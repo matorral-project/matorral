@@ -1,0 +1,58 @@
+[
+{
+  "model": "stories.storystate",
+  "pk": "dn",
+  "fields": {
+    "name": "Done"
+  }
+},
+{
+  "model": "stories.storystate",
+  "pk": "ip",
+  "fields": {
+    "name": "In Progress"
+  }
+},
+{
+  "model": "stories.storystate",
+  "pk": "pl",
+  "fields": {
+    "name": "Planning"
+  }
+},
+{
+  "model": "stories.storystate",
+  "pk": "td",
+  "fields": {
+    "name": "To Do"
+  }
+},
+{
+  "model": "stories.epicstate",
+  "pk": "dn",
+  "fields": {
+    "name": "Done"
+  }
+},
+{
+  "model": "stories.epicstate",
+  "pk": "ip",
+  "fields": {
+    "name": "In Progress"
+  }
+},
+{
+  "model": "stories.epicstate",
+  "pk": "pl",
+  "fields": {
+    "name": "Planning"
+  }
+},
+{
+  "model": "stories.epicstate",
+  "pk": "td",
+  "fields": {
+    "name": "To Do"
+  }
+}
+]

@@ -1,0 +1,4 @@
+Django==2.2.1
+django-comments-xtd==2.4.0
+django-simple-history==2.7.2
+django-taggit==1.1.0
