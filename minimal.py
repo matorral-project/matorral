@@ -10,8 +10,22 @@ from django.core.management import execute_from_command_line
 from django.http import HttpResponse
 from django.urls import include, path
 
+import environ
 
-DEBUG = True
+env = environ.Env(
+    DEBUG=(bool, False)
+)
+
+# reading .env file
+environ.Env.read_env()
+
+# False if not in os.environ
+DEBUG = env('DEBUG')
+
+DATABASES = {
+    # read os.environ['DATABASE_URL'] and raises ImproperlyConfigured exception if not found
+    'default': env.db(default='sqlite:////tmp/alameda.db')
+}
 
 STATIC_ROOT = 'statics'
 STATIC_URL = '/static/'
@@ -19,12 +33,7 @@ STATIC_URL = '/static/'
 settings.configure(
     DEBUG=DEBUG,
     ROOT_URLCONF=sys.modules[__name__],
-    DATABASES={
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': 'alameda.db',
-        }
-    },
+    DATABASES=DATABASES,
     INSTALLED_APPS=[
         'django.contrib.staticfiles',
         'django.contrib.auth',
