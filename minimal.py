@@ -33,6 +33,7 @@ STATIC_URL = '/static/'
 settings.configure(
     DEBUG=DEBUG,
     ROOT_URLCONF=sys.modules[__name__],
+    ALLOWED_HOSTS=['127.0.0.1', 'localhost', 'alameda-tool.herokuapp.com'],
     DATABASES=DATABASES,
     INSTALLED_APPS=[
         'django.contrib.staticfiles',
