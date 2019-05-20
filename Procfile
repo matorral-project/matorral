@@ -1,1 +1,1 @@
-web_: python minimal.py runserver
+web: python minimal.py runserver
