@@ -2,6 +2,7 @@ from django import forms
 from django.contrib import admin
 from django.utils import timezone
 
+from django_admin_listfilter_dropdown.filters import RelatedDropdownFilter, ChoiceDropdownFilter
 from simple_history.admin import SimpleHistoryAdmin
 
 from .models import Epic, EpicState, Sprint, Story, StoryState, Task
@@ -30,8 +31,11 @@ class SprintAdmin(SimpleHistoryAdmin):
 class EpicAdmin(SimpleHistoryAdmin):
     actions_on_bottom = True
     list_display = ('title', 'priority', 'state', 'owner', 'created_at', 'completed_at')
-    list_filter = ('priority', 'state', 'owner')
-    list_select_related = ('state', 'owner')
+    list_filter = [
+        ('priority', ChoiceDropdownFilter),
+        ('state', RelatedDropdownFilter),
+        ('owner', RelatedDropdownFilter)
+    ]
     search_fields = ['title']
     form = EpicForm
     actions = ['mark_as_done']
@@ -45,7 +49,12 @@ class StoryAdmin(SimpleHistoryAdmin):
     actions_on_bottom = True
     list_display = ('title', 'epic', 'priority', 'state', 'points', 'assignee', 'created_at', 'completed_at')
     list_filter = ('epic', 'sprint', 'state', 'priority', 'assignee')
-    list_select_related = ('epic', 'state', 'assignee')
+    list_filter = [
+        ('state', RelatedDropdownFilter),
+        ('epic', RelatedDropdownFilter),
+        ('sprint', RelatedDropdownFilter),
+        ('assignee', RelatedDropdownFilter)
+    ]
     search_fields = ['title', 'epic__title', 'sprint__title', 'assignee__username']
     form = StoryForm
     actions = ['reset_sprint', 'finish_sprint', 'mark_as_done']

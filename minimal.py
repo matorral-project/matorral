@@ -47,6 +47,7 @@ settings.configure(
         'taggit',
         'django_comments_xtd',
         'django_comments',
+        'django_admin_listfilter_dropdown',
         'stories',
     ],
     TEMPLATES=[
