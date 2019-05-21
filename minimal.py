@@ -44,6 +44,7 @@ settings.configure(
         'django.contrib.admin',
         'django.contrib.sites',
         'simple_history',
+        'tagulous',
         'taggit',
         'django_comments_xtd',
         'django_comments',

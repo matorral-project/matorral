@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 
 from simple_history.models import HistoricalRecords
-from taggit.managers import TaggableManager
+from tagulous.models import TagField
 
 
 class BaseModel(models.Model):
@@ -69,8 +69,9 @@ class Epic(BaseModel):
 
     owner = models.ForeignKey('auth.User', null=True, blank=True, on_delete=models.SET_NULL)
 
+    tags = TagField(blank=True)
+
     history = HistoricalRecords()
-    tags = TaggableManager(blank=True)
 
     def get_absolute_url(self):
         return reverse('stories:epic-view', args=[str(self.id), slugify(self.title)])
@@ -99,8 +100,9 @@ class Story(BaseModel):
     owner = models.ForeignKey('auth.User', null=True, blank=True, on_delete=models.SET_NULL, related_name='owned_tasks')
     assignee = models.ForeignKey('auth.User', null=True, blank=True, on_delete=models.SET_NULL, related_name='assigned_tasks')
 
+    tags = TagField(blank=True)
+
     history = HistoricalRecords()
-    tags = TaggableManager(blank=True)
 
     def get_absolute_url(self):
         return reverse('stories:story-view', args=[str(self.id), slugify(self.title)])
