@@ -11,7 +11,7 @@ class BaseModel(models.Model):
         abstract = True
 
     title = models.CharField(max_length=255, db_index=True)
-    description = models.TextField()
+    description = models.TextField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now=True, db_index=True)
     updated_at = models.DateTimeField(auto_now_add=True, db_index=True)
