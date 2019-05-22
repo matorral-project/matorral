@@ -30,6 +30,7 @@ msgpack_python==0.5.6
 # Utils
 django-extensions==2.1.7
 django-watchman==0.16.0
+django-debug-toolbar==1.11
 
 # Admin
 django-admin-list-filter-dropdown==1.0.2
