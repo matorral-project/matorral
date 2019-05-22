@@ -1,0 +1,21 @@
+sudo: false
+
+language: python
+
+python:
+  - "3.6.4"
+
+env:
+  - DJANGO_DATABASE_URL=postgresql://postgres:@127.0.0.1:5432/alameda
+
+services:
+  - postgresql
+
+# command to install dependencies
+install: pip install tox-travis==0.10
+
+before_script:
+  - psql -c 'create database alameda;' -U postgres
+
+# command to run tests with Tox
+script: tox

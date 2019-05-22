@@ -1,8 +1,10 @@
+from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
 
 from simple_history.models import HistoricalRecords
+
 from tagulous.models import TagField
 
 
@@ -67,7 +69,7 @@ class Epic(BaseModel):
     priority = models.PositiveIntegerField(default=0)
     state = models.ForeignKey(EpicState, on_delete=models.SET_NULL, null=True, blank=True)
 
-    owner = models.ForeignKey('auth.User', null=True, blank=True, on_delete=models.SET_NULL)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
 
     tags = TagField(blank=True)
 
@@ -97,8 +99,8 @@ class Story(BaseModel):
 
     sprint = models.ForeignKey(Sprint, null=True, blank=True, on_delete=models.SET_NULL)
 
-    owner = models.ForeignKey('auth.User', null=True, blank=True, on_delete=models.SET_NULL, related_name='owned_tasks')
-    assignee = models.ForeignKey('auth.User', null=True, blank=True, on_delete=models.SET_NULL, related_name='assigned_tasks')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='owned_tasks')
+    assignee = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='assigned_tasks')
 
     tags = TagField(blank=True)
 
