@@ -1,7 +1,8 @@
+from alameda.users.serializers import UserSerializer
+
 from rest_framework import serializers
 
-from .models import Epic, EpicState, Sprint, Story, StoryState, Task
-from alameda.users.serializers import UserSerializer
+from .models import Epic, EpicState, Story, StoryState, Task
 
 
 class EpicStateSerializer(serializers.ModelSerializer):
@@ -24,12 +25,6 @@ class EpicSerializer(serializers.HyperlinkedModelSerializer):
         model = Epic
         fields = ('title', 'description', 'priority', 'state', 'owner',
                   'created_at', 'updated_at', 'completed_at')
-
-
-class SprintSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = Sprint
-        fields = ('title', 'description', 'created_at', 'updated_at', 'completed_at')
 
 
 class TaskItemSerializer(serializers.ModelSerializer):

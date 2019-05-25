@@ -42,16 +42,6 @@ class StoryState(StateModel):
     pass
 
 
-class Sprint(BaseModel):
-    """
-    """
-
-    history = HistoricalRecords()
-
-    def get_absolute_url(self):
-        return reverse('stories:sprint-view', args=[str(self.id), slugify(self.title)])
-
-
 class Epic(BaseModel):
     """
     """
@@ -97,7 +87,7 @@ class Story(BaseModel):
     points = models.PositiveIntegerField(default=0)
     state = models.ForeignKey(StoryState, on_delete=models.SET_NULL, null=True, blank=True)
 
-    sprint = models.ForeignKey(Sprint, null=True, blank=True, on_delete=models.SET_NULL)
+    sprint = models.ForeignKey('sprints.Sprint', null=True, blank=True, on_delete=models.SET_NULL)
 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='owned_tasks')
     assignee = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='assigned_tasks')

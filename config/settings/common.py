@@ -67,6 +67,7 @@ LOCAL_APPS = (
     'alameda.users',  # custom users app
     'alameda.authentication',
     # Your stuff: custom apps go here
+    'alameda.sprints',
     'alameda.stories',
 )
 

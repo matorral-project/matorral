@@ -11,14 +11,15 @@ from django.views.generic.base import RedirectView
 
 from rest_framework.routers import DefaultRouter
 
-from alameda.stories import views
+from alameda.sprints import views as sprints_views
+from alameda.stories import views as stories_views
 
 
 router = DefaultRouter()
-router.register(r'epics', views.EpicViewSet)
-router.register(r'sprints', views.SprintViewSet)
-router.register(r'stories', views.StoryViewSet)
-router.register(r'tasks', views.TaskViewSet)
+router.register(r'epics', stories_views.EpicViewSet)
+router.register(r'sprints', sprints_views.SprintViewSet)
+router.register(r'stories', stories_views.StoryViewSet)
+router.register(r'tasks', stories_views.TaskViewSet)
 
 urlpatterns = [
     # Django Admin, use {% url 'admin:index' %}
