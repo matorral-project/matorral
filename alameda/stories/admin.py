@@ -2,10 +2,13 @@ from django import forms
 from django.contrib import admin
 from django.utils import timezone
 
-from django_admin_listfilter_dropdown.filters import RelatedDropdownFilter, ChoiceDropdownFilter
+from django_admin_listfilter_dropdown.filters import ChoiceDropdownFilter, RelatedDropdownFilter
+
 from simple_history.admin import SimpleHistoryAdmin
 
-from .models import Epic, EpicState, Sprint, Story, StoryState, Task
+from alameda.sprints.models import Sprint
+
+from .models import Epic, EpicState, Story, StoryState, Task
 
 
 class EpicForm(forms.ModelForm):
@@ -20,12 +23,6 @@ class StoryForm(forms.ModelForm):
     class Meta:
         model = Story
         exclude = ['created_at', 'updated_at', 'completed_at']
-
-
-class SprintAdmin(SimpleHistoryAdmin):
-    actions_on_bottom = True
-    list_display = ('title', 'created_at', 'completed_at')
-    search_fields = ['title']
 
 
 class EpicAdmin(SimpleHistoryAdmin):
@@ -93,7 +90,6 @@ class TaskAdmin(admin.ModelAdmin):
 
 admin.site.register(Epic, EpicAdmin)
 admin.site.register(EpicState)
-admin.site.register(Sprint, SprintAdmin)
 admin.site.register(Story, StoryAdmin)
 admin.site.register(StoryState)
 admin.site.register(Task, TaskAdmin)
