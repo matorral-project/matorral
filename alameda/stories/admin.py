@@ -15,7 +15,8 @@ class EpicForm(forms.ModelForm):
 
     class Meta:
         model = Epic
-        exclude = ['created_at', 'updated_at', 'completed_at']
+        exclude = ['created_at', 'updated_at', 'completed_at', 'total_points',
+                   'story_count', 'progress', 'points_done']
 
 
 class StoryForm(forms.ModelForm):
@@ -27,7 +28,8 @@ class StoryForm(forms.ModelForm):
 
 class EpicAdmin(SimpleHistoryAdmin):
     actions_on_bottom = True
-    list_display = ('title', 'priority', 'state', 'owner', 'created_at', 'completed_at')
+    list_display = ('title', 'priority', 'progress', 'story_count', 'total_points',
+                    'points_done', 'state', 'owner', 'created_at', 'completed_at')
     list_filter = [
         ('priority', ChoiceDropdownFilter),
         ('state', RelatedDropdownFilter),
