@@ -27,8 +27,15 @@ class StateModel(models.Model):
     class Meta:
         abstract = True
 
+    STATE_TYPES = (
+        ('u', 'Unstarted'),
+        ('s', 'Started'),
+        ('d', 'Done'),
+    )
+
     slug = models.SlugField(max_length=2, primary_key=True)
     name = models.CharField(max_length=100, db_index=True)
+    stype = models.CharField(max_length=1, db_index=True, choices=STATE_TYPES, default='u')
 
     def __str__(self):
         return self.name
