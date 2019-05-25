@@ -1,5 +1,7 @@
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
 from django.urls import reverse
 from django.utils.text import slugify
 
@@ -27,8 +29,15 @@ class StateModel(models.Model):
     class Meta:
         abstract = True
 
+    STATE_TYPES = (
+        ('u', 'Unstarted'),
+        ('s', 'Started'),
+        ('d', 'Done'),
+    )
+
     slug = models.SlugField(max_length=2, primary_key=True)
     name = models.CharField(max_length=100, db_index=True)
+    stype = models.CharField(max_length=1, db_index=True, choices=STATE_TYPES, default='u')
 
     def __str__(self):
         return self.name
@@ -61,12 +70,34 @@ class Epic(BaseModel):
 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
 
+    total_points = models.PositiveIntegerField(default=0)
+    story_count = models.PositiveIntegerField(default=0)
+    points_done = models.PositiveIntegerField(default=0)
+    progress = models.PositiveIntegerField(default=0)
+
     tags = TagField(blank=True)
 
     history = HistoricalRecords()
 
     def get_absolute_url(self):
         return reverse('stories:epic-view', args=[str(self.id), slugify(self.title)])
+
+    @staticmethod
+    def update_points_and_progress(sender, **kwargs):
+        raw = kwargs['raw']
+        instance = kwargs['instance']
+
+        if not raw:
+            epic = instance.epic
+
+            total_points = Story.objects.filter(epic=epic).aggregate(models.Sum('points'))['points__sum'] or 0
+            points_done = Story.objects.filter(state__stype='d', epic=epic).aggregate(models.Sum('points'))['points__sum'] or 0
+
+            epic.total_points = total_points
+            epic.points_done = points_done
+            epic.story_count = Story.objects.filter(epic=epic).count()
+            epic.progress = int(points_done / total_points * 100)
+            epic.save()
 
 
 class Story(BaseModel):
@@ -98,6 +129,16 @@ class Story(BaseModel):
 
     def get_absolute_url(self):
         return reverse('stories:story-view', args=[str(self.id), slugify(self.title)])
+
+
+@receiver(post_save, sender=Story)
+def handle_story_post_save(sender, **kwargs):
+    Epic.update_points_and_progress(sender, **kwargs)
+
+
+@receiver(post_delete, sender=Story)
+def handle_story_post_delete(sender, **kwargs):
+    Epic.update_points_and_progress(sender, **kwargs)
 
 
 class Task(BaseModel):
