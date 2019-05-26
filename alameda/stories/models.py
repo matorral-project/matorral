@@ -30,15 +30,19 @@ class StateModel(models.Model):
         abstract = True
         ordering = ['stype', 'name']
 
+    STATE_UNSTARTED = 0
+    STATE_STARTED = 1
+    STATE_DONE = 2
+
     STATE_TYPES = (
-        (0, 'Unstarted'),
-        (1, 'Started'),
-        (2, 'Done'),
+        (STATE_UNSTARTED, 'Unstarted'),
+        (STATE_STARTED, 'Started'),
+        (STATE_DONE, 'Done'),
     )
 
     slug = models.SlugField(max_length=2, primary_key=True)
     name = models.CharField(max_length=100, db_index=True)
-    stype = models.PositiveIntegerField(db_index=True, choices=STATE_TYPES, default=0)
+    stype = models.PositiveIntegerField(db_index=True, choices=STATE_TYPES, default=STATE_UNSTARTED)
 
     def __str__(self):
         return self.name
@@ -91,8 +95,10 @@ class Epic(BaseModel):
         if not raw:
             epic = instance.epic
 
-            total_points = Story.objects.filter(epic=epic).aggregate(models.Sum('points'))['points__sum'] or 0
-            points_done = Story.objects.filter(state__stype='d', epic=epic).aggregate(models.Sum('points'))['points__sum'] or 0
+            total_points = Story.objects.filter(epic=epic)\
+                .aggregate(models.Sum('points'))['points__sum'] or 0
+            points_done = Story.objects.filter(state__stype=EpicState.STATE_DONE, epic=epic)\
+                .aggregate(models.Sum('points'))['points__sum'] or 0
 
             epic.total_points = total_points
             epic.points_done = points_done
