@@ -100,13 +100,22 @@ class Epic(BaseModel):
 
             total_points = Story.objects.filter(epic=epic)\
                 .aggregate(models.Sum('points'))['points__sum'] or 0
-            points_done = Story.objects.filter(state__stype=EpicState.STATE_DONE, epic=epic)\
+            points_done = Story.objects.filter(state__stype=StoryState.STATE_DONE, epic=epic)\
                 .aggregate(models.Sum('points'))['points__sum'] or 0
 
             epic.total_points = total_points
             epic.points_done = points_done
             epic.story_count = Story.objects.filter(epic=epic).count()
             epic.progress = int(points_done / total_points * 100)
+
+            # set epic as started when it has one or more started stories
+            if Story.objects.filter(state__stype=StoryState.STATE_STARTED).count() > 0:
+                if epic.state.stype != EpicState.STATE_STARTED:
+                    epic.state = EpicState.objects.filter(stype=EpicState.STATE_STARTED)[0]
+            elif Story.objects.filter(state__stype=StoryState.STATE_UNSTARTED).count() == epic.story_count:
+                if epic.state.stype != EpicState.STATE_UNSTARTED:
+                    epic.state = EpicState.objects.filter(stype=EpicState.STATE_UNSTARTED)[0]
+
             epic.save()
 
 
