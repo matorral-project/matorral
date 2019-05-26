@@ -95,6 +95,9 @@ class Epic(BaseModel):
         if not raw:
             epic = instance.epic
 
+            if epic is None:
+                return
+
             total_points = Story.objects.filter(epic=epic)\
                 .aggregate(models.Sum('points'))['points__sum'] or 0
             points_done = Story.objects.filter(state__stype=EpicState.STATE_DONE, epic=epic)\
