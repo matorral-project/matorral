@@ -28,16 +28,17 @@ class BaseModel(models.Model):
 class StateModel(models.Model):
     class Meta:
         abstract = True
+        ordering = ['stype', 'name']
 
     STATE_TYPES = (
-        ('u', 'Unstarted'),
-        ('s', 'Started'),
-        ('d', 'Done'),
+        (0, 'Unstarted'),
+        (1, 'Started'),
+        (2, 'Done'),
     )
 
     slug = models.SlugField(max_length=2, primary_key=True)
     name = models.CharField(max_length=100, db_index=True)
-    stype = models.CharField(max_length=1, db_index=True, choices=STATE_TYPES, default='u')
+    stype = models.PositiveIntegerField(db_index=True, choices=STATE_TYPES, default=0)
 
     def __str__(self):
         return self.name

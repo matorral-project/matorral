@@ -90,8 +90,22 @@ class TaskAdmin(admin.ModelAdmin):
         self.message_user(request, f"{count} tasks successfully maked as done")
 
 
+class EpicStateAdmin(admin.ModelAdmin):
+    list_display = ('name', 'stype')
+    list_filter = [
+        ('stype', ChoiceDropdownFilter),
+    ]
+
+
+class StoryStateAdmin(admin.ModelAdmin):
+    list_display = ('name', 'stype')
+    list_filter = [
+        ('stype', ChoiceDropdownFilter),
+    ]
+
+
 admin.site.register(Epic, EpicAdmin)
-admin.site.register(EpicState)
+admin.site.register(EpicState, EpicStateAdmin)
 admin.site.register(Story, StoryAdmin)
-admin.site.register(StoryState)
+admin.site.register(StoryState, StoryStateAdmin)
 admin.site.register(Task, TaskAdmin)
