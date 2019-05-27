@@ -1,0 +1,41 @@
+{% extends 'stories/base.html' %}
+
+{% block object_add_url %}{% url 'stories:epic-add' %}{% endblock %}
+{% block object_list_url %}{% url 'stories:epic-list' %}{% endblock %}
+
+{% block table_head_content %}
+  <tr>
+    <th><abbr title="Identification Number">ID</abbr></th>
+    <th>Title</th>
+    <th>State</th>
+    <th>Priority</th>
+    <th><abbr title="Total Points">Pts</abbr></th>
+    <th>Stories</th>
+    <th>Progress</th>
+    <th>Owner</th>
+  </tr>
+{% endblock %}
+
+{% block table_body_content %}
+  {% for epic in object_list %}
+  <tr>
+    <td>#{{ epic.id }}</td>
+    <td>
+      <a href=" {% url 'stories:epic-edit' epic.id %} ">
+        <strong>{{ epic.title }}</strong><br/>
+      </a>
+      {% for tag in epic.tags.all %}
+      <span class="tag is-info">{{ tag.name }}</span>
+      {% endfor %}
+    </td>
+    <td>{{ epic.state }}</td>
+    <td>{{ epic.priority }}</td>
+    <td>{{ epic.total_points }}</td>
+    <td>{{ epic.story_count }}</td>
+    <td>
+      <progress class="progress is-success" value="{{ epic.progress }}" max="100">{{ epic.progress }}%</progress>
+    </td>
+    <td>{{ epic.owner.username }}</td>
+  </tr>
+  {% endfor %}
+{% endblock %}

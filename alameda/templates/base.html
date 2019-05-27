@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hello Alameda Tool!</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+  </head>
+  <body>
+    <nav class="navbar" role="navigation" aria-label="main navigation">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="/">
+            <h1 class="title">
+              Alameda Tool
+            </h1>
+        </a>
+
+        <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+        </a>
+      </div>
+
+      <div id="navbarBasicExample" class="navbar-menu">
+        <div class="navbar-start">
+          <a class="navbar-item" href="{% url 'stories:story-list' %}">
+            Stories
+          </a>
+
+          <a class="navbar-item" href="{% url 'stories:epic-list' %}">
+            Epics
+          </a>
+
+          <a class="navbar-item" href="{% url 'sprints:sprint-list' %}">
+            Sprints
+          </a>
+
+          <div class="navbar-item has-dropdown is-hoverable">
+            <a class="navbar-link">
+              More
+            </a>
+
+            <div class="navbar-dropdown">
+              <a class="navbar-item">
+                Help
+              </a>
+              <a class="navbar-item">
+                About
+              </a>
+              <a class="navbar-item">
+                Terms of Use
+              </a>
+              <a class="navbar-item">
+                Privacy
+              </a>
+              <hr class="navbar-divider">
+              <a class="navbar-item" href="https://github.com/matagus/alameda">
+                Code
+              </a>
+              <a class="navbar-item" href="https://github.com/matagus/alameda/issues">
+                Report an issue
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="navbar-end">
+          <div class="level-right">
+            <form href="{% block object_list_url %}{% endblock %}" method="get">
+              <div class="level-item">
+                <div class="field has-addons">
+                  <p class="control">
+                    <input class="input" name="q" type="text" placeholder="Find an {{ singular_title }}">
+                  </p>
+                  <p class="control">
+                    <button class="button" type="submit">
+                      Search
+                    </button>
+                  </p>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="navbar-item">
+            <div class="buttons">
+              {% if user.is_anonymous %}
+              <a href="{% url 'admin:login' %}" class="button is-primary">
+                Log in
+              </a>
+              {% else %}
+							<div class="navbar-item has-dropdown is-hoverable">
+								<a class="navbar-link" href="#">
+									{{ user.username }}
+								</a>
+
+								<div class="navbar-dropdown">
+									<a class="navbar-item">
+										Settings
+									</a>
+									<a href="{% url 'admin:logout' %}" class="navbar-item">
+										Logout
+									</a>
+								</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <section class="section">
+			{% if messages %}
+				{% for message in messages %}
+				<div class="notification is-success {% if message.tags %}{{ message.tags }}{% endif %}">
+					<button class="delete"></button>
+					<p>{{ message }}</p>
+				</div>
+				{% endfor %}
+			{% endif %}
+
+      {% block content %}
+      {% endblock %}
+    </section>
+
+    <div class="modal" id="modal-form">
+      <div class="modal-background"></div>
+      <div class="modal-card">
+        <header class="modal-card-head">
+          <p class="modal-card-title">Modal title</p>
+          <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+          <iframe src="" style="width: 100%;">
+          </iframe>
+        </section>
+        <footer class="modal-card-foot">
+          <button class="button is-success">Save changes</button>
+          <button class="button">Cancel</button>
+        </footer>
+      </div>
+    </div>
+  </body>
+  <script>
+    function ready(fn) {
+      if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading"){
+        fn();
+      } else {
+        document.addEventListener('DOMContentLoaded', fn);
+      }
+    }
+
+    ready(function() {
+      var elementList = document.querySelectorAll('a.launch-modal');
+      Array.prototype.forEach.call(elementList, function(el, i) {
+        el.addEventListener('click', function(event) {
+          event.preventDefault()
+
+          var modalFormTitle = document.querySelector('#modal-form .modal-card-title');
+          modalFormTitle.innerHTML = event.target.textContent;
+
+          var modalForm = document.querySelector('#modal-form');
+          modalForm.querySelector('iframe').setAttribute('src', event.target.parentNode.getAttribute('href'));
+          modalForm.classList.add('is-clipped');
+          modalForm.classList.add('is-active');
+        });
+      });
+
+      var elementList = document.querySelectorAll('#modal-form button');
+      Array.prototype.forEach.call(elementList, function(el, i) {
+        el.addEventListener('click', function(event) {
+          var modalForm = document.querySelector('#modal-form');
+          modalForm.classList.remove('is-active');
+          modalForm.classList.remove('is-clipped');
+        });
+      });
+
+			(document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
+				$notification = $delete.parentNode;
+				$delete.addEventListener('click', () => {
+					$notification.parentNode.removeChild($notification);
+				});
+			});
+    });
+  </script>
+</html>

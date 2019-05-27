@@ -1,0 +1,30 @@
+{% extends 'sprints/base.html' %}
+
+{% block object_add_url %}{% url 'sprints:sprint-add' %}{% endblock %}
+{% block object_list_url %}{% url 'sprints:sprint-list' %}{% endblock %}
+
+{% block table_head_content %}
+  <tr>
+    <th><abbr title="Identification Number">ID</abbr></th>
+    <th>Title</th>
+    <th>Created</th>
+    <th>Updated</th>
+    <th>Completed</th>
+  </tr>
+{% endblock %}
+
+{% block table_body_content %}
+  {% for sprint in object_list %}
+  <tr>
+    <td>#{{ sprint.id }}</td>
+    <td>
+      <a href=" {% url 'sprints:sprint-edit' sprint.id %} ">
+        <strong>{{ sprint.title }}</strong><br/>
+      </a>
+    </td>
+    <td>{{ sprint.created_at }}</td>
+    <td>{{ sprint.updated_at }}</td>
+    <td>{{ sprint.completed_at }}</td>
+  </tr>
+  {% endfor %}
+{% endblock %}

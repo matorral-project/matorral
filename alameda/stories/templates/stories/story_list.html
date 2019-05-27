@@ -1,0 +1,37 @@
+{% extends 'stories/base.html' %}
+
+{% block object_add_url %}{% url 'stories:story-add' %}{% endblock %}
+{% block object_list_url %}{% url 'stories:story-list' %}{% endblock %}
+
+{% block table_head_content %}
+  <tr>
+    <th><abbr title="Identification Number">ID</abbr></th>
+    <th>Title</th>
+    <th>State</th>
+    <th>Priority</th>
+    <th><abbr title="Points">Pts</abbr></th>
+    <th>Owner</th>
+    <th>Assignee</th>
+  </tr>
+{% endblock %}
+
+{% block table_body_content %}
+  {% for story in object_list %}
+  <tr>
+    <td>#{{ story.id }}</td>
+    <td>
+      <a href="{% url 'stories:story-edit' story.id %}">
+        <strong>{{ story.title }}</strong><br/>
+      </a>
+      {% for tag in story.tags.all %}
+      <span class="tag is-info">{{ tag.name }}</span>
+      {% endfor %}
+    </td>
+    <td>{{ story.state }}</td>
+    <td>{{ story.priority }}</td>
+    <td>{{ story.points }}</td>
+    <td>{{ story.owner.username }}</td>
+    <td>{{ story.assignee.username }}</td>
+  </tr>
+  {% endfor %}
+{% endblock %}
