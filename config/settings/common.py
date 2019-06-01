@@ -44,7 +44,7 @@ DJANGO_APPS = (
     'django.contrib.messages',
     'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
-
+    'django.forms',
     # Admin
     'django.contrib.admin',
     'django_admin_listfilter_dropdown',
@@ -86,8 +86,6 @@ MIDDLEWARE = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
 )
-
-
 
 # MIGRATIONS CONFIGURATION
 # ------------------------------------------------------------------------------
@@ -235,6 +233,8 @@ AUTHENTICATION_BACKENDS = (
 LANGUAGE_COOKIE_NAME = "alameda-lang"
 CSRF_COOKIE_NAME = "alameda-csrf"
 SESSION_COOKIE_NAME = "alameda-session"
+
+FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
 
 # Some really nice defaults
 ACCOUNT_AUTHENTICATION_METHOD = 'username'
