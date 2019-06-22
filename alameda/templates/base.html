@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Hello Alameda Tool!</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
-    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/bulma-calendar.min.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/bulma-tagsinput.min.css">
   </head>
   <body>
     <nav class="navbar" role="navigation" aria-label="main navigation">
@@ -141,6 +142,9 @@
       </div>
     </div>
   </body>
+  <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+  <script src="{{ STATIC_URL }}js/bulma-calendar.min.js"></script>
+  <script src="{{ STATIC_URL }}js/bulma-tagsinput.min.js"></script>
   <script>
     function ready(fn) {
       if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading"){
@@ -181,6 +185,10 @@
 					$notification.parentNode.removeChild($notification);
 				});
 			});
+
+      bulmaTagsinput.attach('[data-tagulous="true"]');
+      bulmaCalendar.attach('#id_starts_at', {type: 'date'});
+      bulmaCalendar.attach('#id_ends_at', {type: 'date'});
     });
   </script>
 </html>

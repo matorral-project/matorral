@@ -7,7 +7,7 @@ from .models import Sprint
 
 class SprintAdmin(SimpleHistoryAdmin):
     actions_on_bottom = True
-    list_display = ('title', 'created_at', 'completed_at')
+    list_display = ('title', 'starts_at', 'ends_at', 'state')
     search_fields = ['title']
 
 

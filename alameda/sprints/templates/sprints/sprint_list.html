@@ -7,9 +7,10 @@
   <tr>
     <th><abbr title="Identification Number">ID</abbr></th>
     <th>Title</th>
-    <th>Created</th>
+    <th>State</th>
+    <th>Starts</th>
+    <th>Ends</th>
     <th>Updated</th>
-    <th>Completed</th>
   </tr>
 {% endblock %}
 
@@ -22,9 +23,10 @@
         <strong>{{ sprint.title }}</strong><br/>
       </a>
     </td>
-    <td>{{ sprint.created_at }}</td>
-    <td>{{ sprint.updated_at }}</td>
-    <td>{{ sprint.completed_at }}</td>
+    <td>{{ sprint.get_state_display }}</td>
+    <td>{{ sprint.starts_at|default:'' }}</td>
+    <td>{{ sprint.ends_at|default:'' }}</td>
+    <td>{{ sprint.updated_at|default:'' }}</td>
   </tr>
   {% endfor %}
 {% endblock %}
