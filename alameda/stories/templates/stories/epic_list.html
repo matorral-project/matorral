@@ -13,6 +13,7 @@
     <th>Stories</th>
     <th>Progress</th>
     <th>Owner</th>
+    <th>Actions</th>
   </tr>
 {% endblock %}
 
@@ -21,7 +22,7 @@
   <tr {% if epic.is_done %}class="has-text-success"{% endif %}>
     <td>#{{ epic.id }}</td>
     <td>
-      <a href="{% url 'stories:epic-edit' epic.id %}" {% if epic.is_done %}class="has-text-success"{% endif %}>
+      <a href="{% url 'stories:epic-detail' epic.id %}" {% if epic.is_done %}class="has-text-success"{% endif %}>
         <strong>{{ epic.title }}</strong><br/>
       </a>
       {% for tag in epic.tags.all %}
@@ -36,6 +37,11 @@
       <progress class="progress is-success" value="{{ epic.progress }}" max="100">{{ epic.progress }}%</progress>
     </td>
     <td>{{ epic.owner.username }}</td>
+    <td>
+      <a class="button is-small is-link" href="{% url 'stories:epic-edit' epic.id %}">
+        edit
+      </a>
+    </td>
   </tr>
   {% endfor %}
 {% endblock %}
