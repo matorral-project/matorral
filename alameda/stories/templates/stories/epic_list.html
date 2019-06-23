@@ -18,10 +18,10 @@
 
 {% block table_body_content %}
   {% for epic in object_list %}
-  <tr>
+  <tr {% if epic.is_done %}class="has-text-success"{% endif %}>
     <td>#{{ epic.id }}</td>
     <td>
-      <a href=" {% url 'stories:epic-edit' epic.id %} ">
+      <a href="{% url 'stories:epic-edit' epic.id %}" {% if epic.is_done %}class="has-text-success"{% endif %}>
         <strong>{{ epic.title }}</strong><br/>
       </a>
       {% for tag in epic.tags.all %}
