@@ -93,9 +93,11 @@
 								</a>
 
 								<div class="navbar-dropdown">
-									<a class="navbar-item">
-										Settings
+                  {% if user.is_staff %}
+                  <a class="navbar-item" href="{% url 'admin:index' %}">
+										Admin
 									</a>
+                  {% endif %}
 									<a href="{% url 'logout' %}" class="navbar-item">
 										Logout
 									</a>
