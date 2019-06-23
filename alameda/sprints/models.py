@@ -37,3 +37,9 @@ class Sprint(models.Model):
 
     def get_absolute_url(self):
         return reverse('sprints:sprint-view', args=[str(self.id), slugify(self.title)])
+
+    def is_done(self):
+        return self.state == self.STATE_DONE
+
+    def is_started(self):
+        return self.state == self.STATE_STARTED

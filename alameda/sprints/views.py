@@ -86,7 +86,7 @@ class BaseView(object):
 class SprintBaseView(BaseView):
     model = Sprint
     fields = [
-        'title', 'description', 'starts_at', 'ends_at', 'state'
+        'title', 'description', 'starts_at', 'ends_at'
     ]
     success_url = reverse_lazy('sprints:sprint-list')
 
