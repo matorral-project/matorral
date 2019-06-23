@@ -5,6 +5,7 @@ from django.conf import settings
 from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.auth import views as auth_views
 from django.urls import path
 from django.views import defaults as default_views
 
@@ -27,6 +28,9 @@ urlpatterns = [
     # health checks
     url(r'^health-check/', include('watchman.urls')),
     url(r'^health/', include('alameda.health_checks.urls')),
+
+    url(r'^login/$', auth_views.LoginView.as_view(), name='login'),
+    url(r'^logout/$', auth_views.LogoutView.as_view(), {'next_page': '/'}, name='logout'),
 
     # User management
     url(r'^users/', include('alameda.users.urls')),

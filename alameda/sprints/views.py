@@ -1,5 +1,7 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
 from django.views.generic import ListView
 from django.views.generic.edit import CreateView, UpdateView
 
@@ -69,6 +71,7 @@ class BaseListView(ListView):
         return qs
 
 
+@method_decorator(login_required, name='dispatch')
 class SprintList(BaseListView):
     model = Sprint
     filter_fields = {}
@@ -91,12 +94,14 @@ class SprintBaseView(BaseView):
     success_url = reverse_lazy('sprints:sprint-list')
 
 
+@method_decorator(login_required, name='dispatch')
 class SprintCreateView(SprintBaseView, CreateView):
 
     def _get_success_message(self):
         return 'Sprint successfully created!'
 
 
+@method_decorator(login_required, name='dispatch')
 class SprintUpdateView(SprintBaseView, UpdateView):
 
     def _get_success_message(self):
