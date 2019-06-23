@@ -13,6 +13,7 @@
     <th><abbr title="Points">Pts</abbr></th>
     <th>Owner</th>
     <th>Assignee</th>
+    <th>Actions</th>
   </tr>
 {% endblock %}
 
@@ -30,7 +31,7 @@
     </td>
     <td>
       {% if story.epic %}
-      <a href="{% url 'stories:epic-edit' story.epic.id %}" {% if story.is_done %}class="has-text-success"{% endif %}>
+      <a href="{% url 'stories:epic-detail' story.epic.id %}" {% if story.is_done %}class="has-text-success"{% endif %}>
         {{ story.epic.title }}
       </a>
       {% endif %}
@@ -40,6 +41,11 @@
     <td>{{ story.points }}</td>
     <td>{{ story.owner.username }}</td>
     <td>{{ story.assignee.username }}</td>
+    <td>
+      <a class="button is-link is-small" href="{% url 'stories:story-edit' story.id %}">
+        edit
+      </a>
+    </td>
   </tr>
   {% endfor %}
 {% endblock %}

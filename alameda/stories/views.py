@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
+from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView
 
 from rest_framework import viewsets
@@ -8,6 +9,16 @@ from rest_framework import viewsets
 from .models import Epic, Story, Task
 from .serializers import EpicSerializer, StorySerializer, TaskSerializer
 from alameda.sprints.views import BaseListView, BaseView
+
+
+class EpicDetailView(DetailView):
+
+    model = Epic
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['object_list'] = self.get_object().story_set.all()
+        return context
 
 
 class EpicViewSet(viewsets.ModelViewSet):

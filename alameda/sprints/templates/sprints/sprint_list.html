@@ -19,7 +19,7 @@
   <tr {% if sprint.is_done %}class="has-text-success"{% endif %}>
     <td>#{{ sprint.id }}</td>
     <td>
-      <a href="{% url 'sprints:sprint-edit' sprint.id %}" {% if sprint.is_done %}class="has-text-success"{% endif %}>
+      <a href="{% url 'sprints:sprint-detail' sprint.id %}" {% if sprint.is_done %}class="has-text-success"{% endif %}>
         <strong>{{ sprint.title }}</strong><br/>
       </a>
     </td>
@@ -27,6 +27,11 @@
     <td>{{ sprint.starts_at|default:'' }}</td>
     <td>{{ sprint.ends_at|default:'' }}</td>
     <td>{{ sprint.updated_at|default:'' }}</td>
+    <td>
+      <a href="{% url 'sprints:sprint-edit' sprint.id %}" class="button is-small is-link">
+        edit
+      </a>
+    </td>
   </tr>
   {% endfor %}
 {% endblock %}
