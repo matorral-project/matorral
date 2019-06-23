@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="{{ STATIC_URL }}css/bulma-tagsinput.min.css">
   </head>
   <body>
+    {% if user.is_authenticated %}
     <nav class="navbar" role="navigation" aria-label="main navigation">
       <div class="navbar-brand">
         <a class="navbar-item" href="/">
@@ -86,11 +87,6 @@
           </div>
           <div class="navbar-item">
             <div class="buttons">
-              {% if user.is_anonymous %}
-              <a href="{% url 'admin:login' %}" class="button is-primary">
-                Log in
-              </a>
-              {% else %}
 							<div class="navbar-item has-dropdown is-hoverable">
 								<a class="navbar-link" href="#">
 									{{ user.username }}
@@ -100,16 +96,17 @@
 									<a class="navbar-item">
 										Settings
 									</a>
-									<a href="{% url 'admin:logout' %}" class="navbar-item">
+									<a href="{% url 'logout' %}" class="navbar-item">
 										Logout
 									</a>
 								</div>
-              {% endif %}
             </div>
           </div>
         </div>
       </div>
     </nav>
+    {% endif %}
+
     <section class="section">
 			{% if messages %}
 				{% for message in messages %}

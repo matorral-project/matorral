@@ -251,7 +251,7 @@ SOCIALACCOUNT_ADAPTER = 'alameda.users.adapters.SocialAccountAdapter'
 # Select the correct user model
 AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = 'stories:story-list'
-LOGIN_URL = 'account_login'
+LOGIN_URL = 'login'
 
 # SLUGLIFIER
 AUTOSLUG_SLUGIFY_FUNCTION = 'slugify.slugify'

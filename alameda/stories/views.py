@@ -1,4 +1,6 @@
+from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
 from django.views.generic.edit import CreateView, UpdateView
 
 from rest_framework import viewsets
@@ -35,6 +37,7 @@ class StoryBaseView(BaseView):
     success_url = reverse_lazy('stories:story-list')
 
 
+@method_decorator(login_required, name='dispatch')
 class StoryCreateView(StoryBaseView, CreateView):
 
     def _get_success_message(self):
@@ -44,6 +47,7 @@ class StoryCreateView(StoryBaseView, CreateView):
         return dict(owner=self.request.user.id, state='pl')
 
 
+@method_decorator(login_required, name='dispatch')
 class StoryUpdateView(StoryBaseView, UpdateView):
 
     def _get_success_message(self):
@@ -60,6 +64,7 @@ class EpicBaseView(BaseView):
     success_url = reverse_lazy('stories:epic-list')
 
 
+@method_decorator(login_required, name='dispatch')
 class EpicCreateView(EpicBaseView, CreateView):
 
     def _get_success_message(self):
@@ -69,12 +74,14 @@ class EpicCreateView(EpicBaseView, CreateView):
         return dict(owner=self.request.user.id, state='pl')
 
 
+@method_decorator(login_required, name='dispatch')
 class EpicUpdateView(EpicBaseView, UpdateView):
 
     def _get_success_message(self):
         return 'Epic successfully updated!'
 
 
+@method_decorator(login_required, name='dispatch')
 class EpicList(BaseListView):
     model = Epic
 
@@ -88,6 +95,7 @@ class EpicList(BaseListView):
     prefetch_related = ['tags']
 
 
+@method_decorator(login_required, name='dispatch')
 class StoryList(BaseListView):
     model = Story
 
