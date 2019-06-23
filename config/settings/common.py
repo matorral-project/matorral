@@ -184,6 +184,7 @@ TEMPLATES = [
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
                 # Your stuff: custom template context processors go here
+                'alameda.context_processors.site',
             ],
         },
     },

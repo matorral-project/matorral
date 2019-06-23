@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Hello Alameda Tool!</title>
+    <title>Hello from {{ current_site.name }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
     <link rel="stylesheet" href="{{ STATIC_URL }}css/bulma-calendar.min.css">
     <link rel="stylesheet" href="{{ STATIC_URL }}css/bulma-tagsinput.min.css">
@@ -14,7 +14,7 @@
       <div class="navbar-brand">
         <a class="navbar-item" href="/">
             <h1 class="title">
-              Alameda Tool
+              {{ current_site.name }}
             </h1>
         </a>
 
@@ -93,9 +93,11 @@
 								</a>
 
 								<div class="navbar-dropdown">
-									<a class="navbar-item">
-										Settings
+                  {% if user.is_staff %}
+                  <a class="navbar-item" href="{% url 'admin:index' %}">
+										Admin
 									</a>
+                  {% endif %}
 									<a href="{% url 'logout' %}" class="navbar-item">
 										Logout
 									</a>

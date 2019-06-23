@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
-{% block title %}Alameda Tool{% endblock %}
+{% block title %}{{ current_site.name }}{% endblock %}
 
 {% block content %}
   <div class="columns is-mobile">
     <div class="column is-half is-offset-one-quarter">
       <h2 class="title">You're logged out now</h2>
-      <p class="subtitle">Thanks for using Alameda Tool</p>
+      <p class="subtitle">Thanks for using {{ current_site.name }}</p>
 
       <div class="field is-grouped">
         <div class="control">

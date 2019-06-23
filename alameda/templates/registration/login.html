@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
-{% block title %}Alameda Tool - Login{% endblock %}
+{% block title %}{{ current_site.name }} - Login{% endblock %}
 
 {% block content %}
   <div class="columns is-mobile">
     <div class="column is-half is-offset-one-quarter">
-      <h2 class="title">Welcome to Alameda Tool</h2>
+      <h2 class="title">Welcome to {{ current_site.name }}</h2>
 
       {% if form.subject.errors %}
         <ol>
