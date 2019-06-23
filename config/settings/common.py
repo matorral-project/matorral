@@ -14,6 +14,8 @@ import re
 
 import environ
 
+from celery.schedules import crontab
+
 ROOT_DIR = environ.Path(__file__) - 3  # (alameda/config/settings/common.py - 3 = alameda/)
 APPS_DIR = ROOT_DIR.path('alameda')
 
@@ -366,9 +368,17 @@ if SENTRY_ENABLED:
         environment=f'{SENTRY_ENVIRONMENT}',
         dsn=f'{SENTRY_DSN}',
         integrations=[DjangoIntegration(), CeleryIntegration()]
-)
+    )
 
 # Your common stuff: Below this line define 3rd party library settings
 
 COMMENTS_APP = 'django_comments_xtd'
 COMMENTS_XTD_MAX_THREAD_LEVEL = 2
+
+# Other Celery settings
+CELERYBEAT_SCHEDULE = {
+    'sprints-update-state': {
+        'task': 'alameda.sprints.tasks.update_state',
+        'schedule': crontab(hour='*/1')
+    },
+}

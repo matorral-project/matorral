@@ -7,6 +7,7 @@
   <tr>
     <th><abbr title="Identification Number">ID</abbr></th>
     <th>Title</th>
+    <th>Epic</th>
     <th>State</th>
     <th>Priority</th>
     <th><abbr title="Points">Pts</abbr></th>
@@ -17,15 +18,22 @@
 
 {% block table_body_content %}
   {% for story in object_list %}
-  <tr>
+  <tr {% if story.is_done %}class="has-text-success"{% endif %}>
     <td>#{{ story.id }}</td>
     <td>
-      <a href="{% url 'stories:story-edit' story.id %}">
+      <a href="{% url 'stories:story-edit' story.id %}" {% if story.is_done %}class="has-text-success"{% endif %}>
         <strong>{{ story.title }}</strong><br/>
       </a>
       {% for tag in story.tags.all %}
       <span class="tag is-info">{{ tag.name }}</span>
       {% endfor %}
+    </td>
+    <td>
+      {% if story.epic %}
+      <a href="{% url 'stories:epic-edit' story.epic.id %}" {% if story.is_done %}class="has-text-success"{% endif %}>
+        {{ story.epic.title }}
+      </a>
+      {% endif %}
     </td>
     <td>{{ story.state }}</td>
     <td>{{ story.priority }}</td>

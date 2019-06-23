@@ -87,6 +87,12 @@ class Epic(BaseModel):
     def get_absolute_url(self):
         return reverse('stories:epic-view', args=[str(self.id), slugify(self.title)])
 
+    def is_done(self):
+        if self.state.stype == StateModel.STATE_DONE:
+            return True
+
+        return False
+
     @staticmethod
     def update_points_and_progress(sender, **kwargs):
         raw = kwargs['raw']
@@ -148,6 +154,12 @@ class Story(BaseModel):
 
     def get_absolute_url(self):
         return reverse('stories:story-view', args=[str(self.id), slugify(self.title)])
+
+    def is_done(self):
+        if self.state.stype == StateModel.STATE_DONE:
+            return True
+
+        return False
 
 
 @receiver(post_save, sender=Story)

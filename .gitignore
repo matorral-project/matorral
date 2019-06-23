@@ -78,3 +78,4 @@ celerybeat.pid
 
 alameda.egg-info/
 .pytest_cache/
+celerybeat-schedule

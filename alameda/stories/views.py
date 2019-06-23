@@ -10,12 +10,12 @@ from alameda.sprints.views import BaseListView, BaseView
 
 class EpicViewSet(viewsets.ModelViewSet):
     serializer_class = EpicSerializer
-    queryset = Epic.objects.all()
+    queryset = Epic.objects.select_related('state', 'state__stype', 'owner')
 
 
 class StoryViewSet(viewsets.ModelViewSet):
     serializer_class = StorySerializer
-    queryset = Story.objects.all()
+    queryset = Story.objects.select_related('epic', 'sprint', 'state', 'state__stype', 'owner', 'assignee')
 
 
 class TaskViewSet(viewsets.ModelViewSet):
