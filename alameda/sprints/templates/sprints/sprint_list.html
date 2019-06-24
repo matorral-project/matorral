@@ -10,6 +10,9 @@
     <th>State</th>
     <th>Starts</th>
     <th>Ends</th>
+    <th><abbr title="Total Points">Pts</abbr></th>
+    <th>Stories</th>
+    <th>Progress</th>
     <th>Updated</th>
   </tr>
 {% endblock %}
@@ -26,6 +29,11 @@
     <td>{{ sprint.get_state_display }}</td>
     <td>{{ sprint.starts_at|default:'' }}</td>
     <td>{{ sprint.ends_at|default:'' }}</td>
+    <td>{{ sprint.total_points }}</td>
+    <td>{{ sprint.story_count }}</td>
+    <td>
+      <progress class="progress is-success" value="{{ sprint.progress }}" max="100">{{ sprint.progress }}%</progress>
+    </td>
     <td>{{ sprint.updated_at|default:'' }}</td>
     <td>
       <a href="{% url 'sprints:sprint-edit' sprint.id %}" class="button is-small is-link">

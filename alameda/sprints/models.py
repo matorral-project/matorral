@@ -4,10 +4,10 @@ from django.utils.text import slugify
 
 from simple_history.models import HistoricalRecords
 
-from alameda.models import BaseModel
+from alameda.models import ModelWithProgress
 
 
-class Sprint(BaseModel):
+class Sprint(ModelWithProgress):
     """
     """
 
