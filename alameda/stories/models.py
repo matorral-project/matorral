@@ -9,20 +9,8 @@ from simple_history.models import HistoricalRecords
 
 from tagulous.models import TagField
 
-
-class BaseModel(models.Model):
-    class Meta:
-        abstract = True
-
-    title = models.CharField(max_length=255, db_index=True)
-    description = models.TextField(blank=True, null=True)
-
-    created_at = models.DateTimeField(auto_now=True, db_index=True)
-    updated_at = models.DateTimeField(auto_now_add=True, db_index=True)
-    completed_at = models.DateTimeField(null=True, blank=True)
-
-    def __str__(self):
-        return self.title
+from alameda.models import BaseModel, ModelWithProgress
+from alameda.sprints.models import Sprint
 
 
 class StateModel(models.Model):
@@ -56,7 +44,7 @@ class StoryState(StateModel):
     pass
 
 
-class Epic(BaseModel):
+class Epic(ModelWithProgress):
     """
     """
 
@@ -75,11 +63,6 @@ class Epic(BaseModel):
 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
 
-    total_points = models.PositiveIntegerField(default=0)
-    story_count = models.PositiveIntegerField(default=0)
-    points_done = models.PositiveIntegerField(default=0)
-    progress = models.PositiveIntegerField(default=0)
-
     tags = TagField(blank=True)
 
     history = HistoricalRecords()
@@ -94,7 +77,7 @@ class Epic(BaseModel):
         return False
 
     @staticmethod
-    def update_points_and_progress(sender, **kwargs):
+    def update_state(sender, **kwargs):
         raw = kwargs['raw']
         instance = kwargs['instance']
 
@@ -103,16 +86,6 @@ class Epic(BaseModel):
 
             if epic is None:
                 return
-
-            total_points = Story.objects.filter(epic=epic)\
-                .aggregate(models.Sum('points'))['points__sum'] or 0
-            points_done = Story.objects.filter(state__stype=StoryState.STATE_DONE, epic=epic)\
-                .aggregate(models.Sum('points'))['points__sum'] or 0
-
-            epic.total_points = total_points
-            epic.points_done = points_done
-            epic.story_count = Story.objects.filter(epic=epic).count()
-            epic.progress = int(points_done / total_points * 100)
 
             # set epic as started when it has one or more started stories
             if Story.objects.filter(state__stype=StoryState.STATE_STARTED).count() > 0:
@@ -165,11 +138,23 @@ class Story(BaseModel):
 @receiver(post_save, sender=Story)
 def handle_story_post_save(sender, **kwargs):
     Epic.update_points_and_progress(sender, **kwargs)
+    Epic.update_state(sender, **kwargs)
 
 
 @receiver(post_delete, sender=Story)
 def handle_story_post_delete(sender, **kwargs):
     Epic.update_points_and_progress(sender, **kwargs)
+    Epic.update_state(sender, **kwargs)
+
+
+@receiver(post_save, sender=Story)
+def handle_story_post_save(sender, **kwargs):
+    Sprint.update_points_and_progress(sender, **kwargs)
+
+
+@receiver(post_delete, sender=Story)
+def handle_story_post_delete(sender, **kwargs):
+    Sprint.update_points_and_progress(sender, **kwargs)
 
 
 class Task(BaseModel):
