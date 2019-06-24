@@ -45,7 +45,6 @@ class StoryBaseView(BaseView):
         'priority', 'points',
         'state', 'tags',
     ]
-    success_url = reverse_lazy('stories:story-list')
 
 
 @method_decorator(login_required, name='dispatch')
@@ -55,11 +54,35 @@ class StoryCreateView(StoryBaseView, CreateView):
         return 'Story successfully created!'
 
     def get_initial(self):
-        return dict(owner=self.request.user.id, state='pl')
+        initial_dict = dict(owner=self.request.user.id, state='pl')
+
+        epic_id = self.request.GET.get('epic')
+        if epic_id is not None:
+            initial_dict['epic'] = epic_id
+
+        sprint_id = self.request.GET.get('sprint')
+        if sprint_id is not None:
+            initial_dict['sprint'] = sprint_id
+
+        return initial_dict
+
+    @property
+    def success_url(self):
+        epic_id = self.request.GET.get('epic')
+        if epic_id is not None:
+            return reverse_lazy('stories:epic-detail', args=[epic_id])
+
+        sprint_id = self.request.GET.get('sprint')
+        if sprint_id is not None:
+            return reverse_lazy('sprints:sprint-detail', args=[sprint_id])
+
+        return reverse_lazy('stories:story-list')
 
 
 @method_decorator(login_required, name='dispatch')
 class StoryUpdateView(StoryBaseView, UpdateView):
+
+    success_url = reverse_lazy('stories:story-list')
 
     def _get_success_message(self):
         return 'Story successfully updated!'
