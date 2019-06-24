@@ -4,8 +4,10 @@ from django.utils.text import slugify
 
 from simple_history.models import HistoricalRecords
 
+from alameda.models import BaseModel
 
-class Sprint(models.Model):
+
+class Sprint(BaseModel):
     """
     """
 
@@ -19,16 +21,10 @@ class Sprint(models.Model):
         (STATE_DONE, 'Done'),
     )
 
-    title = models.CharField(max_length=255, db_index=True)
-    description = models.TextField(blank=True, null=True)
-
     state = models.PositiveIntegerField(db_index=True, choices=STATE_TYPES, default=STATE_UNSTARTED)
 
     starts_at = models.DateField(db_index=True, null=True, blank=True)
     ends_at = models.DateField(db_index=True, null=True, blank=True)
-
-    created_at = models.DateTimeField(auto_now=True, db_index=True)
-    updated_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     history = HistoricalRecords()
 
