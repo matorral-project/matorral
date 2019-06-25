@@ -24,7 +24,7 @@ class SprintDetailView(DetailView):
 
 class SprintViewSet(viewsets.ModelViewSet):
     serializer_class = SprintSerializer
-    queryset = Sprint.objects.select_related('state')
+    queryset = Sprint.objects.all()
 
 
 class BaseListView(ListView):
