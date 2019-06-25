@@ -110,10 +110,10 @@
 		</thead>
 		<tbody>
       {% for story in object_list %}
-      <tr {% if story.is_done %}class="has-text-success"{% endif %}>
+      <tr {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
         <td>#{{ story.id }}</td>
         <td>
-          <a href="{% url 'stories:story-edit' story.id %}" {% if story.is_done %}class="has-text-success"{% endif %}>
+          <a href="{% url 'stories:story-edit' story.id %}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
             <strong>{{ story.title }}</strong><br/>
           </a>
           {% for tag in story.tags.all %}

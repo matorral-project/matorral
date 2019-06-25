@@ -19,10 +19,10 @@
 
 {% block table_body_content %}
   {% for sprint in object_list %}
-  <tr {% if sprint.is_done %}class="has-text-success"{% endif %}>
+  <tr {% if sprint.is_done %}class="has-text-grey-dark"{% endif %}>
     <td>#{{ sprint.id }}</td>
     <td>
-      <a href="{% url 'sprints:sprint-detail' sprint.id %}" {% if sprint.is_done %}class="has-text-success"{% endif %}>
+      <a href="{% url 'sprints:sprint-detail' sprint.id %}" {% if sprint.is_done %}class="has-text-grey-dark"{% endif %}>
         <strong>{{ sprint.title }}</strong><br/>
       </a>
     </td>
