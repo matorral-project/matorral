@@ -46,6 +46,21 @@ class StoryBaseView(BaseView):
         'state', 'tags',
     ]
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['cancel_url'] = reverse_lazy('stories:story-list')
+
+        epic_id = self.request.GET.get('epic')
+        if epic_id is not None:
+            context['cancel_url'] = reverse_lazy('stories:epic-detail', args=[epic_id])
+
+        sprint_id = self.request.GET.get('sprint')
+        if sprint_id is not None:
+            context['cancel_url'] = reverse_lazy('sprints:sprint-detail', args=[sprint_id])
+
+        return context
+
 
 @method_decorator(login_required, name='dispatch')
 class StoryCreateView(StoryBaseView, CreateView):
@@ -73,8 +88,13 @@ class StoryCreateView(StoryBaseView, CreateView):
             return reverse_lazy('stories:epic-detail', args=[epic_id])
 
         sprint_id = self.request.GET.get('sprint')
+
         if sprint_id is not None:
             return reverse_lazy('sprints:sprint-detail', args=[sprint_id])
+
+        epic_id = self.request.GET.get('epic')
+        if epic_id is not None:
+            return reverse_lazy('stories:epic-detail', args=[epic_id])
 
         return reverse_lazy('stories:story-list')
 
