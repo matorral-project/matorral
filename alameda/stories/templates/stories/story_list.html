@@ -42,8 +42,11 @@
     <td>{{ story.owner.username }}</td>
     <td>{{ story.assignee.username }}</td>
     <td>
-      <a class="button is-link is-small" href="{% url 'stories:story-edit' story.id %}">
-        edit
+      <a class="button is-small is-link is-outlined" href="{% url 'stories:story-edit' story.id %}" title="Edit">
+				<span class="icon is-small">
+					<i class="fas fa-edit"></i>
+				</span>
+				<small>edit</small>
       </a>
     </td>
   </tr>

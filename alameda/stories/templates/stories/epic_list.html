@@ -38,8 +38,11 @@
     </td>
     <td>{{ epic.owner.username }}</td>
     <td>
-      <a class="button is-small is-link" href="{% url 'stories:epic-edit' epic.id %}">
-        edit
+      <a class="button is-small is-link is-outlined" href="{% url 'stories:epic-edit' epic.id %}" title="Edit">
+				<span class="icon is-small">
+					<i class="fas fa-edit"></i>
+				</span>
+				<small>edit</small>
       </a>
     </td>
   </tr>

@@ -37,8 +37,11 @@
     </td>
     <td>{{ sprint.updated_at|default:'' }}</td>
     <td>
-      <a href="{% url 'sprints:sprint-edit' sprint.id %}" class="button is-small is-link">
-        edit
+      <a class="button is-small is-link is-outlined" href="{% url 'sprints:sprint-edit' sprint.id %}" title="Edit">
+				<span class="icon is-small">
+					<i class="fas fa-edit"></i>
+				</span>
+				<small>edit</small>
       </a>
     </td>
   </tr>

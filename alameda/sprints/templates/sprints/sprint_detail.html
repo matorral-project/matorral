@@ -22,7 +22,10 @@
 		<div class="level-right">
 			<div class="level-item">
 				<a href="{% url 'sprints:sprint-edit' sprint.id %}" class="button is-success">
-					Edit
+					<span class="icon is-small">
+						<i class="fas fa-edit"></i>
+					</span>
+					<small>Edit</small>
 				</a>
 			</div>
 		</div>
@@ -73,7 +76,10 @@
 				<div class="field has-addons">
 					<p class="control">
             <a class="button is-success" href="{% url 'stories:story-add' %}?sprint={{ sprint.id }}">
-              Create
+              <span class="icon is-small">
+                <i class="fas fa-plus"></i>
+              </span>
+              <small>Create</small>
 						</a>
 					</p>
 				</div>
@@ -120,8 +126,11 @@
         <td>{{ story.owner.username }}</td>
         <td>{{ story.assignee.username }}</td>
         <td>
-          <a class="button is-link is-small" href="{% url 'stories:story-edit' story.id %}?sprint={{ sprint.id }}">
-            edit
+          <a class="button is-link is-small is-outlined" href="{% url 'stories:story-edit' story.id %}?sprint={{ sprint.id }}" title="Edit">
+						<span class="icon is-small">
+							<i class="fas fa-edit"></i>
+						</span>
+						<small>edit</small>
           </a>
         </td>
       </tr>
