@@ -5,6 +5,7 @@
 
 {% block table_head_content %}
   <tr>
+    <th></th>
     <th><abbr title="Identification Number">ID</abbr></th>
     <th>Title</th>
     <th>Epic</th>
@@ -20,6 +21,9 @@
 {% block table_body_content %}
   {% for story in object_list %}
   <tr {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
+    <td>
+      <input type="checkbox" name="story-{{ story.id }}" />
+    </td>
     <td>#{{ story.id }}</td>
     <td>
       <a href="{% url 'stories:story-edit' story.id %}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>

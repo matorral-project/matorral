@@ -28,6 +28,33 @@
 					<small>Edit</small>
 				</a>
 			</div>
+
+      <div class="level-item">
+				<div class="field has-addons">
+					<p class="control">
+            <a class="button is-success is-outlined" href="{% block object_add_url2 %}{% endblock %}">
+              <span class="icon is-small">
+                <i class="fas fa-copy"></i>
+              </span>
+              <small>Duplicate</small>
+						</a>
+					</p>
+				</div>
+			</div>
+
+			<div class="level-item">
+				<div class="field has-addons">
+					<p class="control">
+            <a class="button is-danger is-outlined" href="{% block object_add_url1 %}{% endblock %}">
+              <span class="icon is-small">
+                <i class="fas fa-minus"></i>
+              </span>
+              <small>Remove</small>
+						</a>
+					</p>
+				</div>
+			</div>
+
 		</div>
 	</nav>
 
@@ -63,11 +90,27 @@
 	<nav class="level">
 		<!-- Left side -->
 		<div class="level-left">
-			<nav class="breadcrumb is-large" aria-label="breadcrumbs">
+			<nav class="breadcrumb is-large" aria-label="breadcrumbs" style="margin: 0;">
 				<ul>
 					<li class="is-active"><a href="#" aria-current="page">Stories</a></li>
 				</ul>
 			</nav>
+
+			<div class="level-item">
+				<label>Group by</label>&nbsp;
+				<div class="field">
+					<div class="control">
+						<div class="select is-link">
+							<select>
+								<option>Owner</option>
+								<option>Assignee</option>
+								<option>State</option>
+								<option>Epic</option>
+							</select>
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
 
 		<!-- Right side -->
@@ -84,12 +127,40 @@
 					</p>
 				</div>
 			</div>
+
+      <div class="level-item">
+				<div class="field has-addons">
+					<p class="control">
+            <a class="button is-success is-outlined" href="{% block object_add_url3 %}{% endblock %}">
+              <span class="icon is-small">
+                <i class="fas fa-search"></i>
+              </span>
+              <small>Add Existing</small>
+						</a>
+					</p>
+				</div>
+			</div>
+
+			<div class="level-item">
+				<div class="field has-addons">
+					<p class="control">
+            <a class="button is-danger is-outlined" href="{% block object_add_url4 %}{% endblock %}">
+              <span class="icon is-small">
+                <i class="fas fa-minus"></i>
+              </span>
+              <small>Remove from Sprint</small>
+						</a>
+					</p>
+				</div>
+			</div>
+
 		</div>
 	</nav>
 
 	<table class="table is-bordered is-striped is-hoverable is-fullwidth">
 		<thead>
       <tr>
+        <th></th>
         <th><abbr title="Identification Number">ID</abbr></th>
         <th>Title</th>
         <th>Epic</th>
@@ -104,6 +175,9 @@
 		<tbody>
       {% for story in object_list %}
       <tr {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
+        <td>
+          <input type="checkbox" name="story-{{ story.id }}" />
+        </td>
         <td>#{{ story.id }}</td>
         <td>
           <a href="{% url 'stories:story-edit' story.id %}?sprint={{ sprint.id }}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
