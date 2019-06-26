@@ -160,7 +160,9 @@
 	<table class="table is-bordered is-striped is-hoverable is-fullwidth">
 		<thead>
       <tr>
-        <th></th>
+        <th>
+            <input type="checkbox" name="story-all" class="is-checkradio has-background-color is-info" checked=checked />
+        </th>
         <th><abbr title="Identification Number">ID</abbr></th>
         <th>Title</th>
         <th>Epic</th>
@@ -176,7 +178,9 @@
       {% for story in object_list %}
       <tr {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
         <td>
-          <input type="checkbox" name="story-{{ story.id }}" />
+          <div class="field">
+            <input type="checkbox" name="story-{{ story.id }}" class="is-checkradio is-info" />
+          </div>
         </td>
         <td>#{{ story.id }}</td>
         <td>
