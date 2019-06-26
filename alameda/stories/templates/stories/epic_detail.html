@@ -52,14 +52,14 @@
 					<div class="control">
 						<div class="tags has-addons">
 							<span class="tag">Priority</span>
-							<span class="tag is-success">{{ epic.priority }}</span>
+							<span class="tag is-link">{{ epic.priority }}</span>
 						</div>
 					</div>
 					{% for tag in epic.tags.all %}
 					<div class="control">
 						<div class="tags has-addons">
 							<span class="tag is-dark">#</span>
-							<span class="tag is-info">{{ tag.name }}</span>
+							<span class="tag is-light">{{ tag.name }}</span>
 						</div>
 					</div>
 					{% endfor %}
@@ -123,7 +123,7 @@
             <strong>{{ story.title }}</strong><br/>
           </a>
           {% for tag in story.tags.all %}
-          <span class="tag is-info">{{ tag.name }}</span>
+          <span class="tag is-light">{{ tag.name }}</span>
           {% endfor %}
         </td>
         <td>{{ story.state }}</td>
