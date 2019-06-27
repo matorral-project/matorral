@@ -4,6 +4,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <title>{{ current_site.name }} - Simple Project Management System</title>
     <link rel="preload stylesheet" href="{% static 'css/bulma-0.7.4.min.css' %}">
     <link rel="preload stylesheet" href="{% static 'css/bulma-calendar.min.css' %}">
@@ -145,6 +146,10 @@
 			</div>
 		</footer>
   </body>
+
+  <script src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+  <script src="{{ STATIC_URL }}js/bulma-calendar.min.js"></script>
+  <script src="{{ STATIC_URL }}js/bulma-tagsinput.min.js"></script>
   <script>
     function ready(fn) {
       if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading"){
