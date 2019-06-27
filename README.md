@@ -43,4 +43,4 @@ PRs accepted.
 
 ## License
 
-MPL
+To be defined!
