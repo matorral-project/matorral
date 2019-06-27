@@ -6,28 +6,35 @@
 
 A project managent system / Taiga.io clone with a simpler UX built @ Málaga
 
-## Usage:
+## Installation
 
-In your local environment just run:
+1. Create a python 3.7.x virtual environment
+2. Activate it
+3. Install local requirements: `pip install -r requirements/local.txt`
+4. Configure a rabbitmq server with the following credentials / setup: user=guest password=guest host=localhost port=5672 virtual host=/alameda.
+5. Run: `honcho -f Procfile.local start`
+7. Open your browser at `http://localhost:8000`.
 
-    honcho start
+## Deploying to heroku:
 
-## Running tests
+1. Install the heroku client: https://devcenter.heroku.com/articles/heroku-cli
+2. Login using your credentials
+3. Add the git remote: `git remote add heroku https://git.heroku.com/alameda-tool.git`
+4. Profit!
 
-    tox
-    
-### Running Pep8 checkups
-
-    tox -e pep8
-
-## Deploying:
+Every time you want to deploy a new branch just do:
 
     git push heroku <branch-name>:master
 
+To deploy master just do:
+
+    git push heroku master
+
 ## Links
 
- * [API](http://alameda-tool.herokuapp.com/api/v1/)
- * [Admin](http://alameda-tool.herokuapp.com/)
+ * [Django-based web interface](https://alameda.dev/)
+ * [API](https://alameda.dev/api/v1/)
+ * [Admin](https://alameda.dev/admin/)
 
 
 ## Contribute
