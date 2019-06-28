@@ -21,7 +21,7 @@
 		<!-- Right side -->
 		<div class="level-right">
 			<div class="level-item">
-				<a href="{% url 'stories:epic-edit' epic.id %}" class="button is-success">
+        <a href="{% url 'stories:epic-edit' epic.id %}?next={{ encoded_url }}" class="button is-success">
           <span class="icon is-small">
             <i class="fas fa-edit"></i>
           </span>
@@ -133,7 +133,7 @@
 			<div class="level-item">
 				<div class="field has-addons">
 					<p class="control">
-            <a class="button is-success" href="{% url 'stories:story-add' %}?epic={{ epic.id }}">
+            <a class="button is-success" href="{% url 'stories:story-add' %}?next={{ encoded_url }}&amp;epic={{ epic.id }}">
               <span class="icon is-small">
                 <i class="fas fa-plus"></i>
               </span>
@@ -146,7 +146,7 @@
       <div class="level-item">
 				<div class="field has-addons">
 					<p class="control">
-            <a class="button is-success is-outlined" href="{% block object_add_url3 %}{% endblock %}">
+            <a class="button is-success is-outlined" href="{% block object_add_url3 %}{% endblock %}?next={{ encoded_url }}&amp;epic={{ epic.id }}">
               <span class="icon is-small">
                 <i class="fas fa-search"></i>
               </span>
@@ -194,7 +194,7 @@
         </td>
         <td>#{{ story.id }}</td>
         <td>
-          <a href="{% url 'stories:story-edit' story.id %}?epic={{ epic.id }}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
+          <a href="{% url 'stories:story-edit' story.id %}?next={{ encoded_url }}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
             <strong>{{ story.title }}</strong><br/>
           </a>
           {% for tag in story.tags.all %}
@@ -207,7 +207,7 @@
         <td>{{ story.owner.username }}</td>
         <td>{{ story.assignee.username }}</td>
         <td>
-          <a class="button is-small is-link is-outlined" href="{% url 'stories:story-edit' story.id %}?epic={{ epic.id }}" title="Edit">
+          <a class="button is-small is-link is-outlined" href="{% url 'stories:story-edit' story.id %}?next={{ encoded_url }}" title="Edit">
             <span class="icon is-small">
               <i class="fas fa-edit"></i>
             </span>

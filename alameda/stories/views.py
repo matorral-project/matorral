@@ -6,6 +6,7 @@ from django.views.generic.edit import CreateView, UpdateView
 
 from rest_framework import viewsets
 
+from ..utils import get_clean_next_url
 from .models import Epic, Story, Task
 from .serializers import EpicSerializer, StorySerializer, TaskSerializer
 from alameda.sprints.views import BaseListView, BaseView
@@ -46,20 +47,9 @@ class StoryBaseView(BaseView):
         'state', 'tags',
     ]
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        context['cancel_url'] = reverse_lazy('stories:story-list')
-
-        epic_id = self.request.GET.get('epic')
-        if epic_id is not None:
-            context['cancel_url'] = reverse_lazy('stories:epic-detail', args=[epic_id])
-
-        sprint_id = self.request.GET.get('sprint')
-        if sprint_id is not None:
-            context['cancel_url'] = reverse_lazy('sprints:sprint-detail', args=[sprint_id])
-
-        return context
+    @property
+    def success_url(self):
+        return get_clean_next_url(self.request, reverse_lazy('stories:story-list'))
 
 
 @method_decorator(login_required, name='dispatch')
@@ -81,28 +71,9 @@ class StoryCreateView(StoryBaseView, CreateView):
 
         return initial_dict
 
-    @property
-    def success_url(self):
-        epic_id = self.request.GET.get('epic')
-        if epic_id is not None:
-            return reverse_lazy('stories:epic-detail', args=[epic_id])
-
-        sprint_id = self.request.GET.get('sprint')
-
-        if sprint_id is not None:
-            return reverse_lazy('sprints:sprint-detail', args=[sprint_id])
-
-        epic_id = self.request.GET.get('epic')
-        if epic_id is not None:
-            return reverse_lazy('stories:epic-detail', args=[epic_id])
-
-        return reverse_lazy('stories:story-list')
-
 
 @method_decorator(login_required, name='dispatch')
 class StoryUpdateView(StoryBaseView, UpdateView):
-
-    success_url = reverse_lazy('stories:story-list')
 
     def _get_success_message(self):
         return 'Story successfully updated!'
@@ -115,7 +86,10 @@ class EpicBaseView(BaseView):
         'owner', 'priority',
         'state', 'tags',
     ]
-    success_url = reverse_lazy('stories:epic-list')
+
+    @property
+    def success_url(self):
+        return get_clean_next_url(self.request, reverse_lazy('stories:epic-list'))
 
 
 @method_decorator(login_required, name='dispatch')

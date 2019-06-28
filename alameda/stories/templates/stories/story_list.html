@@ -26,7 +26,7 @@
     </td>
     <td>#{{ story.id }}</td>
     <td>
-      <a href="{% url 'stories:story-edit' story.id %}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
+      <a href="{% url 'stories:story-edit' story.id %}?next={{ encoded_url }}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
         <strong>{{ story.title }}</strong><br/>
       </a>
       {% for tag in story.tags.all %}
@@ -46,7 +46,7 @@
     <td>{{ story.owner.username }}</td>
     <td>{{ story.assignee.username }}</td>
     <td>
-      <a class="button is-small is-link is-outlined" href="{% url 'stories:story-edit' story.id %}" title="Edit">
+      <a class="button is-small is-link is-outlined" href="{% url 'stories:story-edit' story.id %}?next={{ encoded_url }}" title="Edit">
 				<span class="icon is-small">
 					<i class="fas fa-edit"></i>
 				</span>

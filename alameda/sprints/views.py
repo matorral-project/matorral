@@ -8,6 +8,7 @@ from django.views.generic.edit import CreateView, UpdateView
 
 from rest_framework import viewsets
 
+from ..utils import get_clean_next_url
 from .models import Sprint
 from .serializers import SprintSerializer
 
@@ -102,7 +103,10 @@ class SprintBaseView(BaseView):
     fields = [
         'title', 'description', 'starts_at', 'ends_at'
     ]
-    success_url = reverse_lazy('sprints:sprint-list')
+
+    @property
+    def success_url(self):
+        return get_clean_next_url(self.request, reverse_lazy('sprints:sprint-list'))
 
 
 @method_decorator(login_required, name='dispatch')
