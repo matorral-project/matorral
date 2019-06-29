@@ -63,38 +63,24 @@
 
         <div class="navbar-end">
           <div class="level-right">
-            <form href="{% block object_list_url %}{% endblock %}" method="get">
-              <div class="level-item">
-                <div class="field has-addons">
-                  <p class="control">
-                    <input class="input" name="q" type="text" placeholder="Find an {{ singular_title }}">
-                  </p>
-                  <p class="control">
-                    <button class="button" type="submit">
-                      Search
-                    </button>
-                  </p>
-                </div>
-              </div>
-            </form>
-          </div>
-          <div class="navbar-item">
-            <div class="buttons">
-							<div class="navbar-item has-dropdown is-hoverable">
-								<a class="navbar-link" href="#">
-									{{ user.username }}
-								</a>
+            <div class="navbar-item">
+              <div class="buttons">
+                <div class="navbar-item has-dropdown is-hoverable">
+                  <a class="navbar-link" href="#">
+                    {{ user.username }}
+                  </a>
 
-								<div class="navbar-dropdown">
-                  {% if user.is_staff %}
-                  <a class="navbar-item" href="{% url 'admin:index' %}">
-										Admin
-									</a>
-                  {% endif %}
-									<a href="{% url 'logout' %}" class="navbar-item">
-										Logout
-									</a>
-								</div>
+                  <div class="navbar-dropdown">
+                    {% if user.is_staff %}
+                    <a class="navbar-item" href="{% url 'admin:index' %}">
+                      Admin
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'logout' %}" class="navbar-item">
+                      Logout
+                    </a>
+                  </div>
+              </div>
             </div>
           </div>
         </div>

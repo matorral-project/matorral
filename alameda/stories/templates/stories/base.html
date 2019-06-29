@@ -1,162 +1,104 @@
 {% extends "base.html" %}
 
 {% block content %}
-	<nav class="level">
-		<!-- Left side -->
-		<div class="level-left">
-			<nav class="breadcrumb is-large" aria-label="breadcrumbs" style="margin: 0; padding: 0;">
-				<ul>
-					<li class="is-size-3 is-active"><a href="#" aria-current="page">{{ title }}</a></li>
-				</ul>
-			</nav>
+  <nav class="level">
+    {% include "listview-left.html" %}
 
-			<div class="level-item">
-				<label>Filter by Owner</label>&nbsp;
-				<div class="field">
-					<div class="control">
-						<div class="select is-link">
-							<select>
-								<option>All</option>
-								<option>matagus</option>
-								<option>jeronimoalbi</option>
-								<option>demo</option>
-							</select>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<div class="level-item">
-				<label>State</label>&nbsp;
-				<div class="field">
-					<div class="control">
-						<div class="select is-link">
-							<select>
-								<option>All</option>
-								<option>In Progress</option>
-								<option>To Do</option>
-								<option>Done</option>
-							</select>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- Right side -->
-		<div class="level-right">
-			<div class="level-item">
-				<label>Set</label>&nbsp;
-				<div class="field">
-					<div class="control">
-						<div class="select is-success">
-							<select>
-								<option>Owner to</option>
-								<option>None</option>
-								<option>matagus</option>
-								<option>jeronimoalbi</option>
-								<option>demo</option>
-							</select>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<div class="level-item">
-				<label>Set</label>&nbsp;
-				<div class="field">
-					<div class="control">
-						<div class="select is-success">
-							<select>
-								<option>State to</option>
-								<option>None</option>
-								<option>In Progress</option>
-								<option>To Do</option>
-								<option>Done</option>
-							</select>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<div class="level-item">
-				&nbsp;
-			</div>
+    <!-- Right side -->
+    <div class="level-right">
+      <div class="level-item">
+        <label>Set</label>&nbsp;
+        <div class="field">
+          <div class="control">
+            <div class="select is-success">
+              <select onchange="document.querySelector('#object-list').submit();" form="object-list">
+                <option>Owner to</option>
+                <option>None</option>
+                <option>matagus</option>
+                <option>jeronimoalbi</option>
+                <option>demo</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div class="level-item">
-				<div class="field has-addons">
-					<p class="control">
-            <a class="button is-success is-outlined" href="{% block object_add_url2 %}{% endblock %}">
+        <label>Set</label>&nbsp;
+        <div class="field">
+          <div class="control">
+            <div class="select is-success">
+              <select onchange="document.querySelector('#object-list').submit();" form="object-list">
+                <option>State to</option>
+                <option>None</option>
+                <option>In Progress</option>
+                <option>To Do</option>
+                <option>Done</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="level-item">
+        &nbsp;
+      </div>
+
+      <div class="level-item">
+        <div class="field has-addons">
+          <p class="control">
+            <button class="button is-success is-outlined" form="object-list" type="submit">
               <span class="icon is-small">
                 <i class="fas fa-copy"></i>
               </span>
               <small>Duplicate</small>
-						</a>
-					</p>
-				</div>
-			</div>
+            </button>
+          </p>
+        </div>
+      </div>
 
-			<div class="level-item">
-				<div class="field has-addons">
-					<p class="control">
-            <a class="button is-danger is-outlined" href="{% block object_add_url1 %}{% endblock %}">
+      <div class="level-item">
+        <div class="field has-addons">
+          <p class="control">
+            <button class="button is-danger is-outlined" form="object-list" type="submit">
               <span class="icon is-small">
                 <i class="fas fa-minus"></i>
               </span>
               <small>Remove</small>
-						</a>
-					</p>
-				</div>
-			</div>
+            </button>
+          </p>
+        </div>
+      </div>
 
-			<div class="level-item">
-				<div class="field has-addons">
-					<p class="control">
+      <div class="level-item">
+        <div class="field has-addons">
+          <p class="control">
             <a class="button is-success" href="{% block object_add_url %}{% endblock %}?next={{ encoded_url }}">
               <span class="icon is-small">
                 <i class="fas fa-plus"></i>
               </span>
               <small>Create</small>
-						</a>
-					</p>
-				</div>
-			</div>
-		</div>
-	</nav>
-
-	<table class="table is-bordered is-striped is-hoverable is-fullwidth">
-		<thead>
-      {% block table_head_content %}
-      {% endblock %}
-		</thead>
-		<tbody>
-      {% block table_body_content %}
-      {% endblock %}
-		</tbody>
-	</table>
-
-  <nav class="pagination" role="navigation" aria-label="pagination">
-    {% if page_obj.has_previous %}
-      <a href="?page={{ page_obj.previous_page_number }}" class="pagination-previous" title="This is the first page">&laquo;</a>
-    {% else %}
-      <a class="pagination-previous" title="This is the first page" disabled>&laquo;</a>
-    {% endif %}
-    {% if show_all_url %}
-      <a class="pagination-link" href="{{ show_all_url }}">Show All</a>
-    {% endif %}
-    {% if page_obj.has_next %}
-      <a href="?page={{ page_obj.next_page_number }}" class="pagination-next">&raquo;</a>
-    {% else %}
-      <a class="pagination-next" disabled>&raquo;</a>
-    {% endif %}
-    <ul class="pagination-list">
-    {% for i in paginator.page_range %}
-      {% if page_obj.number == i %}
-        <li><a href="?page={{ i }}" class="pagination-link is-current" aria-label="Page {{ i }}" aria-current="page">{{ i }}</a></li>
-      {% else %}
-        <li><a href="?page={{ i }}" class="pagination-link" aria-label="Goto page {{ i }}">{{ i }}</a></li>
-      {% endif %}
-    {% endfor %}
-    </ul>
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
   </nav>
+
+  <form method="POST" name="object-list" id="object-list">
+    {% csrf_token %}
+    <input type="hidden" value="{{ page }}" name="page" />
+    <table class="table is-bordered is-striped is-hoverable is-fullwidth">
+      <thead>
+        {% block table_head_content %}
+        {% endblock %}
+      </thead>
+      <tbody>
+        {% block table_body_content %}
+        {% endblock %}
+      </tbody>
+    </table>
+  </form>
+  <br/>
+  {% include "paginator.html" %}
 {% endblock %}

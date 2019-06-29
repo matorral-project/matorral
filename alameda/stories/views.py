@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.generic.detail import DetailView
@@ -122,6 +123,9 @@ class EpicList(BaseListView):
     select_related = ['owner', 'state']
     prefetch_related = ['tags']
 
+    def post(self, *args, **kwargs):
+        return HttpResponseRedirect(self.request.get_full_path())
+
 
 @method_decorator(login_required, name='dispatch')
 class StoryList(BaseListView):
@@ -137,3 +141,6 @@ class StoryList(BaseListView):
 
     select_related = ['owner', 'assignee', 'state', 'sprint']
     prefetch_related = ['tags']
+
+    def post(self, *args, **kwargs):
+        return HttpResponseRedirect(self.request.get_full_path())

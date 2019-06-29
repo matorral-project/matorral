@@ -4,58 +4,62 @@
 
 {% block content %}
 	<nav class="level">
-		<!-- Left side -->
-		<div class="level-left">
-			<nav class="breadcrumb is-large" aria-label="breadcrumbs">
-				<ul>
-          <li><a href="{% url 'sprints:sprint-list' %}">Sprints</a></li>
-          <li class="is-active">
-            <a href="#" aria-current="page">
-              {{ object.title }}
-            </a>
-          </li>
-				</ul>
-			</nav>
-		</div>
+    <form method="GET">
+      <!-- Left side -->
+      <div class="level-left">
+        <nav class="breadcrumb is-large" aria-label="breadcrumbs">
+          <ul>
+            <li><a href="{% url 'sprints:sprint-list' %}">Sprints</a></li>
+            <li class="is-active">
+              <a href="#" aria-current="page">
+                {{ object.title }}
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </form>
 
-		<!-- Right side -->
-		<div class="level-right">
-			<div class="level-item">
-        <a href="{% url 'sprints:sprint-edit' sprint.id %}?next={{ encoded_url }}" class="button is-success">
-					<span class="icon is-small">
-						<i class="fas fa-edit"></i>
-					</span>
-					<small>Edit</small>
-				</a>
-			</div>
+    <form method="POST">
+      {% csrf_token %}
+      <!-- Right side -->
+      <div class="level-right">
+        <div class="level-item">
+          <a href="{% url 'sprints:sprint-edit' sprint.id %}?next={{ encoded_url }}" class="button is-success">
+            <span class="icon is-small">
+              <i class="fas fa-edit"></i>
+            </span>
+            <small>Edit</small>
+          </a>
+        </div>
 
-      <div class="level-item">
-				<div class="field has-addons">
-					<p class="control">
-            <a class="button is-success is-outlined" href="{% block object_add_url2 %}{% endblock %}">
-              <span class="icon is-small">
-                <i class="fas fa-copy"></i>
-              </span>
-              <small>Duplicate</small>
-						</a>
-					</p>
-				</div>
-			</div>
+        <div class="level-item">
+          <div class="field has-addons">
+            <p class="control">
+              <a class="button is-success is-outlined" href="{% block object_add_url2 %}{% endblock %}">
+                <span class="icon is-small">
+                  <i class="fas fa-copy"></i>
+                </span>
+                <small>Duplicate</small>
+              </a>
+            </p>
+          </div>
+        </div>
 
-			<div class="level-item">
-				<div class="field has-addons">
-					<p class="control">
-            <a class="button is-danger is-outlined" href="{% block object_add_url1 %}{% endblock %}">
-              <span class="icon is-small">
-                <i class="fas fa-minus"></i>
-              </span>
-              <small>Remove</small>
-						</a>
-					</p>
-				</div>
-			</div>
-
-		</div>
+        <div class="level-item">
+          <div class="field has-addons">
+            <p class="control">
+              <a class="button is-danger is-outlined" href="{% block object_add_url1 %}{% endblock %}">
+                <span class="icon is-small">
+                  <i class="fas fa-minus"></i>
+                </span>
+                <small>Remove</small>
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </form>
 	</nav>
 
 	<div class="card">
@@ -88,30 +92,32 @@
 
   <br/>
 	<nav class="level">
-		<!-- Left side -->
-		<div class="level-left">
-			<nav class="breadcrumb is-large" aria-label="breadcrumbs" style="margin: 0;">
-				<ul>
-					<li class="is-active"><a href="#" aria-current="page">Stories</a></li>
-				</ul>
-			</nav>
+    <form method="GET">
+      <!-- Left side -->
+      <div class="level-left">
+        <nav class="breadcrumb is-large" aria-label="breadcrumbs" style="margin: 0;">
+          <ul>
+            <li class="is-active"><a href="#" aria-current="page">Stories</a></li>
+          </ul>
+        </nav>
 
-			<div class="level-item">
-				<label>Group by</label>&nbsp;
-				<div class="field">
-					<div class="control">
-						<div class="select is-link">
-							<select>
-								<option>Owner</option>
-								<option>Assignee</option>
-								<option>State</option>
-								<option>Epic</option>
-							</select>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
+        <div class="level-item">
+          <label>Group by</label>&nbsp;
+          <div class="field">
+            <div class="control">
+              <div class="select is-link">
+                <select onchange="this.form.submit();">
+                  <option value="owner">Owner</option>
+                  <option value="assignee">Assignee</option>
+                  <option value="state">State</option>
+                  <option value="epic">Epic</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
 
 		<!-- Right side -->
 		<div class="level-right">

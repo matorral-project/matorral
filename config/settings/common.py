@@ -186,6 +186,7 @@ TEMPLATES = [
                 # Your stuff: custom template context processors go here
                 'alameda.context_processors.site',
                 'alameda.context_processors.navigation',
+                'alameda.context_processors.search',
             ],
         },
     },

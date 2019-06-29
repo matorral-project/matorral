@@ -1,11 +1,11 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView
-
 from rest_framework import viewsets
 
 from ..utils import get_clean_next_url
@@ -89,6 +89,9 @@ class SprintList(BaseListView):
     filter_fields = {}
     select_related = None
     prefetch_related = None
+
+    def post(self, *args, **kwargs):
+        return HttpResponseRedirect(self.request.get_full_path())
 
 
 class BaseView(object):
