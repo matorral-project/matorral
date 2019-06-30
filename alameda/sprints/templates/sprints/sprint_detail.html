@@ -112,6 +112,20 @@
 
 		<!-- Right side -->
 		<div class="level-right">
+
+			<div class="level-item bulk-action">
+				<div class="field has-addons">
+					<p class="control">
+            <button class="button is-danger is-outlined" type="submit" name="sprint-reset" value="yes" form="object-list">
+              <span class="icon is-small">
+                <i class="fas fa-minus"></i>
+              </span>
+              <small>Remove from Sprint</small>
+						</button>
+					</p>
+				</div>
+			</div>
+
 			<div class="level-item">
 				<div class="field has-addons">
 					<p class="control">
@@ -134,19 +148,6 @@
               </span>
               <small>Add Existing</small>
 						</a>
-					</p>
-				</div>
-			</div>
-
-			<div class="level-item">
-				<div class="field has-addons">
-					<p class="control">
-            <button class="button is-danger is-outlined" type="submit" name="sprint-reset" value="yes" form="object-list">
-              <span class="icon is-small">
-                <i class="fas fa-minus"></i>
-              </span>
-              <small>Remove from Sprint</small>
-						</button>
 					</p>
 				</div>
 			</div>
@@ -215,30 +216,6 @@
       </tbody>
     </table>
   </form>
-
-  <nav class="pagination" role="navigation" aria-label="pagination">
-    {% if page_obj.has_previous %}
-      <a href="?page={{ page_obj.previous_page_number }}" class="pagination-previous" title="This is the first page">&laquo;</a>
-    {% else %}
-      <a class="pagination-previous" title="This is the first page" disabled>&laquo;</a>
-    {% endif %}
-    {% if show_all_url %}
-      <a class="pagination-link" href="{{ show_all_url }}">Show All</a>
-    {% endif %}
-    {% if page_obj.has_next %}
-      <a href="?page={{ page_obj.next_page_number }}" class="pagination-next">&raquo;</a>
-    {% else %}
-      <a class="pagination-next" disabled>&raquo;</a>
-    {% endif %}
-    <ul class="pagination-list">
-    {% for i in paginator.page_range %}
-      {% if page_obj.number == i %}
-        <li><a href="?page={{ i }}" class="pagination-link is-current" aria-label="Page {{ i }}" aria-current="page">{{ i }}</a></li>
-      {% else %}
-        <li><a href="?page={{ i }}" class="pagination-link" aria-label="Goto page {{ i }}">{{ i }}</a></li>
-      {% endif %}
-    {% endfor %}
-    </ul>
-  </nav>
+  {% include "paginator.html" %}
 
 {% endblock %}
