@@ -22,9 +22,8 @@ class EpicFilterForm(ModelForm):
 class StoryFilterForm(ModelForm):
     class Meta:
         model = Story
-        fields = ('state', 'owner', 'assignee')
+        fields = ('state', 'assignee')
         widgets = {
             'state': custom_select,
-            'owner': custom_select,
             'assignee': custom_select,
         }

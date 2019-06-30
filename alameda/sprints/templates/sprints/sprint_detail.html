@@ -97,7 +97,8 @@
             <div class="control">
               <div class="select is-link">
                 <select onchange="this.form.submit();">
-                  <option value="owner">Owner</option>
+                  <option value="">None</option>
+                  <option value="requester">Requester</option>
                   <option value="assignee">Assignee</option>
                   <option value="state">State</option>
                   <option value="epic">Epic</option>
@@ -167,7 +168,7 @@
           <th>State</th>
           <th>Priority</th>
           <th><abbr title="Points">Pts</abbr></th>
-          <th>Owner</th>
+          <th>Requester</th>
           <th>Assignee</th>
           <th>Actions</th>
         </tr>
@@ -199,7 +200,7 @@
           <td>{{ story.state }}</td>
           <td>{{ story.priority }}</td>
           <td>{{ story.points }}</td>
-          <td>{{ story.owner.username }}</td>
+          <td>{{ story.requester.username }}</td>
           <td>{{ story.assignee.username }}</td>
           <td>
             <a class="button is-link is-small is-outlined" href="{% url 'stories:story-edit' story.id %}?next={{ encoded_url }}" title="Edit">

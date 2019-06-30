@@ -12,8 +12,8 @@ from .forms import EpicFilterForm, StoryFilterForm
 from .models import Epic, Story, Task
 from .serializers import EpicSerializer, StorySerializer, TaskSerializer
 from .tasks import (duplicate_stories, remove_stories, story_set_assignee,
-                    story_set_owner, story_set_state, duplicate_epics,
-                    remove_epics, epic_set_owner, epic_set_state)
+                    story_set_state, duplicate_epics, remove_epics,
+                    epic_set_owner, epic_set_state)
 from alameda.sprints.views import BaseListView, BaseView
 
 
@@ -23,7 +23,7 @@ class EpicDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['object_list'] = self.get_object().story_set.select_related('owner', 'state')
+        context['object_list'] = self.get_object().story_set.select_related('requester', 'assignee', 'sprint', 'state')
         return context
 
     def post(self, *args, **kwargs):
@@ -42,7 +42,7 @@ class EpicViewSet(viewsets.ModelViewSet):
 
 class StoryViewSet(viewsets.ModelViewSet):
     serializer_class = StorySerializer
-    queryset = Story.objects.select_related('epic', 'sprint', 'state', 'state', 'owner', 'assignee')
+    queryset = Story.objects.select_related('epic', 'sprint', 'state', 'state', 'requester', 'assignee')
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -55,7 +55,7 @@ class StoryBaseView(BaseView):
     fields = [
         'title', 'description',
         'epic', 'sprint',
-        'owner', 'assignee',
+        'requester', 'assignee',
         'priority', 'points',
         'state', 'tags',
     ]
@@ -72,7 +72,7 @@ class StoryCreateView(StoryBaseView, CreateView):
         return 'Story successfully created!'
 
     def get_initial(self):
-        initial_dict = dict(owner=self.request.user.id, state='pl')
+        initial_dict = dict(requester=self.request.user.id, state='pl')
 
         epic_id = self.request.GET.get('epic')
         if epic_id is not None:
@@ -166,14 +166,14 @@ class StoryList(BaseListView):
     model = Story
 
     filter_fields = dict(
-        owner='owner__username',
+        requester='requester__username',
         assignee='assignee__username',
         state='state__name__iexact',
         label='tags__name__iexact',
         sprint='sprint__title__iexact'
     )
 
-    select_related = ['owner', 'assignee', 'state', 'sprint']
+    select_related = ['requester', 'assignee', 'state', 'sprint']
     prefetch_related = ['tags']
 
     def get_context_data(self, **kwargs):
@@ -195,9 +195,6 @@ class StoryList(BaseListView):
 
             if params.get('state'):
                 story_set_state.delay(story_ids, params['state'])
-
-            if params.get('owner'):
-                story_set_owner.delay(story_ids, params['owner'])
 
             if params.get('assignee'):
                 story_set_assignee.delay(story_ids, params['assignee'])

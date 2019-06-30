@@ -36,14 +36,14 @@ class TaskItemSerializer(serializers.ModelSerializer):
 class StorySerializer(serializers.HyperlinkedModelSerializer):
     state = StoryStateSerializer()
     assignee = UserSerializer()
-    owner = UserSerializer()
+    requester = UserSerializer()
 
     tasks = TaskItemSerializer(many=True, source='task_set')
 
     class Meta:
         model = Story
         fields = ('title', 'description', 'epic', 'priority', 'points', 'state',
-                  'sprint', 'owner', 'assignee', 'tasks', 'created_at',
+                  'sprint', 'requester', 'assignee', 'tasks', 'created_at',
                   'updated_at', 'completed_at')
 
 
