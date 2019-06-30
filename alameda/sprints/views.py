@@ -1,3 +1,5 @@
+from itertools import groupby
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
@@ -9,6 +11,7 @@ from django.views.generic.edit import CreateView, UpdateView
 from rest_framework import viewsets
 
 from ..utils import get_clean_next_url
+from .forms import SprintGroupByForm
 from .models import Sprint
 from .serializers import SprintSerializer
 from .tasks import duplicate_sprints, remove_sprints, reset_sprint
@@ -18,9 +21,32 @@ class SprintDetailView(DetailView):
 
     model = Sprint
 
+    def get_children(self):
+        queryset = self.get_object().story_set.select_related('requester', 'assignee', 'epic', 'state')
+
+        config = dict(
+            epic=('epic__name', lambda story: story.epic and story.epic.title or 'No Epic'),
+            state=('state__slug', lambda story: story.state.name),
+            requester=('requester__username', lambda story: story.requester and story.requester.username or 'Unset'),
+            assignee=('assignee__username', lambda story: story.assignee and story.assignee.username or 'Unassigned'),
+        )
+
+        group_by = self.request.GET.get('group_by')
+
+        try:
+            order_by, fx = config[group_by]
+        except KeyError:
+            return [(None, queryset)]
+        else:
+            queryset = queryset.order_by(order_by)
+            foo = [(t[0], list(t[1])) for t in groupby(queryset, key=fx)]
+            return foo
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['object_list'] = self.get_object().story_set.all()
+        context['group_by_form'] = SprintGroupByForm(self.request.GET)
+        context['objects_by_group'] = self.get_children()
+        context['group_by'] = self.request.GET.get('group_by')
         return context
 
     def post(self, *args, **kwargs):

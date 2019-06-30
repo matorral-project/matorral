@@ -20,11 +20,6 @@ def remove_stories(story_ids):
 
 
 @app.task(ignore_result=True)
-def story_set_owner(story_ids, user_id):
-    Story.objects.filter(id__in=story_ids).update(owner=user_id)
-
-
-@app.task(ignore_result=True)
 def story_set_assignee(story_ids, user_id):
     Story.objects.filter(id__in=story_ids).update(assignee=user_id)
 
@@ -68,3 +63,8 @@ def epic_set_state(epic_ids, state_slug):
         return
 
     Epic.objects.filter(id__in=epic_ids).update(state=state)
+
+
+@app.task(ignore_result=True)
+def reset_epic(story_ids):
+    Story.objects.filter(id__in=story_ids).update(epic=None)
