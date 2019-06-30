@@ -11,6 +11,7 @@ from rest_framework import viewsets
 from ..utils import get_clean_next_url
 from .models import Sprint
 from .serializers import SprintSerializer
+from .tasks import duplicate_sprints, remove_sprints, reset_sprint
 
 
 class SprintDetailView(DetailView):
@@ -21,6 +22,19 @@ class SprintDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         context['object_list'] = self.get_object().story_set.all()
         return context
+
+    def post(self, *args, **kwargs):
+        params = self.request.POST.dict()
+
+        if params.get('remove') == 'yes':
+            remove_sprints.delay([self.get_object().id])
+            return HttpResponseRedirect(reverse_lazy('sprints:sprint-list'))
+
+        if params.get('sprint-reset') == 'yes':
+            story_ids = [t[6:] for t in params.keys() if 'story-' in t]
+            reset_sprint.delay(story_ids)
+
+        return HttpResponseRedirect(self.request.get_full_path())
 
 
 class SprintViewSet(viewsets.ModelViewSet):
@@ -91,6 +105,17 @@ class SprintList(BaseListView):
     prefetch_related = None
 
     def post(self, *args, **kwargs):
+        params = self.request.POST.dict()
+
+        sprint_ids = [t[7:] for t in params.keys() if 'sprint-' in t]
+
+        if len(sprint_ids) > 0:
+            if params.get('remove') == 'yes':
+                remove_sprints.delay(sprint_ids)
+
+            if params.get('duplicate') == 'yes':
+                duplicate_sprints.delay(sprint_ids)
+
         return HttpResponseRedirect(self.request.get_full_path())
 
 

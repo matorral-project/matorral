@@ -1,3 +1,5 @@
+import copy
+
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
@@ -52,3 +54,9 @@ class Sprint(ModelWithProgress):
 
     def is_started(self):
         return self.state == self.STATE_STARTED
+
+    def duplicate(self):
+        cloned = copy.copy(self)
+        cloned.pk = None
+        cloned.title = 'Copy of ' + self.title
+        cloned.save()

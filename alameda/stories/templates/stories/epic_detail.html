@@ -29,28 +29,18 @@
 				</a>
 			</div>
 
-      <div class="level-item">
-				<div class="field has-addons">
-					<p class="control">
-            <a class="button is-primary is-outlined" href="{% block object_add_url2 %}{% endblock %}">
-              <span class="icon is-small">
-                <i class="fas fa-copy"></i>
-              </span>
-              <small>Duplicate</small>
-						</a>
-					</p>
-				</div>
-			</div>
-
 			<div class="level-item">
 				<div class="field has-addons">
 					<p class="control">
-            <a class="button is-danger is-outlined" href="{% block object_add_url1 %}{% endblock %}">
-              <span class="icon is-small">
-                <i class="fas fa-minus"></i>
-              </span>
-              <small>Remove</small>
-						</a>
+            <form method="POST">
+              {% csrf_token %}
+              <button class="button is-danger is-outlined" type="submit" name="remove" value="yes">
+                <span class="icon is-small">
+                  <i class="fas fa-minus"></i>
+                </span>
+                <small>Remove</small>
+              </button>
+            </form>
 					</p>
 				</div>
 			</div>

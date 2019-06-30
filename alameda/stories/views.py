@@ -8,8 +8,12 @@ from django.views.generic.edit import CreateView, UpdateView
 from rest_framework import viewsets
 
 from ..utils import get_clean_next_url
+from .forms import EpicFilterForm, StoryFilterForm
 from .models import Epic, Story, Task
 from .serializers import EpicSerializer, StorySerializer, TaskSerializer
+from .tasks import (duplicate_stories, remove_stories, story_set_assignee,
+                    story_set_owner, story_set_state, duplicate_epics,
+                    remove_epics, epic_set_owner, epic_set_state)
 from alameda.sprints.views import BaseListView, BaseView
 
 
@@ -19,8 +23,16 @@ class EpicDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['object_list'] = self.get_object().story_set.all()
+        context['object_list'] = self.get_object().story_set.select_related('owner', 'state')
         return context
+
+    def post(self, *args, **kwargs):
+        params = self.request.POST.dict()
+
+        if params.get('remove') == 'yes':
+            remove_epics.delay([self.get_object().id])
+
+        return HttpResponseRedirect(reverse_lazy('stories:epic-list'))
 
 
 class EpicViewSet(viewsets.ModelViewSet):
@@ -123,7 +135,29 @@ class EpicList(BaseListView):
     select_related = ['owner', 'state']
     prefetch_related = ['tags']
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['filters_form'] = EpicFilterForm(self.request.POST)
+        return context
+
     def post(self, *args, **kwargs):
+        params = self.request.POST.dict()
+
+        epic_ids = [t[5:] for t in params.keys() if 'epic-' in t]
+
+        if len(epic_ids) > 0:
+            if params.get('remove') == 'yes':
+                remove_epics.delay(epic_ids)
+
+            if params.get('duplicate') == 'yes':
+                duplicate_epics.delay(epic_ids)
+
+            if params.get('state') != '--':
+                epic_set_state.delay(epic_ids, params['state'])
+
+            if params.get('owner') != '--':
+                epic_set_owner.delay(epic_ids, params['owner'])
+
         return HttpResponseRedirect(self.request.get_full_path())
 
 
@@ -142,5 +176,30 @@ class StoryList(BaseListView):
     select_related = ['owner', 'assignee', 'state', 'sprint']
     prefetch_related = ['tags']
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['filters_form'] = StoryFilterForm(self.request.POST)
+        return context
+
     def post(self, *args, **kwargs):
+        params = self.request.POST.dict()
+
+        story_ids = [t[6:] for t in params.keys() if 'story-' in t]
+
+        if len(story_ids) > 0:
+            if params.get('remove') == 'yes':
+                remove_stories.delay(story_ids)
+
+            if params.get('duplicate') == 'yes':
+                duplicate_stories.delay(story_ids)
+
+            if params.get('state'):
+                story_set_state.delay(story_ids, params['state'])
+
+            if params.get('owner'):
+                story_set_owner.delay(story_ids, params['owner'])
+
+            if params.get('assignee'):
+                story_set_assignee.delay(story_ids, params['assignee'])
+
         return HttpResponseRedirect(self.request.get_full_path())

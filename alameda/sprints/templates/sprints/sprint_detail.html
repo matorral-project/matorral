@@ -36,25 +36,15 @@
         <div class="level-item">
           <div class="field has-addons">
             <p class="control">
-              <a class="button is-primary is-outlined" href="{% block object_add_url2 %}{% endblock %}">
-                <span class="icon is-small">
-                  <i class="fas fa-copy"></i>
-                </span>
-                <small>Duplicate</small>
-              </a>
-            </p>
-          </div>
-        </div>
-
-        <div class="level-item">
-          <div class="field has-addons">
-            <p class="control">
-              <a class="button is-danger is-outlined" href="{% block object_add_url1 %}{% endblock %}">
-                <span class="icon is-small">
-                  <i class="fas fa-minus"></i>
-                </span>
-                <small>Remove</small>
-              </a>
+              <form method="POST">
+                {% csrf_token %}
+                <button class="button is-danger is-outlined" type="submit" name="remove" value="yes">
+                  <span class="icon is-small">
+                    <i class="fas fa-minus"></i>
+                  </span>
+                  <small>Remove</small>
+                </button>
+              </form>
             </p>
           </div>
         </div>
@@ -150,12 +140,12 @@
 			<div class="level-item">
 				<div class="field has-addons">
 					<p class="control">
-            <a class="button is-danger is-outlined" href="{% block object_add_url4 %}{% endblock %}">
+            <button class="button is-danger is-outlined" type="submit" name="sprint-reset" value="yes" form="object-list">
               <span class="icon is-small">
                 <i class="fas fa-minus"></i>
               </span>
               <small>Remove from Sprint</small>
-						</a>
+						</button>
 					</p>
 				</div>
 			</div>
@@ -163,64 +153,67 @@
 		</div>
 	</nav>
 
-	<table class="table is-bordered is-striped is-hoverable is-fullwidth">
-		<thead>
-      <tr>
-        <th>
-            <input type="checkbox" name="story-all" class="is-checkradio has-background-color is-info" checked=checked />
-        </th>
-        <th><abbr title="Identification Number">ID</abbr></th>
-        <th>Title</th>
-        <th>Epic</th>
-        <th>State</th>
-        <th>Priority</th>
-        <th><abbr title="Points">Pts</abbr></th>
-        <th>Owner</th>
-        <th>Assignee</th>
-        <th>Actions</th>
-      </tr>
-		</thead>
-		<tbody>
-      {% for story in object_list %}
-      <tr {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
-        <td>
-          <div class="field">
-            <input type="checkbox" name="story-{{ story.id }}" class="is-checkradio is-info" />
-          </div>
-        </td>
-        <td>#{{ story.id }}</td>
-        <td>
-          <a href="{% url 'stories:story-edit' story.id %}?next={{ encoded_url }}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
-            <strong>{{ story.title }}</strong><br/>
-          </a>
-          {% for tag in story.tags.all %}
-          <span class="tag is-light">{{ tag.name }}</span>
-          {% endfor %}
-        </td>
-        <td>
-          {% if story.epic %}
-          <a href="{% url 'stories:epic-detail' story.epic.id %}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
-            {{ story.epic.title }}
-          </a>
-          {% endif %}
-        </td>
-        <td>{{ story.state }}</td>
-        <td>{{ story.priority }}</td>
-        <td>{{ story.points }}</td>
-        <td>{{ story.owner.username }}</td>
-        <td>{{ story.assignee.username }}</td>
-        <td>
-          <a class="button is-link is-small is-outlined" href="{% url 'stories:story-edit' story.id %}?next={{ encoded_url }}" title="Edit">
-						<span class="icon is-small">
-							<i class="fas fa-edit"></i>
-						</span>
-						<small>edit</small>
-          </a>
-        </td>
-      </tr>
-      {% endfor %}
-		</tbody>
-	</table>
+  <form id="object-list" name="object-list" method="POST">
+    {% csrf_token %}
+    <table class="table is-bordered is-striped is-hoverable is-fullwidth">
+      <thead>
+        <tr>
+          <th>
+              <input type="checkbox" name="select-all" class="is-checkradio has-background-color is-info" checked=checked />
+          </th>
+          <th><abbr title="Identification Number">ID</abbr></th>
+          <th>Title</th>
+          <th>Epic</th>
+          <th>State</th>
+          <th>Priority</th>
+          <th><abbr title="Points">Pts</abbr></th>
+          <th>Owner</th>
+          <th>Assignee</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for story in object_list %}
+        <tr {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
+          <td>
+            <div class="field">
+              <input type="checkbox" name="story-{{ story.id }}" />
+            </div>
+          </td>
+          <td>#{{ story.id }}</td>
+          <td>
+            <a href="{% url 'stories:story-edit' story.id %}?next={{ encoded_url }}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
+              <strong>{{ story.title }}</strong><br/>
+            </a>
+            {% for tag in story.tags.all %}
+            <span class="tag is-light">{{ tag.name }}</span>
+            {% endfor %}
+          </td>
+          <td>
+            {% if story.epic %}
+            <a href="{% url 'stories:epic-detail' story.epic.id %}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
+              {{ story.epic.title }}
+            </a>
+            {% endif %}
+          </td>
+          <td>{{ story.state }}</td>
+          <td>{{ story.priority }}</td>
+          <td>{{ story.points }}</td>
+          <td>{{ story.owner.username }}</td>
+          <td>{{ story.assignee.username }}</td>
+          <td>
+            <a class="button is-link is-small is-outlined" href="{% url 'stories:story-edit' story.id %}?next={{ encoded_url }}" title="Edit">
+              <span class="icon is-small">
+                <i class="fas fa-edit"></i>
+              </span>
+              <small>edit</small>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </form>
 
   <nav class="pagination" role="navigation" aria-label="pagination">
     {% if page_obj.has_previous %}

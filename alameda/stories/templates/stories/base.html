@@ -7,38 +7,20 @@
     <!-- Right side -->
     <div class="level-right">
       <div class="level-item">
-        <label>Set</label>&nbsp;
-        <div class="field">
-          <div class="control">
-            <div class="select is-primary">
-              <select onchange="document.querySelector('#object-list').submit();" form="object-list">
-                <option>Owner to</option>
-                <option>None</option>
-                <option>matagus</option>
-                <option>jeronimoalbi</option>
-                <option>demo</option>
-              </select>
+        <strong>Set in bulk:</strong>
+      </div>
+      {% for field in filters_form.visible_fields %}
+        <div class="level-item">
+          <label>{{ field.label }}</label>&nbsp;
+          <div class="field">
+            <div class="control">
+              <div class="select is-primary">
+                {{ field }}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="level-item">
-        <label>Set</label>&nbsp;
-        <div class="field">
-          <div class="control">
-            <div class="select is-primary">
-              <select onchange="document.querySelector('#object-list').submit();" form="object-list">
-                <option>State to</option>
-                <option>None</option>
-                <option>In Progress</option>
-                <option>To Do</option>
-                <option>Done</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
+      {% endfor %}
 
       <div class="level-item">
         &nbsp;
@@ -47,7 +29,7 @@
       <div class="level-item">
         <div class="field has-addons">
           <p class="control">
-            <button class="button is-primary is-outlined" form="object-list" type="submit">
+            <button class="button is-primary is-outlined" form="object-list" type="submit" name="duplicate" value="yes">
               <span class="icon is-small">
                 <i class="fas fa-copy"></i>
               </span>
@@ -60,7 +42,7 @@
       <div class="level-item">
         <div class="field has-addons">
           <p class="control">
-            <button class="button is-danger is-outlined" form="object-list" type="submit">
+            <button class="button is-danger is-outlined" form="object-list" type="submit" name="remove" value="yes">
               <span class="icon is-small">
                 <i class="fas fa-minus"></i>
               </span>
