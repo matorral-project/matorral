@@ -1,3 +1,5 @@
+import copy
+
 from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save, post_delete
@@ -76,6 +78,16 @@ class Epic(ModelWithProgress):
 
         return False
 
+    def duplicate(self):
+        cloned = copy.copy(self)
+        cloned.pk = None
+        cloned.title = 'Copy of ' + self.title
+        cloned.save()
+
+        for tag in self.tags.values_list('name', flat=True):
+            cloned.tags.add(tag)
+
+
     @staticmethod
     def update_state(sender, **kwargs):
         raw = kwargs['raw']
@@ -134,6 +146,18 @@ class Story(BaseModel):
 
         return False
 
+    def duplicate(self):
+        cloned = copy.copy(self)
+        cloned.pk = None
+        cloned.title = 'Copy of ' + self.title
+        cloned.save()
+
+        for task in self.task_set.all():
+            task.duplicate(story=cloned)
+
+        for tag in self.tags.values_list('name', flat=True):
+            cloned.tags.add(tag)
+
 
 @receiver(post_save, sender=Story)
 def handle_story_post_save(sender, **kwargs):
@@ -164,3 +188,13 @@ class Task(BaseModel):
 
     def get_absolute_url(self):
         return reverse('stories:task-view', args=[str(self.id), slugify(self.title)])
+
+    def duplicate(self, parent=None):
+        cloned = copy.copy(self)
+        cloned.pk = None
+        cloned.title = self.title
+
+        if parent is not None:
+            cloned.story = parent
+
+        cloned.save()

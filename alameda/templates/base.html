@@ -63,38 +63,24 @@
 
         <div class="navbar-end">
           <div class="level-right">
-            <form href="{% block object_list_url %}{% endblock %}" method="get">
-              <div class="level-item">
-                <div class="field has-addons">
-                  <p class="control">
-                    <input class="input" name="q" type="text" placeholder="Find an {{ singular_title }}">
-                  </p>
-                  <p class="control">
-                    <button class="button" type="submit">
-                      Search
-                    </button>
-                  </p>
-                </div>
-              </div>
-            </form>
-          </div>
-          <div class="navbar-item">
-            <div class="buttons">
-							<div class="navbar-item has-dropdown is-hoverable">
-								<a class="navbar-link" href="#">
-									{{ user.username }}
-								</a>
+            <div class="navbar-item">
+              <div class="buttons">
+                <div class="navbar-item has-dropdown is-hoverable">
+                  <a class="navbar-link" href="#">
+                    {{ user.username }}
+                  </a>
 
-								<div class="navbar-dropdown">
-                  {% if user.is_staff %}
-                  <a class="navbar-item" href="{% url 'admin:index' %}">
-										Admin
-									</a>
-                  {% endif %}
-									<a href="{% url 'logout' %}" class="navbar-item">
-										Logout
-									</a>
-								</div>
+                  <div class="navbar-dropdown">
+                    {% if user.is_staff %}
+                    <a class="navbar-item" href="{% url 'admin:index' %}">
+                      Admin
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'logout' %}" class="navbar-item">
+                      Logout
+                    </a>
+                  </div>
+              </div>
             </div>
           </div>
         </div>
@@ -105,7 +91,7 @@
     <section class="section">
 			{% if messages %}
 				{% for message in messages %}
-				<div class="notification is-success {% if message.tags %}{{ message.tags }}{% endif %}">
+				<div class="notification is-primary {% if message.tags %}{{ message.tags }}{% endif %}">
 					<button class="delete"></button>
 					<p>{{ message }}</p>
 				</div>
@@ -128,7 +114,7 @@
           </iframe>
         </section>
         <footer class="modal-card-foot">
-          <button class="button is-success">Save changes</button>
+          <button class="button is-primary">Save changes</button>
           <button class="button">Cancel</button>
         </footer>
       </div>
@@ -137,11 +123,11 @@
 		<footer class="footer">
 			<div class="content has-text-centered">
 				<p>
-					<strong>Alameda</strong> by <a href="https://github.com/matagus">matagus</a> &amp; <a href="https://github.com/jeronimoalbi">jeronimoalbi</a>.
-					The <a href="https://github.com/matagus/alameda">source code</a> is licensed <a href="http://opensource.org/licenses/mit-license.php">MIT</a>.
+					<strong>Alameda</strong> by <a target="_blank" href="https://github.com/matagus">matagus</a> &amp; <a target="_blank" href="https://github.com/jeronimoalbi">jeronimoalbi</a>.
+					The <a target="_blank" href="https://github.com/matagus/alameda">source code</a> is licensed under <a target="_blank" href="http://opensource.org/licenses/mit-license.php">MIT</a> License.
 				</p>
 				<p>
-					This website has been built in a few weekends thanks to <a href="https://bulma.io/">Bulma</a> &amp; <a href="https://www.djangoproject.com/">Django</a>.
+					This website has been built in a few weekends thanks to <a target="_blank" href="https://bulma.io/">Bulma</a> &amp; <a target="_blank" href="https://www.djangoproject.com/">Django</a>.
 				</p>
 			</div>
 		</footer>

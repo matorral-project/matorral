@@ -38,10 +38,10 @@ class ModelWithProgress(models.Model):
 
     @staticmethod
     def update_points_and_progress(sender, **kwargs):
-        raw = kwargs['raw']
+        raw = kwargs.get('raw')
         instance = kwargs['instance']
 
-        if not raw:
+        if raw is None:
             Story = apps.get_model('stories', 'Story')
             StoryState = apps.get_model('stories', 'StoryState')
 

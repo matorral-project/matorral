@@ -1,3 +1,5 @@
+import copy
+
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
@@ -21,6 +23,19 @@ class Sprint(ModelWithProgress):
         (STATE_DONE, 'Done'),
     )
 
+    class Meta:
+        get_latest_by = 'created_at'
+        ordering = ['updated_at', 'starts_at']
+        indexes = [
+            models.Index(fields=['updated_at', 'starts_at']),
+            models.Index(fields=['starts_at', 'ends_at']),
+            models.Index(fields=['starts_at']),
+            models.Index(fields=['ends_at']),
+            models.Index(fields=['title']),
+        ]
+        verbose_name = 'sprint'
+        verbose_name_plural = 'sprints'
+
     state = models.PositiveIntegerField(db_index=True, choices=STATE_TYPES, default=STATE_UNSTARTED)
 
     starts_at = models.DateField(db_index=True, null=True, blank=True)
@@ -39,3 +54,9 @@ class Sprint(ModelWithProgress):
 
     def is_started(self):
         return self.state == self.STATE_STARTED
+
+    def duplicate(self):
+        cloned = copy.copy(self)
+        cloned.pk = None
+        cloned.title = 'Copy of ' + self.title
+        cloned.save()

@@ -1,0 +1,24 @@
+<div class="level-left">
+  <nav class="breadcrumb is-large" aria-label="breadcrumbs" style="margin: 0; padding: 0;">
+    <ul>
+      <li class="is-size-3 is-active"><a href="#" aria-current="page">{{ title }}</a></li>
+    </ul>
+  </nav>
+
+  <div class="level-item">
+    <form method="GET">
+      <div class="level-item">
+        <div class="field has-addons">
+          <p class="control">
+            {{ search_form.visible_fields.0 }}
+          </p>
+          <p class="control">
+            <button class="button is-primary" type="submit">
+              Search
+            </button>
+          </p>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

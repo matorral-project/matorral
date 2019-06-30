@@ -21,7 +21,7 @@
 		<!-- Right side -->
 		<div class="level-right">
 			<div class="level-item">
-				<a href="{% url 'stories:epic-edit' epic.id %}" class="button is-success">
+        <a href="{% url 'stories:epic-edit' epic.id %}?next={{ encoded_url }}" class="button is-primary">
           <span class="icon is-small">
             <i class="fas fa-edit"></i>
           </span>
@@ -29,28 +29,18 @@
 				</a>
 			</div>
 
-      <div class="level-item">
-				<div class="field has-addons">
-					<p class="control">
-            <a class="button is-success is-outlined" href="{% block object_add_url2 %}{% endblock %}">
-              <span class="icon is-small">
-                <i class="fas fa-copy"></i>
-              </span>
-              <small>Duplicate</small>
-						</a>
-					</p>
-				</div>
-			</div>
-
 			<div class="level-item">
 				<div class="field has-addons">
 					<p class="control">
-            <a class="button is-danger is-outlined" href="{% block object_add_url1 %}{% endblock %}">
-              <span class="icon is-small">
-                <i class="fas fa-minus"></i>
-              </span>
-              <small>Remove</small>
-						</a>
+            <form method="POST">
+              {% csrf_token %}
+              <button class="button is-danger is-outlined" type="submit" name="remove" value="yes">
+                <span class="icon is-small">
+                  <i class="fas fa-minus"></i>
+                </span>
+                <small>Remove</small>
+              </button>
+            </form>
 					</p>
 				</div>
 			</div>
@@ -73,7 +63,7 @@
 					<div class="control">
 						<div class="tags has-addons">
 							<span class="tag">State</span>
-							<span class="tag is-success">{{ epic.state }}</span>
+							<span class="tag is-primary">{{ epic.state }}</span>
 						</div>
 					</div>
 					<div class="control">
@@ -94,7 +84,7 @@
 				<strong>Progress:</strong>
 				<br/>
 				<br/>
-				<progress class="progress is-success" value="{{ epic.progress }}" max="100">{{ epic.progress }}%</progress>
+				<progress class="progress is-primary" value="{{ epic.progress }}" max="100">{{ epic.progress }}%</progress>
 				<strong>Last Update:</strong> <time datetime="{{ epic.updated_at }}">{{ epic.updated_at }}</time>
 			</div>
 		</div>
@@ -133,7 +123,7 @@
 			<div class="level-item">
 				<div class="field has-addons">
 					<p class="control">
-            <a class="button is-success" href="{% url 'stories:story-add' %}?epic={{ epic.id }}">
+            <a class="button is-primary" href="{% url 'stories:story-add' %}?next={{ encoded_url }}&amp;epic={{ epic.id }}">
               <span class="icon is-small">
                 <i class="fas fa-plus"></i>
               </span>
@@ -146,7 +136,7 @@
       <div class="level-item">
 				<div class="field has-addons">
 					<p class="control">
-            <a class="button is-success is-outlined" href="{% block object_add_url3 %}{% endblock %}">
+            <a class="button is-primary is-outlined" href="{% block object_add_url3 %}{% endblock %}?next={{ encoded_url }}&amp;epic={{ epic.id }}">
               <span class="icon is-small">
                 <i class="fas fa-search"></i>
               </span>
@@ -194,7 +184,7 @@
         </td>
         <td>#{{ story.id }}</td>
         <td>
-          <a href="{% url 'stories:story-edit' story.id %}?epic={{ epic.id }}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
+          <a href="{% url 'stories:story-edit' story.id %}?next={{ encoded_url }}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
             <strong>{{ story.title }}</strong><br/>
           </a>
           {% for tag in story.tags.all %}
@@ -207,7 +197,7 @@
         <td>{{ story.owner.username }}</td>
         <td>{{ story.assignee.username }}</td>
         <td>
-          <a class="button is-small is-link is-outlined" href="{% url 'stories:story-edit' story.id %}?epic={{ epic.id }}" title="Edit">
+          <a class="button is-small is-link is-outlined" href="{% url 'stories:story-edit' story.id %}?next={{ encoded_url }}" title="Edit">
             <span class="icon is-small">
               <i class="fas fa-edit"></i>
             </span>

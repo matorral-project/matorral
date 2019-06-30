@@ -37,11 +37,11 @@
     <td>{{ sprint.total_points }}</td>
     <td>{{ sprint.story_count }}</td>
     <td>
-      <progress class="progress is-success" value="{{ sprint.progress }}" max="100">{{ sprint.progress }}%</progress>
+      <progress class="progress is-primary" value="{{ sprint.progress }}" max="100">{{ sprint.progress }}%</progress>
     </td>
     <td>{{ sprint.updated_at|default:'' }}</td>
     <td>
-      <a class="button is-small is-link is-outlined" href="{% url 'sprints:sprint-edit' sprint.id %}" title="Edit">
+      <a class="button is-small is-link is-outlined" href="{% url 'sprints:sprint-edit' sprint.id %}?next={{ encoded_url }}" title="Edit">
 				<span class="icon is-small">
 					<i class="fas fa-edit"></i>
 				</span>
