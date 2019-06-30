@@ -13,7 +13,7 @@ from .models import Epic, Story, Task
 from .serializers import EpicSerializer, StorySerializer, TaskSerializer
 from .tasks import (duplicate_stories, remove_stories, story_set_assignee,
                     story_set_state, duplicate_epics, remove_epics,
-                    epic_set_owner, epic_set_state)
+                    epic_set_owner, epic_set_state, reset_epic)
 from alameda.sprints.views import BaseListView, BaseView
 
 
@@ -31,8 +31,13 @@ class EpicDetailView(DetailView):
 
         if params.get('remove') == 'yes':
             remove_epics.delay([self.get_object().id])
+            return HttpResponseRedirect(reverse_lazy('stories:epic-list'))
 
-        return HttpResponseRedirect(reverse_lazy('stories:epic-list'))
+        if params.get('epic-reset') == 'yes':
+            story_ids = [t[6:] for t in params.keys() if 'story-' in t]
+            reset_epic.delay(story_ids)
+
+        return HttpResponseRedirect(self.request.get_full_path())
 
 
 class EpicViewSet(viewsets.ModelViewSet):

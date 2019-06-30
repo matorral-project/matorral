@@ -63,3 +63,8 @@ def epic_set_state(epic_ids, state_slug):
         return
 
     Epic.objects.filter(id__in=epic_ids).update(state=state)
+
+
+@app.task(ignore_result=True)
+def reset_epic(story_ids):
+    Story.objects.filter(id__in=story_ids).update(epic=None)
