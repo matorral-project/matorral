@@ -101,20 +101,16 @@
 			</nav>
 
 			<div class="level-item">
-				<label>Group by</label>&nbsp;
-				<div class="field">
-					<div class="control">
-						<div class="select is-link">
-							<select>
-								<option>None</option>
-								<option>Requester</option>
-								<option>Assignee</option>
-								<option>State</option>
-								<option>Sprint</option>
-							</select>
-						</div>
-					</div>
-				</div>
+				<form method="GET">
+        {% for field in group_by_form.visible_fields %}
+          <div class="level-item">
+            <label>{{ field.label }}</label>&nbsp;
+            <div class="field">
+              {{ field }}
+            </div>
+          </div>
+        {% endfor %}
+				</form>
 			</div>
 		</div>
 
@@ -164,55 +160,60 @@
 
   <form method="POST" id="object-list">
     {% csrf_token %}
-    <table class="table is-bordered is-striped is-hoverable is-fullwidth">
-      <thead>
-        <tr>
-          <th>
-            <input type="checkbox" name="select-all" />
-          </th>
-          <th><abbr title="Identification Number">ID</abbr></th>
-          <th>Title</th>
-          <th>State</th>
-          <th>Priority</th>
-          <th><abbr title="Points">Pts</abbr></th>
-          <th>Requester</th>
-          <th>Assignee</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for story in object_list %}
-        <tr {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
-          <td>
-            <input type="checkbox" name="story-{{ story.id }}" />
-          </td>
-          <td>#{{ story.id }}</td>
-          <td>
-            <a href="{% url 'stories:story-edit' story.id %}?next={{ encoded_url }}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
-              <strong>{{ story.title }}</strong><br/>
-            </a>
-            {% for tag in story.tags.all %}
-            <span class="tag is-light">{{ tag.name }}</span>
-            {% endfor %}
-          </td>
-          <td>{{ story.state }}</td>
-          <td>{{ story.priority }}</td>
-          <td>{{ story.points }}</td>
-          <td>{{ story.requester.username }}</td>
-          <td>{{ story.assignee.username }}</td>
-          <td>
-            <a class="button is-small is-link is-outlined" href="{% url 'stories:story-edit' story.id %}?next={{ encoded_url }}" title="Edit">
-              <span class="icon is-small">
-                <i class="fas fa-edit"></i>
-              </span>
-              <small>edit</small>
-            </a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    {% for group_title, object_list in objects_by_group %}
+      {% if group_by %}
+        <h3 class="subtitle">{{ group_title }}</h3>
+      {% endif %}
+
+			<table class="table is-bordered is-striped is-hoverable is-fullwidth">
+				<thead>
+					<tr>
+						<th>
+							<input type="checkbox" name="select-all" />
+						</th>
+						<th><abbr title="Identification Number">ID</abbr></th>
+						<th>Title</th>
+						<th>State</th>
+						<th>Priority</th>
+						<th><abbr title="Points">Pts</abbr></th>
+						<th>Requester</th>
+						<th>Assignee</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for story in object_list %}
+					<tr {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
+						<td>
+							<input type="checkbox" name="story-{{ story.id }}" />
+						</td>
+						<td>#{{ story.id }}</td>
+						<td>
+							<a href="{% url 'stories:story-edit' story.id %}?next={{ encoded_url }}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
+								<strong>{{ story.title }}</strong><br/>
+							</a>
+							{% for tag in story.tags.all %}
+							<span class="tag is-light">{{ tag.name }}</span>
+							{% endfor %}
+						</td>
+						<td>{{ story.state }}</td>
+						<td>{{ story.priority }}</td>
+						<td>{{ story.points }}</td>
+						<td>{{ story.requester.username }}</td>
+						<td>{{ story.assignee.username }}</td>
+						<td>
+							<a class="button is-small is-link is-outlined" href="{% url 'stories:story-edit' story.id %}?next={{ encoded_url }}" title="Edit">
+								<span class="icon is-small">
+									<i class="fas fa-edit"></i>
+								</span>
+								<small>edit</small>
+							</a>
+						</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		{% endfor %}
   </form>
-  {% include "paginator.html" %}
 
 {% endblock %}

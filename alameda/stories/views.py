@@ -1,3 +1,5 @@
+from itertools import groupby
+
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
@@ -8,7 +10,7 @@ from django.views.generic.edit import CreateView, UpdateView
 from rest_framework import viewsets
 
 from ..utils import get_clean_next_url
-from .forms import EpicFilterForm, StoryFilterForm
+from .forms import EpicFilterForm, StoryFilterForm, EpicGroupByForm
 from .models import Epic, Story, Task
 from .serializers import EpicSerializer, StorySerializer, TaskSerializer
 from .tasks import (duplicate_stories, remove_stories, story_set_assignee,
@@ -21,9 +23,32 @@ class EpicDetailView(DetailView):
 
     model = Epic
 
+    def get_children(self):
+        queryset = self.get_object().story_set.select_related('requester', 'assignee', 'sprint', 'state')
+
+        config = dict(
+            sprint=('sprint__starts_at', lambda story: story.sprint and story.sprint.title or 'No sprint'),
+            state=('state__slug', lambda story: story.state.name),
+            requester=('requester__id', lambda story: story.requester and story.requester.username or 'Unset'),
+            assignee=('assignee__id', lambda story: story.assignee and story.assignee.username or 'Unassigned'),
+        )
+
+        group_by = self.request.GET.get('group_by')
+
+        try:
+            order_by, fx = config[group_by]
+        except KeyError:
+            return [(None, queryset)]
+        else:
+            queryset = queryset.order_by(order_by)
+            foo = [(t[0], list(t[1])) for t in groupby(queryset, key=fx)]
+            return foo
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['object_list'] = self.get_object().story_set.select_related('requester', 'assignee', 'sprint', 'state')
+        context['objects_by_group'] = self.get_children()
+        context['group_by_form'] = EpicGroupByForm(self.request.GET)
+        context['group_by'] = self.request.GET.get('group_by')
         return context
 
     def post(self, *args, **kwargs):

@@ -1,4 +1,4 @@
-from django.forms import ModelForm, Select
+from django.forms import ModelForm, Select, Form, ChoiceField
 
 from .models import Epic, Story
 
@@ -27,3 +27,15 @@ class StoryFilterForm(ModelForm):
             'state': custom_select,
             'assignee': custom_select,
         }
+
+
+class EpicGroupByForm(Form):
+    CHOICES = [
+        ('', 'None'),
+        ('requester', 'Requester'),
+        ('assignee', 'Assignee'),
+        ('state', 'State'),
+        ('sprint', 'Sprint'),
+    ]
+
+    group_by = ChoiceField(choices=CHOICES, required=False, widget=Select(attrs={'onchange': 'this.form.submit();'}))
