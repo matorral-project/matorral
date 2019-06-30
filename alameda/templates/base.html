@@ -180,6 +180,17 @@
       bulmaTagsinput.attach('[data-tagulous="true"]');
       bulmaCalendar.attach('#id_starts_at', {type: 'date'});
       bulmaCalendar.attach('#id_ends_at', {type: 'date'});
+
+      var selectAll = document.querySelector('[name="select-all"]');
+      selectAll.addEventListener('click', function(event) {
+        document.querySelectorAll('input[type="checkbox"]').forEach(($checkbox) => {
+          if (document.querySelector('[name="select-all"]').checked) {
+            $checkbox.setAttribute('checked', 'checked');
+          } else {
+            $checkbox.removeAttribute('checked');
+          }
+        })
+      });
     });
   </script>
 </html>
