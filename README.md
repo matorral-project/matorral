@@ -1,17 +1,30 @@
-# alameda
+# matorral
 
-![Build Status](https://travis-ci.com/matagus/alameda.svg)
+![Build Status](https://travis-ci.com/matagus/matorral.svg)
 
 ## Overview
 
-A project managent system / Taiga.io clone with a simpler UX built @ Málaga
+A very simple project managent tool built with Django & Bulma.io & Turbolinks, made in order to learn some of the new
+Django 2.x features and specially Django Channels :)
+
+Here are some screenshots:
+
+![](https://github.com/matagus/matorral/raw/master/alameda/static/screenshots/stories-1.png)
+
+![](https://github.com/matagus/matorral/raw/master/alameda/static/screenshots/stories-2.png)
+
+![](https://github.com/matagus/matorral/raw/master/alameda/static/screenshots/stories-4.png)
+
+![](https://github.com/matagus/matorral/raw/master/alameda/static/screenshots/epics-1.png)
+
+![](https://github.com/matagus/matorral/raw/master/alameda/static/screenshots/sprints-1.png)
 
 ## Installation
 
 1. Create a python 3.7.x virtual environment
 2. Activate it
 3. Install local requirements: `pip install -r requirements/local.txt`
-4. Configure a rabbitmq server with the following credentials / setup: user=guest password=guest host=localhost port=5672 virtual host=/alameda.
+4. Configure a rabbitmq server with the following credentials / setup: user=guest password=guest host=localhost port=5672 virtual host=/matorral.
 5. Run: `honcho -f Procfile.local start`
 7. Open your browser at `http://localhost:8000`.
 
@@ -32,9 +45,9 @@ To deploy master just do:
 
 ## Links
 
- * [Django-based web interface](https://alameda.dev/)
- * [API](https://alameda.dev/api/v1/)
- * [Admin](https://alameda.dev/admin/)
+ * [Django-based web interface](https://matorral.alameda.dev/)
+ * [API](https://matorral.alameda.dev/api/v1/)
+ * [Admin](https://matorral.alameda.dev/admin/)
 
 
 ## Contribute
@@ -43,4 +56,4 @@ PRs accepted.
 
 ## License
 
-To be defined!
+[MPL](https://www.mozilla.org/en-US/MPL/)
