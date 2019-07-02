@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
+    <meta name="turbolinks-cache-control" content="no-preview">
     <title>{{ current_site.name }} - Simple Project Management System</title>
     <link rel="preload stylesheet" href="{% static 'css/bulma-0.7.4.min.css' %}">
     <link rel="preload stylesheet" href="{% static 'css/bulma-calendar.min.css' %}">
@@ -13,13 +13,15 @@
     <style>
       nav div.level-item.bulk-action { visibility: hidden; }
     </style>
+    <script defer src="{% static 'js/turbolinks.js' %}"></script>
+    <script defer src="{% static 'js/fetch.js' %}"></script>
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
     <script defer src="{% static 'js/bulma-calendar.min.js' %}"></script>
     <script defer src="{% static 'js/bulma-tagsinput.min.js' %}"></script>
   </head>
   <body>
     {% if user.is_authenticated %}
-    <nav class="navbar" role="navigation" aria-label="main navigation">
+    <nav class="navbar" role="navigation" aria-label="main navigation" data-turbolinks-permanent>
       <div class="navbar-brand">
         <a class="navbar-item" href="/">
             <h1 class="title">
@@ -92,14 +94,14 @@
     {% endif %}
 
     <section class="section">
-			{% if messages %}
-				{% for message in messages %}
-				<div class="notification is-primary {% if message.tags %}{{ message.tags }}{% endif %}">
-					<button class="delete"></button>
-					<p>{{ message }}</p>
-				</div>
-				{% endfor %}
-			{% endif %}
+      {% if messages %}
+        {% for message in messages %}
+        <div class="notification is-primary {% if message.tags %}{{ message.tags }}{% endif %}">
+          <button class="delete"></button>
+          <p>{{ message }}</p>
+        </div>
+        {% endfor %}
+      {% endif %}
 
       {% block content %}
       {% endblock %}
@@ -123,17 +125,17 @@
       </div>
     </div
 >
-		<footer class="footer">
-			<div class="content has-text-centered">
-				<p>
-					<strong>Alameda</strong> by <a target="_blank" href="https://github.com/matagus">matagus</a> &amp; <a target="_blank" href="https://github.com/jeronimoalbi">jeronimoalbi</a>.
-					The <a target="_blank" href="https://github.com/matagus/alameda">source code</a> is licensed under <a target="_blank" href="http://opensource.org/licenses/mit-license.php">MIT</a> License.
-				</p>
-				<p>
-					This website has been built in a few weekends thanks to <a target="_blank" href="https://bulma.io/">Bulma</a> &amp; <a target="_blank" href="https://www.djangoproject.com/">Django</a>.
-				</p>
-			</div>
-		</footer>
+    <footer class="footer" data-turbolinks-permanent>
+      <div class="content has-text-centered">
+        <p>
+          <strong>Alameda</strong> by <a target="_blank" href="https://github.com/matagus">matagus</a> &amp; <a target="_blank" href="https://github.com/jeronimoalbi">jeronimoalbi</a>.
+          The <a target="_blank" href="https://github.com/matagus/alameda">source code</a> is licensed under <a target="_blank" href="http://opensource.org/licenses/mit-license.php">MIT</a> License.
+        </p>
+        <p>
+          This website has been built in a few weekends thanks to <a target="_blank" href="https://bulma.io/">Bulma</a> &amp; <a target="_blank" href="https://www.djangoproject.com/">Django</a>.
+        </p>
+      </div>
+    </footer>
   </body>
 
   <script src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
@@ -173,33 +175,35 @@
         });
       });
 
-			(document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
-				$notification = $delete.parentNode;
-				$delete.addEventListener('click', () => {
-					$notification.parentNode.removeChild($notification);
-				});
-			});
+      (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
+        $notification = $delete.parentNode;
+        $delete.addEventListener('click', () => {
+          $notification.parentNode.removeChild($notification);
+        });
+      });
 
       bulmaTagsinput.attach('[data-tagulous="true"]');
       bulmaCalendar.attach('#id_starts_at', {type: 'date'});
       bulmaCalendar.attach('#id_ends_at', {type: 'date'});
 
       var selectAll = document.querySelector('[name="select-all"]');
-      selectAll.addEventListener('click', function(event) {
-        document.querySelectorAll('input[type="checkbox"]').forEach(($checkbox) => {
-          if (document.querySelector('[name="select-all"]').checked) {
-            $checkbox.setAttribute('checked', 'checked');
-            document.querySelectorAll('.bulk-action').forEach(($div) => {
-              $div.style.visibility = 'visible'
-            });
-          } else {
-            $checkbox.removeAttribute('checked');
-            document.querySelectorAll('.bulk-action').forEach(($div) => {
-              $div.style.visibility = 'hidden'
-            });
-          }
-        })
-      });
+      if (selectAll) {
+        selectAll.addEventListener('click', function(event) {
+          document.querySelectorAll('input[type="checkbox"]').forEach(($checkbox) => {
+            if (document.querySelector('[name="select-all"]').checked) {
+              $checkbox.setAttribute('checked', 'checked');
+              document.querySelectorAll('.bulk-action').forEach(($div) => {
+                $div.style.visibility = 'visible'
+              });
+            } else {
+              $checkbox.removeAttribute('checked');
+              document.querySelectorAll('.bulk-action').forEach(($div) => {
+                $div.style.visibility = 'hidden'
+              });
+            }
+          })
+        });
+      }
 
       document.querySelectorAll('input[type="checkbox"]').forEach(($checkbox) => {
         $checkbox.addEventListener('click', function(event) {
@@ -215,6 +219,44 @@
         })
       });
 
+      window.postForm = function(form, button) {
+        var formData = new FormData(form);
+
+        if (button) {
+          formData.append(button.name, button.value);
+        } else {
+          if (form.id) {
+            document.querySelectorAll('select[form=' + form.id + ']').forEach(($select) => {
+              formData.append($select.name, $select.value);
+            });
+          }
+        }
+
+				fetch(document.location.href, {
+					method: 'POST',
+					headers: {
+						'X-Fetch': 'true'
+					},
+					body: formData
+				}).then(function(data) {
+          return data.json();
+        }).then(function(jsonResponse) {
+          Turbolinks.visit(jsonResponse.url, { action: "replace" });
+				}).catch(function(error) {
+					console.log('request failed', error)
+				})
+      };
+
+      document.querySelectorAll('form').forEach(($form) => {
+        $form.addEventListener('submit', function(event) {
+          event.preventDefault();
+          if ($form.method.toLowerCase() == 'get') {
+            Turbolinks.visit(document.location.pathname + "?q=" + encodeURIComponent(document.querySelector('#id_q').value));
+          } else {
+            postForm($form);
+          }
+        });
+      })
     });
   </script>
 </html>

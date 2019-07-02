@@ -2,6 +2,7 @@ from itertools import groupby
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
+from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.generic.detail import DetailView
@@ -10,13 +11,13 @@ from django.views.generic.edit import CreateView, UpdateView
 from rest_framework import viewsets
 
 from ..utils import get_clean_next_url
-from .forms import EpicFilterForm, StoryFilterForm, EpicGroupByForm
+from .forms import EpicGroupByForm, EpicFilterForm, StoryFilterForm
 from .models import Epic, Story, Task
 from .serializers import EpicSerializer, StorySerializer, TaskSerializer
 from .tasks import (duplicate_stories, remove_stories, story_set_assignee,
                     story_set_state, duplicate_epics, remove_epics,
                     epic_set_owner, epic_set_state, reset_epic)
-from alameda.sprints.views import BaseListView, BaseView
+from alameda.sprints.views import BaseListView
 
 
 class EpicDetailView(DetailView):
@@ -56,13 +57,24 @@ class EpicDetailView(DetailView):
 
         if params.get('remove') == 'yes':
             remove_epics.delay([self.get_object().id])
-            return HttpResponseRedirect(reverse_lazy('stories:epic-list'))
+
+            url = reverse_lazy('stories:epic-list')
+
+            if self.request.META.get('HTTP_X_FETCH') == 'true':
+                return JsonResponse(dict(url=url))
+            else:
+                return HttpResponseRedirect(url)
 
         if params.get('epic-reset') == 'yes':
             story_ids = [t[6:] for t in params.keys() if 'story-' in t]
             reset_epic.delay(story_ids)
 
-        return HttpResponseRedirect(self.request.get_full_path())
+        url = self.request.get_full_path()
+
+        if self.request.META.get('HTTP_X_FETCH') == 'true':
+            return JsonResponse(dict(url=url))
+        else:
+            return HttpResponseRedirect(url)
 
 
 class EpicViewSet(viewsets.ModelViewSet):
@@ -80,7 +92,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
 
 
-class StoryBaseView(BaseView):
+class StoryBaseView(object):
     model = Story
     fields = [
         'title', 'description',
@@ -122,7 +134,7 @@ class StoryUpdateView(StoryBaseView, UpdateView):
         return 'Story successfully updated!'
 
 
-class EpicBaseView(BaseView):
+class EpicBaseView(object):
     model = Epic
     fields = [
         'title', 'description',
@@ -188,7 +200,12 @@ class EpicList(BaseListView):
             if params.get('owner') != '--':
                 epic_set_owner.delay(epic_ids, params['owner'])
 
-        return HttpResponseRedirect(self.request.get_full_path())
+        url = self.request.get_full_path()
+
+        if self.request.META.get('HTTP_X_FETCH') == 'true':
+            return JsonResponse(dict(url=url))
+        else:
+            return HttpResponseRedirect(url)
 
 
 @method_decorator(login_required, name='dispatch')
@@ -229,4 +246,9 @@ class StoryList(BaseListView):
             if params.get('assignee'):
                 story_set_assignee.delay(story_ids, params['assignee'])
 
-        return HttpResponseRedirect(self.request.get_full_path())
+        url = self.request.get_full_path()
+
+        if self.request.META.get('HTTP_X_FETCH') == 'true':
+            return JsonResponse(dict(url=url))
+        else:
+            return HttpResponseRedirect(url)
