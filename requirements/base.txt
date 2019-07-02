@@ -1,5 +1,6 @@
 # Bleeding edge Django
 Django==2.2.8
+channels==2.2.0
 
 # Configuration
 django-environ==0.4.5
@@ -41,3 +42,7 @@ django-contrib-comments==1.9.1
 django-simple-history==2.7.2
 django-taggit==1.1.0
 django-tagulous==0.14.1
+
+channels-redis==2.4.0
+hiredis==1.0.0
+msgpack==0.6.1

@@ -142,6 +142,7 @@
 
   <script defer src="{% static 'js/bulma-calendar.min.js' %}" data-mutate-approach="sync"></script>
   <script defer src="{% static 'js/bulma-tagsinput.min.js' %}" data-mutate-approach="sync"></script>
+  <script defer src="{% static 'js/bulma-toast.min.js' %}" data-mutate-approach="sync"></script>
   <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js" data-mutate-approach="sync"></script>
   <script>
     function ready(fn) {
@@ -303,6 +304,29 @@
           });
         }
       })
+
+      if (!window.notificationsSocket) {
+        window.notificationsSocket = new WebSocket('ws://' + window.location.host + '/ws/interactions/');
+      }
+
+      notificationsSocket.onmessage = function(e) {
+        var data = JSON.parse(e.data);
+        console.log(data);
+        bulmaToast.toast({
+          message: data['message'],
+          type: "is-success",
+          dismissible: true,
+          position: "bottom-right",
+          closeOnClick: true,
+          duration: 3500,
+          animate: { in: "fadeIn", out: "fadeOut" }
+        });
+      };
+
+      notificationsSocket.onclose = function(e) {
+        console.error('Notifications socket closed unexpectedly');
+        console.log(e);
+      };
     });
   </script>
 </html>

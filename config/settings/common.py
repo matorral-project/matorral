@@ -44,6 +44,7 @@ DJANGO_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
+    'channels',
     'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
     'django.forms',
@@ -229,6 +230,8 @@ ROOT_URLCONF = 'config.urls'
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#wsgi-application
 WSGI_APPLICATION = 'config.wsgi.application'
 
+ASGI_APPLICATION = "alameda.routing.application"
+
 # AUTHENTICATION CONFIGURATION
 # ------------------------------------------------------------------------------
 AUTHENTICATION_BACKENDS = (
@@ -275,7 +278,6 @@ CELERY_QUEUES = {
 CELERY_ROUTES = {
 }
 # END CELERY
-
 
 # Location of root django.contrib.admin URL, use {% url 'admin:index' %}
 ADMIN_URL = re.sub("^/", '^', env('DJANGO_ADMIN_URL', default="^admin/"))
@@ -384,5 +386,14 @@ CELERYBEAT_SCHEDULE = {
     'sprints-update-state': {
         'task': 'matorral.sprints.tasks.update_state',
         'schedule': crontab(hour='*/1')
+    },
+}
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [env('CHANNEL_LAYERS_DEFAULT_URL')],
+        },
     },
 }
