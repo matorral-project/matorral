@@ -1,8 +1,7 @@
 from itertools import groupby
 
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
@@ -51,16 +50,20 @@ class SprintDetailView(DetailView):
 
     def post(self, *args, **kwargs):
         params = self.request.POST.dict()
+        url = self.request.get_full_path()
 
         if params.get('remove') == 'yes':
             remove_sprints.delay([self.get_object().id])
-            return HttpResponseRedirect(reverse_lazy('sprints:sprint-list'))
+            url = reverse_lazy('sprints:sprint-list')
 
-        if params.get('sprint-reset') == 'yes':
+        elif params.get('sprint-reset') == 'yes':
             story_ids = [t[6:] for t in params.keys() if 'story-' in t]
             reset_sprint.delay(story_ids)
 
-        return HttpResponseRedirect(self.request.get_full_path())
+        if self.request.META.get('HTTP_X_FETCH') == 'true':
+            return JsonResponse(dict(url=url))
+        else:
+            return HttpResponseRedirect(url)
 
 
 class SprintViewSet(viewsets.ModelViewSet):
@@ -142,17 +145,15 @@ class SprintList(BaseListView):
             if params.get('duplicate') == 'yes':
                 duplicate_sprints.delay(sprint_ids)
 
-        return HttpResponseRedirect(self.request.get_full_path())
+        url = self.request.get_full_path()
+
+        if self.request.META.get('HTTP_X_FETCH') == 'true':
+            return JsonResponse(dict(url=url))
+        else:
+            return HttpResponseRedirect(url)
 
 
-class BaseView(object):
-
-    def form_valid(self, form):
-        messages.add_message(self.request, messages.INFO, self._get_success_message())
-        return super().form_valid(form)
-
-
-class SprintBaseView(BaseView):
+class SprintBaseView(object):
     model = Sprint
     fields = [
         'title', 'description', 'starts_at', 'ends_at'
@@ -165,13 +166,9 @@ class SprintBaseView(BaseView):
 
 @method_decorator(login_required, name='dispatch')
 class SprintCreateView(SprintBaseView, CreateView):
-
-    def _get_success_message(self):
-        return 'Sprint successfully created!'
+    pass
 
 
 @method_decorator(login_required, name='dispatch')
 class SprintUpdateView(SprintBaseView, UpdateView):
-
-    def _get_success_message(self):
-        return 'Sprint successfully updated!'
+    pass

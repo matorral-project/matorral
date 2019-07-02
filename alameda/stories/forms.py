@@ -5,7 +5,7 @@ from .models import Epic, Story
 
 custom_select = Select(attrs={
     'form': 'object-list',
-    'onchange': 'document.querySelector("#object-list").submit();'
+    'onchange': 'postForm(document.querySelector("#object-list"));'
 })
 
 
