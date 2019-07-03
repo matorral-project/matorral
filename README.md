@@ -9,15 +9,15 @@ Django 2.x features and specially Django Channels :)
 
 Here are some screenshots:
 
-![](https://github.com/matagus/matorral/raw/master/alameda/static/screenshots/stories-1.png)
+![](https://github.com/matagus/matorral/raw/master/matorral/static/screenshots/stories-1.png)
 
-![](https://github.com/matagus/matorral/raw/master/alameda/static/screenshots/stories-2.png)
+![](https://github.com/matagus/matorral/raw/master/matorral/static/screenshots/stories-2.png)
 
-![](https://github.com/matagus/matorral/raw/master/alameda/static/screenshots/stories-4.png)
+![](https://github.com/matagus/matorral/raw/master/matorral/static/screenshots/stories-4.png)
 
-![](https://github.com/matagus/matorral/raw/master/alameda/static/screenshots/epics-1.png)
+![](https://github.com/matagus/matorral/raw/master/matorral/static/screenshots/epics-1.png)
 
-![](https://github.com/matagus/matorral/raw/master/alameda/static/screenshots/sprints-1.png)
+![](https://github.com/matagus/matorral/raw/master/matorral/static/screenshots/sprints-1.png)
 
 ## Installation
 
@@ -32,7 +32,7 @@ Here are some screenshots:
 
 1. Install the heroku client: https://devcenter.heroku.com/articles/heroku-cli
 2. Login using your credentials
-3. Add the git remote: `git remote add heroku https://git.heroku.com/alameda-tool.git`
+3. Add the git remote: `git remote add heroku https://git.heroku.com/matorral-tool.git`
 4. Profit!
 
 Every time you want to deploy a new branch just do:

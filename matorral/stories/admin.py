@@ -6,7 +6,7 @@ from django_admin_listfilter_dropdown.filters import ChoiceDropdownFilter, Relat
 
 from simple_history.admin import SimpleHistoryAdmin
 
-from alameda.sprints.models import Sprint
+from matorral.sprints.models import Sprint
 
 from .models import Epic, EpicState, Story, StoryState, Task
 

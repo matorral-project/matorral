@@ -37,7 +37,7 @@ TEMPLATES[0]['OPTIONS']['loaders'] = [
 ]
 
 
-LOGGING['loggers']['alameda'] = {
+LOGGING['loggers']['matorral'] = {
     'level': 'WARNING',
     'handlers': ['console'],
     'propagate': False,

@@ -17,8 +17,8 @@ def update_site_forward(apps, schema_editor):
     Site.objects.update_or_create(
         id=settings.SITE_ID,
         defaults={
-            'domain': 'alameda-tool.herokuapp.com',
-            'name': 'alameda'
+            'domain': 'matorral-tool.herokuapp.com',
+            'name': 'matorral'
         }
     )
 
