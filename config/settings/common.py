@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Django settings for alameda project.
+Django settings for matorral project.
 
 For more information on this file, see
 https://docs.djangoproject.com/en/dev/topics/settings/
@@ -16,8 +16,8 @@ import environ
 
 from celery.schedules import crontab
 
-ROOT_DIR = environ.Path(__file__) - 3  # (alameda/config/settings/common.py - 3 = alameda/)
-APPS_DIR = ROOT_DIR.path('alameda')
+ROOT_DIR = environ.Path(__file__) - 3  # (matorral/config/settings/common.py - 3 = matorral/)
+APPS_DIR = ROOT_DIR.path('matorral')
 
 env = environ.Env()
 environ.Env.read_env(env_file='config/settings/.env')  # reading .env file
@@ -32,7 +32,7 @@ SECRET_KEY = env('DJANGO_SECRET_KEY')
 # ------------------------------------------------------------------------------
 # Hosts/domain names that are valid for this site
 # See https://docs.djangoproject.com/en/1.6/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['alameda-tool.herokuapp.com'])
+ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['matorral-tool.herokuapp.com'])
 # END SITE CONFIGURATION
 
 # APP CONFIGURATION
@@ -66,11 +66,11 @@ THIRD_PARTY_APPS = (
 
 # Apps specific for this project go here.
 LOCAL_APPS = (
-    'alameda.users',  # custom users app
-    'alameda.authentication',
+    'matorral.users',  # custom users app
+    'matorral.authentication',
     # Your stuff: custom apps go here
-    'alameda.sprints',
-    'alameda.stories',
+    'matorral.sprints',
+    'matorral.stories',
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -92,7 +92,7 @@ MIDDLEWARE = (
 # MIGRATIONS CONFIGURATION
 # ------------------------------------------------------------------------------
 MIGRATION_MODULES = {
-    'sites': 'alameda.contrib.sites.migrations'
+    'sites': 'matorral.contrib.sites.migrations'
 }
 
 # DEBUG
@@ -125,7 +125,7 @@ MANAGERS = ADMINS
 # ------------------------------------------------------------------------------
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#databases
 DATABASES = {
-    'default': env.db('DJANGO_DATABASE_URL', default='sqlite:///alameda.db'),
+    'default': env.db('DJANGO_DATABASE_URL', default='sqlite:///matorral.db'),
 }
 DATABASES['default']['ATOMIC_REQUESTS'] = True
 
@@ -184,9 +184,9 @@ TEMPLATES = [
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
                 # Your stuff: custom template context processors go here
-                'alameda.context_processors.site',
-                'alameda.context_processors.navigation',
-                'alameda.context_processors.search',
+                'matorral.context_processors.site',
+                'matorral.context_processors.navigation',
+                'matorral.context_processors.search',
             ],
         },
     },
@@ -235,9 +235,9 @@ AUTHENTICATION_BACKENDS = (
 )
 
 # cookies
-LANGUAGE_COOKIE_NAME = "alameda-lang"
-CSRF_COOKIE_NAME = "alameda-csrf"
-SESSION_COOKIE_NAME = "alameda-session"
+LANGUAGE_COOKIE_NAME = "matorral-lang"
+CSRF_COOKIE_NAME = "matorral-csrf"
+SESSION_COOKIE_NAME = "matorral-session"
 
 FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
 
@@ -247,8 +247,8 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
 ACCOUNT_ALLOW_REGISTRATION = env.bool('DJANGO_ACCOUNT_ALLOW_REGISTRATION', True)
-ACCOUNT_ADAPTER = 'alameda.users.adapters.AccountAdapter'
-SOCIALACCOUNT_ADAPTER = 'alameda.users.adapters.SocialAccountAdapter'
+ACCOUNT_ADAPTER = 'matorral.users.adapters.AccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'matorral.users.adapters.SocialAccountAdapter'
 
 # Custom user app defaults
 # Select the correct user model
@@ -260,7 +260,7 @@ LOGIN_URL = 'login'
 AUTOSLUG_SLUGIFY_FUNCTION = 'slugify.slugify'
 
 # CELERY
-INSTALLED_APPS += ('alameda.taskapp.celery.CeleryConfig',)
+INSTALLED_APPS += ('matorral.taskapp.celery.CeleryConfig',)
 BROKER_URL = env('CELERY_BROKER_URL', default='amqp://')
 CELERY_TIMEZONE = 'UTC'
 CELERY_ACCEPT_CONTENT = ['msgpack']
@@ -300,7 +300,7 @@ REST_FRAMEWORK = {
     )
 }
 
-USER_AGENT = env("USER_AGENT", default="alameda/0.1.0")
+USER_AGENT = env("USER_AGENT", default="matorral/0.1.0")
 
 WATCHMAN_CHECKS = (
     'watchman.checks.caches',
@@ -347,7 +347,7 @@ LOGGING = {
             'handlers': ['console'],
             'propagate': True
         },
-        'alameda': {
+        'matorral': {
             'handlers': ['console'],
             'level': env('LOGGING_LOGGER_LEVEL', default='ERROR'),
             'formatter': 'verbose',
@@ -381,7 +381,7 @@ COMMENTS_XTD_MAX_THREAD_LEVEL = 2
 # Other Celery settings
 CELERYBEAT_SCHEDULE = {
     'sprints-update-state': {
-        'task': 'alameda.sprints.tasks.update_state',
+        'task': 'matorral.sprints.tasks.update_state',
         'schedule': crontab(hour='*/1')
     },
 }

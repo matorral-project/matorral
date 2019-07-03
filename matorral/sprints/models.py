@@ -6,7 +6,7 @@ from django.utils.text import slugify
 
 from simple_history.models import HistoricalRecords
 
-from alameda.models import ModelWithProgress
+from matorral.models import ModelWithProgress
 
 
 class Sprint(ModelWithProgress):

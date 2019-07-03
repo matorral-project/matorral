@@ -1,4 +1,4 @@
-from alameda.users.serializers import UserSerializer
+from matorral.users.serializers import UserSerializer
 
 from rest_framework import serializers
 

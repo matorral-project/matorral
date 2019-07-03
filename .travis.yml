@@ -6,7 +6,7 @@ python:
   - "3.6.4"
 
 env:
-  - DJANGO_DATABASE_URL=postgresql://postgres:@127.0.0.1:5432/alameda
+  - DJANGO_DATABASE_URL=postgresql://postgres:@127.0.0.1:5432/matorral
 
 services:
   - postgresql
@@ -15,7 +15,7 @@ services:
 install: pip install tox-travis==0.10
 
 before_script:
-  - psql -c 'create database alameda;' -U postgres
+  - psql -c 'create database matorral;' -U postgres
 
 # command to run tests with Tox
 script: tox

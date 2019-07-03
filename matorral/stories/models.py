@@ -11,8 +11,8 @@ from simple_history.models import HistoricalRecords
 
 from tagulous.models import TagField
 
-from alameda.models import BaseModel, ModelWithProgress
-from alameda.sprints.models import Sprint
+from matorral.models import BaseModel, ModelWithProgress
+from matorral.sprints.models import Sprint
 
 
 class StateModel(models.Model):

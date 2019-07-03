@@ -18,11 +18,11 @@ if not settings.configured:
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.local')  # pragma: no cover
 
 
-app = Celery('alameda')
+app = Celery('matorral')
 
 
 class CeleryConfig(AppConfig):
-    name = 'alameda.taskapp'
+    name = 'matorral.taskapp'
     verbose_name = 'Celery Config'
 
     def ready(self):

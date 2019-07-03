@@ -17,7 +17,7 @@ from .serializers import EpicSerializer, StorySerializer, TaskSerializer
 from .tasks import (duplicate_stories, remove_stories, story_set_assignee,
                     story_set_state, duplicate_epics, remove_epics,
                     epic_set_owner, epic_set_state, reset_epic)
-from alameda.sprints.views import BaseListView
+from matorral.sprints.views import BaseListView
 
 
 class EpicDetailView(DetailView):

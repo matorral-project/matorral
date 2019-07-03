@@ -1,4 +1,4 @@
-from alameda.taskapp.celery import app
+from matorral.taskapp.celery import app
 
 from .models import Epic, EpicState, Story, StoryState
 

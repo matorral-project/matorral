@@ -1,8 +1,8 @@
 from datetime import date
 
-from alameda.taskapp.celery import app
+from matorral.taskapp.celery import app
 
-from alameda.sprints.models import Sprint
+from matorral.sprints.models import Sprint
 
 
 @app.task(ignore_result=True)
@@ -31,5 +31,5 @@ def remove_sprints(sprint_ids):
 
 @app.task(ignore_result=True)
 def reset_sprint(story_ids):
-    from alameda.stories.models import Story
+    from matorral.stories.models import Story
     Story.objects.filter(id__in=story_ids).update(sprint=None)

@@ -1,5 +1,5 @@
 [run]
-include = alameda/*
+include = matorral/*
 omit = *migrations*, *tests*
 plugins =
     django_coverage_plugin

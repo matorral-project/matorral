@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from alameda.health_checks.views import liveness, readiness
+from matorral.health_checks.views import liveness, readiness
 
 urlpatterns = [
     url(r'^live/$', liveness),
