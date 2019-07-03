@@ -246,14 +246,16 @@
       };
 
       document.querySelectorAll('form').forEach(($form) => {
-        $form.addEventListener('submit', function(event) {
-          event.preventDefault();
-          if ($form.method.toLowerCase() == 'get') {
-            Turbolinks.visit(document.location.pathname + "?q=" + encodeURIComponent(document.querySelector('#id_q').value));
-          } else {
-            postForm($form);
-          }
-        });
+        if (!$form.hasAttribute('data-nofetch')) {
+          $form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            if ($form.method.toLowerCase() == 'get') {
+              Turbolinks.visit(document.location.pathname + "?q=" + encodeURIComponent(document.querySelector('#id_q').value));
+            } else {
+              postForm($form);
+            }
+          });
+        }
       })
     });
   </script>
