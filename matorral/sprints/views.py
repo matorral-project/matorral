@@ -163,6 +163,16 @@ class SprintBaseView(object):
     def success_url(self):
         return get_clean_next_url(self.request, reverse_lazy('sprints:sprint-list'))
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+
+        url = self.get_success_url()
+
+        if self.request.META.get('HTTP_X_FETCH') == 'true':
+            return JsonResponse(dict(url=url))
+
+        return response
+
 
 @method_decorator(login_required, name='dispatch')
 class SprintCreateView(SprintBaseView, CreateView):

@@ -110,9 +110,6 @@ class StoryBaseView(object):
 @method_decorator(login_required, name='dispatch')
 class StoryCreateView(StoryBaseView, CreateView):
 
-    def _get_success_message(self):
-        return 'Story successfully created!'
-
     def get_initial(self):
         initial_dict = dict(requester=self.request.user.id, state='pl')
 
@@ -126,12 +123,29 @@ class StoryCreateView(StoryBaseView, CreateView):
 
         return initial_dict
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+
+        url = self.get_success_url()
+
+        if self.request.META.get('HTTP_X_FETCH') == 'true':
+            return JsonResponse(dict(url=url))
+
+        return response
+
 
 @method_decorator(login_required, name='dispatch')
 class StoryUpdateView(StoryBaseView, UpdateView):
 
-    def _get_success_message(self):
-        return 'Story successfully updated!'
+    def form_valid(self, form):
+        response = super().form_valid(form)
+
+        url = self.get_success_url()
+
+        if self.request.META.get('HTTP_X_FETCH') == 'true':
+            return JsonResponse(dict(url=url))
+
+        return response
 
 
 class EpicBaseView(object):
@@ -150,18 +164,32 @@ class EpicBaseView(object):
 @method_decorator(login_required, name='dispatch')
 class EpicCreateView(EpicBaseView, CreateView):
 
-    def _get_success_message(self):
-        return 'Epic successfully created!'
-
     def get_initial(self):
         return dict(owner=self.request.user.id, state='pl')
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+
+        url = self.get_success_url()
+
+        if self.request.META.get('HTTP_X_FETCH') == 'true':
+            return JsonResponse(dict(url=url))
+
+        return response
 
 
 @method_decorator(login_required, name='dispatch')
 class EpicUpdateView(EpicBaseView, UpdateView):
 
-    def _get_success_message(self):
-        return 'Epic successfully updated!'
+    def form_valid(self, form):
+        response = super().form_valid(form)
+
+        url = self.get_success_url()
+
+        if self.request.META.get('HTTP_X_FETCH') == 'true':
+            return JsonResponse(dict(url=url))
+
+        return response
 
 
 @method_decorator(login_required, name='dispatch')
