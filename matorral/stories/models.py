@@ -12,7 +12,6 @@ from simple_history.models import HistoricalRecords
 from tagulous.models import TagField
 
 from matorral.models import BaseModel, ModelWithProgress
-from matorral.sprints.models import Sprint
 
 
 class StateModel(models.Model):
@@ -87,7 +86,6 @@ class Epic(ModelWithProgress):
         for tag in self.tags.values_list('name', flat=True):
             cloned.tags.add(tag)
 
-
     @staticmethod
     def update_state(sender, **kwargs):
         raw = kwargs['raw']
@@ -161,24 +159,25 @@ class Story(BaseModel):
 
 @receiver(post_save, sender=Story)
 def handle_story_post_save(sender, **kwargs):
-    Epic.update_points_and_progress(sender, **kwargs)
-    Epic.update_state(sender, **kwargs)
+    _handle_story_change(sender, kwargs)
 
 
 @receiver(post_delete, sender=Story)
 def handle_story_post_delete(sender, **kwargs):
-    Epic.update_points_and_progress(sender, **kwargs)
+    _handle_story_change(sender, kwargs)
+
+
+def _handle_story_change(sender, kwargs):
+    raw = kwargs.get('raw')
+    if not raw:
+        story = kwargs['instance']
+        if story.epic is not None:
+            story.epic.update_points_and_progress()
+
+        if story.sprint is not None:
+            story.sprint.update_points_and_progress()
+
     Epic.update_state(sender, **kwargs)
-
-
-@receiver(post_save, sender=Story)
-def handle_story_post_save(sender, **kwargs):
-    Sprint.update_points_and_progress(sender, **kwargs)
-
-
-@receiver(post_delete, sender=Story)
-def handle_story_post_delete(sender, **kwargs):
-    Sprint.update_points_and_progress(sender, **kwargs)
 
 
 class Task(BaseModel):
