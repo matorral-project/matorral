@@ -62,5 +62,10 @@ class ModelWithProgress(models.Model):
                 parent.total_points = total_points
                 parent.points_done = points_done
                 parent.story_count = Story.objects.filter(**parent_dict).count()
-                parent.progress = int(points_done / total_points * 100)
+
+                if total_points > 0:
+                    parent.progress = int(points_done / total_points * 100)
+                else:
+                    parent.progress = 0
+
                 parent.save()

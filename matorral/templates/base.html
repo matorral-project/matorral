@@ -4,20 +4,16 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="turbolinks-cache-control" content="no-preview">
     <title>{{ current_site.name }} - Simple Project Management System</title>
-    <link rel="preload stylesheet" href="{% static 'css/bulma-0.7.4.min.css' %}">
-    <link rel="preload stylesheet" href="{% static 'css/bulma-calendar.min.css' %}">
-    <link rel="preload stylesheet" href="{% static 'css/bulma-tagsinput.min.css' %}">
-    <link rel="preload stylesheet" href="{% static 'css/bulma-checkradio.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bulma-0.7.4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bulma-calendar.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bulma-tagsinput.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bulma-checkradio.min.css' %}">
     <style>
       nav div.level-item.bulk-action { visibility: hidden; }
     </style>
     <script defer src="{% static 'js/turbolinks.js' %}"></script>
     <script defer src="{% static 'js/fetch.js' %}"></script>
-    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
-    <script defer src="{% static 'js/bulma-calendar.min.js' %}"></script>
-    <script defer src="{% static 'js/bulma-tagsinput.min.js' %}"></script>
   </head>
   <body>
     {% if user.is_authenticated %}
@@ -136,9 +132,9 @@
     </footer>
   </body>
 
-  <script src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
-  <script src="{{ STATIC_URL }}js/bulma-calendar.min.js"></script>
-  <script src="{{ STATIC_URL }}js/bulma-tagsinput.min.js"></script>
+  <script defer src="{% static 'js/bulma-calendar.min.js' %}" data-mutate-approach="sync"></script>
+  <script defer src="{% static 'js/bulma-tagsinput.min.js' %}" data-mutate-approach="sync"></script>
+  <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js" data-mutate-approach="sync"></script>
   <script>
     function ready(fn) {
       if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading"){
@@ -230,19 +226,35 @@
           }
         }
 
-				fetch(document.location.href, {
-					method: 'POST',
-					headers: {
-						'X-Fetch': 'true'
-					},
-					body: formData
-				}).then(function(data) {
+        var object = {};
+        formData.forEach((value, key) => {
+            // Reflect.has in favor of: object.hasOwnProperty(key)
+            if(!Reflect.has(object, key)){
+                object[key] = value;
+                return;
+            }
+            if(!Array.isArray(object[key])){
+                object[key] = [object[key]];
+            }
+            object[key].push(value);
+        });
+        var jsonParams = JSON.stringify(object);
+
+        fetch(document.location.href, {
+          method: 'POST',
+          headers: {
+            'X-Fetch': 'true',
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+            'Content-Type': 'application/json'
+          },
+          body: jsonParams
+        }).then(function(data) {
           return data.json();
         }).then(function(jsonResponse) {
           Turbolinks.visit(jsonResponse.url, { action: "replace" });
-				}).catch(function(error) {
-					console.log('request failed', error)
-				})
+        }).catch(function(error) {
+          console.log('request failed', error)
+        })
       };
 
       document.querySelectorAll('form').forEach(($form) => {

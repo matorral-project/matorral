@@ -1,5 +1,7 @@
 from itertools import groupby
 
+import ujson
+
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse_lazy
@@ -49,7 +51,7 @@ class SprintDetailView(DetailView):
         return context
 
     def post(self, *args, **kwargs):
-        params = self.request.POST.dict()
+        params = ujson.loads(self.request.body)
         url = self.request.get_full_path()
 
         if params.get('remove') == 'yes':
@@ -134,7 +136,7 @@ class SprintList(BaseListView):
     prefetch_related = None
 
     def post(self, *args, **kwargs):
-        params = self.request.POST.dict()
+        params = ujson.loads(self.request.body)
 
         sprint_ids = [t[7:] for t in params.keys() if 'sprint-' in t]
 
@@ -176,9 +178,17 @@ class SprintBaseView(object):
 
 @method_decorator(login_required, name='dispatch')
 class SprintCreateView(SprintBaseView, CreateView):
-    pass
+
+    def post(self, *args, **kwargs):
+        data = ujson.loads(self.request.body)
+        form = self.get_form_class()(data)
+        return self.form_valid(form)
 
 
 @method_decorator(login_required, name='dispatch')
 class SprintUpdateView(SprintBaseView, UpdateView):
-    pass
+
+    def post(self, *args, **kwargs):
+        data = ujson.loads(self.request.body)
+        form = self.get_form_class()(data, instance=self.get_object())
+        return self.form_valid(form)
