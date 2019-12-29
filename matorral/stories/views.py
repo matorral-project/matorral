@@ -1,5 +1,7 @@
 from itertools import groupby
 
+import ujson
+
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.http import JsonResponse
@@ -53,7 +55,7 @@ class EpicDetailView(DetailView):
         return context
 
     def post(self, *args, **kwargs):
-        params = self.request.POST.dict()
+        params = ujson.loads(self.request.body)
 
         if params.get('remove') == 'yes':
             remove_epics.delay([self.get_object().id])
@@ -123,6 +125,11 @@ class StoryCreateView(StoryBaseView, CreateView):
 
         return initial_dict
 
+    def post(self, *args, **kwargs):
+        data = ujson.loads(self.request.body)
+        form = self.get_form_class()(data)
+        return self.form_valid(form)
+
     def form_valid(self, form):
         response = super().form_valid(form)
 
@@ -136,6 +143,11 @@ class StoryCreateView(StoryBaseView, CreateView):
 
 @method_decorator(login_required, name='dispatch')
 class StoryUpdateView(StoryBaseView, UpdateView):
+
+    def post(self, *args, **kwargs):
+        data = ujson.loads(self.request.body)
+        form = self.get_form_class()(data, instance=self.get_object())
+        return self.form_valid(form)
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -167,6 +179,11 @@ class EpicCreateView(EpicBaseView, CreateView):
     def get_initial(self):
         return dict(owner=self.request.user.id, state='pl')
 
+    def post(self, *args, **kwargs):
+        data = ujson.loads(self.request.body)
+        form = self.get_form_class()(data)
+        return self.form_valid(form)
+
     def form_valid(self, form):
         response = super().form_valid(form)
 
@@ -180,6 +197,11 @@ class EpicCreateView(EpicBaseView, CreateView):
 
 @method_decorator(login_required, name='dispatch')
 class EpicUpdateView(EpicBaseView, UpdateView):
+
+    def post(self, *args, **kwargs):
+        data = ujson.loads(self.request.body)
+        form = self.get_form_class()(data, instance=self.get_object())
+        return self.form_valid(form)
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -211,7 +233,7 @@ class EpicList(BaseListView):
         return context
 
     def post(self, *args, **kwargs):
-        params = self.request.POST.dict()
+        params = ujson.loads(self.request.body)
 
         epic_ids = [t[5:] for t in params.keys() if 'epic-' in t]
 
@@ -222,11 +244,17 @@ class EpicList(BaseListView):
             if params.get('duplicate') == 'yes':
                 duplicate_epics.delay(epic_ids)
 
-            if params.get('state') != '--':
-                epic_set_state.delay(epic_ids, params['state'])
+            state = params.get('state')
+            if isinstance(state, list):
+                state = state[0]
+            if state:
+                epic_set_state.delay(epic_ids, state)
 
-            if params.get('owner') != '--':
-                epic_set_owner.delay(epic_ids, params['owner'])
+            owner = params.get('owner')
+            if isinstance(owner, list):
+                owner = owner[0]
+            if owner:
+                epic_set_owner.delay(epic_ids, owner)
 
         url = self.request.get_full_path()
 
@@ -257,7 +285,7 @@ class StoryList(BaseListView):
         return context
 
     def post(self, *args, **kwargs):
-        params = self.request.POST.dict()
+        params = ujson.loads(self.request.body)
 
         story_ids = [t[6:] for t in params.keys() if 'story-' in t]
 
@@ -268,11 +296,17 @@ class StoryList(BaseListView):
             if params.get('duplicate') == 'yes':
                 duplicate_stories.delay(story_ids)
 
-            if params.get('state'):
-                story_set_state.delay(story_ids, params['state'])
+            state = params.get('state')
+            if isinstance(state, list):
+                state = state[0]
+            if state:
+                story_set_state.delay(story_ids, state)
 
-            if params.get('assignee'):
-                story_set_assignee.delay(story_ids, params['assignee'])
+            assignee = params.get('assignee')
+            if isinstance(assignee, list):
+                assignee = assignee[0]
+            if assignee:
+                story_set_assignee.delay(story_ids, assignee)
 
         url = self.request.get_full_path()
 

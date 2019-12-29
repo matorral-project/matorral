@@ -226,19 +226,35 @@
           }
         }
 
-				fetch(document.location.href, {
-					method: 'POST',
-					headers: {
-						'X-Fetch': 'true'
-					},
-					body: formData
-				}).then(function(data) {
+        var object = {};
+        formData.forEach((value, key) => {
+            // Reflect.has in favor of: object.hasOwnProperty(key)
+            if(!Reflect.has(object, key)){
+                object[key] = value;
+                return;
+            }
+            if(!Array.isArray(object[key])){
+                object[key] = [object[key]];
+            }
+            object[key].push(value);
+        });
+        var jsonParams = JSON.stringify(object);
+
+        fetch(document.location.href, {
+          method: 'POST',
+          headers: {
+            'X-Fetch': 'true',
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+            'Content-Type': 'application/json'
+          },
+          body: jsonParams
+        }).then(function(data) {
           return data.json();
         }).then(function(jsonResponse) {
           Turbolinks.visit(jsonResponse.url, { action: "replace" });
-				}).catch(function(error) {
-					console.log('request failed', error)
-				})
+        }).catch(function(error) {
+          console.log('request failed', error)
+        })
       };
 
       document.querySelectorAll('form').forEach(($form) => {

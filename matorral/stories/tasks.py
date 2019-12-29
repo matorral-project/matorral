@@ -21,7 +21,7 @@ def remove_stories(story_ids):
 
 @app.task(ignore_result=True)
 def story_set_assignee(story_ids, user_id):
-    Story.objects.filter(id__in=story_ids).update(assignee=user_id)
+    i = Story.objects.filter(id__in=story_ids).update(assignee=user_id)
 
 
 @app.task(ignore_result=True)
