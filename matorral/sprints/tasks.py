@@ -32,4 +32,12 @@ def remove_sprints(sprint_ids):
 @app.task(ignore_result=True)
 def reset_sprint(story_ids):
     from matorral.stories.models import Story
+
+    # get affected sprint ids before removing them: evaluate queryset because
+    # they're lazy :)
+    sprint_ids = list(Story.objects.filter(id__in=story_ids).values_list('sprint_id', flat=True))
+
     Story.objects.filter(id__in=story_ids).update(sprint=None)
+
+    for sprint in Sprint.objects.filter(id__in=sprint_ids):
+        sprint.update_points_and_progress()

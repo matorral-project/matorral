@@ -86,26 +86,17 @@ class Epic(ModelWithProgress):
         for tag in self.tags.values_list('name', flat=True):
             cloned.tags.add(tag)
 
-    @staticmethod
-    def update_state(sender, **kwargs):
-        raw = kwargs['raw']
-        instance = kwargs['instance']
+    def update_state(self):
+        # set epic as started when it has one or more started stories
+        if Story.objects.filter(state__stype=StoryState.STATE_STARTED).count() > 0:
+            if self.state.stype != EpicState.STATE_STARTED:
+                self.state = EpicState.objects.filter(stype=EpicState.STATE_STARTED)[0]
 
-        if not raw:
-            epic = instance.epic
+        elif Story.objects.filter(state__stype=StoryState.STATE_UNSTARTED).count() == self.story_count:
+            if self.state.stype != EpicState.STATE_UNSTARTED:
+                self.state = EpicState.objects.filter(stype=EpicState.STATE_UNSTARTED)[0]
 
-            if epic is None:
-                return
-
-            # set epic as started when it has one or more started stories
-            if Story.objects.filter(state__stype=StoryState.STATE_STARTED).count() > 0:
-                if epic.state.stype != EpicState.STATE_STARTED:
-                    epic.state = EpicState.objects.filter(stype=EpicState.STATE_STARTED)[0]
-            elif Story.objects.filter(state__stype=StoryState.STATE_UNSTARTED).count() == epic.story_count:
-                if epic.state.stype != EpicState.STATE_UNSTARTED:
-                    epic.state = EpicState.objects.filter(stype=EpicState.STATE_UNSTARTED)[0]
-
-            epic.save()
+        self.save()
 
 
 class Story(BaseModel):
@@ -159,25 +150,18 @@ class Story(BaseModel):
 
 @receiver(post_save, sender=Story)
 def handle_story_post_save(sender, **kwargs):
-    _handle_story_change(sender, kwargs)
+    from .tasks import handle_story_change
+    if not kwargs.get('raw', False):
+        instance = kwargs['instance']
+        handle_story_change.delay(instance.id)
 
 
 @receiver(post_delete, sender=Story)
 def handle_story_post_delete(sender, **kwargs):
-    _handle_story_change(sender, kwargs)
-
-
-def _handle_story_change(sender, kwargs):
-    raw = kwargs.get('raw')
-    if not raw:
-        story = kwargs['instance']
-        if story.epic is not None:
-            story.epic.update_points_and_progress()
-
-        if story.sprint is not None:
-            story.sprint.update_points_and_progress()
-
-    Epic.update_state(sender, **kwargs)
+    from .tasks import handle_story_change
+    if not kwargs.get('raw', False):
+        instance = kwargs['instance']
+        handle_story_change.delay(instance.id)
 
 
 class Task(BaseModel):

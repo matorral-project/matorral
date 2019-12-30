@@ -18,6 +18,14 @@ def duplicate_stories(story_ids):
 def remove_stories(story_ids):
     Story.objects.filter(id__in=story_ids).delete()
 
+    for epic in Epic.objects.filter(story__id__in=story_ids).distinct():
+        epic.update_state()
+        epic.update_points_and_progress()
+
+    from matorral.sprints.models import Sprint
+    for sprint in Sprint.objects.filter(story__id__in=story_ids).distinct():
+        sprint.update_points_and_progress()
+
 
 @app.task(ignore_result=True)
 def story_set_assignee(story_ids, user_id):
@@ -64,7 +72,38 @@ def epic_set_state(epic_ids, state_slug):
 
     Epic.objects.filter(id__in=epic_ids).update(state=state)
 
+    for epic in Epic.objects.filter(id__in=epic_ids):
+        epic.update_state()
+
 
 @app.task(ignore_result=True)
 def reset_epic(story_ids):
+    # get affected sprint and epic ids before removing them: evaluate queryset
+    # because they're lazy :)
+    epic_ids = list(Story.objects.filter(id__in=story_ids).values_list('epic_id', flat=True))
+    sprint_ids = list(Story.objects.filter(id__in=story_ids).values_list('sprint_id', flat=True))
+
     Story.objects.filter(id__in=story_ids).update(epic=None)
+
+    for epic in Epic.objects.filter(id__in=epic_ids):
+        epic.update_state()
+        epic.update_points_and_progress()
+
+    from matorral.sprints.models import Sprint
+    for sprint in Sprint.objects.filter(id__in=sprint_ids):
+        sprint.update_points_and_progress()
+
+
+@app.task(ignore_result=True)
+def handle_story_change(story_id):
+    try:
+        story = Story.objects.get(pk=story_id)
+    except Story.DoesNotExist:
+        return
+
+    if story.epic is not None:
+        story.epic.update_points_and_progress()
+        story.epic.update_state()
+
+    if story.sprint is not None:
+        story.sprint.update_points_and_progress()
