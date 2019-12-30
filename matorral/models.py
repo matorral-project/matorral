@@ -36,36 +36,28 @@ class ModelWithProgress(models.Model):
     def __str__(self):
         return self.title
 
-    @staticmethod
-    def update_points_and_progress(sender, **kwargs):
-        raw = kwargs.get('raw')
-        instance = kwargs['instance']
+    def update_points_and_progress(self, save=True):
+        Story = apps.get_model('stories', 'Story')
+        StoryState = apps.get_model('stories', 'StoryState')
 
-        if raw is None:
-            Story = apps.get_model('stories', 'Story')
-            StoryState = apps.get_model('stories', 'StoryState')
+        parent_dict = {self._meta.model_name: self.id}
 
-            for (parent_field, parent) in [('epic', instance.epic), ('sprint', instance.sprint)]:
-                if parent is None:
-                    continue
+        total_points = Story.objects.filter(**parent_dict)\
+            .aggregate(models.Sum('points'))['points__sum'] or 0
 
-                parent_dict = {parent_field: parent}
+        params = parent_dict.copy()
+        params['state__stype'] = StoryState.STATE_DONE
+        points_done = Story.objects.filter(**params)\
+            .aggregate(models.Sum('points'))['points__sum'] or 0
 
-                total_points = Story.objects.filter(**parent_dict)\
-                    .aggregate(models.Sum('points'))['points__sum'] or 0
+        self.total_points = total_points
+        self.points_done = points_done
+        self.story_count = Story.objects.filter(**parent_dict).count()
 
-                params = parent_dict
-                params['state__stype'] = StoryState.STATE_DONE
-                points_done = Story.objects.filter(**params)\
-                    .aggregate(models.Sum('points'))['points__sum'] or 0
+        if total_points > 0:
+            self.progress = int(float(points_done) / total_points * 100)
+        else:
+            self.progress = 0
 
-                parent.total_points = total_points
-                parent.points_done = points_done
-                parent.story_count = Story.objects.filter(**parent_dict).count()
-
-                if total_points > 0:
-                    parent.progress = int(points_done / total_points * 100)
-                else:
-                    parent.progress = 0
-
-                parent.save()
+        if save:
+            self.save()

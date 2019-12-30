@@ -4,6 +4,9 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% block extra_head %}
+      <meta name="turbolinks-cache-control" content="no-cache">
+    {% endblock %}
     <title>{{ current_site.name }} - Simple Project Management System</title>
     <link rel="stylesheet" href="{% static 'css/bulma-0.7.4.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/bulma-calendar.min.css' %}">

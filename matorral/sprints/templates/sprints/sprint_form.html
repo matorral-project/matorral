@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 
 {% block object_list_url %}{% url 'sprints:sprint-list' %}{% endblock %}
+{% block extra_head %}
+  <meta name="turbolinks-cache-control" content="no-cache">
+{% endblock %}
 
 {% block content %}
 	<nav class="level">
