@@ -23,7 +23,9 @@ class SprintDetailView(DetailView):
     model = Sprint
 
     def get_children(self):
-        queryset = self.get_object().story_set.select_related('requester', 'assignee', 'epic', 'state')
+        queryset = self.get_object().story_set\
+            .select_related('requester', 'assignee', 'epic', 'state')\
+            .order_by('epic__priority', 'priority')
 
         config = dict(
             epic=('epic__name', lambda story: story.epic and story.epic.title or 'No Epic'),
