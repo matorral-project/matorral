@@ -2,7 +2,7 @@ import copy
 
 from django.conf import settings
 from django.db import models
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils.text import slugify
@@ -146,6 +146,45 @@ class Story(BaseModel):
 
         for tag in self.tags.values_list('name', flat=True):
             cloned.tags.add(tag)
+
+
+@receiver(pre_save, sender=Story)
+def handle_story_pre_save(sender, **kwargs):
+    if not kwargs.get('raw', False):
+        instance = kwargs['instance']
+
+        if instance.id is None:
+            previous_epic = None
+        else:
+            try:
+                previous_epic = Epic.objects.get(story__id=instance.id)
+            except Epic.DoesNotExist:
+                previous_epic = None
+
+        # the epic has changed: update here the previous one,
+        # the new one will be updated in post_save handler :)
+        if (previous_epic != instance.epic) and previous_epic is not None:
+            from .tasks import handle_epic_change
+            # 10 seconds till the epic changes to the new one so this will have
+            # one story less
+            handle_epic_change.apply_async((previous_epic.id, ), countdown=10)
+
+        if instance.id is None:
+            previous_sprint = None
+        else:
+            from matorral.sprints.models import Sprint
+            try:
+                previous_sprint = Sprint.objects.get(story__id=instance.id)
+            except Sprint.DoesNotExist:
+                previous_sprint = None
+
+        # the sprint has changed: update here the previous one,
+        # the new one will be updated in post_save handler :)
+        if (previous_sprint != instance.sprint) and previous_sprint is not None:
+            from .tasks import handle_sprint_change
+            # 10 seconds till the sprint changes to the new one so this will have
+            # one story less
+            handle_sprint_change.apply_async((previous_sprint.id, ), countdown=10)
 
 
 @receiver(post_save, sender=Story)
