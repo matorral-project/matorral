@@ -169,7 +169,12 @@ class StoryUpdateView(StoryBaseView, UpdateView):
 
     def post(self, *args, **kwargs):
         data = ujson.loads(self.request.body)
-        form = self.get_form_class()(data, instance=self.get_object())
+
+        if data.get('save-as-new'):
+            form = self.get_form_class()(data)
+        else:
+            form = self.get_form_class()(data, instance=self.get_object())
+
         return self.form_valid(form)
 
     def form_valid(self, form):
@@ -229,7 +234,12 @@ class EpicUpdateView(EpicBaseView, UpdateView):
 
     def post(self, *args, **kwargs):
         data = ujson.loads(self.request.body)
-        form = self.get_form_class()(data, instance=self.get_object())
+
+        if data.get('save-as-new'):
+            form = self.get_form_class()(data)
+        else:
+            form = self.get_form_class()(data, instance=self.get_object())
+
         return self.form_valid(form)
 
     def form_valid(self, form):

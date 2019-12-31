@@ -265,7 +265,13 @@
         $button.addEventListener('click', function(event) {
           $button.form.querySelector('#next').value = $button.dataset.next;
         });
+      });
 
+      document.querySelectorAll('form[method="post"] button[type="submit"]').forEach(($button) => {
+        $button.addEventListener('click', function(event) {
+          event.preventDefault();
+          postForm($button.form, $button);
+        });
       });
 
       document.querySelectorAll('form').forEach(($form) => {
