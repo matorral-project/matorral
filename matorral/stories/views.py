@@ -1,7 +1,5 @@
 from itertools import groupby
 
-import ujson
-
 from django.contrib.auth.decorators import login_required
 from django.db.models import Max
 from django.http import HttpResponseRedirect
@@ -11,16 +9,19 @@ from django.utils.decorators import method_decorator
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView
 
+from matorral.sprints.views import BaseListView
+
 from rest_framework import viewsets
 
-from ..utils import get_clean_next_url
-from .forms import EpicGroupByForm, EpicFilterForm, StoryFilterForm
+import ujson
+
+from .forms import EpicFilterForm, EpicGroupByForm, StoryFilterForm
 from .models import Epic, Story, Task
 from .serializers import EpicSerializer, StorySerializer, TaskSerializer
-from .tasks import (duplicate_stories, remove_stories, story_set_assignee,
-                    story_set_state, duplicate_epics, remove_epics,
-                    epic_set_owner, epic_set_state, reset_epic)
-from matorral.sprints.views import BaseListView
+from .tasks import (duplicate_epics, duplicate_stories, epic_set_owner,
+                    epic_set_state, remove_epics, remove_stories, reset_epic,
+                    story_set_assignee, story_set_state)
+from ..utils import get_clean_next_url
 
 
 class EpicDetailView(DetailView):
