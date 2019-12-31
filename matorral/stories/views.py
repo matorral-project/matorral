@@ -110,6 +110,23 @@ class StoryBaseView(object):
     def success_url(self):
         return get_clean_next_url(self.request, reverse_lazy('stories:story-list'))
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        story_add_url = reverse_lazy('stories:story-add')
+
+        epic_id = self.request.GET.get('epic')
+        sprint_id = self.request.GET.get('sprint')
+        if epic_id or sprint_id:
+            story_add_url += '?'
+            if epic_id:
+                story_add_url += 'epic=' + epic_id
+            if sprint_id:
+                story_add_url += 'sprint=' + sprint_id
+
+        context['story_add_url'] = story_add_url
+
+        return context
+
 
 @method_decorator(login_required, name='dispatch')
 class StoryCreateView(StoryBaseView, CreateView):
@@ -122,7 +139,7 @@ class StoryCreateView(StoryBaseView, CreateView):
             initial_dict['epic'] = epic_id
 
             max_priority = Story.objects.filter(epic=epic_id)\
-                .aggregate(Max('priority'))['priority__max']
+                .aggregate(Max('priority'))['priority__max'] or 0
             initial_dict['priority'] = max_priority + 1
 
         sprint_id = self.request.GET.get('sprint')
@@ -177,6 +194,12 @@ class EpicBaseView(object):
     @property
     def success_url(self):
         return get_clean_next_url(self.request, reverse_lazy('stories:epic-list'))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        epic_add_url = reverse_lazy('stories:epic-add')
+        context['epic_add_url'] = epic_add_url
+        return context
 
 
 @method_decorator(login_required, name='dispatch')

@@ -261,6 +261,13 @@
         })
       };
 
+      document.querySelectorAll('button[data-next]').forEach(($button) => {
+        $button.addEventListener('click', function(event) {
+          $button.form.querySelector('#next').value = $button.dataset.next;
+        });
+
+      });
+
       document.querySelectorAll('form').forEach(($form) => {
         if (!$form.hasAttribute('data-nofetch')) {
           $form.addEventListener('submit', function(event) {

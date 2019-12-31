@@ -175,6 +175,12 @@ class SprintBaseView(object):
 
         return response
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        sprint_add_url = reverse_lazy('sprints:sprint-add')
+        context['sprint_add_url'] = sprint_add_url
+        return context
+
 
 @method_decorator(login_required, name='dispatch')
 class SprintCreateView(SprintBaseView, CreateView):

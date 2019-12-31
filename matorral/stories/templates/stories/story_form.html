@@ -61,6 +61,15 @@
         </button>
       </div>
       <div class="control">
+        <input type="hidden" name="next" id="next" value="{{ next_url }}" />
+        <button class="button is-link" type="submit" data-next="{{ story_add_url }}">
+          <span class="icon is-small">
+            <i class="fas fa-save"></i>
+          </span>
+          <small>Save &amp; Add Another</small>
+        </button>
+      </div>
+      <div class="control">
         <a class="button is-text" href="{{ next_url }}">Cancel</a>
       </div>
     </div>
