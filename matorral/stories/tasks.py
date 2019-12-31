@@ -117,15 +117,3 @@ def handle_epic_change(epic_id):
         return
 
     epic.update_points_and_progress()
-
-
-@app.task(ignore_result=True)
-def handle_epic_change(epic_id):
-    from matorral.sprints.models import Sprint
-
-    try:
-        sprint = Sprint.objects.get(pk=epic_id)
-    except Sprint.DoesNotExist:
-        return
-
-    sprint.update_points_and_progress()

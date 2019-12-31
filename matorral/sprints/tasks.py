@@ -41,3 +41,13 @@ def reset_sprint(story_ids):
 
     for sprint in Sprint.objects.filter(id__in=sprint_ids):
         sprint.update_points_and_progress()
+
+
+@app.task(ignore_result=True)
+def handle_sprint_change(epic_id):
+    try:
+        sprint = Sprint.objects.get(pk=epic_id)
+    except Sprint.DoesNotExist:
+        return
+
+    sprint.update_points_and_progress()

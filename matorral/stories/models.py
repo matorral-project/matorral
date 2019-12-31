@@ -5,7 +5,6 @@ from django.db import models
 from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
 from django.urls import reverse
-from django.utils.text import slugify
 
 from simple_history.models import HistoricalRecords
 
@@ -69,7 +68,7 @@ class Epic(ModelWithProgress):
     history = HistoricalRecords()
 
     def get_absolute_url(self):
-        return reverse('stories:epic-view', args=[str(self.id), slugify(self.title)])
+        return reverse('stories:epic-detail', args=[str(self.id)])
 
     def is_done(self):
         if self.state.stype == StateModel.STATE_DONE:
@@ -127,7 +126,7 @@ class Story(BaseModel):
     history = HistoricalRecords()
 
     def get_absolute_url(self):
-        return reverse('stories:story-view', args=[str(self.id), slugify(self.title)])
+        return reverse('stories:story-detail', args=[str(self.id)])
 
     def is_done(self):
         if self.state.stype == StateModel.STATE_DONE:
@@ -181,7 +180,7 @@ def handle_story_pre_save(sender, **kwargs):
         # the sprint has changed: update here the previous one,
         # the new one will be updated in post_save handler :)
         if (previous_sprint != instance.sprint) and previous_sprint is not None:
-            from .tasks import handle_sprint_change
+            from matorral.sprints.tasks import handle_sprint_change
             # 10 seconds till the sprint changes to the new one so this will have
             # one story less
             handle_sprint_change.apply_async((previous_sprint.id, ), countdown=10)
@@ -209,7 +208,7 @@ class Task(BaseModel):
     story = models.ForeignKey(Story, on_delete=models.CASCADE)
 
     def get_absolute_url(self):
-        return reverse('stories:task-view', args=[str(self.id), slugify(self.title)])
+        return reverse('stories:task-view', args=[str(self.id)])
 
     def duplicate(self, parent=None):
         cloned = copy.copy(self)

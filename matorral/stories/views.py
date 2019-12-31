@@ -353,3 +353,28 @@ class StoryList(BaseListView):
             return JsonResponse(dict(url=url))
         else:
             return HttpResponseRedirect(url)
+
+
+class StoryDetailView(DetailView):
+
+    model = Story
+
+    def post(self, *args, **kwargs):
+        params = ujson.loads(self.request.body)
+
+        if params.get('remove') == 'yes':
+            remove_stories.delay([self.get_object().id])
+
+            url = reverse_lazy('stories:story-list')
+
+            if self.request.META.get('HTTP_X_FETCH') == 'true':
+                return JsonResponse(dict(url=url))
+            else:
+                return HttpResponseRedirect(url)
+
+        url = self.request.get_full_path()
+
+        if self.request.META.get('HTTP_X_FETCH') == 'true':
+            return JsonResponse(dict(url=url))
+        else:
+            return HttpResponseRedirect(url)
