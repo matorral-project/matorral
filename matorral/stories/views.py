@@ -3,6 +3,7 @@ from itertools import groupby
 import ujson
 
 from django.contrib.auth.decorators import login_required
+from django.db.models import Max
 from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django.urls import reverse_lazy
@@ -118,6 +119,10 @@ class StoryCreateView(StoryBaseView, CreateView):
         epic_id = self.request.GET.get('epic')
         if epic_id is not None:
             initial_dict['epic'] = epic_id
+
+            max_priority = Story.objects.filter(epic=epic_id)\
+                .aggregate(Max('priority'))['priority__max']
+            initial_dict['priority'] = max_priority + 1
 
         sprint_id = self.request.GET.get('sprint')
         if sprint_id is not None:
