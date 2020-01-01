@@ -54,6 +54,7 @@ class EpicDetailView(DetailView):
         context['objects_by_group'] = self.get_children()
         context['group_by_form'] = EpicGroupByForm(self.request.GET)
         context['group_by'] = self.request.GET.get('group_by')
+        context['filters_form'] = StoryFilterForm(self.request.POST)
         return context
 
     def post(self, *args, **kwargs):
@@ -72,6 +73,20 @@ class EpicDetailView(DetailView):
         if params.get('epic-reset') == 'yes':
             story_ids = [t[6:] for t in params.keys() if 'story-' in t]
             reset_epic.delay(story_ids)
+
+        state = params.get('state')
+        if isinstance(state, list):
+            state = state[0]
+        if state:
+            story_ids = [t[6:] for t in params.keys() if 'story-' in t]
+            story_set_state.delay(story_ids, state)
+
+        assignee = params.get('assignee')
+        if isinstance(assignee, list):
+            assignee = assignee[0]
+        if assignee:
+            story_ids = [t[6:] for t in params.keys() if 'story-' in t]
+            story_set_assignee.delay(story_ids, assignee)
 
         url = self.request.get_full_path()
 

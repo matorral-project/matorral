@@ -11,6 +11,9 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView
 from rest_framework import viewsets
 
+from matorral.stories.forms import StoryFilterForm
+from matorral.stories.tasks import story_set_assignee, story_set_state
+
 from ..utils import get_clean_next_url
 from .forms import SprintGroupByForm
 from .models import Sprint
@@ -50,6 +53,7 @@ class SprintDetailView(DetailView):
         context['group_by_form'] = SprintGroupByForm(self.request.GET)
         context['objects_by_group'] = self.get_children()
         context['group_by'] = self.request.GET.get('group_by')
+        context['filters_form'] = StoryFilterForm(self.request.POST)
         return context
 
     def post(self, *args, **kwargs):
@@ -63,6 +67,21 @@ class SprintDetailView(DetailView):
         elif params.get('sprint-reset') == 'yes':
             story_ids = [t[6:] for t in params.keys() if 'story-' in t]
             reset_sprint.delay(story_ids)
+
+        else:
+            state = params.get('state')
+            if isinstance(state, list):
+                state = state[0]
+            if state:
+                story_ids = [t[6:] for t in params.keys() if 'story-' in t]
+                story_set_state.delay(story_ids, state)
+
+            assignee = params.get('assignee')
+            if isinstance(assignee, list):
+                assignee = assignee[0]
+            if assignee:
+                story_ids = [t[6:] for t in params.keys() if 'story-' in t]
+                story_set_assignee.delay(story_ids, assignee)
 
         if self.request.META.get('HTTP_X_FETCH') == 'true':
             return JsonResponse(dict(url=url))
