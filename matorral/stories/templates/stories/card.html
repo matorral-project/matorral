@@ -24,6 +24,6 @@
   <footer class="card-footer">
     <a href="{% url 'stories:story-detail' story.id %}" class="card-footer-item">Details</a>
     <a href="{% url 'stories:story-edit' story.id %}" class="card-footer-item">Edit</a>
-    <a href="{% url 'stories:story-edit' story.id %}" class="card-footer-item">Mark as Done</a>
+    <a href="{% url 'stories:story-edit' story.id %}" class="card-footer-item">{{ next_action }}</a>
   </footer>
 </div>

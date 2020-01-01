@@ -4,7 +4,7 @@
   <h2 class="title is-3">What you're working on</h2>
   <div class="card-list">
   {% for story in my_in_progress_stories %}
-    {% include 'stories/card.html' with story=story %}
+    {% include 'stories/card.html' with story=story next_action="Mark as Done" %}
   {% endfor %}
   </div>
 	<br/>
@@ -12,7 +12,7 @@
   <h2 class="title is-3">What's next?</h2>
   <div class="card-list">
   {% for story in my_upcoming_stories %}
-    {% include 'stories/card.html' with story=story %}
+    {% include 'stories/card.html' with story=story next_action="Mark as In Progress" %}
   {% endfor %}
   </div>
 {% endblock %}
