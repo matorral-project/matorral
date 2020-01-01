@@ -87,11 +87,11 @@ class Epic(ModelWithProgress):
 
     def update_state(self):
         # set epic as started when it has one or more started stories
-        if Story.objects.filter(state__stype=StoryState.STATE_STARTED).count() > 0:
+        if Story.objects.filter(state__stype=StoryState.STATE_STARTED, epic=self).count() > 0:
             if self.state.stype != EpicState.STATE_STARTED:
                 self.state = EpicState.objects.filter(stype=EpicState.STATE_STARTED)[0]
 
-        elif Story.objects.filter(state__stype=StoryState.STATE_UNSTARTED).count() == self.story_count:
+        elif Story.objects.filter(state__stype=StoryState.STATE_UNSTARTED, epic=self).count() == self.story_count:
             if self.state.stype != EpicState.STATE_UNSTARTED:
                 self.state = EpicState.objects.filter(stype=EpicState.STATE_UNSTARTED)[0]
 
