@@ -271,10 +271,14 @@
         });
       });
 
-      document.querySelectorAll('form[method="post"] button[type="submit"]').forEach(($button) => {
+      document.querySelectorAll('div.bulk-action button[type="submit"]').forEach(($button) => {
         $button.addEventListener('click', function(event) {
           event.preventDefault();
-          postForm($button.form, $button);
+          let clickedElement = event.target;
+          if (clickedElement.tagName != 'BUTTON') {
+            clickedElement = clickedElement.parentNode;
+          }
+          postForm(clickedElement.form, clickedElement);
         });
       });
 
@@ -282,10 +286,10 @@
         if (!$form.hasAttribute('data-nofetch')) {
           $form.addEventListener('submit', function(event) {
             event.preventDefault();
-            if ($form.method.toLowerCase() == 'get') {
+            if (event.target.method.toLowerCase() == 'get') {
               Turbolinks.visit(document.location.pathname + "?q=" + encodeURIComponent(document.querySelector('#id_q').value));
             } else {
-              postForm($form);
+              postForm(event.target);
             }
           });
         }

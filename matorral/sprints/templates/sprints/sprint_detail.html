@@ -38,8 +38,7 @@
             <p class="control">
               <form method="POST">
                 {% csrf_token %}
-                <button class="button is-danger is-outlined" type="submit" name="remove" value="yes"
-                      onclick="postForm(this.form, this); return false;">
+                <button class="button is-danger is-outlined" type="submit" name="remove" value="yes">
                   <span class="icon is-small">
                     <i class="fas fa-minus"></i>
                   </span>
@@ -122,8 +121,7 @@
 			<div class="level-item bulk-action">
 				<div class="field has-addons">
 					<p class="control">
-            <button class="button is-danger is-outlined" type="submit" name="sprint-reset" value="yes" form="object-list"
-                  onclick="postForm(this.form, this); return false;">
+            <button class="button is-danger is-outlined" type="submit" name="sprint-reset" value="yes" form="object-list">
               <span class="icon is-small">
                 <i class="fas fa-minus"></i>
               </span>
