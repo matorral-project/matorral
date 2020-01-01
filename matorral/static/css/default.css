@@ -1,2 +1,5 @@
 html, html body { font-size: 13px; }
 body section.section { padding: 1rem; }
+
+div.card-list div.card { width: 33%; vertical-align: top; min-height: 250px; }
+div.card-list div.card div.card-content { height: 210px; padding: 0.75em; }
