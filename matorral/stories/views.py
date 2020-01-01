@@ -1,8 +1,7 @@
 from itertools import groupby
 
-import ujson
-
 from django.contrib.auth.decorators import login_required
+from django.db.models import Max
 from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django.urls import reverse_lazy
@@ -10,16 +9,19 @@ from django.utils.decorators import method_decorator
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView
 
+from matorral.sprints.views import BaseListView
+
 from rest_framework import viewsets
 
-from ..utils import get_clean_next_url
-from .forms import EpicGroupByForm, EpicFilterForm, StoryFilterForm
+import ujson
+
+from .forms import EpicFilterForm, EpicGroupByForm, StoryFilterForm
 from .models import Epic, Story, Task
 from .serializers import EpicSerializer, StorySerializer, TaskSerializer
-from .tasks import (duplicate_stories, remove_stories, story_set_assignee,
-                    story_set_state, duplicate_epics, remove_epics,
-                    epic_set_owner, epic_set_state, reset_epic)
-from matorral.sprints.views import BaseListView
+from .tasks import (duplicate_epics, duplicate_stories, epic_set_owner,
+                    epic_set_state, remove_epics, remove_stories, reset_epic,
+                    story_set_assignee, story_set_state)
+from ..utils import get_clean_next_url
 
 
 class EpicDetailView(DetailView):
@@ -52,6 +54,7 @@ class EpicDetailView(DetailView):
         context['objects_by_group'] = self.get_children()
         context['group_by_form'] = EpicGroupByForm(self.request.GET)
         context['group_by'] = self.request.GET.get('group_by')
+        context['filters_form'] = StoryFilterForm(self.request.POST)
         return context
 
     def post(self, *args, **kwargs):
@@ -70,6 +73,20 @@ class EpicDetailView(DetailView):
         if params.get('epic-reset') == 'yes':
             story_ids = [t[6:] for t in params.keys() if 'story-' in t]
             reset_epic.delay(story_ids)
+
+        state = params.get('state')
+        if isinstance(state, list):
+            state = state[0]
+        if state:
+            story_ids = [t[6:] for t in params.keys() if 'story-' in t]
+            story_set_state.delay(story_ids, state)
+
+        assignee = params.get('assignee')
+        if isinstance(assignee, list):
+            assignee = assignee[0]
+        if assignee:
+            story_ids = [t[6:] for t in params.keys() if 'story-' in t]
+            story_set_assignee.delay(story_ids, assignee)
 
         url = self.request.get_full_path()
 
@@ -108,6 +125,23 @@ class StoryBaseView(object):
     def success_url(self):
         return get_clean_next_url(self.request, reverse_lazy('stories:story-list'))
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        story_add_url = reverse_lazy('stories:story-add')
+
+        epic_id = self.request.GET.get('epic')
+        sprint_id = self.request.GET.get('sprint')
+        if epic_id or sprint_id:
+            story_add_url += '?'
+            if epic_id:
+                story_add_url += 'epic=' + epic_id
+            if sprint_id:
+                story_add_url += 'sprint=' + sprint_id
+
+        context['story_add_url'] = story_add_url
+
+        return context
+
 
 @method_decorator(login_required, name='dispatch')
 class StoryCreateView(StoryBaseView, CreateView):
@@ -118,6 +152,10 @@ class StoryCreateView(StoryBaseView, CreateView):
         epic_id = self.request.GET.get('epic')
         if epic_id is not None:
             initial_dict['epic'] = epic_id
+
+            max_priority = Story.objects.filter(epic=epic_id)\
+                .aggregate(Max('priority'))['priority__max'] or 0
+            initial_dict['priority'] = max_priority + 1
 
         sprint_id = self.request.GET.get('sprint')
         if sprint_id is not None:
@@ -146,7 +184,12 @@ class StoryUpdateView(StoryBaseView, UpdateView):
 
     def post(self, *args, **kwargs):
         data = ujson.loads(self.request.body)
-        form = self.get_form_class()(data, instance=self.get_object())
+
+        if data.get('save-as-new'):
+            form = self.get_form_class()(data)
+        else:
+            form = self.get_form_class()(data, instance=self.get_object())
+
         return self.form_valid(form)
 
     def form_valid(self, form):
@@ -171,6 +214,12 @@ class EpicBaseView(object):
     @property
     def success_url(self):
         return get_clean_next_url(self.request, reverse_lazy('stories:epic-list'))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        epic_add_url = reverse_lazy('stories:epic-add')
+        context['epic_add_url'] = epic_add_url
+        return context
 
 
 @method_decorator(login_required, name='dispatch')
@@ -200,7 +249,12 @@ class EpicUpdateView(EpicBaseView, UpdateView):
 
     def post(self, *args, **kwargs):
         data = ujson.loads(self.request.body)
-        form = self.get_form_class()(data, instance=self.get_object())
+
+        if data.get('save-as-new'):
+            form = self.get_form_class()(data)
+        else:
+            form = self.get_form_class()(data, instance=self.get_object())
+
         return self.form_valid(form)
 
     def form_valid(self, form):
@@ -307,6 +361,31 @@ class StoryList(BaseListView):
                 assignee = assignee[0]
             if assignee:
                 story_set_assignee.delay(story_ids, assignee)
+
+        url = self.request.get_full_path()
+
+        if self.request.META.get('HTTP_X_FETCH') == 'true':
+            return JsonResponse(dict(url=url))
+        else:
+            return HttpResponseRedirect(url)
+
+
+class StoryDetailView(DetailView):
+
+    model = Story
+
+    def post(self, *args, **kwargs):
+        params = ujson.loads(self.request.body)
+
+        if params.get('remove') == 'yes':
+            remove_stories.delay([self.get_object().id])
+
+            url = reverse_lazy('stories:story-list')
+
+            if self.request.META.get('HTTP_X_FETCH') == 'true':
+                return JsonResponse(dict(url=url))
+            else:
+                return HttpResponseRedirect(url)
 
         url = self.request.get_full_path()
 

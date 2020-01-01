@@ -38,16 +38,20 @@
 
       <div id="navbarBasicExample" class="navbar-menu">
         <div class="navbar-start">
-          <a class="navbar-item" href="{% url 'stories:story-list' %}">
-            Stories
+          <a class="navbar-item" href="{% url 'dashboard:index' %}">
+            Dashboard
+          </a>
+
+          <a class="navbar-item" href="{% url 'sprints:sprint-list' %}">
+            Sprints
           </a>
 
           <a class="navbar-item" href="{% url 'stories:epic-list' %}">
             Epics
           </a>
 
-          <a class="navbar-item" href="{% url 'sprints:sprint-list' %}">
-            Sprints
+          <a class="navbar-item" href="{% url 'stories:story-list' %}">
+            Stories
           </a>
 
           <div class="navbar-item has-dropdown is-hoverable">
@@ -119,7 +123,7 @@
           </iframe>
         </section>
         <footer class="modal-card-foot">
-          <button class="button is-primary">Save changes</button>
+          <button class="button is-link">Save changes</button>
           <button class="button">Cancel</button>
         </footer>
       </div>
@@ -184,24 +188,24 @@
       bulmaCalendar.attach('#id_starts_at', {type: 'date'});
       bulmaCalendar.attach('#id_ends_at', {type: 'date'});
 
-      var selectAll = document.querySelector('[name="select-all"]');
-      if (selectAll) {
+      document.querySelectorAll('input[type="checkbox"].selectAll').forEach((selectAll) => {
         selectAll.addEventListener('click', function(event) {
-          document.querySelectorAll('input[type="checkbox"]').forEach(($checkbox) => {
-            if (document.querySelector('[name="select-all"]').checked) {
-              $checkbox.setAttribute('checked', 'checked');
+          table = event.target.parentNode.parentNode.parentNode.parentNode;
+          table.querySelectorAll('tbody input[type="checkbox"]').forEach(($checkbox) => {
+            if (event.target.checked) {
+              $checkbox.checked = true;
               document.querySelectorAll('.bulk-action').forEach(($div) => {
                 $div.style.visibility = 'visible'
               });
             } else {
-              $checkbox.removeAttribute('checked');
+              $checkbox.checked = false;
               document.querySelectorAll('.bulk-action').forEach(($div) => {
                 $div.style.visibility = 'hidden'
               });
             }
           })
         });
-      }
+      });
 
       document.querySelectorAll('input[type="checkbox"]').forEach(($checkbox) => {
         $checkbox.addEventListener('click', function(event) {
@@ -261,14 +265,31 @@
         })
       };
 
+      document.querySelectorAll('button[data-next]').forEach(($button) => {
+        $button.addEventListener('click', function(event) {
+          $button.form.querySelector('#next').value = $button.dataset.next;
+        });
+      });
+
+      document.querySelectorAll('div.bulk-action button[type="submit"]').forEach(($button) => {
+        $button.addEventListener('click', function(event) {
+          event.preventDefault();
+          let clickedElement = event.target;
+          if (clickedElement.tagName != 'BUTTON') {
+            clickedElement = clickedElement.parentNode;
+          }
+          postForm(clickedElement.form, clickedElement);
+        });
+      });
+
       document.querySelectorAll('form').forEach(($form) => {
         if (!$form.hasAttribute('data-nofetch')) {
           $form.addEventListener('submit', function(event) {
             event.preventDefault();
-            if ($form.method.toLowerCase() == 'get') {
+            if (event.target.method.toLowerCase() == 'get') {
               Turbolinks.visit(document.location.pathname + "?q=" + encodeURIComponent(document.querySelector('#id_q').value));
             } else {
-              postForm($form);
+              postForm(event.target);
             }
           });
         }

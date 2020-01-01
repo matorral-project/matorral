@@ -6,7 +6,7 @@
 {% block table_head_content %}
   <tr>
     <th>
-      <input type="checkbox" name="select-all" />
+      <input type="checkbox" class="selectAll" />
     </th>
     <th><abbr title="Identification Number">ID</abbr></th>
     <th>Title</th>
@@ -28,7 +28,7 @@
     </td>
     <td>#{{ story.id }}</td>
     <td>
-      <a href="{% url 'stories:story-edit' story.id %}?next={{ encoded_url }}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
+      <a href="{% url 'stories:story-detail' story.id %}?next={{ encoded_url }}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
         <strong>{{ story.title }}</strong><br/>
       </a>
       {% for tag in story.tags.all %}

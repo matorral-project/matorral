@@ -53,13 +53,32 @@
     {% endfor %}
     <div class="field is-grouped">
       <div class="control">
-        <button class="button is-link" type="submit">
+        <button class="button is-link" type="submit" name="save" value="save">
           <span class="icon is-small">
             <i class="fas fa-save"></i>
           </span>
           <small>Save Changes</small>
         </button>
       </div>
+      <div class="control">
+        <input type="hidden" name="next" id="next" value="{{ next_url }}" />
+        <button class="button is-primary" type="submit" data-next="{{ sprint_add_url }}" name="save-and-add" value="save-and-add">
+          <span class="icon is-small">
+            <i class="fas fa-save"></i>
+          </span>
+          <small>Save &amp; Add Another</small>
+        </button>
+      </div>
+      {% if object %}
+      <div class="control">
+        <button class="button is-warning" type="submit" name="save-as-new" value="save-as-new">
+          <span class="icon is-small">
+            <i class="fas fa-save"></i>
+          </span>
+          <small>Save as New</small>
+        </button>
+      </div>
+      {% endif %}
       <div class="control">
         <a class="button is-text" href="{{ next_url }}">Cancel</a>
       </div>

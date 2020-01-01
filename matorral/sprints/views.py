@@ -11,6 +11,9 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView
 from rest_framework import viewsets
 
+from matorral.stories.forms import StoryFilterForm
+from matorral.stories.tasks import story_set_assignee, story_set_state
+
 from ..utils import get_clean_next_url
 from .forms import SprintGroupByForm
 from .models import Sprint
@@ -23,7 +26,9 @@ class SprintDetailView(DetailView):
     model = Sprint
 
     def get_children(self):
-        queryset = self.get_object().story_set.select_related('requester', 'assignee', 'epic', 'state')
+        queryset = self.get_object().story_set\
+            .select_related('requester', 'assignee', 'epic', 'state')\
+            .order_by('epic__priority', 'priority')
 
         config = dict(
             epic=('epic__name', lambda story: story.epic and story.epic.title or 'No Epic'),
@@ -48,6 +53,7 @@ class SprintDetailView(DetailView):
         context['group_by_form'] = SprintGroupByForm(self.request.GET)
         context['objects_by_group'] = self.get_children()
         context['group_by'] = self.request.GET.get('group_by')
+        context['filters_form'] = StoryFilterForm(self.request.POST)
         return context
 
     def post(self, *args, **kwargs):
@@ -61,6 +67,21 @@ class SprintDetailView(DetailView):
         elif params.get('sprint-reset') == 'yes':
             story_ids = [t[6:] for t in params.keys() if 'story-' in t]
             reset_sprint.delay(story_ids)
+
+        else:
+            state = params.get('state')
+            if isinstance(state, list):
+                state = state[0]
+            if state:
+                story_ids = [t[6:] for t in params.keys() if 'story-' in t]
+                story_set_state.delay(story_ids, state)
+
+            assignee = params.get('assignee')
+            if isinstance(assignee, list):
+                assignee = assignee[0]
+            if assignee:
+                story_ids = [t[6:] for t in params.keys() if 'story-' in t]
+                story_set_assignee.delay(story_ids, assignee)
 
         if self.request.META.get('HTTP_X_FETCH') == 'true':
             return JsonResponse(dict(url=url))
@@ -175,6 +196,12 @@ class SprintBaseView(object):
 
         return response
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        sprint_add_url = reverse_lazy('sprints:sprint-add')
+        context['sprint_add_url'] = sprint_add_url
+        return context
+
 
 @method_decorator(login_required, name='dispatch')
 class SprintCreateView(SprintBaseView, CreateView):
@@ -190,5 +217,10 @@ class SprintUpdateView(SprintBaseView, UpdateView):
 
     def post(self, *args, **kwargs):
         data = ujson.loads(self.request.body)
-        form = self.get_form_class()(data, instance=self.get_object())
+
+        if data.get('save-as-new'):
+            form = self.get_form_class()(data)
+        else:
+            form = self.get_form_class()(data, instance=self.get_object())
+
         return self.form_valid(form)

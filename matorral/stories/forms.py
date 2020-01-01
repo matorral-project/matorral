@@ -1,6 +1,8 @@
-from django.forms import ModelForm, Select, Form, ChoiceField
+from django.forms import Select, Form, ChoiceField, ModelChoiceField
 
-from .models import Epic, Story
+from matorral.users.models import User
+
+from .models import EpicState, StoryState
 
 
 custom_select = Select(attrs={
@@ -9,24 +11,36 @@ custom_select = Select(attrs={
 })
 
 
-class EpicFilterForm(ModelForm):
-    class Meta:
-        model = Epic
-        fields = ('state', 'owner')
-        widgets = {
-            'state': custom_select,
-            'owner': custom_select,
-        }
+class EpicFilterForm(Form):
+    state = ModelChoiceField(
+        empty_label='--Set State--',
+        queryset=EpicState.objects.all(),
+        required=False,
+        widget=custom_select
+    )
+
+    owner = ModelChoiceField(
+        empty_label='--Set Owner--',
+        queryset=User.objects.all(),
+        required=False,
+        widget=custom_select
+    )
 
 
-class StoryFilterForm(ModelForm):
-    class Meta:
-        model = Story
-        fields = ('state', 'assignee')
-        widgets = {
-            'state': custom_select,
-            'assignee': custom_select,
-        }
+class StoryFilterForm(Form):
+    state = ModelChoiceField(
+        empty_label='--Set State--',
+        queryset=StoryState.objects.all(),
+        required=False,
+        widget=custom_select
+    )
+
+    assignee = ModelChoiceField(
+        empty_label='--Set Assignee--',
+        queryset=User.objects.all(),
+        required=False,
+        widget=custom_select
+    )
 
 
 class EpicGroupByForm(Form):

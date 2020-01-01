@@ -25,7 +25,7 @@
       <!-- Right side -->
       <div class="level-right">
         <div class="level-item">
-          <a href="{% url 'sprints:sprint-edit' sprint.id %}?next={{ encoded_url }}" class="button is-primary">
+          <a href="{% url 'sprints:sprint-edit' sprint.id %}?next={{ encoded_url }}" class="button is-link">
             <span class="icon is-small">
               <i class="fas fa-edit"></i>
             </span>
@@ -38,8 +38,7 @@
             <p class="control">
               <form method="POST">
                 {% csrf_token %}
-                <button class="button is-danger is-outlined" type="submit" name="remove" value="yes"
-                      onclick="postForm(this.form, this); return false;">
+                <button class="button is-danger is-outlined" type="submit" name="remove" value="yes">
                   <span class="icon is-small">
                     <i class="fas fa-minus"></i>
                   </span>
@@ -75,7 +74,9 @@
 				<strong>Progress:</strong>
 				<br/>
 				<br/>
-				<progress class="progress is-primary" value="{{ sprint.progress|default:'0' }}" max="100">{{ sprint.progress|default:'0' }}%</progress>
+        {% with sprint.progress|default:'0' as value %}
+          <progress class="progress is-primary" value="{{ value }}" title="{{ value }}%" max="100">{{ value }}%</progress>
+        {% endwith %}
 				<strong>Last Update:</strong> <time datetime="{{ sprint.updated_at }}">{{ sprint.updated_at }}</time>
 			</div>
 		</div>
@@ -106,11 +107,21 @@
 		<!-- Right side -->
 		<div class="level-right">
 
+      {% for field in filters_form.visible_fields %}
+        <div class="level-item bulk-action">
+          <div class="field">
+            <div class="control">
+              <div class="select is-primary">
+                {{ field }}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
 			<div class="level-item bulk-action">
 				<div class="field has-addons">
 					<p class="control">
-            <button class="button is-danger is-outlined" type="submit" name="sprint-reset" value="yes" form="object-list"
-                  onclick="postForm(this.form, this); return false;">
+            <button class="button is-danger is-outlined" type="submit" name="sprint-reset" value="yes" form="object-list">
               <span class="icon is-small">
                 <i class="fas fa-minus"></i>
               </span>
@@ -123,7 +134,7 @@
 			<div class="level-item">
 				<div class="field has-addons">
 					<p class="control">
-            <a class="button is-primary" href="{% url 'stories:story-add' %}?next={{ encoded_url }}&amp;sprint={{ sprint.id }}">
+            <a class="button is-link" href="{% url 'stories:story-add' %}?next={{ encoded_url }}&amp;sprint={{ sprint.id }}">
               <span class="icon is-small">
                 <i class="fas fa-plus"></i>
               </span>
@@ -136,7 +147,7 @@
       <div class="level-item">
 				<div class="field has-addons">
 					<p class="control">
-            <a class="button is-primary is-outlined" href="{% block object_add_url3 %}{% endblock %}?next={{ encoded_url }}&amp;sprint={{ sprint.id }}">
+            <a class="button is-link is-outlined" href="{% block object_add_url3 %}{% endblock %}?next={{ encoded_url }}&amp;sprint={{ sprint.id }}">
               <span class="icon is-small">
                 <i class="fas fa-search"></i>
               </span>
@@ -160,7 +171,7 @@
         <thead>
           <tr>
             <th>
-                <input type="checkbox" name="select-all" />
+                <input type="checkbox" class="selectAll" />
             </th>
             <th><abbr title="Identification Number">ID</abbr></th>
             <th>Title</th>
@@ -183,7 +194,7 @@
             </td>
             <td>#{{ story.id }}</td>
             <td>
-              <a href="{% url 'stories:story-edit' story.id %}?next={{ encoded_url }}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
+              <a href="{% url 'stories:story-detail' story.id %}?next={{ encoded_url }}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
                 <strong>{{ story.title }}</strong><br/>
               </a>
               {% for tag in story.tags.all %}

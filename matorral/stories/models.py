@@ -2,10 +2,9 @@ import copy
 
 from django.conf import settings
 from django.db import models
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
 from django.urls import reverse
-from django.utils.text import slugify
 
 from simple_history.models import HistoricalRecords
 
@@ -69,7 +68,7 @@ class Epic(ModelWithProgress):
     history = HistoricalRecords()
 
     def get_absolute_url(self):
-        return reverse('stories:epic-view', args=[str(self.id), slugify(self.title)])
+        return reverse('stories:epic-detail', args=[str(self.id)])
 
     def is_done(self):
         if self.state.stype == StateModel.STATE_DONE:
@@ -88,11 +87,11 @@ class Epic(ModelWithProgress):
 
     def update_state(self):
         # set epic as started when it has one or more started stories
-        if Story.objects.filter(state__stype=StoryState.STATE_STARTED).count() > 0:
+        if Story.objects.filter(state__stype=StoryState.STATE_STARTED, epic=self).count() > 0:
             if self.state.stype != EpicState.STATE_STARTED:
                 self.state = EpicState.objects.filter(stype=EpicState.STATE_STARTED)[0]
 
-        elif Story.objects.filter(state__stype=StoryState.STATE_UNSTARTED).count() == self.story_count:
+        elif Story.objects.filter(state__stype=StoryState.STATE_UNSTARTED, epic=self).count() == self.story_count:
             if self.state.stype != EpicState.STATE_UNSTARTED:
                 self.state = EpicState.objects.filter(stype=EpicState.STATE_UNSTARTED)[0]
 
@@ -127,7 +126,7 @@ class Story(BaseModel):
     history = HistoricalRecords()
 
     def get_absolute_url(self):
-        return reverse('stories:story-view', args=[str(self.id), slugify(self.title)])
+        return reverse('stories:story-detail', args=[str(self.id)])
 
     def is_done(self):
         if self.state.stype == StateModel.STATE_DONE:
@@ -146,6 +145,45 @@ class Story(BaseModel):
 
         for tag in self.tags.values_list('name', flat=True):
             cloned.tags.add(tag)
+
+
+@receiver(pre_save, sender=Story)
+def handle_story_pre_save(sender, **kwargs):
+    if not kwargs.get('raw', False):
+        instance = kwargs['instance']
+
+        if instance.id is None:
+            previous_epic = None
+        else:
+            try:
+                previous_epic = Epic.objects.get(story__id=instance.id)
+            except Epic.DoesNotExist:
+                previous_epic = None
+
+        # the epic has changed: update here the previous one,
+        # the new one will be updated in post_save handler :)
+        if (previous_epic != instance.epic) and previous_epic is not None:
+            from .tasks import handle_epic_change
+            # 10 seconds till the epic changes to the new one so this will have
+            # one story less
+            handle_epic_change.apply_async((previous_epic.id, ), countdown=10)
+
+        if instance.id is None:
+            previous_sprint = None
+        else:
+            from matorral.sprints.models import Sprint
+            try:
+                previous_sprint = Sprint.objects.get(story__id=instance.id)
+            except Sprint.DoesNotExist:
+                previous_sprint = None
+
+        # the sprint has changed: update here the previous one,
+        # the new one will be updated in post_save handler :)
+        if (previous_sprint != instance.sprint) and previous_sprint is not None:
+            from matorral.sprints.tasks import handle_sprint_change
+            # 10 seconds till the sprint changes to the new one so this will have
+            # one story less
+            handle_sprint_change.apply_async((previous_sprint.id, ), countdown=10)
 
 
 @receiver(post_save, sender=Story)
@@ -170,7 +208,7 @@ class Task(BaseModel):
     story = models.ForeignKey(Story, on_delete=models.CASCADE)
 
     def get_absolute_url(self):
-        return reverse('stories:task-view', args=[str(self.id), slugify(self.title)])
+        return reverse('stories:task-view', args=[str(self.id)])
 
     def duplicate(self, parent=None):
         cloned = copy.copy(self)
