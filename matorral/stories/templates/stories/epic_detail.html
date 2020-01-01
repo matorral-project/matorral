@@ -85,7 +85,9 @@
 				<strong>Progress:</strong>
 				<br/>
 				<br/>
-				<progress class="progress is-primary" value="{{ epic.progress }}" max="100">{{ epic.progress }}%</progress>
+        {% with epic.progress|default:'0' as value %}
+          <progress class="progress is-primary" value="{{ value }}" title="{{ value }}%" max="100">{{ value }}%</progress>
+        {% endwith %}
 				<strong>Last Update:</strong> <time datetime="{{ epic.updated_at }}">{{ epic.updated_at }}</time>
 			</div>
 		</div>
@@ -182,7 +184,7 @@
 				<thead>
 					<tr>
 						<th>
-							<input type="checkbox" name="select-all" />
+							<input type="checkbox" class="selectAll" />
 						</th>
 						<th><abbr title="Identification Number">ID</abbr></th>
 						<th>Title</th>

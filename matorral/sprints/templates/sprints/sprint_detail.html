@@ -75,7 +75,9 @@
 				<strong>Progress:</strong>
 				<br/>
 				<br/>
-				<progress class="progress is-primary" value="{{ sprint.progress|default:'0' }}" max="100">{{ sprint.progress|default:'0' }}%</progress>
+        {% with sprint.progress|default:'0' as value %}
+          <progress class="progress is-primary" value="{{ value }}" title="{{ value }}%" max="100">{{ value }}%</progress>
+        {% endwith %}
 				<strong>Last Update:</strong> <time datetime="{{ sprint.updated_at }}">{{ sprint.updated_at }}</time>
 			</div>
 		</div>
@@ -171,7 +173,7 @@
         <thead>
           <tr>
             <th>
-                <input type="checkbox" name="select-all" />
+                <input type="checkbox" class="selectAll" />
             </th>
             <th><abbr title="Identification Number">ID</abbr></th>
             <th>Title</th>
