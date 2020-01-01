@@ -38,16 +38,20 @@
 
       <div id="navbarBasicExample" class="navbar-menu">
         <div class="navbar-start">
-          <a class="navbar-item" href="{% url 'stories:story-list' %}">
-            Stories
+          <a class="navbar-item" href="{% url 'dashboard:index' %}">
+            Dashboard
+          </a>
+
+          <a class="navbar-item" href="{% url 'sprints:sprint-list' %}">
+            Sprints
           </a>
 
           <a class="navbar-item" href="{% url 'stories:epic-list' %}">
             Epics
           </a>
 
-          <a class="navbar-item" href="{% url 'sprints:sprint-list' %}">
-            Sprints
+          <a class="navbar-item" href="{% url 'stories:story-list' %}">
+            Stories
           </a>
 
           <div class="navbar-item has-dropdown is-hoverable">

@@ -42,6 +42,7 @@ urlpatterns = [
     url(r'^api/v1/', include(router.urls)),
 
     # App
+    path(r'', include('matorral.dashboard.urls', namespace='dashboard')),
     path(r'', include('matorral.stories.urls', namespace='stories')),
     path(r'sprints/', include('matorral.sprints.urls', namespace='sprints')),
 
