@@ -26,6 +26,7 @@ from .tasks import (duplicate_epics, duplicate_stories, epic_set_owner,
 from ..utils import get_clean_next_url
 
 
+@method_decorator(login_required, name='dispatch')
 class EpicDetailView(DetailView):
 
     model = Epic
@@ -98,16 +99,19 @@ class EpicDetailView(DetailView):
             return HttpResponseRedirect(url)
 
 
+@method_decorator(login_required, name='dispatch')
 class EpicViewSet(viewsets.ModelViewSet):
     serializer_class = EpicSerializer
     queryset = Epic.objects.select_related('state', 'state', 'owner')
 
 
+@method_decorator(login_required, name='dispatch')
 class StoryViewSet(viewsets.ModelViewSet):
     serializer_class = StorySerializer
     queryset = Story.objects.select_related('epic', 'sprint', 'state', 'state', 'requester', 'assignee')
 
 
+@method_decorator(login_required, name='dispatch')
 class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
@@ -403,6 +407,7 @@ class StoryList(BaseListView):
             return HttpResponseRedirect(url)
 
 
+@method_decorator(login_required, name='dispatch')
 class StoryDetailView(DetailView):
 
     model = Story
