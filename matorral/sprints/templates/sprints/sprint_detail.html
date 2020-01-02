@@ -147,7 +147,8 @@
       <div class="level-item">
 				<div class="field has-addons">
 					<p class="control">
-            <a class="button is-link is-outlined" href="{% block object_add_url3 %}{% endblock %}?next={{ encoded_url }}&amp;sprint={{ sprint.id }}">
+            <a class="button is-link is-outlined" title="Add existing stories to this sprint"
+               href="{% block object_add_url3 %}{% url 'stories:story-list' %}{% endblock %}?to-sprint={{ sprint.id }}">
               <span class="icon is-small">
                 <i class="fas fa-search"></i>
               </span>

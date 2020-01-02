@@ -1,0 +1,29 @@
+<div class="is-inline-block card">
+  <div class="card-content">
+    <div class="media">
+      <div class="media-left">
+        <figure class="image is-48x48">
+          <img src="https://bulma.io/images/placeholders/96x96.png" alt="{{ story.requester.username }}">
+        </figure>
+      </div>
+      <div class="media-content">
+        <p class="title is-4">{{ story.title|truncatechars:150 }}</p>
+        <p class="subtitle is-5">{{ story.epic.title }}</p>
+      </div>
+    </div>
+
+    <div class="content">
+      {{ story.description|truncatechars:350 }} <a>@{{ story.requester.username }}</a>.
+      {% for tag in story.tags.all %}
+        <a href="#">#{{ tag.name }}</a>
+      {% endfor %}
+      <br>
+      <time datetime="{{ story.modified_at|date }}">{{ story.modified_at }}</time>
+    </div>
+  </div>
+  <footer class="card-footer">
+    <a href="{% url 'stories:story-detail' story.id %}" class="card-footer-item">Details</a>
+    <a href="{% url 'stories:story-edit' story.id %}" class="card-footer-item">Edit</a>
+    <a href="{% url 'stories:story-edit' story.id %}" class="card-footer-item">{{ next_action }}</a>
+  </footer>
+</div>

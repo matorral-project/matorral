@@ -10,6 +10,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView
 
 from matorral.sprints.views import BaseListView
+from matorral.sprints.models import Sprint
 
 from rest_framework import viewsets
 
@@ -20,10 +21,12 @@ from .models import Epic, Story, Task
 from .serializers import EpicSerializer, StorySerializer, TaskSerializer
 from .tasks import (duplicate_epics, duplicate_stories, epic_set_owner,
                     epic_set_state, remove_epics, remove_stories, reset_epic,
-                    story_set_assignee, story_set_state)
+                    story_set_assignee, story_set_state, story_set_sprint,
+                    story_set_epic)
 from ..utils import get_clean_next_url
 
 
+@method_decorator(login_required, name='dispatch')
 class EpicDetailView(DetailView):
 
     model = Epic
@@ -96,16 +99,19 @@ class EpicDetailView(DetailView):
             return HttpResponseRedirect(url)
 
 
+@method_decorator(login_required, name='dispatch')
 class EpicViewSet(viewsets.ModelViewSet):
     serializer_class = EpicSerializer
     queryset = Epic.objects.select_related('state', 'state', 'owner')
 
 
+@method_decorator(login_required, name='dispatch')
 class StoryViewSet(viewsets.ModelViewSet):
     serializer_class = StorySerializer
     queryset = Story.objects.select_related('epic', 'sprint', 'state', 'state', 'requester', 'assignee')
 
 
+@method_decorator(login_required, name='dispatch')
 class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
@@ -336,6 +342,28 @@ class StoryList(BaseListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['filters_form'] = StoryFilterForm(self.request.POST)
+
+        to_sprint = self.request.GET.get('to-sprint')
+        to_epic = self.request.GET.get('to-epic')
+
+        if to_sprint:
+            try:
+                sprint = Sprint.objects.get(pk=to_sprint)
+            except Sprint.DoesNotExist:
+                pass
+            else:
+                context['add_to'] = 'sprint'
+                context['add_to_object'] = sprint
+
+        elif to_epic:
+            try:
+                epic = Epic.objects.get(pk=to_epic)
+            except Epic.DoesNotExist:
+                pass
+            else:
+                context['add_to'] = 'epic'
+                context['add_to_object'] = epic
+
         return context
 
     def post(self, *args, **kwargs):
@@ -347,8 +375,17 @@ class StoryList(BaseListView):
             if params.get('remove') == 'yes':
                 remove_stories.delay(story_ids)
 
-            if params.get('duplicate') == 'yes':
+            elif params.get('duplicate') == 'yes':
                 duplicate_stories.delay(story_ids)
+
+            else:
+                add_to_sprint = params.get('add-to-sprint')
+                if add_to_sprint:
+                    story_set_sprint.delay(story_ids, add_to_sprint)
+
+                add_to_epic = params.get('add-to-epic')
+                if add_to_epic:
+                    story_set_epic.delay(story_ids, add_to_epic)
 
             state = params.get('state')
             if isinstance(state, list):
@@ -370,6 +407,7 @@ class StoryList(BaseListView):
             return HttpResponseRedirect(url)
 
 
+@method_decorator(login_required, name='dispatch')
 class StoryDetailView(DetailView):
 
     model = Story

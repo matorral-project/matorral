@@ -21,10 +21,10 @@
   </head>
   <body>
     {% if user.is_authenticated %}
-    <nav class="navbar" role="navigation" aria-label="main navigation" data-turbolinks-permanent>
+    <nav class="navbar is-primary" role="navigation" aria-label="main navigation" data-turbolinks-permanent>
       <div class="navbar-brand">
         <a class="navbar-item" href="/">
-            <h1 class="title">
+            <h1 class="title has-text-white-bis">
               {{ current_site.name }}
             </h1>
         </a>
@@ -81,7 +81,7 @@
 
                   <div class="navbar-dropdown">
                     {% if user.is_staff %}
-                    <a class="navbar-item" href="{% url 'admin:index' %}">
+                    <a class="navbar-item" href="{% url 'admin:index' %}" target="_blank">
                       Admin
                     </a>
                     {% endif %}
@@ -287,7 +287,16 @@
           $form.addEventListener('submit', function(event) {
             event.preventDefault();
             if (event.target.method.toLowerCase() == 'get') {
-              Turbolinks.visit(document.location.pathname + "?q=" + encodeURIComponent(document.querySelector('#id_q').value));
+              let params = new URLSearchParams();
+              params.append('q', document.querySelector('#id_q').value);
+
+              const url = new URL(document.URL);
+              let to = url.searchParams.get('to-epic');
+              if (to) params.append('to-epic', to);
+              to = url.searchParams.get('to-sprint');
+              if (to) params.append('to-sprint', to);
+
+              Turbolinks.visit(document.location.pathname + "?" + params.toString());
             } else {
               postForm(event.target);
             }

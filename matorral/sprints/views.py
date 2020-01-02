@@ -21,6 +21,7 @@ from .serializers import SprintSerializer
 from .tasks import duplicate_sprints, remove_sprints, reset_sprint
 
 
+@method_decorator(login_required, name='dispatch')
 class SprintDetailView(DetailView):
 
     model = Sprint
@@ -89,6 +90,7 @@ class SprintDetailView(DetailView):
             return HttpResponseRedirect(url)
 
 
+@method_decorator(login_required, name='dispatch')
 class SprintViewSet(viewsets.ModelViewSet):
     serializer_class = SprintSerializer
     queryset = Sprint.objects.all()

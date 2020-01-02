@@ -6,6 +6,54 @@
 
     <!-- Right side -->
     <div class="level-right">
+      {% if add_to == 'sprint' %}
+        <div class="level-item bulk-action">
+          <div class="field has-addons">
+            <div class="control">
+              <button class="button is-link is-outlined" title="Add selected stories to: {{ add_to_object.title }}"
+                      form="object-list" type="submit" name="add-to-sprint" value="{{ add_to_object.id }}">
+                <span class="icon is-small">
+                  <i class="fas fa-calendar-plus"></i>
+                </span>
+                <small>Add to Sprint</small>
+              </button>
+            </div>
+            <div class="control">
+              <a class="button is-link" title="Finish adding stories to: {{ add_to_object.title }}"
+                 href="{% url 'sprints:sprint-detail' add_to_object.id %}">
+                <span class="icon is-small">
+                  <i class="fas fa-window-close"></i>
+                </span>
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if add_to == 'epic' %}
+        <div class="level-item bulk-action">
+          <div class="field has-addons">
+            <div class="control">
+              <button class="button is-link is-outlined" title="Add selected stories to: {{ add_to_object.title }}"
+                      form="object-list" type="submit" name="add-to-epic" value="{{ add_to_object.id }}">
+                <span class="icon is-small">
+                  <i class="fas fa-plus-circle"></i>
+                </span>
+                <small>Add to Epic</small>
+              </button>
+            </div>
+            <div class="control">
+              <a class="button is-link" title="Finish adding stories to: {{ add_to_object.title }}"
+                 href="{% url 'stories:epic-detail' add_to_object.id %}">
+                <span class="icon is-small">
+                  <i class="fas fa-window-close"></i>
+                </span>
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
       {% for field in filters_form.visible_fields %}
         <div class="level-item bulk-action">
           <div class="field">
