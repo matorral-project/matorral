@@ -1,5 +1,7 @@
 html, html body { font-size: 13px; }
 body section.section { padding: 1rem; }
 
+.navbar-brand > a.navbar-item { padding: 0 1em 0.5em; vertical-align: top; }
+
 div.card-list div.card { width: 33%; vertical-align: top; min-height: 250px; }
 div.card-list div.card div.card-content { height: 210px; padding: 0.75em; }
