@@ -1,0 +1,21 @@
+{
+  "name": "Matorral",
+  "description": "An experiment to build a very simple project managent tool using Django/Python + Bulma.io CSS framework + Turbolinks + Django Channels",
+  "repository": "https://github.com/matagus/matorral",
+  "logo": "https://alameda.dev/static/favicon.ico",
+  "keywords": ["django", "python", "project-management", "turbolinks", "django-channels"],
+  "website": "https://matorral.alameda.dev",
+  "addons": ["heroku-postgresql:hobby-dev", "cloudamqp:lemur", "heroku-redis:hobby-dev"],
+  "env": {
+    "DJANGO_ADMIN_URL": "admin/",
+	"DJANGO_SETTINGS_MODULE": "config.settings.production",
+	"GUNICORN_WORKER_CLASS": "sync",
+	"DJANGO_ALLOWED_HOSTS": ".herokuapp.com",
+	"CELERY_BROKER_URL": "<cloudamp url>",
+	"CHANNEL_LAYERS_DEFAULT_URL": "<redis url>",
+    "DJANGO_SECRET_KEY": {
+		"description": "This gets generated",
+		"generator": "secret"
+    }
+  }
+}
