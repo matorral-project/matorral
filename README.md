@@ -30,18 +30,7 @@ Here are some screenshots:
 
 ## Deploying to heroku:
 
-1. Install the heroku client: https://devcenter.heroku.com/articles/heroku-cli
-2. Login using your credentials
-3. Add the git remote: `git remote add heroku https://git.heroku.com/matorral-tool.git`
-4. Profit!
-
-Every time you want to deploy a new branch just do:
-
-    git push heroku <branch-name>:master
-
-To deploy master just do:
-
-    git push heroku master
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
 ## Links
 
