@@ -62,13 +62,15 @@ class Epic(ModelWithProgress):
     state = models.ForeignKey(EpicState, on_delete=models.SET_NULL, null=True, blank=True)
 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    
+    workspace = models.ForeignKey('workspaces.Workspace', on_delete=models.CASCADE)
 
     tags = TagField(blank=True)
 
     history = HistoricalRecords()
 
     def get_absolute_url(self):
-        return reverse('stories:epic-detail', args=[str(self.id)])
+        return reverse('stories:epic-detail', args=[self.workspace.slug, str(self.id)])
 
     def is_done(self):
         if self.state.stype == StateModel.STATE_DONE:
@@ -126,7 +128,7 @@ class Story(BaseModel):
     history = HistoricalRecords()
 
     def get_absolute_url(self):
-        return reverse('stories:story-detail', args=[str(self.id)])
+        return reverse('stories:story-detail', args=[self.epic.workspace.slug, str(self.id)])
 
     def is_done(self):
         if self.state.stype == StateModel.STATE_DONE:

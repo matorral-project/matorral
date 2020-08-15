@@ -1,60 +1,32 @@
-from itertools import groupby
-
 import ujson
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
+from django.utils.text import slugify
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView
 from rest_framework import viewsets
 
-from matorral.stories.forms import StoryFilterForm
-from matorral.stories.tasks import story_set_assignee, story_set_state
-
 from ..utils import get_clean_next_url
-from .forms import SprintGroupByForm
-from .models import Sprint
-from .serializers import SprintSerializer
-from .tasks import duplicate_sprints, remove_sprints, reset_sprint
+from .models import Workspace
+from .serializers import WorkspaceSerializer
+from .tasks import duplicate_workspaces, remove_workspaces
 
 
 @method_decorator(login_required, name='dispatch')
-class SprintDetailView(DetailView):
+class WorkspaceDetailView(DetailView):
 
-    model = Sprint
+    model = Workspace
 
     def get_children(self):
-        queryset = self.get_object().story_set\
-            .select_related('requester', 'assignee', 'epic', 'state')\
-            .order_by('epic__priority', 'priority')
-
-        config = dict(
-            epic=('epic__name', lambda story: story.epic and story.epic.title or 'No Epic'),
-            state=('state__slug', lambda story: story.state.name),
-            requester=('requester__username', lambda story: story.requester and story.requester.username or 'Unset'),
-            assignee=('assignee__username', lambda story: story.assignee and story.assignee.username or 'Unassigned'),
-        )
-
-        group_by = self.request.GET.get('group_by')
-
-        try:
-            order_by, fx = config[group_by]
-        except KeyError:
-            return [(None, queryset)]
-        else:
-            queryset = queryset.order_by(order_by)
-            foo = [(t[0], list(t[1])) for t in groupby(queryset, key=fx)]
-            return foo
+        return self.get_object().members.order_by('username')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['group_by_form'] = SprintGroupByForm(self.request.GET)
-        context['objects_by_group'] = self.get_children()
-        context['group_by'] = self.request.GET.get('group_by')
-        context['filters_form'] = StoryFilterForm(self.request.POST)
+        context['objects_by_group'] = [(None, self.get_children())]
         context['current_workspace'] = self.kwargs['workspace']
         return context
 
@@ -63,27 +35,8 @@ class SprintDetailView(DetailView):
         url = self.request.get_full_path()
 
         if params.get('remove') == 'yes':
-            remove_sprints.delay([self.get_object().id])
-            url = reverse_lazy('sprints:sprint-list', args=[self.kwargs['workspace']])
-
-        elif params.get('sprint-reset') == 'yes':
-            story_ids = [t[6:] for t in params.keys() if 'story-' in t]
-            reset_sprint.delay(story_ids)
-
-        else:
-            state = params.get('state')
-            if isinstance(state, list):
-                state = state[0]
-            if state:
-                story_ids = [t[6:] for t in params.keys() if 'story-' in t]
-                story_set_state.delay(story_ids, state)
-
-            assignee = params.get('assignee')
-            if isinstance(assignee, list):
-                assignee = assignee[0]
-            if assignee:
-                story_ids = [t[6:] for t in params.keys() if 'story-' in t]
-                story_set_assignee.delay(story_ids, assignee)
+            remove_workspaces.delay([self.get_object().id])
+            url = reverse_lazy('workspaces:workspace-list', args=[kwargs['workspace']])
 
         if self.request.META.get('HTTP_X_FETCH') == 'true':
             return JsonResponse(dict(url=url))
@@ -92,9 +45,9 @@ class SprintDetailView(DetailView):
 
 
 @method_decorator(login_required, name='dispatch')
-class SprintViewSet(viewsets.ModelViewSet):
-    serializer_class = SprintSerializer
-    queryset = Sprint.objects.all()
+class WorkspaceViewSet(viewsets.ModelViewSet):
+    serializer_class = WorkspaceSerializer
+    queryset = Workspace.objects.all()
 
 
 class BaseListView(ListView):
@@ -116,7 +69,7 @@ class BaseListView(ListView):
                 except KeyError:
                     continue
             else:
-                params['title__icontains'] = part
+                params['name__icontains'] = part
 
         return params
 
@@ -137,15 +90,11 @@ class BaseListView(ListView):
 
         q = self.request.GET.get('q')
 
-        if 'workspace' in [f.name for f in self.model._meta.fields]:
-            params = dict(workspace__slug=self.kwargs['workspace'])
-        else:
-            params = dict(epic__workspace__slug=self.kwargs['workspace'])
+        params = self._build_filters(q)
 
         if q is None:
-            qs = qs.filter(**params)
+            qs = qs.all()
         else:
-            params.update(self._build_filters(q))
             qs = qs.filter(**params)
 
         if self.select_related is not None:
@@ -158,23 +107,30 @@ class BaseListView(ListView):
 
 
 @method_decorator(login_required, name='dispatch')
-class SprintList(BaseListView):
-    model = Sprint
-    filter_fields = {}
+class WorkspaceList(BaseListView):
+    model = Workspace
+
+    filter_fields = dict(
+        owner='owner__username'
+    )
+
     select_related = None
     prefetch_related = None
+
+    def get_queryset(self):
+        return (super().get_queryset().filter(owner=self.request.user) | super().get_queryset().filter(members=self.request.user)).distinct()
 
     def post(self, *args, **kwargs):
         params = ujson.loads(self.request.body)
 
-        sprint_ids = [t[7:] for t in params.keys() if 'sprint-' in t]
+        workspace_ids = [t.split('workspace-')[1] for t in params.keys() if 'workspace-' in t]
 
-        if len(sprint_ids) > 0:
+        if len(workspace_ids) > 0:
             if params.get('remove') == 'yes':
-                remove_sprints.delay(sprint_ids)
+                remove_workspaces.delay(workspace_ids)
 
             if params.get('duplicate') == 'yes':
-                duplicate_sprints.delay(sprint_ids)
+                duplicate_workspaces.delay(workspace_ids)
 
         url = self.request.get_full_path()
 
@@ -184,15 +140,16 @@ class SprintList(BaseListView):
             return HttpResponseRedirect(url)
 
 
-class SprintBaseView(object):
-    model = Sprint
+class WorkspaceBaseView(object):
+    model = Workspace
     fields = [
-        'title', 'description', 'starts_at', 'ends_at'
+        'name', 'description'
     ]
 
     @property
     def success_url(self):
-        return get_clean_next_url(self.request, reverse_lazy('sprints:sprint-list', args=[self.kwargs['workspace']]))
+        workspace = self.kwargs['workspace']
+        return get_clean_next_url(self.request, reverse_lazy('workspaces:workspace-list', args=[workspace]))
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -206,14 +163,15 @@ class SprintBaseView(object):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        sprint_add_url = reverse_lazy('sprints:sprint-add', args=[self.kwargs['workspace']])
-        context['sprint_add_url'] = sprint_add_url
-        context['current_workspace'] = self.kwargs['workspace']
+        workspace = self.kwargs['workspace']
+        workspace_add_url = reverse_lazy('workspaces:workspace-add', args=[workspace])
+        context['workspace_add_url'] = workspace_add_url
+        context['current_workspace'] = workspace
         return context
 
 
 @method_decorator(login_required, name='dispatch')
-class SprintCreateView(SprintBaseView, CreateView):
+class WorkspaceCreateView(WorkspaceBaseView, CreateView):
 
     def post(self, *args, **kwargs):
         data = ujson.loads(self.request.body)
@@ -221,12 +179,13 @@ class SprintCreateView(SprintBaseView, CreateView):
         return self.form_valid(form)
 
     def form_valid(self, form):
-        form.instance.workspace = self.request.workspace
+        form.instance.owner = self.request.user
+        form.instance.slug = slugify(form.data.get('name', ''))
         return super().form_valid(form)
 
 
 @method_decorator(login_required, name='dispatch')
-class SprintUpdateView(SprintBaseView, UpdateView):
+class WorkspaceUpdateView(WorkspaceBaseView, UpdateView):
 
     def post(self, *args, **kwargs):
         data = ujson.loads(self.request.body)

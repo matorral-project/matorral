@@ -30,7 +30,10 @@ class EpicAdmin(SimpleHistoryAdmin):
     actions_on_bottom = True
     list_display = ('title', 'priority', 'progress', 'story_count', 'total_points',
                     'points_done', 'state', 'owner', 'created_at', 'completed_at')
+    list_display = ('title', 'workspace', 'priority', 'progress', 'story_count', 'total_points',
+                    'points_done', 'state', 'owner', 'created_at', 'completed_at')
     list_filter = [
+        ('workspace', RelatedDropdownFilter),
         ('priority', ChoiceDropdownFilter),
         ('state', RelatedDropdownFilter),
         ('owner', RelatedDropdownFilter)

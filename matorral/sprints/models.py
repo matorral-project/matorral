@@ -37,6 +37,8 @@ class Sprint(ModelWithProgress):
         verbose_name_plural = 'sprints'
 
     state = models.PositiveIntegerField(db_index=True, choices=STATE_TYPES, default=STATE_UNSTARTED)
+    
+    workspace = models.ForeignKey('workspaces.Workspace', on_delete=models.CASCADE)
 
     starts_at = models.DateField(db_index=True, null=True, blank=True)
     ends_at = models.DateField(db_index=True, null=True, blank=True)

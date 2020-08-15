@@ -58,6 +58,7 @@ class EpicDetailView(DetailView):
         context['group_by_form'] = EpicGroupByForm(self.request.GET)
         context['group_by'] = self.request.GET.get('group_by')
         context['filters_form'] = StoryFilterForm(self.request.POST)
+        context['current_workspace'] = self.kwargs['workspace']
         return context
 
     def post(self, *args, **kwargs):
@@ -66,7 +67,7 @@ class EpicDetailView(DetailView):
         if params.get('remove') == 'yes':
             remove_epics.delay([self.get_object().id])
 
-            url = reverse_lazy('stories:epic-list')
+            url = reverse_lazy('stories:epic-list', args=[self.kwargs['workspace']])
 
             if self.request.META.get('HTTP_X_FETCH') == 'true':
                 return JsonResponse(dict(url=url))
@@ -129,11 +130,11 @@ class StoryBaseView(object):
 
     @property
     def success_url(self):
-        return get_clean_next_url(self.request, reverse_lazy('stories:story-list'))
+        return get_clean_next_url(self.request, reverse_lazy('stories:story-list', args=[self.kwargs['workspace']]))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        story_add_url = reverse_lazy('stories:story-add')
+        story_add_url = reverse_lazy('stories:story-add', args=[self.kwargs['workspace']])
 
         epic_id = self.request.GET.get('epic')
         sprint_id = self.request.GET.get('sprint')
@@ -145,6 +146,7 @@ class StoryBaseView(object):
                 story_add_url += 'sprint=' + sprint_id
 
         context['story_add_url'] = story_add_url
+        context['current_workspace'] = self.kwargs['workspace']
 
         return context
 
@@ -219,12 +221,13 @@ class EpicBaseView(object):
 
     @property
     def success_url(self):
-        return get_clean_next_url(self.request, reverse_lazy('stories:epic-list'))
+        return get_clean_next_url(self.request, reverse_lazy('stories:epic-list', args=[self.kwargs['workspace']]))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        epic_add_url = reverse_lazy('stories:epic-add')
+        epic_add_url = reverse_lazy('stories:epic-add', args=[self.kwargs['workspace']])
         context['epic_add_url'] = epic_add_url
+        context['current_workspace'] = self.kwargs['workspace']
         return context
 
 
@@ -240,6 +243,8 @@ class EpicCreateView(EpicBaseView, CreateView):
         return self.form_valid(form)
 
     def form_valid(self, form):
+        form.instance.workspace = self.request.workspace
+
         response = super().form_valid(form)
 
         url = self.get_success_url()
@@ -290,6 +295,7 @@ class EpicList(BaseListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['filters_form'] = EpicFilterForm(self.request.POST)
+        context['current_workspace'] = self.kwargs['workspace']
         return context
 
     def post(self, *args, **kwargs):
@@ -364,6 +370,8 @@ class StoryList(BaseListView):
                 context['add_to'] = 'epic'
                 context['add_to_object'] = epic
 
+        context['current_workspace'] = self.kwargs['workspace']
+
         return context
 
     def post(self, *args, **kwargs):
@@ -412,13 +420,18 @@ class StoryDetailView(DetailView):
 
     model = Story
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['current_workspace'] = self.kwargs['workspace']
+        return context
+
     def post(self, *args, **kwargs):
         params = ujson.loads(self.request.body)
 
         if params.get('remove') == 'yes':
             remove_stories.delay([self.get_object().id])
 
-            url = reverse_lazy('stories:story-list')
+            url = reverse_lazy('stories:story-list', args=[self.kwargs['workspace']])
 
             if self.request.META.get('HTTP_X_FETCH') == 'true':
                 return JsonResponse(dict(url=url))

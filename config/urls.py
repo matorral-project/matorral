@@ -11,11 +11,13 @@ from django.views import defaults as default_views
 
 from rest_framework.routers import DefaultRouter
 
+from matorral.workspaces import views as workspaces_views
 from matorral.sprints import views as sprints_views
 from matorral.stories import views as stories_views
 
 
 router = DefaultRouter()
+router.register(r'workspaces', workspaces_views.WorkspaceViewSet)
 router.register(r'epics', stories_views.EpicViewSet)
 router.register(r'sprints', sprints_views.SprintViewSet)
 router.register(r'stories', stories_views.StoryViewSet)
@@ -42,9 +44,10 @@ urlpatterns = [
     url(r'^api/v1/', include(router.urls)),
 
     # App
-    path(r'', include('matorral.dashboard.urls', namespace='dashboard')),
-    path(r'', include('matorral.stories.urls', namespace='stories')),
-    path(r'sprints/', include('matorral.sprints.urls', namespace='sprints')),
+    path(r'<workspace>/workspaces/', include('matorral.workspaces.urls', namespace='workspaces')),
+    path(r'<workspace>/', include('matorral.dashboard.urls', namespace='dashboard')),
+    path(r'<workspace>/', include('matorral.stories.urls', namespace='stories')),
+    path(r'<workspace>/sprints/', include('matorral.sprints.urls', namespace='sprints')),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

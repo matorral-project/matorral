@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block object_list_url %}{% url 'stories:epic-list' current_workspace %}{% endblock %}
+{% block object_list_url %}{% url 'workspaces:workspace-list' current_workspace %}{% endblock %}
 {% block extra_head %}
   <meta name="turbolinks-cache-control" content="no-cache">
 {% endblock %}
@@ -11,10 +11,10 @@
 		<div class="level-left">
 			<nav class="breadcrumb is-large" aria-label="breadcrumbs">
 				<ul>
-          <li><a href="{% url 'stories:epic-list' current_workspace %}">Epics</a></li>
+          <li><a href="{% url 'workspaces:workspace-list' current_workspace %}">Workspaces</a></li>
           <li class="is-active">
             <a href="#" aria-current="page">
-              {% if object %}Editing {{ object.title }}{% else %}Add an Epic{% endif %}
+              {% if object %}Editing {{ object.title }}{% else %}Create a Workspace{% endif %}
             </a>
           </li>
 				</ul>
@@ -62,7 +62,7 @@
       </div>
       <div class="control">
         <input type="hidden" name="next" id="next" value="{{ next_url }}" />
-        <button class="button is-primary" type="submit" data-next="{{ epic_add_url }}" name="save-and-add" value="save-and-add">
+        <button class="button is-primary" type="submit" data-next="{{ workspace_add_url }}" name="save-and-add" value="save-and-add">
           <span class="icon is-small">
             <i class="fas fa-save"></i>
           </span>

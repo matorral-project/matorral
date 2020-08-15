@@ -69,6 +69,7 @@ LOCAL_APPS = (
     'matorral.users',  # custom users app
     'matorral.authentication',
     # Your stuff: custom apps go here
+    'matorral.workspaces',
     'matorral.sprints',
     'matorral.stories',
     'matorral.dashboard',
@@ -88,6 +89,7 @@ MIDDLEWARE = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
+    'matorral.workspaces.middlewares.WorkspaceMiddleware',
 )
 
 # MIGRATIONS CONFIGURATION

@@ -38,20 +38,24 @@
 
       <div id="navbarBasicExample" class="navbar-menu">
         <div class="navbar-start">
-          <a class="navbar-item" href="{% url 'dashboard:index' %}">
+          <a class="navbar-item" href="{% url 'dashboard:index' current_workspace %}">
             Dashboard
           </a>
 
-          <a class="navbar-item" href="{% url 'sprints:sprint-list' %}">
+          <a class="navbar-item" href="{% url 'sprints:sprint-list' current_workspace %}">
             Sprints
           </a>
 
-          <a class="navbar-item" href="{% url 'stories:epic-list' %}">
+          <a class="navbar-item" href="{% url 'stories:epic-list' current_workspace %}">
             Epics
           </a>
 
-          <a class="navbar-item" href="{% url 'stories:story-list' %}">
+          <a class="navbar-item" href="{% url 'stories:story-list' current_workspace %}">
             Stories
+          </a>
+
+          <a class="navbar-item" href="{% url 'workspaces:workspace-list' current_workspace %}">
+            Workspaces
           </a>
 
           <div class="navbar-item has-dropdown is-hoverable">
