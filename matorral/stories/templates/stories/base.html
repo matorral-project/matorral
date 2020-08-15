@@ -20,7 +20,7 @@
             </div>
             <div class="control">
               <a class="button is-link" title="Finish adding stories to: {{ add_to_object.title }}"
-                 href="{% url 'sprints:sprint-detail' add_to_object.id %}">
+                 href="{% url 'sprints:sprint-detail' current_workspace add_to_object.id %}">
                 <span class="icon is-small">
                   <i class="fas fa-window-close"></i>
                 </span>
@@ -44,7 +44,7 @@
             </div>
             <div class="control">
               <a class="button is-link" title="Finish adding stories to: {{ add_to_object.title }}"
-                 href="{% url 'stories:epic-detail' add_to_object.id %}">
+                 href="{% url 'stories:epic-detail' current_workspace add_to_object.id %}">
                 <span class="icon is-small">
                   <i class="fas fa-window-close"></i>
                 </span>

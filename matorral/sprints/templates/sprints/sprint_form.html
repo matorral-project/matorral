@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block object_list_url %}{% url 'sprints:sprint-list' %}{% endblock %}
+{% block object_list_url %}{% url 'sprints:sprint-list' current_workspace %}{% endblock %}
 {% block extra_head %}
   <meta name="turbolinks-cache-control" content="no-cache">
 {% endblock %}
@@ -11,7 +11,7 @@
 		<div class="level-left">
 			<nav class="breadcrumb is-large" aria-label="breadcrumbs">
 				<ul>
-          <li><a href="{% url 'sprints:sprint-list' %}">Sprints</a></li>
+          <li><a href="{% url 'sprints:sprint-list' current_workspace %}">Sprints</a></li>
           <li class="is-active">
             <a href="#" aria-current="page">
               {% if object %}Editing {{ object.title }}{% else %}Create a Sprint{% endif %}

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block object_list_url %}{% url 'stories:epic-list' %}{% endblock %}
+{% block object_list_url %}{% url 'stories:epic-list' current_workspace %}{% endblock %}
 
 {% block content %}
 	<nav class="level">
@@ -8,7 +8,7 @@
 		<div class="level-left">
 			<nav class="breadcrumb is-large" aria-label="breadcrumbs">
 				<ul>
-          <li><a href="{% url 'stories:epic-list' %}">Epics</a></li>
+          <li><a href="{% url 'stories:epic-list' current_workspace %}">Epics</a></li>
           <li class="is-active">
             <a href="#" aria-current="page">
               {{ object.title }}
@@ -21,7 +21,7 @@
 		<!-- Right side -->
 		<div class="level-right">
 			<div class="level-item">
-        <a href="{% url 'stories:epic-edit' epic.id %}?next={{ encoded_url }}" class="button is-link">
+        <a href="{% url 'stories:epic-edit' current_workspace epic.id %}?next={{ encoded_url }}" class="button is-link">
           <span class="icon is-small">
             <i class="fas fa-edit"></i>
           </span>
@@ -145,7 +145,7 @@
 			<div class="level-item">
 				<div class="field has-addons">
 					<p class="control">
-            <a class="button is-link" href="{% url 'stories:story-add' %}?next={{ encoded_url }}&amp;epic={{ epic.id }}">
+            <a class="button is-link" href="{% url 'stories:story-add' current_workspace %}?next={{ encoded_url }}&amp;epic={{ epic.id }}">
               <span class="icon is-small">
                 <i class="fas fa-plus"></i>
               </span>
@@ -159,7 +159,7 @@
 				<div class="field has-addons">
 					<p class="control">
             <a class="button is-link is-outlined" title="Add existing stories to this epic"
-               href="{% block object_add_url3 %}{% url 'stories:story-list' %}{% endblock %}?to-epic={{ epic.id }}">
+               href="{% block object_add_url3 %}{% url 'stories:story-list' current_workspace %}{% endblock %}?to-epic={{ epic.id }}">
               <span class="icon is-small">
                 <i class="fas fa-search"></i>
               </span>
@@ -203,7 +203,7 @@
 						</td>
 						<td>#{{ story.id }}</td>
 						<td>
-							<a href="{% url 'stories:story-detail' story.id %}?next={{ encoded_url }}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
+							<a href="{% url 'stories:story-detail' current_workspace story.id %}?next={{ encoded_url }}" {% if story.is_done %}class="has-text-grey-dark"{% endif %}>
 								<strong>{{ story.title }}</strong><br/>
 							</a>
 							{% for tag in story.tags.all %}
@@ -216,7 +216,7 @@
 						<td>{{ story.requester.username }}</td>
 						<td>{{ story.assignee.username }}</td>
 						<td>
-							<a class="button is-small is-link is-outlined" href="{% url 'stories:story-edit' story.id %}?next={{ encoded_url }}" title="Edit">
+							<a class="button is-small is-link is-outlined" href="{% url 'stories:story-edit' current_workspace story.id %}?next={{ encoded_url }}" title="Edit">
 								<span class="icon is-small">
 									<i class="fas fa-edit"></i>
 								</span>

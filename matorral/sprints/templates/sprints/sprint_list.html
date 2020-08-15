@@ -1,7 +1,7 @@
 {% extends 'sprints/base.html' %}
 
-{% block object_add_url %}{% url 'sprints:sprint-add' %}{% endblock %}
-{% block object_list_url %}{% url 'sprints:sprint-list' %}{% endblock %}
+{% block object_add_url %}{% url 'sprints:sprint-add' current_workspace %}{% endblock %}
+{% block object_list_url %}{% url 'sprints:sprint-list' current_workspace %}{% endblock %}
 
 {% block table_head_content %}
   <tr>
@@ -29,7 +29,7 @@
     </td>
     <td>#{{ sprint.id }}</td>
     <td>
-      <a href="{% url 'sprints:sprint-detail' sprint.id %}" {% if sprint.is_done %}class="has-text-grey-dark"{% endif %}>
+      <a href="{% url 'sprints:sprint-detail' current_workspace sprint.id %}" {% if sprint.is_done %}class="has-text-grey-dark"{% endif %}>
         <strong>{{ sprint.title }}</strong><br/>
       </a>
     </td>
@@ -43,7 +43,7 @@
     </td>
     <td>{{ sprint.updated_at|default:'' }}</td>
     <td>
-      <a class="button is-small is-link is-outlined" href="{% url 'sprints:sprint-edit' sprint.id %}?next={{ encoded_url }}" title="Edit">
+      <a class="button is-small is-link is-outlined" href="{% url 'sprints:sprint-edit' current_workspace sprint.id %}?next={{ encoded_url }}" title="Edit">
 				<span class="icon is-small">
 					<i class="fas fa-edit"></i>
 				</span>
