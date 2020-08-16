@@ -4,8 +4,8 @@
   {% else %}
     <a class="pagination-previous" title="This is the first page" disabled>&laquo;</a>
   {% endif %}
-  {% if show_all_url %}
-    <a class="pagination-link" href="{{ show_all_url }}">Show All</a>
+  {% if request.GET.q is not None and request.GET.q != '' %}
+    <a class="pagination-link" href="{{ view_config.urls.list_url }}">Show All</a>
   {% endif %}
   {% if page_obj.has_next %}
     <a href="?page={{ page_obj.next_page_number }}" class="pagination-next">&raquo;</a>

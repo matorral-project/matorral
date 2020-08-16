@@ -102,6 +102,34 @@
     {% endif %}
 
     <section class="section">
+      <nav class="level">
+        <!-- Left side -->
+        <div class="level-left">
+            {% block header_left %}
+            <nav class="breadcrumb is-large" aria-label="breadcrumbs">
+              <ul>
+                  <li>
+                  <a href="{{ view_config.urls.list_url }}">{{ view_config.model.names.plural|title }}</a>
+                </li>
+                <li class="is-active">
+                  <a href="#" aria-current="page">
+                    {{ view_config.title }}
+                  </a>
+                </li>
+              </ul>
+            </nav>
+            {% endblock %}
+        </div>
+
+        <!-- Right side -->
+        <div class="level-right">
+            {% block header_right %}
+            {% endblock %}
+        </div>
+      </nav>
+    </section>
+
+    <section class="section">
       {% if messages %}
         {% for message in messages %}
         <div class="notification is-primary {% if message.tags %}{{ message.tags }}{% endif %}">
@@ -115,30 +143,10 @@
       {% endblock %}
     </section>
 
-    <div class="modal" id="modal-form">
-      <div class="modal-background"></div>
-      <div class="modal-card">
-        <header class="modal-card-head">
-          <p class="modal-card-title">Modal title</p>
-          <button class="delete" aria-label="close"></button>
-        </header>
-        <section class="modal-card-body">
-          <iframe src="" style="width: 100%;">
-          </iframe>
-        </section>
-        <footer class="modal-card-foot">
-          <button class="button is-link">Save changes</button>
-          <button class="button">Cancel</button>
-        </footer>
-      </div>
-    </div
->
     <footer class="footer" data-turbolinks-permanent>
       <div class="content has-text-centered">
         <p>
           <strong>Matorral</strong> by <a target="_blank" href="https://github.com/matagus">matagus</a>.
-        <p>
-          This website has been built in a few weekends thanks to <a target="_blank" href="https://bulma.io/">Bulma</a> &amp; <a target="_blank" href="https://www.djangoproject.com/">Django</a>.
         </p>
       </div>
     </footer>
@@ -157,29 +165,6 @@
     }
 
     ready(function() {
-      var elementList = document.querySelectorAll('a.launch-modal');
-      Array.prototype.forEach.call(elementList, function(el, i) {
-        el.addEventListener('click', function(event) {
-          event.preventDefault()
-
-          var modalFormTitle = document.querySelector('#modal-form .modal-card-title');
-          modalFormTitle.innerHTML = event.target.textContent;
-
-          var modalForm = document.querySelector('#modal-form');
-          modalForm.querySelector('iframe').setAttribute('src', event.target.parentNode.getAttribute('href'));
-          modalForm.classList.add('is-clipped');
-          modalForm.classList.add('is-active');
-        });
-      });
-
-      var elementList = document.querySelectorAll('#modal-form button');
-      Array.prototype.forEach.call(elementList, function(el, i) {
-        el.addEventListener('click', function(event) {
-          var modalForm = document.querySelector('#modal-form');
-          modalForm.classList.remove('is-active');
-          modalForm.classList.remove('is-clipped');
-        });
-      });
 
       (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
         $notification = $delete.parentNode;
@@ -198,14 +183,8 @@
           table.querySelectorAll('tbody input[type="checkbox"]').forEach(($checkbox) => {
             if (event.target.checked) {
               $checkbox.checked = true;
-              document.querySelectorAll('.bulk-action').forEach(($div) => {
-                $div.style.visibility = 'visible'
-              });
             } else {
               $checkbox.checked = false;
-              document.querySelectorAll('.bulk-action').forEach(($div) => {
-                $div.style.visibility = 'hidden'
-              });
             }
           })
         });
@@ -213,7 +192,8 @@
 
       document.querySelectorAll('input[type="checkbox"]').forEach(($checkbox) => {
         $checkbox.addEventListener('click', function(event) {
-          if (document.querySelectorAll('input[type="checkbox"]:checked').length > 0) {
+          table = event.target.parentNode.parentNode.parentNode.parentNode;
+          if (table.querySelectorAll('input[type="checkbox"]:checked').length > 0) {
             document.querySelectorAll('.bulk-action').forEach(($div) => {
               $div.style.visibility = 'visible'
             });

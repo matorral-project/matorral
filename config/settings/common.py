@@ -69,6 +69,7 @@ LOCAL_APPS = (
     'matorral.users',  # custom users app
     'matorral.authentication',
     # Your stuff: custom apps go here
+    'matorral.generic_ui',
     'matorral.workspaces',
     'matorral.sprints',
     'matorral.stories',

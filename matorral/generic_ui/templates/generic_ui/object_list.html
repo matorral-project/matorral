@@ -1,0 +1,105 @@
+{% extends 'generic_ui/base.html' %}
+
+{% block header_left %}
+    {% include "generic_ui/listview_left.html" with title=view_config.title %}
+{% endblock %}
+
+{% block header_right %}
+  <div class="level-item bulk-action">
+    <div class="field has-addons">
+      <p class="control">
+        <button class="button is-primary is-outlined" type="submit" form="object-list" name="duplicate" value="yes">
+          <span class="icon is-small">
+            <i class="fas fa-copy"></i>
+          </span>
+          <small>Duplicate</small>
+        </button>
+      </p>
+    </div>
+  </div>
+
+  <div class="level-item bulk-action">
+    <div class="field has-addons">
+      <p class="control">
+        <button class="button is-danger is-outlined" type="submit" form="object-list" name="remove" value="yes">
+          <span class="icon is-small">
+            <i class="fas fa-minus"></i>
+          </span>
+          <small>Remove</small>
+        </button>
+      </p>
+    </div>
+  </div>
+
+  <div class="level-item">
+    <div class="field has-addons">
+      <p class="control">
+        <a class="button is-link" href="{{  view_config.urls.add_url }}?next={{ encoded_url }}">
+          <span class="icon is-small">
+            <i class="fas fa-plus"></i>
+          </span>
+          <small>Create</small>
+        </a>
+      </p>
+    </div>
+  </div>
+{% endblock %}
+
+{% block content %}
+  <form method="POST" name="object-list" id="object-list">
+    {% csrf_token %}
+    <input type="hidden" value="{{ page }}" name="page" />
+    <table class="table is-bordered is-striped is-hoverable is-fullwidth">
+      <thead>
+          <tr>
+            <th>
+              <input type="checkbox" class="selectAll" />
+            </th>
+            {% for column in view_config.column_list %}
+                {% if column.abbreviation %}
+                    <th><abbr title="{{ column.title }}">{{ column.abbreviation }}</abbr></th>
+                {% else %}
+                  <th>{{ column.title }}</th>
+                {% endif %}
+            {% endfor %}
+            {% if view_config.column_list.action_list %}
+                <th>Actions</th>
+            {% endif %}
+          </tr>
+      </thead>
+      <tbody>
+          {% for result in view_config.result_list %}
+          <tr>
+            <td>
+              <input type="checkbox" name="{{ result.unique_id }}" />
+            </td>
+            {% for field in result.field_list %}
+                {% if field.widget == 'progress' %}
+                  <td>
+                    <progress class="progress is-primary" value="{{ field.value }}" max="100">{{ field.value }}%</progress>
+                  </td>
+                {% elif field.widget == 'link' %}
+                  <td>
+                      <a href="{{ field.url }}">{{ field.value }}</a>
+                  </td>
+                {% else %}
+                  <td>{{ field.value }}</td>
+                {% endif %}
+            {% endfor %}
+            <td>
+                {% for action in result.action_list %}
+                  <a class="button {{ action.class }}" href="{{ action.url }}">
+                    <span class="icon">
+                        <i class="fas fa-{{ action.icon }}"></i>
+                    </span><span>{{ action.name }}</span>
+                  </a>
+                {% endfor %}
+            </td>
+          </tr>
+          {% endfor %}
+      </tbody>
+    </table>
+  </form>
+  <br />
+  {% include "generic_ui/paginator.html" %}
+{% endblock %}

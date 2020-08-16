@@ -30,6 +30,9 @@ class Workspace(models.Model):
     def __str__(self):
         return self.name
 
+    def get_absolute_url(self):
+        return reverse('workspaces:workspace-detail', args=[self.slug, str(self.id)])
+
     def duplicate(self):
         cloned = copy.copy(self)
         cloned.pk = None

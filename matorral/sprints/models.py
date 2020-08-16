@@ -49,7 +49,7 @@ class Sprint(ModelWithProgress):
         return self.title
 
     def get_absolute_url(self):
-        return reverse('sprints:sprint-view', args=[str(self.id), slugify(self.title)])
+        return reverse('sprints:sprint-detail', args=[self.workspace.slug, str(self.id)])
 
     def is_done(self):
         return self.state == self.STATE_DONE
