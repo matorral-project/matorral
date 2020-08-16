@@ -123,12 +123,14 @@ class Story(BaseModel):
     requester = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='requested_tasks')
     assignee = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='assigned_tasks')
 
+    workspace = models.ForeignKey('workspaces.Workspace', on_delete=models.CASCADE)
+
     tags = TagField(blank=True)
 
     history = HistoricalRecords()
 
     def get_absolute_url(self):
-        return reverse('stories:story-detail', args=[self.epic.workspace.slug, str(self.id)])
+        return reverse('stories:story-detail', args=[self.workspace.slug, str(self.id)])
 
     def is_done(self):
         if self.state.stype == StateModel.STATE_DONE:
