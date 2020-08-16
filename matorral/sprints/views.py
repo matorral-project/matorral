@@ -137,10 +137,7 @@ class BaseListView(ListView):
 
         q = self.request.GET.get('q')
 
-        if 'workspace' in [f.name for f in self.model._meta.fields]:
-            params = dict(workspace__slug=self.kwargs['workspace'])
-        else:
-            params = dict(epic__workspace__slug=self.kwargs['workspace'])
+        params = dict(workspace__slug=self.kwargs['workspace'])
 
         if q is None:
             qs = qs.filter(**params)

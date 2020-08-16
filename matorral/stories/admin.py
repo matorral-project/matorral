@@ -52,6 +52,7 @@ class StoryAdmin(SimpleHistoryAdmin):
     list_display = ('title', 'epic', 'priority', 'state', 'points', 'assignee', 'created_at', 'completed_at')
     list_filter = ('epic', 'sprint', 'state', 'priority', 'assignee')
     list_filter = [
+        ('workspace', RelatedDropdownFilter),
         ('state', RelatedDropdownFilter),
         ('epic', RelatedDropdownFilter),
         ('sprint', RelatedDropdownFilter),

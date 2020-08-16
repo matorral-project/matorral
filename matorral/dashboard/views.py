@@ -21,4 +21,6 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             .filter(assignee=me, state__slug='pr')\
             .order_by('epic__priority', 'priority')[:3]
 
+        context['current_workspace'] = self.kwargs['workspace']
+
         return context

@@ -177,6 +177,8 @@ class StoryCreateView(StoryBaseView, CreateView):
         return self.form_valid(form)
 
     def form_valid(self, form):
+        form.instance.workspace = self.request.workspace
+
         response = super().form_valid(form)
 
         url = self.get_success_url()
