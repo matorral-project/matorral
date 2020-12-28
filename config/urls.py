@@ -14,6 +14,7 @@ from rest_framework.routers import DefaultRouter
 from matorral.workspaces import views as workspaces_views
 from matorral.sprints import views as sprints_views
 from matorral.stories import views as stories_views
+from matorral.users import views as users_views
 
 
 router = DefaultRouter()
@@ -22,6 +23,7 @@ router.register(r'epics', stories_views.EpicViewSet)
 router.register(r'sprints', sprints_views.SprintViewSet)
 router.register(r'stories', stories_views.StoryViewSet)
 router.register(r'tasks', stories_views.TaskViewSet)
+router.register(r'users', users_views.UserViewSet)
 
 urlpatterns = [
     # Django Admin, use {% url 'admin:index' %}
@@ -34,8 +36,6 @@ urlpatterns = [
     url(r'^login/$', auth_views.LoginView.as_view(), name='login'),
     url(r'^logout/$', auth_views.LogoutView.as_view(), {'next_page': '/'}, name='logout'),
 
-    # User management
-    url(r'^users/', include('matorral.users.urls')),
     # comments app
     url(r'^comments/', include('django_comments_xtd.urls')),
 
@@ -48,6 +48,7 @@ urlpatterns = [
     path(r'<workspace>/', include('matorral.dashboard.urls', namespace='dashboard')),
     path(r'<workspace>/', include('matorral.stories.urls', namespace='stories')),
     path(r'<workspace>/sprints/', include('matorral.sprints.urls', namespace='sprints')),
+    path(r'<workspace>/users/', include('matorral.users.urls', namespace='users')),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

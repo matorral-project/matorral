@@ -1,5 +1,6 @@
 import ujson
 
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse_lazy
 from django.views.generic import ListView
@@ -8,6 +9,7 @@ from django.views.generic.edit import CreateView, UpdateView
 
 from .tasks import do_in_bulk
 from ..utils import get_clean_next_url
+
 
 class BaseConfig:
     def __init__(self, model, params):
@@ -130,10 +132,10 @@ class ListViewConfig(BaseConfig):
         return config
 
 
-class GenericListView(ListView):
+class GenericListView(LoginRequiredMixin, ListView):
     paginate_by = 10
 
-    view_config = []
+    table_config = []
     filter_fields = {}
     select_related = None
     prefetch_related = None
@@ -141,8 +143,8 @@ class GenericListView(ListView):
 
     template_name = 'generic_ui/object_list.html'
 
-    def get_view_config(self):
-        return self.view_config
+    def get_table_config(self):
+        return self.table_config
 
     def _build_filters(self, q):
         params = {}
@@ -166,7 +168,7 @@ class GenericListView(ListView):
         context['current_workspace'] = self.kwargs['workspace']
 
         context['view_config'] = ListViewConfig(
-            self.model, self.kwargs, context['page_obj'].object_list, self.get_view_config()
+            self.model, self.kwargs, context['page_obj'].object_list, self.get_table_config()
         ).as_dict()
 
         return context
@@ -226,7 +228,7 @@ class FormViewConfig(BaseConfig):
         return config
 
 
-class BaseCreateUpdateView(object):
+class BaseCreateUpdateView(LoginRequiredMixin):
 
     template_name = 'generic_ui/object_form.html'
 
@@ -300,9 +302,45 @@ class DetailViewConfig(BaseConfig):
         return config
 
 
-class GenericDetailView(DetailView):
+class ChildrenViewConfig(BaseConfig):
+    def __init__(self, model, params, queryset, parent, column_list):
+        self._model = model
+        self._params = params
+        self._queryset = queryset
+        self._parent = parent
+        self._column_list = column_list
+
+        self._field_list = [
+            (self._model._meta.get_field(column['name']), column.get('widget')) for column in column_list
+        ]
+
+        super().__init__(self._model, self._params)
+
+    def as_dict(self):
+        config = super().as_dict()
+
+        _meta = self._model._meta
+        config.update({
+            'title': _meta.verbose_name_plural.capitalize(),
+            'column_list': ColumnList(self._model, self._column_list, self._params),
+            'result_list': ResultList(self._model, self._queryset, self._field_list, self._params)
+        })
+
+        return config
+
+
+class GenericDetailView(LoginRequiredMixin, DetailView):
 
     template_name = 'generic_ui/object_detail.html'
+
+    class ChildrenConfig:
+        model = None
+        table_config = []
+        filter_fields = {}
+        select_related = None
+        prefetch_related = None
+        group_by = None
+        default_search = 'id__exact'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -311,6 +349,12 @@ class GenericDetailView(DetailView):
         context['view_config'] = DetailViewConfig(
             self.get_queryset().model, context.get('object'), self.kwargs
         ).as_dict()
+
+        if self.ChildrenConfig.model is not None:
+            context['children_view_config'] = ChildrenViewConfig(
+                self.ChildrenConfig.model, self.kwargs, self.get_children(),
+                context.get('object'), self.ChildrenConfig.table_config
+            ).as_dict()
 
         return context
 

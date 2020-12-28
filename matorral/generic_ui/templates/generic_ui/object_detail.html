@@ -45,7 +45,7 @@
 		  <div class="level-left">
 			<nav class="breadcrumb is-large" aria-label="breadcrumbs" style="margin: 0;">
 			  <ul>
-				<li class="is-active"><a href="#" aria-current="page">{{ view_config.children.model.names.plural|title }}</a></li>
+				<li class="is-active"><a href="#" aria-current="page">{{ children_view_config.model.names.plural|title }}</a></li>
 			  </ul>
 			</nav>
 
@@ -81,6 +81,7 @@
 
   <form id="object-list" name="object-list" method="POST">
     {% csrf_token %}
+    {% include "generic_ui/children_list.html" with view_config=children_view_config %}
 
     {% for group_title, object_list in objects_by_group %}
       {% if group_by %}

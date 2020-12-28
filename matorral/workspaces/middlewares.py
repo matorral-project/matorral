@@ -19,6 +19,9 @@ class WorkspaceMiddleware:
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
+        if request.user.is_anonymous:
+            return
+
         try:
             workspace_slug = view_kwargs['workspace']
         except KeyError:

@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.utils.text import slugify
@@ -15,7 +16,6 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
     queryset = Workspace.objects.all()
 
 
-@method_decorator(login_required, name='dispatch')
 class WorkspaceDetailView(GenericDetailView):
 
     model = Workspace
@@ -23,8 +23,9 @@ class WorkspaceDetailView(GenericDetailView):
     fields = ('name', 'description', 'owner', 'updated_at')
 
     class ChildrenConfig:
+        model = get_user_model()
+
         group_by = None
-    
         select_related = None
 
         table_config = [
@@ -39,8 +40,7 @@ class WorkspaceDetailView(GenericDetailView):
         return self.get_object().members.order_by('username')
 
 
-@method_decorator(login_required, name='dispatch')
-class WorkspaceList(GenericListView):
+class WorkspaceListView(GenericListView):
     model = Workspace
 
     paginate_by = 10
@@ -53,7 +53,7 @@ class WorkspaceList(GenericListView):
 
     select_related = ['owner']
 
-    view_config = [
+    table_config = [
         {'name': 'name', 'title': 'Name', 'widget': 'link'},
         {'name': 'description', 'title': 'Description'},
         {'name': 'owner', 'title': 'Owner'},
@@ -64,7 +64,6 @@ class WorkspaceList(GenericListView):
         return (super().get_queryset().filter(owner=self.request.user) | super().get_queryset().filter(members=self.request.user)).distinct()
 
 
-@method_decorator(login_required, name='dispatch')
 class WorkspaceCreateView(GenericCreateView):
     model = Workspace
 
@@ -77,7 +76,6 @@ class WorkspaceCreateView(GenericCreateView):
         form.instance.slug = slugify(form.data.get('name', ''))
 
 
-@method_decorator(login_required, name='dispatch')
 class WorkspaceUpdateView(GenericUpdateView):
     model = Workspace
 

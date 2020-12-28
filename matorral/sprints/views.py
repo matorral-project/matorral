@@ -16,7 +16,6 @@ class SprintViewSet(viewsets.ModelViewSet):
     queryset = Sprint.objects.all()
 
 
-@method_decorator(login_required, name='dispatch')
 class SprintDetailView(GenericDetailView):
 
     model = Sprint
@@ -63,13 +62,12 @@ class SprintDetailView(GenericDetailView):
             return foo
 
 
-@method_decorator(login_required, name='dispatch')
 class SprintList(GenericListView):
     model = Sprint
 
     default_search = 'title__icontains'
 
-    view_config = [
+    table_config = [
         {'name': 'id', 'title': 'Identification Number', 'abbreviation': 'ID'},
         {'name': 'title', 'title': 'Title', 'widget': 'link'},
         {'name': 'state', 'title': 'State'},
@@ -85,7 +83,6 @@ class SprintList(GenericListView):
         return super().get_queryset().filter(workspace__slug=self.kwargs['workspace'])
 
 
-@method_decorator(login_required, name='dispatch')
 class SprintCreateView(GenericCreateView):
     model = Sprint
 
@@ -97,7 +94,6 @@ class SprintCreateView(GenericCreateView):
         form.instance.workspace = self.request.workspace
 
 
-@method_decorator(login_required, name='dispatch')
 class SprintUpdateView(GenericUpdateView):
     model = Sprint
 

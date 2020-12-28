@@ -36,7 +36,6 @@ class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
 
 
-@method_decorator(login_required, name='dispatch')
 class EpicDetailView(GenericDetailView):
     model = Epic
     fields = ('title', 'owner', 'state', 'priority', 'progress', 'updated_at')
@@ -78,16 +77,14 @@ class EpicDetailView(GenericDetailView):
             return foo
 
 
-@method_decorator(login_required, name='dispatch')
 class StoryDetailView(GenericDetailView):
     model = Story
     fields = ('title', 'epic', 'assignee', 'state', 'priority', 'updated_at')
 
 
-@method_decorator(login_required, name='dispatch')
 class EpicList(GenericListView):
     model = Epic
-    
+
     filter_fields = dict(
         owner='owner__username',
         state='state__name__iexact',
@@ -99,7 +96,7 @@ class EpicList(GenericListView):
 
     default_search = 'title__icontains'
 
-    view_config = [
+    table_config = [
         {'name': 'id', 'title': 'Identification Number', 'abbreviation': 'ID'},
         {'name': 'title', 'title': 'Title', 'widget': 'link'},
         {'name': 'state', 'title': 'State'},
@@ -114,10 +111,9 @@ class EpicList(GenericListView):
         return super().get_queryset().filter(workspace__slug=self.kwargs['workspace'])
 
 
-@method_decorator(login_required, name='dispatch')
 class StoryList(GenericListView):
     model = Story
-    
+
     filter_fields = dict(
         requester='requester__username',
         assignee='assignee__username',
@@ -131,7 +127,7 @@ class StoryList(GenericListView):
 
     default_search = 'title__icontains'
 
-    view_config = [
+    table_config = [
         {'name': 'id', 'title': 'Identification Number', 'abbreviation': 'ID'},
         {'name': 'title', 'title': 'Title', 'widget': 'link'},
         {'name': 'epic', 'title': 'Epic', 'widget': 'link'},
@@ -146,7 +142,6 @@ class StoryList(GenericListView):
         return super().get_queryset().filter(workspace__slug=self.kwargs['workspace'])
 
 
-@method_decorator(login_required, name='dispatch')
 class StoryCreateView(GenericCreateView):
     model = Story
 
@@ -163,7 +158,6 @@ class StoryCreateView(GenericCreateView):
         form.instance.workspace = self.request.workspace
 
 
-@method_decorator(login_required, name='dispatch')
 class StoryUpdateView(GenericUpdateView):
     model = Story
 
@@ -176,7 +170,6 @@ class StoryUpdateView(GenericUpdateView):
     ]
 
 
-@method_decorator(login_required, name='dispatch')
 class EpicCreateView(GenericCreateView):
     model = Epic
 
@@ -190,7 +183,6 @@ class EpicCreateView(GenericCreateView):
         form.instance.workspace = self.request.workspace
 
 
-@method_decorator(login_required, name='dispatch')
 class EpicUpdateView(GenericUpdateView):
     model = Epic
 
