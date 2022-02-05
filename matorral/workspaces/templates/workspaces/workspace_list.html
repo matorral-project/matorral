@@ -1,5 +1,7 @@
 {% extends 'workspaces/base.html' %}
 
+{% block page_title %}Workspaces :: {{ current_workspace }}{% endblock %}
+
 {% block object_add_url %}{% url 'workspaces:workspace-add' current_workspace  %}{% endblock %}
 {% block object_list_url %}{% url 'workspaces:workspace-list' current_workspace  %}{% endblock %}
 

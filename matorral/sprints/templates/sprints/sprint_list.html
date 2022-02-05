@@ -1,5 +1,7 @@
 {% extends 'sprints/base.html' %}
 
+{% block page_title %}Sprints :: {{ current_workspace }}{% endblock %}
+
 {% block object_add_url %}{% url 'sprints:sprint-add' current_workspace %}{% endblock %}
 {% block object_list_url %}{% url 'sprints:sprint-list' current_workspace %}{% endblock %}
 
