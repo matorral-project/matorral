@@ -7,7 +7,7 @@
     {% block extra_head %}
       <meta name="turbolinks-cache-control" content="no-cache">
     {% endblock %}
-    <title>{{ current_site.name }} - Simple Project Management System</title>
+    <title>{% block page_title %}{{ current_site.name }} - Simple Project Management System{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/bulma-0.7.4.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/bulma-calendar.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/bulma-tagsinput.min.css' %}">

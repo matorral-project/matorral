@@ -1,5 +1,7 @@
 {% extends 'stories/base.html' %}
 
+{% block page_title %}Epics :: {{ current_workspace }}{% endblock %}
+
 {% block object_add_url %}{% url 'stories:epic-add' current_workspace %}{% endblock %}
 {% block object_list_url %}{% url 'stories:epic-list' current_workspace %}{% endblock %}
 
