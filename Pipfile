@@ -32,7 +32,7 @@ sentry-sdk = "==0.7.14"
 gevent = "==1.4.0"
 tornado = "==6.0.2"
 gunicorn = "==19.9.0"
-Django = "==2.2.18"
+Django = "==2.2.26"
 drf_ujson = "==1.2.0"
 
 [requires]
