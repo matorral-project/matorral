@@ -288,11 +288,11 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 50,
     'DATETIME_FORMAT': '%Y-%m-%dT%H:%M:%S%z',
     'DEFAULT_RENDERER_CLASSES': (
-        'drf_ujson.renderers.UJSONRenderer',
+        'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ),
     'DEFAULT_PARSER_CLASSES': (
-        'drf_ujson.parsers.UJSONParser',
+        'rest_framework.parsers.JSONParser',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
