@@ -22,7 +22,7 @@ django-autoslug==1.9.4
 # Time zones support
 pytz==2019.1
 
-celery==4.3.0
+celery==5.2.2
 # Pin kombu version until issue https://github.com/celery/kombu/issues/870 is fixed
 kombu==4.5.0
 # we use msgpack since it outperforms yaml and json de/serializers
