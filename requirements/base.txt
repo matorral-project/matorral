@@ -11,7 +11,7 @@ django-model-utils==3.1.1
 
 # Rest apis
 djangorestframework==3.11.2
-django-filter==1.1.0
+django-filter==2.4.0
 ujson==5.1.0
 drf_ujson==1.2.0
 
