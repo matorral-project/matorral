@@ -12,7 +12,7 @@ django-model-utils==3.1.1
 # Rest apis
 djangorestframework==3.11.2
 django-filter==2.4.0
-ujson==5.1.0
+ujson==5.2.0
 
 # Unicode slugification
 unicode-slugify==0.1.3
