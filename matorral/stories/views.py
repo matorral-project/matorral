@@ -69,7 +69,7 @@ class EpicDetailView(DetailView):
 
             url = reverse_lazy('stories:epic-list', args=[self.kwargs['workspace']])
 
-            if self.request.META.get('HTTP_X_FETCH') == 'true':
+            if self.request.headers.get('X-Fetch') == 'true':
                 return JsonResponse(dict(url=url))
             else:
                 return HttpResponseRedirect(url)
@@ -94,7 +94,7 @@ class EpicDetailView(DetailView):
 
         url = self.request.get_full_path()
 
-        if self.request.META.get('HTTP_X_FETCH') == 'true':
+        if self.request.headers.get('X-Fetch') == 'true':
             return JsonResponse(dict(url=url))
         else:
             return HttpResponseRedirect(url)
@@ -183,7 +183,7 @@ class StoryCreateView(StoryBaseView, CreateView):
 
         url = self.get_success_url()
 
-        if self.request.META.get('HTTP_X_FETCH') == 'true':
+        if self.request.headers.get('X-Fetch') == 'true':
             return JsonResponse(dict(url=url))
 
         return response
@@ -207,7 +207,7 @@ class StoryUpdateView(StoryBaseView, UpdateView):
 
         url = self.get_success_url()
 
-        if self.request.META.get('HTTP_X_FETCH') == 'true':
+        if self.request.headers.get('X-Fetch') == 'true':
             return JsonResponse(dict(url=url))
 
         return response
@@ -251,7 +251,7 @@ class EpicCreateView(EpicBaseView, CreateView):
 
         url = self.get_success_url()
 
-        if self.request.META.get('HTTP_X_FETCH') == 'true':
+        if self.request.headers.get('X-Fetch') == 'true':
             return JsonResponse(dict(url=url))
 
         return response
@@ -275,7 +275,7 @@ class EpicUpdateView(EpicBaseView, UpdateView):
 
         url = self.get_success_url()
 
-        if self.request.META.get('HTTP_X_FETCH') == 'true':
+        if self.request.headers.get('X-Fetch') == 'true':
             return JsonResponse(dict(url=url))
 
         return response
@@ -326,7 +326,7 @@ class EpicList(BaseListView):
 
         url = self.request.get_full_path()
 
-        if self.request.META.get('HTTP_X_FETCH') == 'true':
+        if self.request.headers.get('X-Fetch') == 'true':
             return JsonResponse(dict(url=url))
         else:
             return HttpResponseRedirect(url)
@@ -411,7 +411,7 @@ class StoryList(BaseListView):
 
         url = self.request.get_full_path()
 
-        if self.request.META.get('HTTP_X_FETCH') == 'true':
+        if self.request.headers.get('X-Fetch') == 'true':
             return JsonResponse(dict(url=url))
         else:
             return HttpResponseRedirect(url)
@@ -435,14 +435,14 @@ class StoryDetailView(DetailView):
 
             url = reverse_lazy('stories:story-list', args=[self.kwargs['workspace']])
 
-            if self.request.META.get('HTTP_X_FETCH') == 'true':
+            if self.request.headers.get('X-Fetch') == 'true':
                 return JsonResponse(dict(url=url))
             else:
                 return HttpResponseRedirect(url)
 
         url = self.request.get_full_path()
 
-        if self.request.META.get('HTTP_X_FETCH') == 'true':
+        if self.request.headers.get('X-Fetch') == 'true':
             return JsonResponse(dict(url=url))
         else:
             return HttpResponseRedirect(url)

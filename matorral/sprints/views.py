@@ -85,7 +85,7 @@ class SprintDetailView(DetailView):
                 story_ids = [t[6:] for t in params.keys() if 'story-' in t]
                 story_set_assignee.delay(story_ids, assignee)
 
-        if self.request.META.get('HTTP_X_FETCH') == 'true':
+        if self.request.headers.get('X-Fetch') == 'true':
             return JsonResponse(dict(url=url))
         else:
             return HttpResponseRedirect(url)
@@ -175,7 +175,7 @@ class SprintList(BaseListView):
 
         url = self.request.get_full_path()
 
-        if self.request.META.get('HTTP_X_FETCH') == 'true':
+        if self.request.headers.get('X-Fetch') == 'true':
             return JsonResponse(dict(url=url))
         else:
             return HttpResponseRedirect(url)
@@ -196,7 +196,7 @@ class SprintBaseView(object):
 
         url = self.get_success_url()
 
-        if self.request.META.get('HTTP_X_FETCH') == 'true':
+        if self.request.headers.get('X-Fetch') == 'true':
             return JsonResponse(dict(url=url))
 
         return response

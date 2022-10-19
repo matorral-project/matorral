@@ -151,7 +151,6 @@ SITE_ID = 1
 USE_I18N = True
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#use-l10n
-USE_L10N = True
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#use-tz
 USE_TZ = True
@@ -236,6 +235,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # cookies
 LANGUAGE_COOKIE_NAME = "matorral-lang"
@@ -387,4 +388,11 @@ CELERYBEAT_SCHEDULE = {
         'task': 'matorral.sprints.tasks.update_state',
         'schedule': crontab(hour='*/1')
     },
+}
+
+SERIALIZATION_MODULES = {
+    "xml": "tagulous.serializers.xml_serializer",
+    "json": "tagulous.serializers.json",
+    "python": "tagulous.serializers.python",
+    "yaml": "tagulous.serializers.pyyaml",
 }

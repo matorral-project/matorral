@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
-from django.conf.urls import include, url
+from django.urls import include, path, re_path
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
@@ -25,23 +25,23 @@ router.register(r'tasks', stories_views.TaskViewSet)
 
 urlpatterns = [
     # Django Admin, use {% url 'admin:index' %}
-    url(settings.ADMIN_URL, admin.site.urls),
+    re_path(settings.ADMIN_URL, admin.site.urls),
 
     # health checks
-    url(r'^health-check/', include('watchman.urls')),
-    url(r'^health/', include('matorral.health_checks.urls')),
+    re_path(r'^health-check/', include('watchman.urls')),
+    re_path(r'^health/', include('matorral.health_checks.urls')),
 
-    url(r'^login/$', auth_views.LoginView.as_view(), name='login'),
-    url(r'^logout/$', auth_views.LogoutView.as_view(), {'next_page': '/'}, name='logout'),
+    path('login/', auth_views.LoginView.as_view(), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(), {'next_page': '/'}, name='logout'),
 
     # User management
-    url(r'^users/', include('matorral.users.urls')),
+    re_path(r'^users/', include('matorral.users.urls')),
     # comments app
-    url(r'^comments/', include('django_comments_xtd.urls')),
+    re_path(r'^comments/', include('django_comments_xtd.urls')),
 
     # API urls
-    url(r'^api/v1/', include('matorral.authentication.urls')),
-    url(r'^api/v1/', include(router.urls)),
+    re_path(r'^api/v1/', include('matorral.authentication.urls')),
+    re_path(r'^api/v1/', include(router.urls)),
 
     # App
     path(r'<workspace>/workspaces/', include('matorral.workspaces.urls', namespace='workspaces')),
@@ -57,12 +57,12 @@ if settings.DEBUG:
     import debug_toolbar
 
     urlpatterns = [  # prepend
-        url(r'^__debug__/', include(debug_toolbar.urls)),
+        re_path(r'^__debug__/', include(debug_toolbar.urls)),
     ] + urlpatterns
 
     urlpatterns += [
-        url(r'^400/$', default_views.bad_request, kwargs={'exception': Exception('Bad Request!')}),
-        url(r'^403/$', default_views.permission_denied, kwargs={'exception': Exception('Permission Denied')}),
-        url(r'^404/$', default_views.page_not_found, kwargs={'exception': Exception('Page not Found')}),
-        url(r'^500/$', default_views.server_error),
+        path('400/', default_views.bad_request, kwargs={'exception': Exception('Bad Request!')}),
+        path('403/', default_views.permission_denied, kwargs={'exception': Exception('Permission Denied')}),
+        path('404/', default_views.page_not_found, kwargs={'exception': Exception('Page not Found')}),
+        path('500/', default_views.server_error),
     ]

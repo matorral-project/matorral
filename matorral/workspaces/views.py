@@ -38,7 +38,7 @@ class WorkspaceDetailView(DetailView):
             remove_workspaces.delay([self.get_object().id])
             url = reverse_lazy('workspaces:workspace-list', args=[kwargs['workspace']])
 
-        if self.request.META.get('HTTP_X_FETCH') == 'true':
+        if self.request.headers.get('X-Fetch') == 'true':
             return JsonResponse(dict(url=url))
         else:
             return HttpResponseRedirect(url)
@@ -134,7 +134,7 @@ class WorkspaceList(BaseListView):
 
         url = self.request.get_full_path()
 
-        if self.request.META.get('HTTP_X_FETCH') == 'true':
+        if self.request.headers.get('X-Fetch') == 'true':
             return JsonResponse(dict(url=url))
         else:
             return HttpResponseRedirect(url)
@@ -156,7 +156,7 @@ class WorkspaceBaseView(object):
 
         url = self.get_success_url()
 
-        if self.request.META.get('HTTP_X_FETCH') == 'true':
+        if self.request.headers.get('X-Fetch') == 'true':
             return JsonResponse(dict(url=url))
 
         return response
