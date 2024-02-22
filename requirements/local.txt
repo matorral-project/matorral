@@ -1,6 +1,6 @@
 # Local development dependencies go here
 -r base.txt
-Werkzeug==0.15.4
+Werkzeug==2.3.8
 coverage==4.5.3
 django-coverage-plugin==1.6.0
 django-test-plus==1.2.0
