@@ -45,7 +45,6 @@ urlpatterns = [
 
     # App
     path(r'<workspace>/workspaces/', include('matorral.workspaces.urls', namespace='workspaces')),
-    path(r'<workspace>/', include('matorral.dashboard.urls', namespace='dashboard')),
     path(r'<workspace>/', include('matorral.stories.urls', namespace='stories')),
     path(r'<workspace>/sprints/', include('matorral.sprints.urls', namespace='sprints')),
 

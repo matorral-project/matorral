@@ -72,7 +72,6 @@ LOCAL_APPS = (
     'matorral.workspaces',
     'matorral.sprints',
     'matorral.stories',
-    'matorral.dashboard',
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
