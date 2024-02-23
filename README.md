@@ -28,10 +28,6 @@ Here are some screenshots:
 5. Run: `honcho -f Procfile.local start`
 7. Open your browser at `http://localhost:8000`.
 
-## Deploying to heroku:
-
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
-
 ## Links
 
  * [Demo](https://matorral.alameda.dev/). Username: `demo` \ password: `demopass`. Please be kind :)
