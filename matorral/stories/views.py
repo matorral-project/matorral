@@ -12,13 +12,10 @@ from django.views.generic.edit import CreateView, UpdateView
 from matorral.sprints.views import BaseListView
 from matorral.sprints.models import Sprint
 
-from rest_framework import viewsets
-
 import ujson
 
 from .forms import EpicFilterForm, EpicGroupByForm, StoryFilterForm
-from .models import Epic, Story, Task
-from .serializers import EpicSerializer, StorySerializer, TaskSerializer
+from .models import Epic, Story
 from .tasks import (duplicate_epics, duplicate_stories, epic_set_owner,
                     epic_set_state, remove_epics, remove_stories, reset_epic,
                     story_set_assignee, story_set_state, story_set_sprint,
@@ -98,24 +95,6 @@ class EpicDetailView(DetailView):
             return JsonResponse(dict(url=url))
         else:
             return HttpResponseRedirect(url)
-
-
-@method_decorator(login_required, name='dispatch')
-class EpicViewSet(viewsets.ModelViewSet):
-    serializer_class = EpicSerializer
-    queryset = Epic.objects.select_related('state', 'state', 'owner')
-
-
-@method_decorator(login_required, name='dispatch')
-class StoryViewSet(viewsets.ModelViewSet):
-    serializer_class = StorySerializer
-    queryset = Story.objects.select_related('epic', 'sprint', 'state', 'state', 'requester', 'assignee')
-
-
-@method_decorator(login_required, name='dispatch')
-class TaskViewSet(viewsets.ModelViewSet):
-    serializer_class = TaskSerializer
-    queryset = Task.objects.all()
 
 
 class StoryBaseView(object):

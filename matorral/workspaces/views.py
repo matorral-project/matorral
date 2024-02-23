@@ -8,11 +8,9 @@ from django.utils.text import slugify
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView
-from rest_framework import viewsets
 
 from ..utils import get_clean_next_url
 from .models import Workspace
-from .serializers import WorkspaceSerializer
 from .tasks import duplicate_workspaces, remove_workspaces
 
 
@@ -42,12 +40,6 @@ class WorkspaceDetailView(DetailView):
             return JsonResponse(dict(url=url))
         else:
             return HttpResponseRedirect(url)
-
-
-@method_decorator(login_required, name='dispatch')
-class WorkspaceViewSet(viewsets.ModelViewSet):
-    serializer_class = WorkspaceSerializer
-    queryset = Workspace.objects.all()
 
 
 class BaseListView(ListView):

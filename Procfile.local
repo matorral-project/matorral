@@ -1,3 +1,0 @@
-web: python manage.py runserver_plus
-worker: celery worker --app=matorral.taskapp --loglevel=debug
-beat: celery beat --app=matorral.taskapp --loglevel=debug

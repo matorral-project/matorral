@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "matorral"
+dynamic = ["version"]
+description = "A project managent system / Taiga.io clone with a simpler UX built @ Málaga"
+readme = "README.md"
+license = ""
+authors = [
+    { name = "matagus", email = "matagus@gmail.com" },
+]
+
+[project.urls]
+Homepage = "https://github.com/matagus/matorral"
+
+[tool.hatch.version]
+path = "config/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = ["."]
+exclude = ["matorral.db"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+exclude = ["matorral.db"]
