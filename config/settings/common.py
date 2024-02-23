@@ -32,7 +32,7 @@ SECRET_KEY = env('DJANGO_SECRET_KEY')
 # ------------------------------------------------------------------------------
 # Hosts/domain names that are valid for this site
 # See https://docs.djangoproject.com/en/1.6/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['matorral-tool.herokuapp.com'])
+ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 # END SITE CONFIGURATION
 
 # APP CONFIGURATION
@@ -362,13 +362,12 @@ LOGGING = {
 # Sentry related config vars
 SENTRY_ENABLED = env.bool('SENTRY_ENABLED', default=False)
 SENTRY_DSN = env('SENTRY_DSN', default='')
-SENTRY_ENVIRONMENT = env('SENTRY_ENVIRONMENT', default='staging')
+SENTRY_ENVIRONMENT = env('SENTRY_ENVIRONMENT', default='production')
 
 if SENTRY_ENABLED:
     import sentry_sdk
     from sentry_sdk.integrations.django import DjangoIntegration
     from sentry_sdk.integrations.celery import CeleryIntegration
-
 
     sentry_sdk.init(
         environment=f'{SENTRY_ENVIRONMENT}',

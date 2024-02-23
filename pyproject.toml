@@ -7,13 +7,54 @@ name = "matorral"
 dynamic = ["version"]
 description = "A project managent system / Taiga.io clone with a simpler UX built @ Málaga"
 readme = "README.md"
-license = ""
+license = "MPL-2.0"
 authors = [
-    { name = "matagus", email = "matagus@gmail.com" },
+    { name = "Matias Agustin Mendez", email = "matagus@gmail.com" },
+]
+keywords = []
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Framework :: Django :: 4.0",
+    "Framework :: Django :: 4.1",
+    "Framework :: Django :: 4.2",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = [
+    "Django>=4.0,<5.0",
+    "celery",
+    "django-admin-list-filter-dropdown",
+    "django-comments-xtd",
+    "django-contrib-comments",
+    "django-environ",
+    "django-extensions",
+    "django-simple-history",
+    "django-taggit",
+    "django-tagulous",
+    "django-watchman",
+    "msgpack",
+    "pytz",
+    "ujson",
+    "sentry-sdk",
+    "whitenoise",
 ]
 
 [project.urls]
 Homepage = "https://github.com/matagus/matorral"
+Issues = "https://.github.com/matagus/matorral/issues"
+Repository = "https://github.com/matagus/matorral"
+Changelog = "https://githib.com/matagus/matorral/releases"
 
 [tool.hatch.version]
 path = "config/__init__.py"
@@ -25,3 +66,72 @@ exclude = ["matorral.db"]
 [tool.hatch.build.targets.wheel]
 packages = ["."]
 exclude = ["matorral.db"]
+
+[tool.hatch.envs.default]
+extra-dependencies = []
+
+
+# Local environment
+[tool.hatch.envs.local]
+extra-dependencies = [
+    "Werkzeug",
+    "coverage[toml]",
+    "django-coverage-plugin",
+    "django-debug-toolbar",
+    "django-test-plus",
+    "ipdb",
+    "ipython",
+    "mypy",
+    "typing-extensions",
+]
+
+[tool.hatch.envs.local.scripts]
+server = "python manage.py runserver_plus --settings=config.settings.local"
+shell = "python manage.py shell_plus --settings=config.settings.local"
+migrate = "python manage.py migrate --settings=config.settings.local"
+makemigrations = "python manage.py makemigrations --settings=config.settings.local"
+
+# Production environment
+[tool.hatch.envs.prod]
+extra-dependencies = [
+    "gunicorn",
+    "psycopg2-binary",
+]
+
+[tool.hatch.envs.prod.scripts]
+server = "gunicorn config.wsgi:application --bind"
+migrate = "python manage.py migrate --settings=config.settings.production"
+makemigrations = "python manage.py makemigrations --settings=config.settings.production"
+
+# Test environment
+[tool.hatch.envs.test]
+extra-dependencies = [
+    "coverage[toml]",
+    "django~={matrix:django}.0",
+    "django_coverage_plugin",
+    "django-debug-toolbar",
+]
+
+[[tool.hatch.envs.test.matrix]]
+django = ["4.0"]
+python = ["3.9", "3.10"]
+
+[[tool.hatch.envs.test.matrix]]
+django = ["4.1"]
+python = ["3.9", "3.10", "3.11"]
+
+[[tool.hatch.envs.test.matrix]]
+django = ["4.2"]
+python = ["3.9", "3.10", "3.11", "3.12"]
+
+[tool.hatch.envs.test.scripts]
+test = "python manage.py test --settings=config.settings.testing"
+test-cov = "coverage run -m django test --settings=config.settings.testing"
+cov-report = ["coverage json", "coverage report"]
+cov = ["test-cov", "cov-report"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.black]
+line-length = 120
