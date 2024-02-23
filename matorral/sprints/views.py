@@ -9,7 +9,6 @@ from django.utils.decorators import method_decorator
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView
-from rest_framework import viewsets
 
 from matorral.stories.forms import StoryFilterForm
 from matorral.stories.tasks import story_set_assignee, story_set_state
@@ -17,7 +16,6 @@ from matorral.stories.tasks import story_set_assignee, story_set_state
 from ..utils import get_clean_next_url
 from .forms import SprintGroupByForm
 from .models import Sprint
-from .serializers import SprintSerializer
 from .tasks import duplicate_sprints, remove_sprints, reset_sprint
 
 
@@ -89,12 +87,6 @@ class SprintDetailView(DetailView):
             return JsonResponse(dict(url=url))
         else:
             return HttpResponseRedirect(url)
-
-
-@method_decorator(login_required, name='dispatch')
-class SprintViewSet(viewsets.ModelViewSet):
-    serializer_class = SprintSerializer
-    queryset = Sprint.objects.all()
 
 
 class BaseListView(ListView):

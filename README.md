@@ -35,7 +35,6 @@ Here are some screenshots:
 ## Links
 
  * [Demo](https://matorral.alameda.dev/). Username: `demo` \ password: `demopass`. Please be kind :)
- * [API](https://matorral.alameda.dev/api/v1/)
  * [Admin](https://matorral.alameda.dev/admin/)
 
 

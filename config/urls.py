@@ -6,22 +6,8 @@ from django.urls import include, path, re_path
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
-from django.urls import path
 from django.views import defaults as default_views
 
-from rest_framework.routers import DefaultRouter
-
-from matorral.workspaces import views as workspaces_views
-from matorral.sprints import views as sprints_views
-from matorral.stories import views as stories_views
-
-
-router = DefaultRouter()
-router.register(r'workspaces', workspaces_views.WorkspaceViewSet)
-router.register(r'epics', stories_views.EpicViewSet)
-router.register(r'sprints', sprints_views.SprintViewSet)
-router.register(r'stories', stories_views.StoryViewSet)
-router.register(r'tasks', stories_views.TaskViewSet)
 
 urlpatterns = [
     # Django Admin, use {% url 'admin:index' %}
@@ -38,10 +24,6 @@ urlpatterns = [
     re_path(r'^users/', include('matorral.users.urls')),
     # comments app
     re_path(r'^comments/', include('django_comments_xtd.urls')),
-
-    # API urls
-    re_path(r'^api/v1/', include('matorral.authentication.urls')),
-    re_path(r'^api/v1/', include(router.urls)),
 
     # App
     path(r'<workspace>/workspaces/', include('matorral.workspaces.urls', namespace='workspaces')),
