@@ -14,7 +14,7 @@ from matorral.sprints.models import Sprint
 
 import ujson
 
-from .forms import EpicFilterForm, EpicGroupByForm, StoryFilterForm
+from .forms import EpicFilterForm, EpicGroupByForm, StoryFilterForm, EpicForm
 from .models import Epic, Story
 from .tasks import (duplicate_epics, duplicate_stories, epic_set_owner,
                     epic_set_state, remove_epics, remove_stories, reset_epic,
@@ -218,14 +218,22 @@ class EpicCreateView(EpicBaseView, CreateView):
     def get_initial(self):
         return dict(owner=self.request.user.id, state='pl')
 
+    def get_form_class(self):
+        return EpicForm
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['workspace'] = self.request.workspace
+        return kwargs
+
     def post(self, *args, **kwargs):
         data = ujson.loads(self.request.body)
-        form = self.get_form_class()(data)
+        kwargs = self.get_form_kwargs()
+        kwargs['data'] = data
+        form = self.get_form_class()(**kwargs)
         return self.form_valid(form)
 
     def form_valid(self, form):
-        form.instance.workspace = self.request.workspace
-
         response = super().form_valid(form)
 
         url = self.get_success_url()
@@ -240,14 +248,26 @@ class EpicCreateView(EpicBaseView, CreateView):
 class EpicUpdateView(EpicBaseView, UpdateView):
 
     def post(self, *args, **kwargs):
+        kwargs = self.get_form_kwargs()
+
         data = ujson.loads(self.request.body)
+        kwargs['data'] = data
 
         if data.get('save-as-new'):
-            form = self.get_form_class()(data)
+            form = self.get_form_class()(**kwargs)
         else:
-            form = self.get_form_class()(data, instance=self.get_object())
+            kwargs['instance'] = self.get_object()
+            form = self.get_form_class()(**kwargs)
 
         return self.form_valid(form)
+
+    def get_form_class(self):
+        return EpicForm
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['workspace'] = self.request.workspace
+        return kwargs
 
     def form_valid(self, form):
         response = super().form_valid(form)
