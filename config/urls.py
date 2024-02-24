@@ -8,6 +8,8 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.views import defaults as default_views
 
+from matorral.workspaces.views import redirect_to_workspace
+
 
 urlpatterns = [
     # Django Admin, use {% url 'admin:index' %}
@@ -29,6 +31,8 @@ urlpatterns = [
     path(r'<workspace>/workspaces/', include('matorral.workspaces.urls', namespace='workspaces')),
     path(r'<workspace>/', include('matorral.stories.urls', namespace='stories')),
     path(r'<workspace>/sprints/', include('matorral.sprints.urls', namespace='sprints')),
+
+    path(r'', redirect_to_workspace, name='redirect_to_workspace')
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
