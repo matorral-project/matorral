@@ -33,18 +33,6 @@
     <td>{{ workspace.owner }}</td>
     <td>{{ workspace.updated_at|default:'' }}</td>
     <td>
-      {% if current_workspace == workspace.slug %}
-      <a class="button is-primary is-outlined" href="#">
-        Active Workspace
-      </a>
-      {% else %}
-      <a class="button is-primary" href="{% url 'workspaces:workspace-list' workspace.slug %}">
-        <span class="icon">
-            <i class="fas fa-toggle-off"></i>
-        </span><span>Switch!</span>
-      </a>
-      {% endif %}
-
       <a class="button is-link is-outlined" href="{% url 'workspaces:workspace-edit' current_workspace workspace.id %}?next={{ encoded_url }}" title="Edit">
         <span class="icon">
             <i class="fas fa-edit"></i>
