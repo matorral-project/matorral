@@ -50,10 +50,6 @@
             Stories
           </a>
 
-          <a class="navbar-item" href="{% url 'workspaces:workspace-list' current_workspace %}">
-            Workspaces
-          </a>
-
           <div class="navbar-item has-dropdown is-hoverable">
             <a class="navbar-link">
               More
@@ -85,6 +81,9 @@
                       Admin
                     </a>
                     {% endif %}
+                    <a class="navbar-item" href="{% url 'workspaces:workspace-list' current_workspace %}">
+                      Workspaces
+                    </a>
                     <a href="{% url 'logout' %}" class="navbar-item">
                       Logout
                     </a>
