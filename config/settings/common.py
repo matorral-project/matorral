@@ -53,8 +53,6 @@ DJANGO_APPS = (
 )
 
 THIRD_PARTY_APPS = (
-    'rest_framework',
-    'rest_framework.authtoken',
     'django_extensions',
     'watchman',
     'simple_history',
@@ -67,7 +65,6 @@ THIRD_PARTY_APPS = (
 # Apps specific for this project go here.
 LOCAL_APPS = (
     'matorral.users',  # custom users app
-    'matorral.authentication',
     # Your stuff: custom apps go here
     'matorral.workspaces',
     'matorral.sprints',
@@ -281,27 +278,6 @@ CELERY_ROUTES = {
 
 # Location of root django.contrib.admin URL, use {% url 'admin:index' %}
 ADMIN_URL = re.sub("^/", '^', env('DJANGO_ADMIN_URL', default="^admin/"))
-
-# Django Rest Framework
-REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 50,
-    'DATETIME_FORMAT': '%Y-%m-%dT%H:%M:%S%z',
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
-    ),
-    'DEFAULT_PARSER_CLASSES': (
-        'rest_framework.parsers.JSONParser',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
-    )
-}
 
 USER_AGENT = env("USER_AGENT", default="matorral/0.1.0")
 
