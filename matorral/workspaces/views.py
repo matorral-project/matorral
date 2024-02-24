@@ -188,3 +188,13 @@ class WorkspaceUpdateView(WorkspaceBaseView, UpdateView):
             form = self.get_form_class()(data, instance=self.get_object())
 
         return self.form_valid(form)
+
+
+@login_required
+def redirect_to_workspace(request):
+    first_workspace = request.user.workspace_set.order_by('id').first()
+    return HttpResponseRedirect(
+        reverse_lazy(
+            'stories:story-list', kwargs={'workspace': first_workspace.slug}
+        )
+    )

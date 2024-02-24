@@ -50,10 +50,6 @@
             Stories
           </a>
 
-          <a class="navbar-item" href="{% url 'workspaces:workspace-list' current_workspace %}">
-            Workspaces
-          </a>
-
           <div class="navbar-item has-dropdown is-hoverable">
             <a class="navbar-link">
               More
@@ -85,6 +81,9 @@
                       Admin
                     </a>
                     {% endif %}
+                    <a class="navbar-item" href="{% url 'workspaces:workspace-list' current_workspace %}">
+                      Workspaces
+                    </a>
                     <a href="{% url 'logout' %}" class="navbar-item">
                       Logout
                     </a>
@@ -134,7 +133,7 @@
         <p>
           <strong>Matorral</strong> by <a target="_blank" href="https://github.com/matagus">matagus</a>.
         <p>
-          This website has been built in a few weekends thanks to <a target="_blank" href="https://bulma.io/">Bulma</a> &amp; <a target="_blank" href="https://www.djangoproject.com/">Django</a>.
+          Built with ❤️, <a target="_blank" href="https://bulma.io/">Bulma</a> &amp; <a target="_blank" href="https://www.djangoproject.com/">Django</a>.
         </p>
       </div>
     </footer>

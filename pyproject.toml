@@ -89,7 +89,7 @@ extra-dependencies = [
 server = "python manage.py runserver_plus --settings=config.settings.local"
 shell = "python manage.py shell_plus --settings=config.settings.local"
 migrate = "python manage.py migrate --settings=config.settings.local"
-makemigrations = "python manage.py makemigrations --settings=config.settings.local"
+makemigrations = "python manage.py makemigrations --settings=config.settings.local {args}"
 
 # Production environment
 [tool.hatch.envs.prod]
@@ -101,7 +101,7 @@ extra-dependencies = [
 [tool.hatch.envs.prod.scripts]
 server = "gunicorn config.wsgi:application --bind"
 migrate = "python manage.py migrate --settings=config.settings.production"
-makemigrations = "python manage.py makemigrations --settings=config.settings.production"
+makemigrations = "python manage.py makemigrations --settings=config.settings.production {args}"
 
 # Test environment
 [tool.hatch.envs.test]

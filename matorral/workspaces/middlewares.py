@@ -24,6 +24,9 @@ class WorkspaceMiddleware:
         except KeyError:
             return None
 
+        if not request.user.is_authenticated:
+            return None
+
         queryset = (Workspace.objects.filter(owner=request.user) | Workspace.objects.filter(members=request.user)).distinct()
 
         try:
