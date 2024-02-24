@@ -37,6 +37,7 @@ dependencies = [
     "django-admin-list-filter-dropdown",
     "django-comments-xtd",
     "django-contrib-comments",
+    "django-debug-toolbar",
     "django-environ",
     "django-extensions",
     "django-simple-history",
@@ -70,14 +71,12 @@ exclude = ["matorral.db"]
 [tool.hatch.envs.default]
 extra-dependencies = []
 
-
 # Local environment
 [tool.hatch.envs.local]
 extra-dependencies = [
     "Werkzeug",
     "coverage[toml]",
     "django-coverage-plugin",
-    "django-debug-toolbar",
     "django-test-plus",
     "ipdb",
     "ipython",
