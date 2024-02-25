@@ -14,7 +14,7 @@ from matorral.sprints.models import Sprint
 
 import ujson
 
-from .forms import EpicFilterForm, EpicGroupByForm, StoryFilterForm, EpicForm
+from .forms import EpicFilterForm, EpicGroupByForm, StoryFilterForm, EpicForm, StoryForm
 from .models import Epic, Story
 from .tasks import (duplicate_epics, duplicate_stories, epic_set_owner,
                     epic_set_state, remove_epics, remove_stories, reset_epic,
@@ -151,13 +151,21 @@ class StoryCreateView(StoryBaseView, CreateView):
         return initial_dict
 
     def post(self, *args, **kwargs):
+        kwargs = self.get_form_kwargs()
         data = ujson.loads(self.request.body)
-        form = self.get_form_class()(data)
+        kwargs['data'] = data
+        form = self.get_form_class()(**kwargs)
         return self.form_valid(form)
 
-    def form_valid(self, form):
-        form.instance.workspace = self.request.workspace
+    def get_form_class(self):
+        return StoryForm
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['workspace'] = self.request.workspace
+        return kwargs
+
+    def form_valid(self, form):
         response = super().form_valid(form)
 
         url = self.get_success_url()
@@ -172,14 +180,24 @@ class StoryCreateView(StoryBaseView, CreateView):
 class StoryUpdateView(StoryBaseView, UpdateView):
 
     def post(self, *args, **kwargs):
+        kwargs = self.get_form_kwargs()
+
         data = ujson.loads(self.request.body)
+        kwargs['data'] = data
 
-        if data.get('save-as-new'):
-            form = self.get_form_class()(data)
-        else:
-            form = self.get_form_class()(data, instance=self.get_object())
+        if not data.get('save-as-new'):
+            kwargs['instance'] = self.get_object()
 
+        form = self.get_form_class()(**kwargs)
         return self.form_valid(form)
+
+    def get_form_class(self):
+        return StoryForm
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['workspace'] = self.request.workspace
+        return kwargs
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -253,11 +271,10 @@ class EpicUpdateView(EpicBaseView, UpdateView):
         data = ujson.loads(self.request.body)
         kwargs['data'] = data
 
-        if data.get('save-as-new'):
-            form = self.get_form_class()(**kwargs)
-        else:
+        if not data.get('save-as-new'):
             kwargs['instance'] = self.get_object()
-            form = self.get_form_class()(**kwargs)
+
+        form = self.get_form_class()(**kwargs)
 
         return self.form_valid(form)
 
