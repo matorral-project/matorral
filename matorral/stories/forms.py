@@ -1,8 +1,8 @@
-from django.forms import Select, Form, ChoiceField, ModelChoiceField
+from django.forms import Select, Form, ChoiceField, ModelChoiceField, ModelForm
 
 from matorral.users.models import User
 
-from .models import EpicState, StoryState
+from .models import EpicState, StoryState, Epic
 
 
 custom_select = Select(attrs={
@@ -53,3 +53,21 @@ class EpicGroupByForm(Form):
     ]
 
     group_by = ChoiceField(choices=CHOICES, required=False, widget=Select(attrs={'onchange': 'this.form.submit();'}))
+
+
+class EpicForm(ModelForm):
+    class Meta:
+        model = Epic
+        fields = ['title', 'description', 'owner', 'state', 'priority', 'tags']
+
+    def __init__(self, *args, **kwargs):
+        self.workspace = kwargs.pop('workspace', None)
+        super(EpicForm, self).__init__(*args, **kwargs)
+        self.fields['owner'].queryset = User.objects.filter(is_active=True, workspace=self.workspace)
+
+    def save(self, commit=True):
+        instance = super(EpicForm, self).save(commit=False)
+        instance.workspace = self.workspace
+        if commit:
+            instance.save()
+        return instance

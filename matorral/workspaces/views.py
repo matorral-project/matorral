@@ -194,4 +194,10 @@ class WorkspaceUpdateView(WorkspaceBaseView, UpdateView):
 @login_required
 def workspace_index(request):
     workspace_list = request.user.workspace_set.order_by('name')
+
+    q = request.GET.get('q')
+
+    if q is not None:
+        workspace_list = workspace_list.filter(name__icontains=q)
+
     return render(request, 'workspaces/index.html', {'workspace_list': workspace_list, 'title': 'Workspaces'})
