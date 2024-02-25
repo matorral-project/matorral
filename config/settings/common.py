@@ -58,8 +58,6 @@ THIRD_PARTY_APPS = (
     'simple_history',
     'tagulous',
     'taggit',
-    'django_comments_xtd',
-    'django_comments',
 )
 
 # Apps specific for this project go here.

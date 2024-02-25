@@ -24,8 +24,6 @@ urlpatterns = [
 
     # User management
     re_path(r'^users/', include('matorral.users.urls')),
-    # comments app
-    re_path(r'^comments/', include('django_comments_xtd.urls')),
 
     # App
     path(r'<workspace>/workspaces/', include('matorral.workspaces.urls', namespace='workspaces')),

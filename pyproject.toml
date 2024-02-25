@@ -35,8 +35,6 @@ dependencies = [
     "Django>=4.0,<5.0",
     "celery",
     "django-admin-list-filter-dropdown",
-    "django-comments-xtd",
-    "django-contrib-comments",
     "django-debug-toolbar",
     "django-environ",
     "django-extensions",
