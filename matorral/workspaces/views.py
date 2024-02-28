@@ -44,7 +44,7 @@ class WorkspaceDetailView(DetailView):
 
 
 class BaseListView(ListView):
-    paginate_by = 10
+    paginate_by = 16
 
     filter_fields = {}
     select_related = None
