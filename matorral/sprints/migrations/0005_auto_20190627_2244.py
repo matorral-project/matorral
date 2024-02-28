@@ -6,32 +6,37 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('sprints', '0004_auto_20190624_0926'),
+        ("sprints", "0004_auto_20190624_0926"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='sprint',
-            options={'get_latest_by': 'created_at', 'ordering': ['-updated_at', 'starts_at'], 'verbose_name': 'sprint', 'verbose_name_plural': 'sprints'},
+            name="sprint",
+            options={
+                "get_latest_by": "created_at",
+                "ordering": ["-updated_at", "starts_at"],
+                "verbose_name": "sprint",
+                "verbose_name_plural": "sprints",
+            },
         ),
         migrations.AddIndex(
-            model_name='sprint',
-            index=models.Index(fields=['updated_at', 'starts_at'], name='sprints_spr_updated_b70ad1_idx'),
+            model_name="sprint",
+            index=models.Index(fields=["updated_at", "starts_at"], name="sprints_spr_updated_b70ad1_idx"),
         ),
         migrations.AddIndex(
-            model_name='sprint',
-            index=models.Index(fields=['starts_at', 'ends_at'], name='sprints_spr_starts__865bcd_idx'),
+            model_name="sprint",
+            index=models.Index(fields=["starts_at", "ends_at"], name="sprints_spr_starts__865bcd_idx"),
         ),
         migrations.AddIndex(
-            model_name='sprint',
-            index=models.Index(fields=['starts_at'], name='sprints_spr_starts__38214d_idx'),
+            model_name="sprint",
+            index=models.Index(fields=["starts_at"], name="sprints_spr_starts__38214d_idx"),
         ),
         migrations.AddIndex(
-            model_name='sprint',
-            index=models.Index(fields=['ends_at'], name='sprints_spr_ends_at_c1c211_idx'),
+            model_name="sprint",
+            index=models.Index(fields=["ends_at"], name="sprints_spr_ends_at_c1c211_idx"),
         ),
         migrations.AddIndex(
-            model_name='sprint',
-            index=models.Index(fields=['title'], name='sprints_spr_title_56c68d_idx'),
+            model_name="sprint",
+            index=models.Index(fields=["title"], name="sprints_spr_title_56c68d_idx"),
         ),
     ]

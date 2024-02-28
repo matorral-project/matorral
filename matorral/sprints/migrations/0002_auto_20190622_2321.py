@@ -6,46 +6,50 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('sprints', '0001_initial'),
+        ("sprints", "0001_initial"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='historicalsprint',
-            name='completed_at',
+            model_name="historicalsprint",
+            name="completed_at",
         ),
         migrations.RemoveField(
-            model_name='sprint',
-            name='completed_at',
+            model_name="sprint",
+            name="completed_at",
         ),
         migrations.AddField(
-            model_name='historicalsprint',
-            name='ends_at',
+            model_name="historicalsprint",
+            name="ends_at",
             field=models.DateField(blank=True, db_index=True, null=True),
         ),
         migrations.AddField(
-            model_name='historicalsprint',
-            name='starts_at',
+            model_name="historicalsprint",
+            name="starts_at",
             field=models.DateField(blank=True, db_index=True, null=True),
         ),
         migrations.AddField(
-            model_name='historicalsprint',
-            name='state',
-            field=models.PositiveIntegerField(choices=[(0, 'Unstarted'), (1, 'Started'), (2, 'Done')], db_index=True, default=0),
+            model_name="historicalsprint",
+            name="state",
+            field=models.PositiveIntegerField(
+                choices=[(0, "Unstarted"), (1, "Started"), (2, "Done")], db_index=True, default=0
+            ),
         ),
         migrations.AddField(
-            model_name='sprint',
-            name='ends_at',
+            model_name="sprint",
+            name="ends_at",
             field=models.DateField(blank=True, db_index=True, null=True),
         ),
         migrations.AddField(
-            model_name='sprint',
-            name='starts_at',
+            model_name="sprint",
+            name="starts_at",
             field=models.DateField(blank=True, db_index=True, null=True),
         ),
         migrations.AddField(
-            model_name='sprint',
-            name='state',
-            field=models.PositiveIntegerField(choices=[(0, 'Unstarted'), (1, 'Started'), (2, 'Done')], db_index=True, default=0),
+            model_name="sprint",
+            name="state",
+            field=models.PositiveIntegerField(
+                choices=[(0, "Unstarted"), (1, "Started"), (2, "Done")], db_index=True, default=0
+            ),
         ),
     ]

@@ -8,26 +8,31 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('workspaces', '0003_auto_20200815_1418'),
+        ("workspaces", "0003_auto_20200815_1418"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='workspace',
-            options={'get_latest_by': 'created_at', 'ordering': ['owner', 'name'], 'verbose_name': 'workspace', 'verbose_name_plural': 'workspaces'},
+            name="workspace",
+            options={
+                "get_latest_by": "created_at",
+                "ordering": ["owner", "name"],
+                "verbose_name": "workspace",
+                "verbose_name_plural": "workspaces",
+            },
         ),
         migrations.AddField(
-            model_name='workspace',
-            name='slug',
-            field=models.SlugField(default='default', max_length=100),
+            model_name="workspace",
+            name="slug",
+            field=models.SlugField(default="default", max_length=100),
         ),
         migrations.AlterField(
-            model_name='workspace',
-            name='name',
+            model_name="workspace",
+            name="name",
             field=models.CharField(db_index=True, max_length=100),
         ),
         migrations.AlterUniqueTogether(
-            name='workspace',
-            unique_together={('slug', 'owner')},
+            name="workspace",
+            unique_together={("slug", "owner")},
         ),
     ]

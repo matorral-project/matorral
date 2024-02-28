@@ -6,48 +6,48 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('stories', '0004_auto_20190525_2309'),
+        ("stories", "0004_auto_20190525_2309"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='epic',
-            name='points_done',
+            model_name="epic",
+            name="points_done",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='epic',
-            name='progress',
+            model_name="epic",
+            name="progress",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='epic',
-            name='story_count',
+            model_name="epic",
+            name="story_count",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='epic',
-            name='total_points',
+            model_name="epic",
+            name="total_points",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='historicalepic',
-            name='points_done',
+            model_name="historicalepic",
+            name="points_done",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='historicalepic',
-            name='progress',
+            model_name="historicalepic",
+            name="progress",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='historicalepic',
-            name='story_count',
+            model_name="historicalepic",
+            name="story_count",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='historicalepic',
-            name='total_points',
+            model_name="historicalepic",
+            name="total_points",
             field=models.PositiveIntegerField(default=0),
         ),
     ]

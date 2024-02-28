@@ -6,18 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('stories', '0003_auto_20190525_1914'),
+        ("stories", "0003_auto_20190525_1914"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='epicstate',
-            name='stype',
-            field=models.CharField(choices=[('u', 'Unstarted'), ('s', 'Started'), ('d', 'Done')], db_index=True, default='u', max_length=1),
+            model_name="epicstate",
+            name="stype",
+            field=models.CharField(
+                choices=[("u", "Unstarted"), ("s", "Started"), ("d", "Done")], db_index=True, default="u", max_length=1
+            ),
         ),
         migrations.AddField(
-            model_name='storystate',
-            name='stype',
-            field=models.CharField(choices=[('u', 'Unstarted'), ('s', 'Started'), ('d', 'Done')], db_index=True, default='u', max_length=1),
+            model_name="storystate",
+            name="stype",
+            field=models.CharField(
+                choices=[("u", "Unstarted"), ("s", "Started"), ("d", "Done")], db_index=True, default="u", max_length=1
+            ),
         ),
     ]

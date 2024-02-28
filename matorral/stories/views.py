@@ -16,29 +16,38 @@ import ujson
 
 from .forms import EpicFilterForm, EpicGroupByForm, StoryFilterForm, EpicForm, StoryForm
 from .models import Epic, Story
-from .tasks import (duplicate_epics, duplicate_stories, epic_set_owner,
-                    epic_set_state, remove_epics, remove_stories, reset_epic,
-                    story_set_assignee, story_set_state, story_set_sprint,
-                    story_set_epic)
+from .tasks import (
+    duplicate_epics,
+    duplicate_stories,
+    epic_set_owner,
+    epic_set_state,
+    remove_epics,
+    remove_stories,
+    reset_epic,
+    story_set_assignee,
+    story_set_state,
+    story_set_sprint,
+    story_set_epic,
+)
 from ..utils import get_clean_next_url
 
 
-@method_decorator(login_required, name='dispatch')
+@method_decorator(login_required, name="dispatch")
 class EpicDetailView(DetailView):
 
     model = Epic
 
     def get_children(self):
-        queryset = self.get_object().story_set.select_related('requester', 'assignee', 'sprint', 'state')
+        queryset = self.get_object().story_set.select_related("requester", "assignee", "sprint", "state")
 
         config = dict(
-            sprint=('sprint__starts_at', lambda story: story.sprint and story.sprint.title or 'No sprint'),
-            state=('state__slug', lambda story: story.state.name),
-            requester=('requester__id', lambda story: story.requester and story.requester.username or 'Unset'),
-            assignee=('assignee__id', lambda story: story.assignee and story.assignee.username or 'Unassigned'),
+            sprint=("sprint__starts_at", lambda story: story.sprint and story.sprint.title or "No sprint"),
+            state=("state__slug", lambda story: story.state.name),
+            requester=("requester__id", lambda story: story.requester and story.requester.username or "Unset"),
+            assignee=("assignee__id", lambda story: story.assignee and story.assignee.username or "Unassigned"),
         )
 
-        group_by = self.request.GET.get('group_by')
+        group_by = self.request.GET.get("group_by")
 
         try:
             order_by, fx = config[group_by]
@@ -51,47 +60,47 @@ class EpicDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['objects_by_group'] = self.get_children()
-        context['group_by_form'] = EpicGroupByForm(self.request.GET)
-        context['group_by'] = self.request.GET.get('group_by')
-        context['filters_form'] = StoryFilterForm(self.request.POST)
-        context['current_workspace'] = self.kwargs['workspace']
+        context["objects_by_group"] = self.get_children()
+        context["group_by_form"] = EpicGroupByForm(self.request.GET)
+        context["group_by"] = self.request.GET.get("group_by")
+        context["filters_form"] = StoryFilterForm(self.request.POST)
+        context["current_workspace"] = self.kwargs["workspace"]
         return context
 
     def post(self, *args, **kwargs):
         params = ujson.loads(self.request.body)
 
-        if params.get('remove') == 'yes':
+        if params.get("remove") == "yes":
             remove_epics.delay([self.get_object().id])
 
-            url = reverse_lazy('stories:epic-list', args=[self.kwargs['workspace']])
+            url = reverse_lazy("stories:epic-list", args=[self.kwargs["workspace"]])
 
-            if self.request.headers.get('X-Fetch') == 'true':
+            if self.request.headers.get("X-Fetch") == "true":
                 return JsonResponse(dict(url=url))
             else:
                 return HttpResponseRedirect(url)
 
-        if params.get('epic-reset') == 'yes':
-            story_ids = [t[6:] for t in params.keys() if 'story-' in t]
+        if params.get("epic-reset") == "yes":
+            story_ids = [t[6:] for t in params.keys() if "story-" in t]
             reset_epic.delay(story_ids)
 
-        state = params.get('state')
+        state = params.get("state")
         if isinstance(state, list):
             state = state[0]
         if state:
-            story_ids = [t[6:] for t in params.keys() if 'story-' in t]
+            story_ids = [t[6:] for t in params.keys() if "story-" in t]
             story_set_state.delay(story_ids, state)
 
-        assignee = params.get('assignee')
+        assignee = params.get("assignee")
         if isinstance(assignee, list):
             assignee = assignee[0]
         if assignee:
-            story_ids = [t[6:] for t in params.keys() if 'story-' in t]
+            story_ids = [t[6:] for t in params.keys() if "story-" in t]
             story_set_assignee.delay(story_ids, assignee)
 
         url = self.request.get_full_path()
 
-        if self.request.headers.get('X-Fetch') == 'true':
+        if self.request.headers.get("X-Fetch") == "true":
             return JsonResponse(dict(url=url))
         else:
             return HttpResponseRedirect(url)
@@ -100,60 +109,64 @@ class EpicDetailView(DetailView):
 class StoryBaseView(object):
     model = Story
     fields = [
-        'title', 'description',
-        'epic', 'sprint',
-        'requester', 'assignee',
-        'priority', 'points',
-        'state', 'tags',
+        "title",
+        "description",
+        "epic",
+        "sprint",
+        "requester",
+        "assignee",
+        "priority",
+        "points",
+        "state",
+        "tags",
     ]
 
     @property
     def success_url(self):
-        return get_clean_next_url(self.request, reverse_lazy('stories:story-list', args=[self.kwargs['workspace']]))
+        return get_clean_next_url(self.request, reverse_lazy("stories:story-list", args=[self.kwargs["workspace"]]))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        story_add_url = reverse_lazy('stories:story-add', args=[self.kwargs['workspace']])
+        story_add_url = reverse_lazy("stories:story-add", args=[self.kwargs["workspace"]])
 
-        epic_id = self.request.GET.get('epic')
-        sprint_id = self.request.GET.get('sprint')
+        epic_id = self.request.GET.get("epic")
+        sprint_id = self.request.GET.get("sprint")
         if epic_id or sprint_id:
-            story_add_url += '?'
+            story_add_url += "?"
             if epic_id:
-                story_add_url += 'epic=' + epic_id
+                story_add_url += "epic=" + epic_id
             if sprint_id:
-                story_add_url += 'sprint=' + sprint_id
+                story_add_url += "sprint=" + sprint_id
 
-        context['story_add_url'] = story_add_url
-        context['current_workspace'] = self.kwargs['workspace']
+        context["story_add_url"] = story_add_url
+        context["current_workspace"] = self.kwargs["workspace"]
 
         return context
 
 
-@method_decorator(login_required, name='dispatch')
+@method_decorator(login_required, name="dispatch")
 class StoryCreateView(StoryBaseView, CreateView):
 
     def get_initial(self):
-        initial_dict = dict(requester=self.request.user.id, state='pl')
+        initial_dict = dict(requester=self.request.user.id, state="pl")
 
-        epic_id = self.request.GET.get('epic')
+        epic_id = self.request.GET.get("epic")
         if epic_id is not None:
-            initial_dict['epic'] = epic_id
+            initial_dict["epic"] = epic_id
 
-            max_priority = Story.objects.filter(epic=epic_id)\
-                .aggregate(Max('priority'))['priority__max'] or 0
-            initial_dict['priority'] = max_priority + 1
+            max_priority = Story.objects.filter(epic=epic_id).aggregate(Max("priority"))["priority__max"] or 0
+            initial_dict["priority"] = max_priority + 1
 
-        sprint_id = self.request.GET.get('sprint')
+        sprint_id = self.request.GET.get("sprint")
         if sprint_id is not None:
-            initial_dict['sprint'] = sprint_id
+            initial_dict["sprint"] = sprint_id
 
         return initial_dict
 
     def post(self, *args, **kwargs):
         kwargs = self.get_form_kwargs()
         data = ujson.loads(self.request.body)
-        kwargs['data'] = data
+        kwargs["data"] = data
         form = self.get_form_class()(**kwargs)
         return self.form_valid(form)
 
@@ -162,7 +175,7 @@ class StoryCreateView(StoryBaseView, CreateView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs['workspace'] = self.request.workspace
+        kwargs["workspace"] = self.request.workspace
         return kwargs
 
     def form_valid(self, form):
@@ -170,23 +183,23 @@ class StoryCreateView(StoryBaseView, CreateView):
 
         url = self.get_success_url()
 
-        if self.request.headers.get('X-Fetch') == 'true':
+        if self.request.headers.get("X-Fetch") == "true":
             return JsonResponse(dict(url=url))
 
         return response
 
 
-@method_decorator(login_required, name='dispatch')
+@method_decorator(login_required, name="dispatch")
 class StoryUpdateView(StoryBaseView, UpdateView):
 
     def post(self, *args, **kwargs):
         kwargs = self.get_form_kwargs()
 
         data = ujson.loads(self.request.body)
-        kwargs['data'] = data
+        kwargs["data"] = data
 
-        if not data.get('save-as-new'):
-            kwargs['instance'] = self.get_object()
+        if not data.get("save-as-new"):
+            kwargs["instance"] = self.get_object()
 
         form = self.get_form_class()(**kwargs)
         return self.form_valid(form)
@@ -196,7 +209,7 @@ class StoryUpdateView(StoryBaseView, UpdateView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs['workspace'] = self.request.workspace
+        kwargs["workspace"] = self.request.workspace
         return kwargs
 
     def form_valid(self, form):
@@ -204,7 +217,7 @@ class StoryUpdateView(StoryBaseView, UpdateView):
 
         url = self.get_success_url()
 
-        if self.request.headers.get('X-Fetch') == 'true':
+        if self.request.headers.get("X-Fetch") == "true":
             return JsonResponse(dict(url=url))
 
         return response
@@ -213,41 +226,44 @@ class StoryUpdateView(StoryBaseView, UpdateView):
 class EpicBaseView(object):
     model = Epic
     fields = [
-        'title', 'description',
-        'owner', 'priority',
-        'state', 'tags',
+        "title",
+        "description",
+        "owner",
+        "priority",
+        "state",
+        "tags",
     ]
 
     @property
     def success_url(self):
-        return get_clean_next_url(self.request, reverse_lazy('stories:epic-list', args=[self.kwargs['workspace']]))
+        return get_clean_next_url(self.request, reverse_lazy("stories:epic-list", args=[self.kwargs["workspace"]]))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        epic_add_url = reverse_lazy('stories:epic-add', args=[self.kwargs['workspace']])
-        context['epic_add_url'] = epic_add_url
-        context['current_workspace'] = self.kwargs['workspace']
+        epic_add_url = reverse_lazy("stories:epic-add", args=[self.kwargs["workspace"]])
+        context["epic_add_url"] = epic_add_url
+        context["current_workspace"] = self.kwargs["workspace"]
         return context
 
 
-@method_decorator(login_required, name='dispatch')
+@method_decorator(login_required, name="dispatch")
 class EpicCreateView(EpicBaseView, CreateView):
 
     def get_initial(self):
-        return dict(owner=self.request.user.id, state='pl')
+        return dict(owner=self.request.user.id, state="pl")
 
     def get_form_class(self):
         return EpicForm
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs['workspace'] = self.request.workspace
+        kwargs["workspace"] = self.request.workspace
         return kwargs
 
     def post(self, *args, **kwargs):
         data = ujson.loads(self.request.body)
         kwargs = self.get_form_kwargs()
-        kwargs['data'] = data
+        kwargs["data"] = data
         form = self.get_form_class()(**kwargs)
         return self.form_valid(form)
 
@@ -256,23 +272,23 @@ class EpicCreateView(EpicBaseView, CreateView):
 
         url = self.get_success_url()
 
-        if self.request.headers.get('X-Fetch') == 'true':
+        if self.request.headers.get("X-Fetch") == "true":
             return JsonResponse(dict(url=url))
 
         return response
 
 
-@method_decorator(login_required, name='dispatch')
+@method_decorator(login_required, name="dispatch")
 class EpicUpdateView(EpicBaseView, UpdateView):
 
     def post(self, *args, **kwargs):
         kwargs = self.get_form_kwargs()
 
         data = ujson.loads(self.request.body)
-        kwargs['data'] = data
+        kwargs["data"] = data
 
-        if not data.get('save-as-new'):
-            kwargs['instance'] = self.get_object()
+        if not data.get("save-as-new"):
+            kwargs["instance"] = self.get_object()
 
         form = self.get_form_class()(**kwargs)
 
@@ -283,7 +299,7 @@ class EpicUpdateView(EpicBaseView, UpdateView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs['workspace'] = self.request.workspace
+        kwargs["workspace"] = self.request.workspace
         return kwargs
 
     def form_valid(self, form):
@@ -291,50 +307,46 @@ class EpicUpdateView(EpicBaseView, UpdateView):
 
         url = self.get_success_url()
 
-        if self.request.headers.get('X-Fetch') == 'true':
+        if self.request.headers.get("X-Fetch") == "true":
             return JsonResponse(dict(url=url))
 
         return response
 
 
-@method_decorator(login_required, name='dispatch')
+@method_decorator(login_required, name="dispatch")
 class EpicList(BaseListView):
     model = Epic
 
-    filter_fields = dict(
-        owner='owner__username',
-        state='state__name__iexact',
-        label='tags__name__iexact'
-    )
+    filter_fields = dict(owner="owner__username", state="state__name__iexact", label="tags__name__iexact")
 
-    select_related = ['owner', 'state']
-    prefetch_related = ['tags']
+    select_related = ["owner", "state"]
+    prefetch_related = ["tags"]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['filters_form'] = EpicFilterForm(self.request.POST)
-        context['current_workspace'] = self.kwargs['workspace']
+        context["filters_form"] = EpicFilterForm(self.request.POST)
+        context["current_workspace"] = self.kwargs["workspace"]
         return context
 
     def post(self, *args, **kwargs):
         params = ujson.loads(self.request.body)
 
-        epic_ids = [t[5:] for t in params.keys() if 'epic-' in t]
+        epic_ids = [t[5:] for t in params.keys() if "epic-" in t]
 
         if len(epic_ids) > 0:
-            if params.get('remove') == 'yes':
+            if params.get("remove") == "yes":
                 remove_epics.delay(epic_ids)
 
-            if params.get('duplicate') == 'yes':
+            if params.get("duplicate") == "yes":
                 duplicate_epics.delay(epic_ids)
 
-            state = params.get('state')
+            state = params.get("state")
             if isinstance(state, list):
                 state = state[0]
             if state:
                 epic_set_state.delay(epic_ids, state)
 
-            owner = params.get('owner')
+            owner = params.get("owner")
             if isinstance(owner, list):
                 owner = owner[0]
             if owner:
@@ -342,33 +354,33 @@ class EpicList(BaseListView):
 
         url = self.request.get_full_path()
 
-        if self.request.headers.get('X-Fetch') == 'true':
+        if self.request.headers.get("X-Fetch") == "true":
             return JsonResponse(dict(url=url))
         else:
             return HttpResponseRedirect(url)
 
 
-@method_decorator(login_required, name='dispatch')
+@method_decorator(login_required, name="dispatch")
 class StoryList(BaseListView):
     model = Story
 
     filter_fields = dict(
-        requester='requester__username',
-        assignee='assignee__username',
-        state='state__name__iexact',
-        label='tags__name__iexact',
-        sprint='sprint__title__iexact'
+        requester="requester__username",
+        assignee="assignee__username",
+        state="state__name__iexact",
+        label="tags__name__iexact",
+        sprint="sprint__title__iexact",
     )
 
-    select_related = ['requester', 'assignee', 'state', 'sprint']
-    prefetch_related = ['tags']
+    select_related = ["requester", "assignee", "state", "sprint"]
+    prefetch_related = ["tags"]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['filters_form'] = StoryFilterForm(self.request.POST)
+        context["filters_form"] = StoryFilterForm(self.request.POST)
 
-        to_sprint = self.request.GET.get('to-sprint')
-        to_epic = self.request.GET.get('to-epic')
+        to_sprint = self.request.GET.get("to-sprint")
+        to_epic = self.request.GET.get("to-epic")
 
         if to_sprint:
             try:
@@ -376,8 +388,8 @@ class StoryList(BaseListView):
             except Sprint.DoesNotExist:
                 pass
             else:
-                context['add_to'] = 'sprint'
-                context['add_to_object'] = sprint
+                context["add_to"] = "sprint"
+                context["add_to_object"] = sprint
 
         elif to_epic:
             try:
@@ -385,41 +397,41 @@ class StoryList(BaseListView):
             except Epic.DoesNotExist:
                 pass
             else:
-                context['add_to'] = 'epic'
-                context['add_to_object'] = epic
+                context["add_to"] = "epic"
+                context["add_to_object"] = epic
 
-        context['current_workspace'] = self.kwargs['workspace']
+        context["current_workspace"] = self.kwargs["workspace"]
 
         return context
 
     def post(self, *args, **kwargs):
         params = ujson.loads(self.request.body)
 
-        story_ids = [t[6:] for t in params.keys() if 'story-' in t]
+        story_ids = [t[6:] for t in params.keys() if "story-" in t]
 
         if len(story_ids) > 0:
-            if params.get('remove') == 'yes':
+            if params.get("remove") == "yes":
                 remove_stories.delay(story_ids)
 
-            elif params.get('duplicate') == 'yes':
+            elif params.get("duplicate") == "yes":
                 duplicate_stories.delay(story_ids)
 
             else:
-                add_to_sprint = params.get('add-to-sprint')
+                add_to_sprint = params.get("add-to-sprint")
                 if add_to_sprint:
                     story_set_sprint.delay(story_ids, add_to_sprint)
 
-                add_to_epic = params.get('add-to-epic')
+                add_to_epic = params.get("add-to-epic")
                 if add_to_epic:
                     story_set_epic.delay(story_ids, add_to_epic)
 
-            state = params.get('state')
+            state = params.get("state")
             if isinstance(state, list):
                 state = state[0]
             if state:
                 story_set_state.delay(story_ids, state)
 
-            assignee = params.get('assignee')
+            assignee = params.get("assignee")
             if isinstance(assignee, list):
                 assignee = assignee[0]
             if assignee:
@@ -427,38 +439,38 @@ class StoryList(BaseListView):
 
         url = self.request.get_full_path()
 
-        if self.request.headers.get('X-Fetch') == 'true':
+        if self.request.headers.get("X-Fetch") == "true":
             return JsonResponse(dict(url=url))
         else:
             return HttpResponseRedirect(url)
 
 
-@method_decorator(login_required, name='dispatch')
+@method_decorator(login_required, name="dispatch")
 class StoryDetailView(DetailView):
 
     model = Story
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['current_workspace'] = self.kwargs['workspace']
+        context["current_workspace"] = self.kwargs["workspace"]
         return context
 
     def post(self, *args, **kwargs):
         params = ujson.loads(self.request.body)
 
-        if params.get('remove') == 'yes':
+        if params.get("remove") == "yes":
             remove_stories.delay([self.get_object().id])
 
-            url = reverse_lazy('stories:story-list', args=[self.kwargs['workspace']])
+            url = reverse_lazy("stories:story-list", args=[self.kwargs["workspace"]])
 
-            if self.request.headers.get('X-Fetch') == 'true':
+            if self.request.headers.get("X-Fetch") == "true":
                 return JsonResponse(dict(url=url))
             else:
                 return HttpResponseRedirect(url)
 
         url = self.request.get_full_path()
 
-        if self.request.headers.get('X-Fetch') == 'true':
+        if self.request.headers.get("X-Fetch") == "true":
             return JsonResponse(dict(url=url))
         else:
             return HttpResponseRedirect(url)

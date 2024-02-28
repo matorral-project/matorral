@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('sprints', '0002_auto_20190622_2321'),
+        ("sprints", "0002_auto_20190622_2321"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='historicalsprint',
-            name='completed_at',
+            model_name="historicalsprint",
+            name="completed_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='sprint',
-            name='completed_at',
+            model_name="sprint",
+            name="completed_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
     ]

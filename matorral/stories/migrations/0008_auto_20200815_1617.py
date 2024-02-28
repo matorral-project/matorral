@@ -7,20 +7,27 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('workspaces', '0004_auto_20200815_1608'),
-        ('stories', '0007_auto_20190630_1552'),
+        ("workspaces", "0004_auto_20200815_1608"),
+        ("stories", "0007_auto_20190630_1552"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='epic',
-            name='workspace',
-            field=models.ForeignKey(default=8, on_delete=django.db.models.deletion.CASCADE, to='workspaces.Workspace'),
+            model_name="epic",
+            name="workspace",
+            field=models.ForeignKey(default=8, on_delete=django.db.models.deletion.CASCADE, to="workspaces.Workspace"),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='historicalepic',
-            name='workspace',
-            field=models.ForeignKey(blank=True, db_constraint=False, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to='workspaces.Workspace'),
+            model_name="historicalepic",
+            name="workspace",
+            field=models.ForeignKey(
+                blank=True,
+                db_constraint=False,
+                null=True,
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                related_name="+",
+                to="workspaces.Workspace",
+            ),
         ),
     ]

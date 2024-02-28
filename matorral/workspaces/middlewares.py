@@ -20,14 +20,16 @@ class WorkspaceMiddleware:
 
     def process_view(self, request, view_func, view_args, view_kwargs):
         try:
-            workspace_slug = view_kwargs['workspace']
+            workspace_slug = view_kwargs["workspace"]
         except KeyError:
             return None
 
         if not request.user.is_authenticated:
             return None
 
-        queryset = (Workspace.objects.filter(owner=request.user) | Workspace.objects.filter(members=request.user)).distinct()
+        queryset = (
+            Workspace.objects.filter(owner=request.user) | Workspace.objects.filter(members=request.user)
+        ).distinct()
 
         try:
             workspace = queryset.get(slug=workspace_slug)

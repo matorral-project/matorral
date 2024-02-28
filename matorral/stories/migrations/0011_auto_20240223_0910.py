@@ -48,7 +48,7 @@ def remove_story_states(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('stories', '0010_alter_historicalepic_options_and_more'),
+        ("stories", "0010_alter_historicalepic_options_and_more"),
     ]
 
     operations = [

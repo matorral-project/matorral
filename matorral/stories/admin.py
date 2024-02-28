@@ -15,52 +15,72 @@ class EpicForm(forms.ModelForm):
 
     class Meta:
         model = Epic
-        exclude = ['created_at', 'updated_at', 'completed_at', 'total_points',
-                   'story_count', 'progress', 'points_done']
+        exclude = ["created_at", "updated_at", "completed_at", "total_points", "story_count", "progress", "points_done"]
 
 
 class StoryForm(forms.ModelForm):
 
     class Meta:
         model = Story
-        exclude = ['created_at', 'updated_at', 'completed_at']
+        exclude = ["created_at", "updated_at", "completed_at"]
 
 
 class EpicAdmin(SimpleHistoryAdmin):
     actions_on_bottom = True
-    list_display = ('title', 'priority', 'progress', 'story_count', 'total_points',
-                    'points_done', 'state', 'owner', 'created_at', 'completed_at')
-    list_display = ('title', 'workspace', 'priority', 'progress', 'story_count', 'total_points',
-                    'points_done', 'state', 'owner', 'created_at', 'completed_at')
+    list_display = (
+        "title",
+        "priority",
+        "progress",
+        "story_count",
+        "total_points",
+        "points_done",
+        "state",
+        "owner",
+        "created_at",
+        "completed_at",
+    )
+    list_display = (
+        "title",
+        "workspace",
+        "priority",
+        "progress",
+        "story_count",
+        "total_points",
+        "points_done",
+        "state",
+        "owner",
+        "created_at",
+        "completed_at",
+    )
     list_filter = [
-        ('workspace', RelatedDropdownFilter),
-        ('priority', ChoiceDropdownFilter),
-        ('state', RelatedDropdownFilter),
-        ('owner', RelatedDropdownFilter)
+        ("workspace", RelatedDropdownFilter),
+        ("priority", ChoiceDropdownFilter),
+        ("state", RelatedDropdownFilter),
+        ("owner", RelatedDropdownFilter),
     ]
-    search_fields = ['title']
+    search_fields = ["title"]
     form = EpicForm
-    actions = ['mark_as_done']
+    actions = ["mark_as_done"]
 
     def mark_as_done(self, request, queryset):
-        count = queryset.update(completed_at=timezone.now(), state='dn')
+        count = queryset.update(completed_at=timezone.now(), state="dn")
         self.message_user(request, f"{count} epics successfully maked as done")
 
 
 class StoryAdmin(SimpleHistoryAdmin):
     actions_on_bottom = True
-    list_display = ('title', 'epic', 'priority', 'state', 'points', 'assignee', 'created_at', 'completed_at')
-    list_filter = ('epic', 'sprint', 'state', 'priority', 'assignee')
+    list_display = ("title", "epic", "priority", "state", "points", "assignee", "created_at", "completed_at")
+    list_filter = ("epic", "sprint", "state", "priority", "assignee")
     list_filter = [
-        ('workspace', RelatedDropdownFilter),
-        ('state', RelatedDropdownFilter),
-        ('epic', RelatedDropdownFilter),
-        ('sprint', RelatedDropdownFilter),
-        ('assignee', RelatedDropdownFilter)
+        ("workspace", RelatedDropdownFilter),
+        ("state", RelatedDropdownFilter),
+        ("epic", RelatedDropdownFilter),
+        ("sprint", RelatedDropdownFilter),
+        ("assignee", RelatedDropdownFilter),
     ]
-    search_fields = ['title', 'epic__title', 'sprint__title', 'assignee__username']
+    search_fields = ["title", "epic__title", "sprint__title", "assignee__username"]
     form = StoryForm
-    actions = ['reset_sprint', 'finish_sprint', 'mark_as_done']
+    actions = ["reset_sprint", "finish_sprint", "mark_as_done"]
 
     def reset_sprint(self, request, queryset):
         # given a set of stories it sets the sprint field to None
@@ -79,15 +99,15 @@ class StoryAdmin(SimpleHistoryAdmin):
             self.message_user(request, f"{count} stories moved to the next sprint")
 
     def mark_as_done(self, request, queryset):
-        count = queryset.update(completed_at=timezone.now(), state='dn')
+        count = queryset.update(completed_at=timezone.now(), state="dn")
         self.message_user(request, f"{count} stories successfully maked as done")
 
 
 class TaskAdmin(admin.ModelAdmin):
     actions_on_bottom = True
-    list_display = ('title', 'created_at', 'completed_at')
-    search_fields = ['title']
-    actions = ['mark_as_done']
+    list_display = ("title", "created_at", "completed_at")
+    search_fields = ["title"]
+    actions = ["mark_as_done"]
 
     def mark_as_done(self, request, queryset):
         count = queryset.update(completed_at=timezone.now())
@@ -95,16 +115,16 @@ class TaskAdmin(admin.ModelAdmin):
 
 
 class EpicStateAdmin(admin.ModelAdmin):
-    list_display = ('name', 'stype')
+    list_display = ("name", "stype")
     list_filter = [
-        ('stype', ChoiceDropdownFilter),
+        ("stype", ChoiceDropdownFilter),
     ]
 
 
 class StoryStateAdmin(admin.ModelAdmin):
-    list_display = ('name', 'stype')
+    list_display = ("name", "stype")
     list_filter = [
-        ('stype', ChoiceDropdownFilter),
+        ("stype", ChoiceDropdownFilter),
     ]
 
 

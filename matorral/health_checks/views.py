@@ -9,7 +9,7 @@ def liveness(request):
 
 def readiness(request):
     try:
-        call_command('check')
+        call_command("check")
     except SystemCheckError:
-        return JsonResponse({'error': "Django's check command failed"}, status=500)
+        return JsonResponse({"error": "Django's check command failed"}, status=500)
     return JsonResponse({})
