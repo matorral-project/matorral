@@ -39,7 +39,6 @@ dependencies = [
     "django-environ",
     "django-extensions",
     "django-simple-history",
-    "django-taggit",
     "django-tagulous",
     "django-watchman",
     "msgpack",
@@ -129,6 +128,7 @@ cov = ["test-cov", "cov-report"]
 
 [tool.ruff]
 line-length = 120
+exclude = ["matorral.db", "static", "config/settings/*.py"]
 
 [tool.black]
 line-length = 120

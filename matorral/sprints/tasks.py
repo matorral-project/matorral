@@ -35,7 +35,7 @@ def reset_sprint(story_ids):
 
     # get affected sprint ids before removing them: evaluate queryset because
     # they're lazy :)
-    sprint_ids = list(Story.objects.filter(id__in=story_ids).values_list('sprint_id', flat=True))
+    sprint_ids = list(Story.objects.filter(id__in=story_ids).values_list("sprint_id", flat=True))
 
     Story.objects.filter(id__in=story_ids).update(sprint=None)
 

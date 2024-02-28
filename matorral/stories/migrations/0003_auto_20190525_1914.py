@@ -7,19 +7,28 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('sprints', '0001_initial'),
-        ('stories', '0002_auto_20190525_1913'),
+        ("sprints", "0001_initial"),
+        ("stories", "0002_auto_20190525_1913"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='historicalstory',
-            name='sprint',
-            field=models.ForeignKey(blank=True, db_constraint=False, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to='sprints.Sprint'),
+            model_name="historicalstory",
+            name="sprint",
+            field=models.ForeignKey(
+                blank=True,
+                db_constraint=False,
+                null=True,
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                related_name="+",
+                to="sprints.Sprint",
+            ),
         ),
         migrations.AddField(
-            model_name='story',
-            name='sprint',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='sprints.Sprint'),
+            model_name="story",
+            name="sprint",
+            field=models.ForeignKey(
+                blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to="sprints.Sprint"
+            ),
         ),
     ]

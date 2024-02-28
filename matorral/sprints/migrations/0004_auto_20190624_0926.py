@@ -6,48 +6,48 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('sprints', '0003_auto_20190624_0903'),
+        ("sprints", "0003_auto_20190624_0903"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='historicalsprint',
-            name='points_done',
+            model_name="historicalsprint",
+            name="points_done",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='historicalsprint',
-            name='progress',
+            model_name="historicalsprint",
+            name="progress",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='historicalsprint',
-            name='story_count',
+            model_name="historicalsprint",
+            name="story_count",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='historicalsprint',
-            name='total_points',
+            model_name="historicalsprint",
+            name="total_points",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='sprint',
-            name='points_done',
+            model_name="sprint",
+            name="points_done",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='sprint',
-            name='progress',
+            model_name="sprint",
+            name="progress",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='sprint',
-            name='story_count',
+            model_name="sprint",
+            name="story_count",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='sprint',
-            name='total_points',
+            model_name="sprint",
+            name="total_points",
             field=models.PositiveIntegerField(default=0),
         ),
     ]

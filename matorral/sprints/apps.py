@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class SprintsConfig(AppConfig):
-    name = 'matorral.sprints'
+    name = "matorral.sprints"

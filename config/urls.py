@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 from django.conf import settings
 from django.urls import include, path, re_path
 from django.conf.urls.static import static
@@ -14,24 +11,18 @@ from matorral.workspaces.views import workspace_index
 urlpatterns = [
     # Django Admin, use {% url 'admin:index' %}
     re_path(settings.ADMIN_URL, admin.site.urls),
-
     # health checks
-    re_path(r'^health-check/', include('watchman.urls')),
-    re_path(r'^health/', include('matorral.health_checks.urls')),
-
-    path('login/', auth_views.LoginView.as_view(), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), {'next_page': '/'}, name='logout'),
-
+    re_path(r"^health-check/", include("watchman.urls")),
+    re_path(r"^health/", include("matorral.health_checks.urls")),
+    path("login/", auth_views.LoginView.as_view(), name="login"),
+    path("logout/", auth_views.LogoutView.as_view(), {"next_page": "/"}, name="logout"),
     # User management
-    re_path(r'^users/', include('matorral.users.urls')),
-
+    re_path(r"^users/", include("matorral.users.urls")),
     # App
-    path(r'<workspace>/workspaces/', include('matorral.workspaces.urls', namespace='workspaces')),
-    path(r'<workspace>/', include('matorral.stories.urls', namespace='stories')),
-    path(r'<workspace>/sprints/', include('matorral.sprints.urls', namespace='sprints')),
-
-    path(r'', workspace_index, name='workspace:index')
-
+    path(r"<workspace>/workspaces/", include("matorral.workspaces.urls", namespace="workspaces")),
+    path(r"<workspace>/", include("matorral.stories.urls", namespace="stories")),
+    path(r"<workspace>/sprints/", include("matorral.sprints.urls", namespace="sprints")),
+    path(r"", workspace_index, name="workspace:index"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
@@ -40,12 +31,12 @@ if settings.DEBUG:
     import debug_toolbar
 
     urlpatterns = [  # prepend
-        re_path(r'^__debug__/', include(debug_toolbar.urls)),
+        re_path(r"^__debug__/", include(debug_toolbar.urls)),
     ] + urlpatterns
 
     urlpatterns += [
-        path('400/', default_views.bad_request, kwargs={'exception': Exception('Bad Request!')}),
-        path('403/', default_views.permission_denied, kwargs={'exception': Exception('Permission Denied')}),
-        path('404/', default_views.page_not_found, kwargs={'exception': Exception('Page not Found')}),
-        path('500/', default_views.server_error),
+        path("400/", default_views.bad_request, kwargs={"exception": Exception("Bad Request!")}),
+        path("403/", default_views.permission_denied, kwargs={"exception": Exception("Permission Denied")}),
+        path("404/", default_views.page_not_found, kwargs={"exception": Exception("Page not Found")}),
+        path("500/", default_views.server_error),
     ]

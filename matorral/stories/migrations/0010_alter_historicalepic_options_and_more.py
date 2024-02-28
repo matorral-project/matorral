@@ -6,26 +6,36 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('stories', '0009_auto_20200816_1042'),
+        ("stories", "0009_auto_20200816_1042"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='historicalepic',
-            options={'get_latest_by': ('history_date', 'history_id'), 'ordering': ('-history_date', '-history_id'), 'verbose_name': 'historical epic', 'verbose_name_plural': 'historical epics'},
+            name="historicalepic",
+            options={
+                "get_latest_by": ("history_date", "history_id"),
+                "ordering": ("-history_date", "-history_id"),
+                "verbose_name": "historical epic",
+                "verbose_name_plural": "historical epics",
+            },
         ),
         migrations.AlterModelOptions(
-            name='historicalstory',
-            options={'get_latest_by': ('history_date', 'history_id'), 'ordering': ('-history_date', '-history_id'), 'verbose_name': 'historical story', 'verbose_name_plural': 'historical stories'},
+            name="historicalstory",
+            options={
+                "get_latest_by": ("history_date", "history_id"),
+                "ordering": ("-history_date", "-history_id"),
+                "verbose_name": "historical story",
+                "verbose_name_plural": "historical stories",
+            },
         ),
         migrations.AlterField(
-            model_name='historicalepic',
-            name='history_date',
+            model_name="historicalepic",
+            name="history_date",
             field=models.DateTimeField(db_index=True),
         ),
         migrations.AlterField(
-            model_name='historicalstory',
-            name='history_date',
+            model_name="historicalstory",
+            name="history_date",
             field=models.DateTimeField(db_index=True),
         ),
     ]

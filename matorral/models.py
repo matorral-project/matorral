@@ -37,18 +37,16 @@ class ModelWithProgress(models.Model):
         return self.title
 
     def update_points_and_progress(self, save=True):
-        Story = apps.get_model('stories', 'Story')
-        StoryState = apps.get_model('stories', 'StoryState')
+        Story = apps.get_model("stories", "Story")
+        StoryState = apps.get_model("stories", "StoryState")
 
         parent_dict = {self._meta.model_name: self.id}
 
-        total_points = Story.objects.filter(**parent_dict)\
-            .aggregate(models.Sum('points'))['points__sum'] or 0
+        total_points = Story.objects.filter(**parent_dict).aggregate(models.Sum("points"))["points__sum"] or 0
 
         params = parent_dict.copy()
-        params['state__stype'] = StoryState.STATE_DONE
-        points_done = Story.objects.filter(**params)\
-            .aggregate(models.Sum('points'))['points__sum'] or 0
+        params["state__stype"] = StoryState.STATE_DONE
+        points_done = Story.objects.filter(**params).aggregate(models.Sum("points"))["points__sum"] or 0
 
         self.total_points = total_points
         self.points_done = points_done

@@ -9,22 +9,24 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('workspaces', '0001_initial'),
+        ("workspaces", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='workspace',
-            name='members',
-            field=models.ManyToManyField(blank=True, related_name='members_set', to=settings.AUTH_USER_MODEL),
+            model_name="workspace",
+            name="members",
+            field=models.ManyToManyField(blank=True, related_name="members_set", to=settings.AUTH_USER_MODEL),
         ),
         migrations.AlterField(
-            model_name='workspace',
-            name='owner',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
+            model_name="workspace",
+            name="owner",
+            field=models.ForeignKey(
+                blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='workspace',
-            unique_together={('name', 'owner')},
+            name="workspace",
+            unique_together={("name", "owner")},
         ),
     ]

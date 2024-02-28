@@ -13,23 +13,20 @@ def site(request):
 
 
 def navigation(request):
-    params = dict(
-        encoded_url=quote_plus(request.get_full_path()),
-        next_url=unquote_plus(request.GET.get('next', ''))
-    )
+    params = dict(encoded_url=quote_plus(request.get_full_path()), next_url=unquote_plus(request.GET.get("next", "")))
 
     try:
-        params['page'] = int(request.GET.get('page', 0))
+        params["page"] = int(request.GET.get("page", 0))
     except ValueError:
         pass
 
     get_vars = request.GET.copy()
     try:
-        get_vars.pop('page')
+        get_vars.pop("page")
     except KeyError:
         pass
 
-    params['get_vars'] = "&" + get_vars.urlencode()
+    params["get_vars"] = "&" + get_vars.urlencode()
 
     return params
 

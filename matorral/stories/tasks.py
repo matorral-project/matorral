@@ -23,6 +23,7 @@ def remove_stories(story_ids):
         epic.update_points_and_progress()
 
     from matorral.sprints.models import Sprint
+
     for sprint in Sprint.objects.filter(story__id__in=story_ids).distinct():
         sprint.update_points_and_progress()
 
@@ -80,8 +81,8 @@ def epic_set_state(epic_ids, state_slug):
 def reset_epic(story_ids):
     # get affected sprint and epic ids before removing them: evaluate queryset
     # because they're lazy :)
-    epic_ids = list(Story.objects.filter(id__in=story_ids).values_list('epic_id', flat=True))
-    sprint_ids = list(Story.objects.filter(id__in=story_ids).values_list('sprint_id', flat=True))
+    epic_ids = list(Story.objects.filter(id__in=story_ids).values_list("epic_id", flat=True))
+    sprint_ids = list(Story.objects.filter(id__in=story_ids).values_list("sprint_id", flat=True))
 
     Story.objects.filter(id__in=story_ids).update(epic=None)
 
@@ -90,6 +91,7 @@ def reset_epic(story_ids):
         epic.update_points_and_progress()
 
     from matorral.sprints.models import Sprint
+
     for sprint in Sprint.objects.filter(id__in=sprint_ids):
         sprint.update_points_and_progress()
 
@@ -134,6 +136,7 @@ def story_set_epic(story_ids, epic_id):
 @app.task(ignore_result=True)
 def story_set_sprint(story_ids, sprint_id):
     from matorral.sprints.models import Sprint
+
     try:
         sprint = Sprint.objects.get(pk=sprint_id)
     except Sprint.DoesNotExist:

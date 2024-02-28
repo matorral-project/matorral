@@ -15,21 +15,26 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Workspace',
+            name="Workspace",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(db_index=True, max_length=255)),
-                ('description', models.TextField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now=True, db_index=True)),
-                ('updated_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('members', models.ManyToManyField(related_name='members_set', to=settings.AUTH_USER_MODEL)),
-                ('owner', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(db_index=True, max_length=255)),
+                ("description", models.TextField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now=True, db_index=True)),
+                ("updated_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("members", models.ManyToManyField(related_name="members_set", to=settings.AUTH_USER_MODEL)),
+                (
+                    "owner",
+                    models.ForeignKey(
+                        blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'worskspace',
-                'verbose_name_plural': 'workspace',
-                'ordering': ['name'],
-                'get_latest_by': 'created_at',
+                "verbose_name": "worskspace",
+                "verbose_name_plural": "workspace",
+                "ordering": ["name"],
+                "get_latest_by": "created_at",
             },
         ),
     ]

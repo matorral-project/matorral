@@ -6,12 +6,17 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('workspaces', '0002_auto_20200815_1216'),
+        ("workspaces", "0002_auto_20200815_1216"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='workspace',
-            options={'get_latest_by': 'created_at', 'ordering': ['name'], 'verbose_name': 'workspace', 'verbose_name_plural': 'workspaces'},
+            name="workspace",
+            options={
+                "get_latest_by": "created_at",
+                "ordering": ["name"],
+                "verbose_name": "workspace",
+                "verbose_name_plural": "workspaces",
+            },
         ),
     ]
