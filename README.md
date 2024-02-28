@@ -29,20 +29,22 @@ Here are some screenshots:
 
 ## Roadmap
 
-- Django 5.0 support
+- Migrate from Turbolinks to HTMX <3
 - Enhance test coverage
 - Run using docker compose
-- Upgrade to Bulma 1.0 + Dark mode
+- Upgrade to Bulma 1.0
+- Dark mode
 - Support for multiple themes
 - Realtime updates
 - Milestones
+- Subtasks
+- Projects
 - Multiple assigness
 - Kanban view
 - History
 - Comments everywhere
 - Attachments for Stories, Epics and Milestones
 - Import data from Jira, Github, Asana, etc
-- and more!
 
 
 ## Quick Start
