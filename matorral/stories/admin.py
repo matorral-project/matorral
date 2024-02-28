@@ -85,7 +85,7 @@ class StoryAdmin(SimpleHistoryAdmin):
     def reset_sprint(self, request, queryset):
         # given a set of stories it sets the sprint field to None
         count = queryset.update(sprint=None)
-        self.message_user(request, f"{count} stories successfully reseted")
+        self.message_user(request, f"{count} stories successfully reset")
 
     def finsh_sprint(self, request, queryset):
         # given a set of stories it sets the sprint field to point to the next
