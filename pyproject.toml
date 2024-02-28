@@ -39,7 +39,6 @@ dependencies = [
     "django-environ",
     "django-extensions",
     "django-simple-history",
-    "django-taggit",
     "django-tagulous",
     "django-watchman",
     "msgpack",

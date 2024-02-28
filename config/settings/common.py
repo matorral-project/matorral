@@ -57,7 +57,6 @@ THIRD_PARTY_APPS = (
     'watchman',
     'simple_history',
     'tagulous',
-    'taggit',
 )
 
 # Apps specific for this project go here.
