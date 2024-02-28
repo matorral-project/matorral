@@ -1,7 +1,7 @@
 from itertools import groupby
 
 from django.contrib.auth.decorators import login_required
-from django.db.models import Max
+from django.db.models import Max, F
 from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django.urls import reverse_lazy
@@ -45,7 +45,7 @@ class EpicDetailView(DetailView):
         except KeyError:
             return [(None, queryset)]
         else:
-            queryset = queryset.order_by(order_by)
+            queryset = queryset.order_by(F(order_by).asc(nulls_last=True))
             foo = [(t[0], list(t[1])) for t in groupby(queryset, key=fx)]
             return foo
 

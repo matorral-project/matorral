@@ -2,6 +2,7 @@ from itertools import groupby
 
 import ujson
 
+from django.db.models import F
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse_lazy
@@ -152,6 +153,10 @@ class SprintList(BaseListView):
     filter_fields = {}
     select_related = None
     prefetch_related = None
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.order_by(F('starts_at').asc(nulls_last=True))
 
     def post(self, *args, **kwargs):
         params = ujson.loads(self.request.body)
