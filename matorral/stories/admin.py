@@ -64,7 +64,7 @@ class EpicAdmin(SimpleHistoryAdmin):
 
     def mark_as_done(self, request, queryset):
         count = queryset.update(completed_at=timezone.now(), state="dn")
-        self.message_user(request, f"{count} epics successfully maked as done")
+        self.message_user(request, f"{count} epics successfully marked as done")
 
 
 class StoryAdmin(SimpleHistoryAdmin):
@@ -93,14 +93,14 @@ class StoryAdmin(SimpleHistoryAdmin):
         try:
             next_sprint = Sprint.objects.get(completed_at__isnull=True)
         except Sprint.DoesNotExist:
-            self.message_user(request, f"There's no current sprint. Please create one first.")
+            self.message_user(request, "There's no current sprint. Please create one first.")
         else:
             count = queryset.update(sprint=next_sprint)
             self.message_user(request, f"{count} stories moved to the next sprint")
 
     def mark_as_done(self, request, queryset):
         count = queryset.update(completed_at=timezone.now(), state="dn")
-        self.message_user(request, f"{count} stories successfully maked as done")
+        self.message_user(request, f"{count} stories successfully marked as done")
 
 
 class TaskAdmin(admin.ModelAdmin):
@@ -111,7 +111,7 @@ class TaskAdmin(admin.ModelAdmin):
 
     def mark_as_done(self, request, queryset):
         count = queryset.update(completed_at=timezone.now())
-        self.message_user(request, f"{count} tasks successfully maked as done")
+        self.message_user(request, f"{count} tasks successfully marked as done")
 
 
 class EpicStateAdmin(admin.ModelAdmin):

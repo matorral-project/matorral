@@ -1,5 +1,3 @@
-from datetime import date
-
 from matorral.taskapp.celery import app
 
 from matorral.workspaces.models import Workspace

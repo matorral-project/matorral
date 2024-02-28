@@ -128,6 +128,7 @@ cov = ["test-cov", "cov-report"]
 
 [tool.ruff]
 line-length = 120
+exclude = ["matorral.db", "static", "config/settings/*.py"]
 
 [tool.black]
 line-length = 120
