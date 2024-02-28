@@ -180,7 +180,7 @@ class SprintList(BaseListView):
             return HttpResponseRedirect(url)
 
 
-class SprintBaseView(object):
+class SprintBaseView:
     model = Sprint
     fields = ["title", "description", "starts_at", "ends_at"]
 

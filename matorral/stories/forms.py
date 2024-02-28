@@ -51,10 +51,10 @@ class BaseWorkspaceModelForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.workspace = kwargs.pop("workspace", None)
-        super(BaseWorkspaceModelForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def save(self, commit=True):
-        instance = super(BaseWorkspaceModelForm, self).save(commit=False)
+        instance = super().save(commit=False)
         instance.workspace = self.workspace
         if commit:
             instance.save()
@@ -67,7 +67,7 @@ class EpicForm(BaseWorkspaceModelForm):
         fields = ["title", "description", "owner", "state", "priority", "tags"]
 
     def __init__(self, *args, **kwargs):
-        super(EpicForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields["owner"].queryset = User.objects.filter(is_active=True, workspace=self.workspace).order_by(
             "username"
         )
@@ -90,7 +90,7 @@ class StoryForm(BaseWorkspaceModelForm):
         ]
 
     def __init__(self, *args, **kwargs):
-        super(StoryForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields["requester"].queryset = User.objects.filter(is_active=True, workspace=self.workspace).order_by(
             "username"
         )

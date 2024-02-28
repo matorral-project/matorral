@@ -106,7 +106,7 @@ class EpicDetailView(DetailView):
             return HttpResponseRedirect(url)
 
 
-class StoryBaseView(object):
+class StoryBaseView:
     model = Story
     fields = [
         "title",
@@ -223,7 +223,7 @@ class StoryUpdateView(StoryBaseView, UpdateView):
         return response
 
 
-class EpicBaseView(object):
+class EpicBaseView:
     model = Epic
     fields = [
         "title",

@@ -134,7 +134,7 @@ class WorkspaceList(BaseListView):
             return HttpResponseRedirect(url)
 
 
-class WorkspaceBaseView(object):
+class WorkspaceBaseView:
     model = Workspace
     fields = ["name", "description"]
 
