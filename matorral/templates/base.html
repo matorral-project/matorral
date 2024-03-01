@@ -87,9 +87,12 @@
                         Workspaces
                       </a>
                     {% endif %}
-                    <a href="{% url 'logout' %}" class="navbar-item">
-                      Logout
-                    </a>
+                    <form method="post" action="{% url 'logout' %}" class="navbar-item">
+                      {% csrf_token %}
+                      <button class="button" type="submit" onclick="event.preventDefault(); this.form.submit();">
+                        Logout
+                      </button>
+                    </form>
                   </div>
               </div>
             </div>
