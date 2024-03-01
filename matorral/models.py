@@ -42,20 +42,27 @@ class ModelWithProgress(models.Model):
 
         parent_dict = {self._meta.model_name: self.id}
 
+        # calculate total points
         total_points = Story.objects.filter(**parent_dict).aggregate(models.Sum("points"))["points__sum"] or 0
 
+        if total_points == 0:
+            # if no story has points, then count the stories
+            total_points = Story.objects.filter(**parent_dict).count()
+
+        # calculate points done
         params = parent_dict.copy()
         params["state__stype"] = StoryState.STATE_DONE
         points_done = Story.objects.filter(**params).aggregate(models.Sum("points"))["points__sum"] or 0
+
+        if points_done == 0:
+            # if no story has points, then count the stories
+            points_done = Story.objects.filter(**params).count()
 
         self.total_points = total_points
         self.points_done = points_done
         self.story_count = Story.objects.filter(**parent_dict).count()
 
-        if total_points > 0:
-            self.progress = int(float(points_done) / total_points * 100)
-        else:
-            self.progress = 0
+        self.progress = int(float(points_done) / (total_points or 1) * 100)
 
         if save:
             self.save()

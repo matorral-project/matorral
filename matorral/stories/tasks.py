@@ -40,7 +40,10 @@ def story_set_state(story_ids, state_slug):
     except StoryState.DoesNotExist:
         return
 
-    Story.objects.filter(id__in=story_ids).update(state=state)
+    # update stories one by one to trigger signals and tasks that update the progress and points, etc
+    for story in Story.objects.filter(id__in=story_ids):
+        story.state = state
+        story.save()
 
 
 @app.task(ignore_result=True)
