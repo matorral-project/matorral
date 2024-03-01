@@ -1,5 +1,6 @@
 from django.apps import apps
 from django.db import models
+from django.utils import timezone
 
 
 class BaseModel(models.Model):
@@ -15,6 +16,17 @@ class BaseModel(models.Model):
 
     def __str__(self):
         return self.title
+
+    def is_done(self):
+        return self.state.stype == self.state.STATE_DONE
+
+    def save(self, *args, **kwargs):
+        if self.is_done():
+            self.completed_at = timezone.now()
+        else:
+            self.completed_at = None
+
+        super().save(*args, **kwargs)
 
 
 class ModelWithProgress(models.Model):
