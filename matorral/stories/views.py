@@ -54,7 +54,7 @@ class EpicDetailView(DetailView):
         except KeyError:
             return [(None, queryset)]
         else:
-            queryset = queryset.order_by(F(order_by).asc(nulls_last=True))
+            queryset = queryset.order_by(F(order_by).asc(nulls_last=True), "priority")
             foo = [(t[0], list(t[1])) for t in groupby(queryset, key=fx)]
             return foo
 
