@@ -1,6 +1,7 @@
 from matorral.taskapp.celery import app
 
 from .models import Epic, EpicState, Story, StoryState
+from matorral.sprints.tasks import update_state as update_sprint_state
 
 
 @app.task(ignore_result=True)
@@ -27,6 +28,8 @@ def remove_stories(story_ids):
     for sprint in Sprint.objects.filter(story__id__in=story_ids).distinct():
         sprint.update_points_and_progress()
 
+    update_sprint_state.delay()
+
 
 @app.task(ignore_result=True)
 def story_set_assignee(story_ids, user_id):
@@ -44,6 +47,8 @@ def story_set_state(story_ids, state_slug):
     for story in Story.objects.filter(id__in=story_ids):
         story.state = state
         story.save()
+
+    update_sprint_state.delay()
 
 
 @app.task(ignore_result=True)
@@ -112,6 +117,7 @@ def handle_story_change(story_id):
 
     if story.sprint is not None:
         story.sprint.update_points_and_progress()
+        update_sprint_state.delay()
 
 
 @app.task(ignore_result=True)
@@ -148,3 +154,5 @@ def story_set_sprint(story_ids, sprint_id):
     for story in Story.objects.filter(id__in=story_ids):
         story.sprint = sprint
         story.save()
+
+    update_sprint_state.delay()

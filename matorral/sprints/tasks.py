@@ -42,6 +42,8 @@ def reset_sprint(story_ids):
     for sprint in Sprint.objects.filter(id__in=sprint_ids):
         sprint.update_points_and_progress()
 
+    update_state.delay()
+
 
 @app.task(ignore_result=True)
 def handle_sprint_change(epic_id):
@@ -51,3 +53,4 @@ def handle_sprint_change(epic_id):
         return
 
     sprint.update_points_and_progress()
+    update_state.delay()
