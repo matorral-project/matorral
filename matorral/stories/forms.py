@@ -91,11 +91,7 @@ class StoryForm(BaseWorkspaceModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["requester"].queryset = User.objects.filter(is_active=True, workspace=self.workspace).order_by(
-            "username"
-        )
-        self.fields["assignee"].queryset = User.objects.filter(is_active=True, workspace=self.workspace).order_by(
-            "username"
-        )
+        self.fields["requester"].queryset = self.workspace.members.filter(is_active=True).order_by("username")
+        self.fields["assignee"].queryset = self.workspace.members.filter(is_active=True).order_by("username")
         self.fields["epic"].queryset = Epic.objects.filter(workspace=self.workspace).order_by("title")
         self.fields["sprint"].queryset = Sprint.objects.filter(workspace=self.workspace).order_by("ends_at")
