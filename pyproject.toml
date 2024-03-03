@@ -83,9 +83,9 @@ extra-dependencies = [
 ]
 
 [tool.hatch.envs.local.scripts]
-server = "python manage.py runserver_plus --settings=config.settings.local"
-shell = "python manage.py shell_plus --settings=config.settings.local"
-migrate = "python manage.py migrate --settings=config.settings.local"
+server = "python manage.py runserver_plus --settings=config.settings.local {args}"
+shell = "python manage.py shell_plus --settings=config.settings.local {args}"
+migrate = "python manage.py migrate --settings=config.settings.local {args}"
 makemigrations = "python manage.py makemigrations --settings=config.settings.local {args}"
 
 # Production environment
