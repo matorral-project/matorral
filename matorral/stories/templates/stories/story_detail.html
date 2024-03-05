@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load stories_tags %}
 
 {% block page_title %}[Story] {{ object.title }} :: {{ current_workspace }}{% endblock %}
 
@@ -67,7 +68,7 @@
 			</div>
 
 			<div class="content">
-				{{ story.description|default:''|linebreaksbr }}<br/><br/>
+				{{ story.description|default:''|to_html }}<br/><br/>
 				<div class="field is-grouped is-grouped-multiline">
 					<div class="control">
 						<div class="tags has-addons">
