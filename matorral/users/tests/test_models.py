@@ -1,10 +1,12 @@
-from test_plus.test import TestCase
+from django.test import TestCase
+
+from matorral.users.tests.factories import UserFactory
 
 
 class TestUser(TestCase):
 
     def setUp(self):
-        self.user = self.make_user()
+        self.user = UserFactory.create(username="testuser")
 
     def test__str__(self):
         self.assertEqual(self.user.__str__(), "testuser")  # This is the default username for self.make_user()

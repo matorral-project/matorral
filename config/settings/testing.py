@@ -41,4 +41,10 @@ DEBUG_TOOLBAR_CONFIG = {
 # ------------------------------------------------------------------------------
 TEST_RUNNER = "django.test.runner.DiscoverRunner"
 
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.MD5PasswordHasher",
+]
+
+CELERY_ALWAYS_EAGER = True
+
 # Your local stuff: Below this line define 3rd party library settings
