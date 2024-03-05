@@ -83,10 +83,10 @@ extra-dependencies = [
 ]
 
 [tool.hatch.envs.local.scripts]
-server = "python manage.py runserver_plus --settings=config.settings.local {args}"
-shell = "python manage.py shell_plus --settings=config.settings.local {args}"
-migrate = "python manage.py migrate --settings=config.settings.local {args}"
-makemigrations = "python manage.py makemigrations --settings=config.settings.local {args}"
+server = "python manage.py runserver_plus {args}"
+shell = "python manage.py shell_plus {args}"
+migrate = "python manage.py migrate {args}"
+makemigrations = "python manage.py makemigrations {args}"
 
 # Production environment
 [tool.hatch.envs.prod]
@@ -97,8 +97,8 @@ extra-dependencies = [
 
 [tool.hatch.envs.prod.scripts]
 server = "gunicorn config.wsgi:application --bind"
-migrate = "python manage.py migrate --settings=config.settings.production"
-makemigrations = "python manage.py makemigrations --settings=config.settings.production {args}"
+migrate = "python manage.py migrate"
+makemigrations = "python manage.py makemigrations {args}"
 
 # Test environment
 [tool.hatch.envs.test]
@@ -127,14 +127,14 @@ django = ["5.0"]
 python = ["3.10", "3.11", "3.12"]
 
 [tool.hatch.envs.test.scripts]
-test = "python manage.py test --settings=config.settings.testing"
-test-cov = "coverage run -m django test --settings=config.settings.testing"
+test = "python manage.py test --settings=config.settings {args}"
+test-cov = "coverage run -m django test --settings=config.settings {args}"
 cov-report = ["coverage json", "coverage report"]
 cov = ["test-cov", "cov-report"]
 
 [tool.ruff]
 line-length = 120
-exclude = ["matorral.db", "static", "config/settings/*.py"]
+exclude = ["matorral.db", "static", "config/settings.py"]
 
 [tool.black]
 line-length = 120
