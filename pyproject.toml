@@ -107,6 +107,7 @@ extra-dependencies = [
     "django~={matrix:django}.0",
     "django_coverage_plugin",
     "django-debug-toolbar",
+    "factory-boy",
 ]
 
 [[tool.hatch.envs.test.matrix]]

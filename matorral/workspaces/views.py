@@ -2,7 +2,6 @@ import ujson
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, JsonResponse
-from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.utils.text import slugify
@@ -192,11 +191,5 @@ class WorkspaceUpdateView(WorkspaceBaseView, UpdateView):
 
 @login_required
 def workspace_index(request):
-    workspace_list = request.user.workspace_set.order_by("name")
-
-    q = request.GET.get("q")
-
-    if q is not None:
-        workspace_list = workspace_list.filter(name__icontains=q)
-
-    return render(request, "workspaces/index.html", {"workspace_list": workspace_list, "title": "Workspaces"})
+    default_workspace = request.user.workspace_set.order_by("id").first()
+    return HttpResponseRedirect(reverse_lazy("stories:story-list", args=[default_workspace.slug]))

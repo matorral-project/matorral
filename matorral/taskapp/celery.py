@@ -30,6 +30,7 @@ class CeleryConfig(AppConfig):
         # pickle the object when using Windows.
         app.config_from_object("django.conf:settings")
         app.autodiscover_tasks(lambda: settings.INSTALLED_APPS, force=True)
+        app.conf.task_always_eager = settings.CELERY_ALWAYS_EAGER
 
 
 @app.task(bind=True)

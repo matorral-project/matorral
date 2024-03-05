@@ -22,7 +22,7 @@ urlpatterns = [
     path(r"<workspace>/workspaces/", include("matorral.workspaces.urls", namespace="workspaces")),
     path(r"<workspace>/", include("matorral.stories.urls", namespace="stories")),
     path(r"<workspace>/sprints/", include("matorral.sprints.urls", namespace="sprints")),
-    path(r"", workspace_index, name="workspace:index"),
+    path(r"", workspace_index, name="workspace:index"),  # disabled for now, until we finish all the features
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
