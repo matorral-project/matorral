@@ -29,6 +29,10 @@ jobs:
           - django-version: "5.0"
             python-version: "3.9"
     runs-on: ${{ matrix.os }}
+    env:
+      ENVIRONMENT: "test"
+      CELERY_ALWAYS_EAGER: 1
+      DJANGO_EMAIL_BACKEND: "django.core.mail.backends.console.EmailBackend"
     steps:
       - uses: actions/checkout@v4
       - name: Setup Python

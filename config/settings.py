@@ -9,16 +9,19 @@ https://docs.djangoproject.com/en/dev/ref/settings/
 """
 
 import re
+import sys
 
 import environ
 
 from celery.schedules import crontab
 
-ROOT_DIR = environ.Path(__file__) - 3  # (matorral/config/settings/common.py - 3 = matorral/)
+ROOT_DIR = environ.Path(__file__) - 2  # (matorral/config/settings/common.py - 2 = matorral/)
 APPS_DIR = ROOT_DIR.path("matorral")
 
 env = environ.Env()
-environ.Env.read_env(env_file="config/settings/.env")  # reading .env file
+environ.Env.read_env(env_file="config/.env")  # reading .env file
+
+ENVIRONMENT = env("ENVIRONMENT", default="production")
 
 # SECRET CONFIGURATION
 # ------------------------------------------------------------------------------
@@ -100,6 +103,9 @@ FIXTURE_DIRS = (str(APPS_DIR.path("fixtures")),)
 # EMAIL CONFIGURATION
 # ------------------------------------------------------------------------------
 EMAIL_BACKEND = env("DJANGO_EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")
+DEFAULT_FROM_EMAIL = env("DJANGO_DEFAULT_FROM_EMAIL", default="matorral <noreply@localhost>")
+EMAIL_SUBJECT_PREFIX = env("DJANGO_EMAIL_SUBJECT_PREFIX", default="[matorral] ")
+SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
 
 # MANAGER CONFIGURATION
 # ------------------------------------------------------------------------------
@@ -308,7 +314,6 @@ LOGGING = {
 # Sentry related config vars
 SENTRY_ENABLED = env.bool("SENTRY_ENABLED", default=False)
 SENTRY_DSN = env("SENTRY_DSN", default="")
-SENTRY_ENVIRONMENT = env("SENTRY_ENVIRONMENT", default="production")
 
 if SENTRY_ENABLED:
     import sentry_sdk
@@ -316,7 +321,7 @@ if SENTRY_ENABLED:
     from sentry_sdk.integrations.celery import CeleryIntegration
 
     sentry_sdk.init(
-        environment=f"{SENTRY_ENVIRONMENT}",
+        environment=f"{ENVIRONMENT}",
         dsn=f"{SENTRY_DSN}",
         integrations=[DjangoIntegration(), CeleryIntegration()],
     )
@@ -327,13 +332,55 @@ COMMENTS_APP = "django_comments_xtd"
 COMMENTS_XTD_MAX_THREAD_LEVEL = 2
 
 # Other Celery settings
+CELERY_ALWAYS_EAGER = env.bool("CELERY_ALWAYS_EAGER", default=False)
+
 CELERYBEAT_SCHEDULE = {
     "sprints-update-state": {"task": "matorral.sprints.tasks.update_state", "schedule": crontab(hour="*/1")},
 }
 
+# Tagulous settings
 SERIALIZATION_MODULES = {
     "xml": "tagulous.serializers.xml_serializer",
     "json": "tagulous.serializers.json",
     "python": "tagulous.serializers.python",
     "yaml": "tagulous.serializers.pyyaml",
 }
+
+# TESTING
+# ------------------------------------------------------------------------------
+TEST_RUNNER = "django.test.runner.DiscoverRunner"
+
+if ENVIRONMENT == "production":
+    INSTALLED_APPS += ("gunicorn",)
+
+    # This ensures that Django will be able to detect a secure connection
+    # properly on Heroku.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+    # set this to 60 seconds and then to 518400 when you can prove it works
+    SECURE_HSTS_SECONDS = 60
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS", default=True)
+    SECURE_CONTENT_TYPE_NOSNIFF = env.bool("DJANGO_SECURE_CONTENT_TYPE_NOSNIFF", default=True)
+    SECURE_BROWSER_XSS_FILTER = True
+    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_HTTPONLY = True
+    SECURE_SSL_REDIRECT = env.bool("DJANGO_SECURE_SSL_REDIRECT", default=False)
+
+else:
+    # django-debug-toolbar
+    # ------------------------------------------------------------------------------
+    MIDDLEWARE += ("debug_toolbar.middleware.DebugToolbarMiddleware",)
+    INSTALLED_APPS += ("debug_toolbar",)
+
+    INTERNAL_IPS = ("127.0.0.1",)
+
+    DEBUG_TOOLBAR_CONFIG = {
+        "DISABLE_PANELS": [
+            "debug_toolbar.panels.redirects.RedirectsPanel",
+        ],
+        "SHOW_TEMPLATE_CONTEXT": True,
+    }
+
+# if we are running tests, we want to use a fast hasher
+if sys.argv[1:2] == ["test"]:
+    PASSWORD_HASHERS = ("django.contrib.auth.hashers.MD5PasswordHasher",)
