@@ -95,6 +95,8 @@
 	</div>
 
   <br/>
+  <form method="POST" id="object-list">
+	{% csrf_token %}
 	<nav class="level">
 		<!-- Left side -->
 		<div class="level-left">
@@ -105,16 +107,14 @@
 			</nav>
 
 			<div class="level-item">
-				<form method="GET">
-        {% for field in group_by_form.visible_fields %}
-          <div class="level-item">
-            <label>{{ field.label }}</label>&nbsp;
-            <div class="field">
-              {{ field }}
-            </div>
-          </div>
-        {% endfor %}
-				</form>
+			{% for field in group_by_form.visible_fields %}
+			  <div class="level-item">
+				<label>{{ field.label }}</label>&nbsp;
+				<div class="field">
+				  {{ field }}
+				</div>
+			  </div>
+			{% endfor %}
 			</div>
 		</div>
 
@@ -174,7 +174,6 @@
 		</div>
 	</nav>
 
-  <form method="POST" id="object-list">
     {% csrf_token %}
     {% for group_title, object_list in objects_by_group %}
       {% if group_by %}

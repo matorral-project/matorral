@@ -46,10 +46,10 @@
     <td>{{ sprint.updated_at|default:'' }}</td>
     <td>
       <a class="button is-small is-link is-outlined" href="{% url 'sprints:sprint-edit' current_workspace sprint.id %}?next={{ encoded_url }}" title="Edit">
-				<span class="icon is-small">
-					<i class="fas fa-edit"></i>
-				</span>
-				<small>edit</small>
+          <span class="icon is-small">
+              <i class="fas fa-edit"></i>
+          </span>
+          <small>edit</small>
       </a>
     </td>
   </tr>

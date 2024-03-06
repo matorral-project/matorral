@@ -5,7 +5,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {% block extra_head %}
-      <meta name="turbolinks-cache-control" content="no-cache">
     {% endblock %}
     <title>{% block page_title %}{{ current_site.name }} - Simple Project Management System{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/bulma-0.7.4.min.css' %}">
@@ -16,12 +15,11 @@
     <style>
       nav div.level-item.bulk-action { visibility: hidden; }
     </style>
-    <script defer src="{% static 'js/turbolinks.js' %}"></script>
-    <script defer src="{% static 'js/fetch.js' %}"></script>
+    <script defer src="{% static 'js/htmx.min.js' %}"></script>
   </head>
-  <body>
+  <body hx-boost="true">
     {% if user.is_authenticated %}
-    <nav class="navbar is-primary" role="navigation" aria-label="main navigation" data-turbolinks-permanent>
+    <nav class="navbar is-primary" role="navigation" aria-label="main navigation">
       <div class="navbar-brand">
         <a class="navbar-item" href="/">
             <h1 class="title has-text-white-bis">
@@ -116,25 +114,7 @@
       {% endblock %}
     </section>
 
-    <div class="modal" id="modal-form">
-      <div class="modal-background"></div>
-      <div class="modal-card">
-        <header class="modal-card-head">
-          <p class="modal-card-title">Modal title</p>
-          <button class="delete" aria-label="close"></button>
-        </header>
-        <section class="modal-card-body">
-          <iframe src="" style="width: 100%;">
-          </iframe>
-        </section>
-        <footer class="modal-card-foot">
-          <button class="button is-link">Save changes</button>
-          <button class="button">Cancel</button>
-        </footer>
-      </div>
-    </div
->
-    <footer class="footer" data-turbolinks-permanent>
+    <footer class="footer">
       <div class="content has-text-centered">
         <p>
           <strong>Matorral</strong> by <a target="_blank" href="https://github.com/matagus">matagus</a>.
@@ -158,37 +138,6 @@
     }
 
     ready(function() {
-      var elementList = document.querySelectorAll('a.launch-modal');
-      Array.prototype.forEach.call(elementList, function(el, i) {
-        el.addEventListener('click', function(event) {
-          event.preventDefault()
-
-          var modalFormTitle = document.querySelector('#modal-form .modal-card-title');
-          modalFormTitle.innerHTML = event.target.textContent;
-
-          var modalForm = document.querySelector('#modal-form');
-          modalForm.querySelector('iframe').setAttribute('src', event.target.parentNode.getAttribute('href'));
-          modalForm.classList.add('is-clipped');
-          modalForm.classList.add('is-active');
-        });
-      });
-
-      var elementList = document.querySelectorAll('#modal-form button');
-      Array.prototype.forEach.call(elementList, function(el, i) {
-        el.addEventListener('click', function(event) {
-          var modalForm = document.querySelector('#modal-form');
-          modalForm.classList.remove('is-active');
-          modalForm.classList.remove('is-clipped');
-        });
-      });
-
-      (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
-        $notification = $delete.parentNode;
-        $delete.addEventListener('click', () => {
-          $notification.parentNode.removeChild($notification);
-        });
-      });
-
       bulmaTagsinput.attach('[data-tagulous="true"]');
       bulmaCalendar.attach('#id_starts_at', {type: 'date'});
       bulmaCalendar.attach('#id_ends_at', {type: 'date'});
@@ -214,7 +163,7 @@
 
       document.querySelectorAll('input[type="checkbox"]').forEach(($checkbox) => {
         $checkbox.addEventListener('click', function(event) {
-          if (document.querySelectorAll('input[type="checkbox"]:checked').length > 0) {
+          if (document.querySelectorAll('#object-list input[type="checkbox"]:checked').length > 0) {
             document.querySelectorAll('.bulk-action').forEach(($div) => {
               $div.style.visibility = 'visible'
             });
@@ -225,89 +174,6 @@
           }
         })
       });
-
-      window.postForm = function(form, button) {
-        var formData = new FormData(form);
-
-        if (button) {
-          formData.append(button.name, button.value);
-        } else {
-          if (form.id) {
-            document.querySelectorAll('select[form=' + form.id + ']').forEach(($select) => {
-              formData.append($select.name, $select.value);
-            });
-          }
-        }
-
-        var object = {};
-        formData.forEach((value, key) => {
-            // Reflect.has in favor of: object.hasOwnProperty(key)
-            if(!Reflect.has(object, key)){
-                object[key] = value;
-                return;
-            }
-            if(!Array.isArray(object[key])){
-                object[key] = [object[key]];
-            }
-            object[key].push(value);
-        });
-        var jsonParams = JSON.stringify(object);
-
-        fetch(document.location.href, {
-          method: 'POST',
-          headers: {
-            'X-Fetch': 'true',
-            'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-            'Content-Type': 'application/json'
-          },
-          body: jsonParams
-        }).then(function(data) {
-          return data.json();
-        }).then(function(jsonResponse) {
-          Turbolinks.visit(jsonResponse.url, { action: "replace" });
-        }).catch(function(error) {
-          console.log('request failed', error)
-        })
-      };
-
-      document.querySelectorAll('button[data-next]').forEach(($button) => {
-        $button.addEventListener('click', function(event) {
-          $button.form.querySelector('#next').value = $button.dataset.next;
-        });
-      });
-
-      document.querySelectorAll('div.bulk-action button[type="submit"]').forEach(($button) => {
-        $button.addEventListener('click', function(event) {
-          event.preventDefault();
-          let clickedElement = event.target;
-          if (clickedElement.tagName != 'BUTTON') {
-            clickedElement = clickedElement.parentNode;
-          }
-          postForm(clickedElement.form, clickedElement);
-        });
-      });
-
-      document.querySelectorAll('form').forEach(($form) => {
-        if (!$form.hasAttribute('data-nofetch')) {
-          $form.addEventListener('submit', function(event) {
-            event.preventDefault();
-            if (event.target.method.toLowerCase() == 'get') {
-              let params = new URLSearchParams();
-              params.append('q', document.querySelector('#id_q').value);
-
-              const url = new URL(document.URL);
-              let to = url.searchParams.get('to-epic');
-              if (to) params.append('to-epic', to);
-              to = url.searchParams.get('to-sprint');
-              if (to) params.append('to-sprint', to);
-
-              Turbolinks.visit(document.location.pathname + "?" + params.toString());
-            } else {
-              postForm(event.target);
-            }
-          });
-        }
-      })
     });
   </script>
 </html>

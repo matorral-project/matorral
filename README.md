@@ -31,7 +31,7 @@ Here are some screenshots:
 
 ## Roadmap
 
-- Migrate from Turbolinks to HTMX <3
+- ~~Migrate from Turbolinks to HTMX <3~~
 - Enhance test coverage
 - Run using docker compose
 - Upgrade to Bulma 1.0

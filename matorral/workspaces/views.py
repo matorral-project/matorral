@@ -1,4 +1,4 @@
-import ujson
+from urllib.parse import parse_qsl
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, JsonResponse
@@ -29,7 +29,7 @@ class WorkspaceDetailView(DetailView):
         return context
 
     def post(self, *args, **kwargs):
-        params = ujson.loads(self.request.body)
+        params = dict(parse_qsl(self.request.body.decode("utf-8")))
         url = self.request.get_full_path()
 
         if params.get("remove") == "yes":
@@ -114,7 +114,7 @@ class WorkspaceList(BaseListView):
         ).distinct()
 
     def post(self, *args, **kwargs):
-        params = ujson.loads(self.request.body)
+        params = dict(parse_qsl(self.request.body.decode("utf-8")))
 
         workspace_ids = [t.split("workspace-")[1] for t in params.keys() if "workspace-" in t]
 
@@ -165,7 +165,7 @@ class WorkspaceBaseView:
 class WorkspaceCreateView(WorkspaceBaseView, CreateView):
 
     def post(self, *args, **kwargs):
-        data = ujson.loads(self.request.body)
+        data = dict(parse_qsl(self.request.body.decode("utf-8")))
         form = self.get_form_class()(data)
         return self.form_valid(form)
 
@@ -179,7 +179,7 @@ class WorkspaceCreateView(WorkspaceBaseView, CreateView):
 class WorkspaceUpdateView(WorkspaceBaseView, UpdateView):
 
     def post(self, *args, **kwargs):
-        data = ujson.loads(self.request.body)
+        data = dict(parse_qsl(self.request.body.decode("utf-8")))
 
         if data.get("save-as-new"):
             form = self.get_form_class()(data)

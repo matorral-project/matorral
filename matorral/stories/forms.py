@@ -6,7 +6,14 @@ from .models import EpicState, StoryState, Epic, Story
 from matorral.sprints.models import Sprint
 
 
-custom_select = Select(attrs={"form": "object-list", "onchange": 'postForm(document.querySelector("#object-list"));'})
+custom_select = Select(
+    attrs={
+        "form": "object-list",
+        "hx-trigger": "change",
+        "hx-post": ".",
+        "hx-target": "body",
+    }
+)
 
 
 class EpicFilterForm(Form):
@@ -38,7 +45,18 @@ class EpicGroupByForm(Form):
         ("sprint", "Sprint"),
     ]
 
-    group_by = ChoiceField(choices=CHOICES, required=False, widget=Select(attrs={"onchange": "this.form.submit();"}))
+    group_by = ChoiceField(
+        choices=CHOICES,
+        required=False,
+        widget=Select(
+            attrs={
+                "hx-trigger": "change",
+                "hx-get": ".",
+                "hx-target": "body",
+                "hx-replace-url": "true",
+            }
+        ),
+    )
 
 
 class BaseWorkspaceModelForm(ModelForm):

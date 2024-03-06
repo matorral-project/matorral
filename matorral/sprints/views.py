@@ -1,23 +1,20 @@
 from itertools import groupby
 
-import ujson
-
 from django.db.models import F
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
-from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView
 
+from matorral.sprints.forms import SprintGroupByForm
+from matorral.sprints.models import Sprint
+from matorral.sprints.tasks import duplicate_sprints, remove_sprints, reset_sprint
 from matorral.stories.forms import StoryFilterForm
 from matorral.stories.tasks import story_set_assignee, story_set_state
-
-from ..utils import get_clean_next_url
-from .forms import SprintGroupByForm
-from .models import Sprint
-from .tasks import duplicate_sprints, remove_sprints, reset_sprint
+from matorral.utils import get_clean_next_url, get_referer_url
+from matorral.views import BaseListView
 
 
 @method_decorator(login_required, name="dispatch")
@@ -33,7 +30,7 @@ class SprintDetailView(DetailView):
         )
 
         config = dict(
-            epic=("epic__name", lambda story: story.epic and story.epic.title or "No Epic"),
+            epic=("epic__title", lambda story: story.epic and story.epic.title or "No Epic"),
             state=("state__slug", lambda story: story.state.name),
             requester=("requester__username", lambda story: story.requester and story.requester.username or "Unset"),
             assignee=("assignee__username", lambda story: story.assignee and story.assignee.username or "Unassigned"),
@@ -60,93 +57,32 @@ class SprintDetailView(DetailView):
         return context
 
     def post(self, *args, **kwargs):
-        params = ujson.loads(self.request.body)
-        url = self.request.get_full_path()
+        url = get_referer_url(self.request)
 
-        if params.get("remove") == "yes":
+        if self.request.POST.get("remove") == "yes":
             remove_sprints.delay([self.get_object().id])
             url = reverse_lazy("sprints:sprint-list", args=[self.kwargs["workspace"]])
 
-        elif params.get("sprint-reset") == "yes":
-            story_ids = [t[6:] for t in params.keys() if "story-" in t]
+        elif self.request.POST.get("sprint-reset") == "yes":
+            story_ids = [t[6:] for t in self.request.POST.keys() if "story-" in t]
             reset_sprint.delay(story_ids)
 
         else:
-            state = params.get("state")
+            state = self.request.POST.get("state")
             if isinstance(state, list):
                 state = state[0]
             if state:
-                story_ids = [t[6:] for t in params.keys() if "story-" in t]
+                story_ids = [t[6:] for t in self.request.POST.keys() if "story-" in t]
                 story_set_state.delay(story_ids, state)
 
-            assignee = params.get("assignee")
+            assignee = self.request.POST.get("assignee")
             if isinstance(assignee, list):
                 assignee = assignee[0]
             if assignee:
-                story_ids = [t[6:] for t in params.keys() if "story-" in t]
+                story_ids = [t[6:] for t in self.request.POST.keys() if "story-" in t]
                 story_set_assignee.delay(story_ids, assignee)
 
-        if self.request.headers.get("X-Fetch") == "true":
-            return JsonResponse(dict(url=url))
-        else:
-            return HttpResponseRedirect(url)
-
-
-class BaseListView(ListView):
-    paginate_by = 16
-
-    filter_fields = {}
-    select_related = None
-    prefetch_related = None
-
-    def _build_filters(self, q):
-        params = {}
-
-        for part in (q or "").split():
-            if ":" in part:
-                field, value = part.split(":")
-                try:
-                    operator = self.filter_fields[field]
-                    params[operator] = value
-                except KeyError:
-                    continue
-            else:
-                params["title__icontains"] = part
-
-        return params
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        if self.request.GET.get("q") is not None:
-            context["show_all_url"] = self.request.path
-
-        context["title"] = self.model._meta.verbose_name_plural.capitalize()
-        context["singular_title"] = self.model._meta.verbose_name.capitalize()
-        context["current_workspace"] = self.kwargs["workspace"]
-
-        return context
-
-    def get_queryset(self):
-        qs = self.model.objects
-
-        q = self.request.GET.get("q")
-
-        params = dict(workspace__slug=self.kwargs["workspace"])
-
-        if q is None:
-            qs = qs.filter(**params)
-        else:
-            params.update(self._build_filters(q))
-            qs = qs.filter(**params)
-
-        if self.select_related is not None:
-            qs = qs.select_related(*self.select_related)
-
-        if self.prefetch_related is not None:
-            qs = qs.prefetch_related(*self.prefetch_related)
-
-        return qs
+        return HttpResponseRedirect(url)
 
 
 @method_decorator(login_required, name="dispatch")
@@ -160,43 +96,34 @@ class SprintList(BaseListView):
         qs = super().get_queryset()
         return qs.order_by(F("starts_at").asc(nulls_last=True))
 
+    def _process_in_bulk_actions(self):
+        sprint_ids = [t[7:] for t in self.request.POST.keys() if "sprint-" in t]
+
+        if len(sprint_ids) == 0:
+            # No sprints selected
+            return
+
+        # Remove sprints in bulk
+        if self.request.POST.get("remove") == "yes":
+            remove_sprints.delay(sprint_ids)
+
+        # Duplicate sprints in bulk
+        if self.request.POST.get("duplicate") == "yes":
+            duplicate_sprints.delay(sprint_ids)
+
     def post(self, *args, **kwargs):
-        params = ujson.loads(self.request.body)
-
-        sprint_ids = [t[7:] for t in params.keys() if "sprint-" in t]
-
-        if len(sprint_ids) > 0:
-            if params.get("remove") == "yes":
-                remove_sprints.delay(sprint_ids)
-
-            if params.get("duplicate") == "yes":
-                duplicate_sprints.delay(sprint_ids)
-
+        self._process_in_bulk_actions()
         url = self.request.get_full_path()
-
-        if self.request.headers.get("X-Fetch") == "true":
-            return JsonResponse(dict(url=url))
-        else:
-            return HttpResponseRedirect(url)
+        return HttpResponseRedirect(url)
 
 
-class SprintBaseView:
+class SprintEditMixin:
     model = Sprint
     fields = ["title", "description", "starts_at", "ends_at"]
 
     @property
     def success_url(self):
         return get_clean_next_url(self.request, reverse_lazy("sprints:sprint-list", args=[self.kwargs["workspace"]]))
-
-    def form_valid(self, form):
-        response = super().form_valid(form)
-
-        url = self.get_success_url()
-
-        if self.request.headers.get("X-Fetch") == "true":
-            return JsonResponse(dict(url=url))
-
-        return response
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -205,29 +132,22 @@ class SprintBaseView:
         context["current_workspace"] = self.kwargs["workspace"]
         return context
 
-
-@method_decorator(login_required, name="dispatch")
-class SprintCreateView(SprintBaseView, CreateView):
-
-    def post(self, *args, **kwargs):
-        data = ujson.loads(self.request.body)
-        form = self.get_form_class()(data)
-        return self.form_valid(form)
-
     def form_valid(self, form):
         form.instance.workspace = self.request.workspace
         return super().form_valid(form)
 
 
 @method_decorator(login_required, name="dispatch")
-class SprintUpdateView(SprintBaseView, UpdateView):
+class SprintCreateView(SprintEditMixin, CreateView):
+    pass
+
+
+@method_decorator(login_required, name="dispatch")
+class SprintUpdateView(SprintEditMixin, UpdateView):
 
     def post(self, *args, **kwargs):
-        data = ujson.loads(self.request.body)
+        if self.request.POST.get("save-as-new"):
+            form = self.get_form_class()(self.request.POST)
+            return self.form_valid(form)
 
-        if data.get("save-as-new"):
-            form = self.get_form_class()(data)
-        else:
-            form = self.get_form_class()(data, instance=self.get_object())
-
-        return self.form_valid(form)
+        return super().post(*args, **kwargs)

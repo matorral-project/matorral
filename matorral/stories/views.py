@@ -3,20 +3,16 @@ from itertools import groupby
 from django.contrib.auth.decorators import login_required
 from django.db.models import Max, F
 from django.http import HttpResponseRedirect
-from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView
 
-from matorral.sprints.views import BaseListView
+from matorral.views import BaseListView
 from matorral.sprints.models import Sprint
-
-import ujson
-
-from .forms import EpicFilterForm, EpicGroupByForm, StoryFilterForm, EpicForm, StoryForm
-from .models import Epic, Story
-from .tasks import (
+from matorral.stories.forms import EpicFilterForm, EpicGroupByForm, StoryFilterForm, EpicForm, StoryForm
+from matorral.stories.models import Epic, Story
+from matorral.stories.tasks import (
     duplicate_epics,
     duplicate_stories,
     epic_set_owner,
@@ -29,11 +25,12 @@ from .tasks import (
     story_set_sprint,
     story_set_epic,
 )
-from ..utils import get_clean_next_url
+from matorral.utils import get_clean_next_url, get_referer_url
 
 
 @method_decorator(login_required, name="dispatch")
 class EpicDetailView(DetailView):
+    """ """
 
     model = Epic
 
@@ -68,17 +65,12 @@ class EpicDetailView(DetailView):
         return context
 
     def post(self, *args, **kwargs):
-        params = ujson.loads(self.request.body)
+        params = self.request.POST
 
         if params.get("remove") == "yes":
             remove_epics.delay([self.get_object().id])
-
             url = reverse_lazy("stories:epic-list", args=[self.kwargs["workspace"]])
-
-            if self.request.headers.get("X-Fetch") == "true":
-                return JsonResponse(dict(url=url))
-            else:
-                return HttpResponseRedirect(url)
+            return HttpResponseRedirect(url)
 
         if params.get("epic-reset") == "yes":
             story_ids = [t[6:] for t in params.keys() if "story-" in t]
@@ -98,12 +90,8 @@ class EpicDetailView(DetailView):
             story_ids = [t[6:] for t in params.keys() if "story-" in t]
             story_set_assignee.delay(story_ids, assignee)
 
-        url = self.request.get_full_path()
-
-        if self.request.headers.get("X-Fetch") == "true":
-            return JsonResponse(dict(url=url))
-        else:
-            return HttpResponseRedirect(url)
+        url = get_referer_url(self.request)
+        return HttpResponseRedirect(url)
 
 
 class StoryBaseView:
@@ -165,8 +153,7 @@ class StoryCreateView(StoryBaseView, CreateView):
 
     def post(self, *args, **kwargs):
         kwargs = self.get_form_kwargs()
-        data = ujson.loads(self.request.body)
-        kwargs["data"] = data
+        kwargs["data"] = self.request.POST
         form = self.get_form_class()(**kwargs)
         return self.form_valid(form)
 
@@ -178,27 +165,15 @@ class StoryCreateView(StoryBaseView, CreateView):
         kwargs["workspace"] = self.request.workspace
         return kwargs
 
-    def form_valid(self, form):
-        response = super().form_valid(form)
-
-        url = self.get_success_url()
-
-        if self.request.headers.get("X-Fetch") == "true":
-            return JsonResponse(dict(url=url))
-
-        return response
-
 
 @method_decorator(login_required, name="dispatch")
 class StoryUpdateView(StoryBaseView, UpdateView):
 
     def post(self, *args, **kwargs):
         kwargs = self.get_form_kwargs()
+        kwargs["data"] = self.request.POST
 
-        data = ujson.loads(self.request.body)
-        kwargs["data"] = data
-
-        if not data.get("save-as-new"):
+        if not kwargs.get("save-as-new"):
             kwargs["instance"] = self.get_object()
 
         form = self.get_form_class()(**kwargs)
@@ -211,16 +186,6 @@ class StoryUpdateView(StoryBaseView, UpdateView):
         kwargs = super().get_form_kwargs()
         kwargs["workspace"] = self.request.workspace
         return kwargs
-
-    def form_valid(self, form):
-        response = super().form_valid(form)
-
-        url = self.get_success_url()
-
-        if self.request.headers.get("X-Fetch") == "true":
-            return JsonResponse(dict(url=url))
-
-        return response
 
 
 class EpicBaseView:
@@ -261,21 +226,10 @@ class EpicCreateView(EpicBaseView, CreateView):
         return kwargs
 
     def post(self, *args, **kwargs):
-        data = ujson.loads(self.request.body)
         kwargs = self.get_form_kwargs()
-        kwargs["data"] = data
+        kwargs["data"] = self.request.POST
         form = self.get_form_class()(**kwargs)
         return self.form_valid(form)
-
-    def form_valid(self, form):
-        response = super().form_valid(form)
-
-        url = self.get_success_url()
-
-        if self.request.headers.get("X-Fetch") == "true":
-            return JsonResponse(dict(url=url))
-
-        return response
 
 
 @method_decorator(login_required, name="dispatch")
@@ -283,15 +237,12 @@ class EpicUpdateView(EpicBaseView, UpdateView):
 
     def post(self, *args, **kwargs):
         kwargs = self.get_form_kwargs()
+        kwargs["data"] = self.request.POST
 
-        data = ujson.loads(self.request.body)
-        kwargs["data"] = data
-
-        if not data.get("save-as-new"):
+        if not kwargs.get("save-as-new"):
             kwargs["instance"] = self.get_object()
 
         form = self.get_form_class()(**kwargs)
-
         return self.form_valid(form)
 
     def get_form_class(self):
@@ -302,23 +253,11 @@ class EpicUpdateView(EpicBaseView, UpdateView):
         kwargs["workspace"] = self.request.workspace
         return kwargs
 
-    def form_valid(self, form):
-        response = super().form_valid(form)
-
-        url = self.get_success_url()
-
-        if self.request.headers.get("X-Fetch") == "true":
-            return JsonResponse(dict(url=url))
-
-        return response
-
 
 @method_decorator(login_required, name="dispatch")
 class EpicList(BaseListView):
     model = Epic
-
     filter_fields = dict(owner="owner__username", state="state__name__iexact", label="tags__name__iexact")
-
     select_related = ["owner", "state"]
     prefetch_related = ["tags"]
 
@@ -329,8 +268,7 @@ class EpicList(BaseListView):
         return context
 
     def post(self, *args, **kwargs):
-        params = ujson.loads(self.request.body)
-
+        params = self.request.POST
         epic_ids = [t[5:] for t in params.keys() if "epic-" in t]
 
         if len(epic_ids) > 0:
@@ -353,17 +291,12 @@ class EpicList(BaseListView):
                 epic_set_owner.delay(epic_ids, owner)
 
         url = self.request.get_full_path()
-
-        if self.request.headers.get("X-Fetch") == "true":
-            return JsonResponse(dict(url=url))
-        else:
-            return HttpResponseRedirect(url)
+        return HttpResponseRedirect(url)
 
 
 @method_decorator(login_required, name="dispatch")
 class StoryList(BaseListView):
     model = Story
-
     filter_fields = dict(
         requester="requester__username",
         assignee="assignee__username",
@@ -371,7 +304,6 @@ class StoryList(BaseListView):
         label="tags__name__iexact",
         sprint="sprint__title__iexact",
     )
-
     select_related = ["requester", "assignee", "state", "sprint"]
     prefetch_related = ["tags"]
 
@@ -405,7 +337,7 @@ class StoryList(BaseListView):
         return context
 
     def post(self, *args, **kwargs):
-        params = ujson.loads(self.request.body)
+        params = self.request.POST
 
         story_ids = [t[6:] for t in params.keys() if "story-" in t]
 
@@ -438,15 +370,12 @@ class StoryList(BaseListView):
                 story_set_assignee.delay(story_ids, assignee)
 
         url = self.request.get_full_path()
-
-        if self.request.headers.get("X-Fetch") == "true":
-            return JsonResponse(dict(url=url))
-        else:
-            return HttpResponseRedirect(url)
+        return HttpResponseRedirect(url)
 
 
 @method_decorator(login_required, name="dispatch")
 class StoryDetailView(DetailView):
+    """ """
 
     model = Story
 
@@ -456,21 +385,12 @@ class StoryDetailView(DetailView):
         return context
 
     def post(self, *args, **kwargs):
-        params = ujson.loads(self.request.body)
+        params = self.request.POST
 
         if params.get("remove") == "yes":
             remove_stories.delay([self.get_object().id])
-
             url = reverse_lazy("stories:story-list", args=[self.kwargs["workspace"]])
-
-            if self.request.headers.get("X-Fetch") == "true":
-                return JsonResponse(dict(url=url))
-            else:
-                return HttpResponseRedirect(url)
+            return HttpResponseRedirect(url)
 
         url = self.request.get_full_path()
-
-        if self.request.headers.get("X-Fetch") == "true":
-            return JsonResponse(dict(url=url))
-        else:
-            return HttpResponseRedirect(url)
+        return HttpResponseRedirect(url)
