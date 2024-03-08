@@ -86,6 +86,9 @@ server = "python manage.py runserver_plus {args}"
 shell = "python manage.py shell_plus {args}"
 migrate = "python manage.py migrate {args}"
 makemigrations = "python manage.py makemigrations {args}"
+createuser = "python manage.py createsuperuser {args}"
+copy-config = "cp config/env.example config/.env"
+install = ["migrate", "copy-config", "createuser"]
 
 # Production environment
 [tool.hatch.envs.prod]

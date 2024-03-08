@@ -80,11 +80,6 @@
                       Admin
                     </a>
                     {% endif %}
-                    {% if current_workspace %}
-                      <a class="navbar-item" href="{% url 'workspaces:workspace-list' current_workspace %}">
-                        Workspaces
-                      </a>
-                    {% endif %}
                     <form method="post" action="{% url 'logout' %}" class="navbar-item">
                       {% csrf_token %}
                       <button class="button" type="submit" onclick="event.preventDefault(); this.form.submit();">

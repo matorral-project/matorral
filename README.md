@@ -68,19 +68,22 @@ pip install hatch
 
 or see [instructions for alternative methods](https://hatch.pypa.io/latest/install/).
 
-3. Run migrations:
+3. Run the install command:
 
 ```
-hatch run local:migrate
+hatch run local:install
 ```
 
-4. Run the server:
+This will create the database, run the migrations, setup the `config/.env` configuration file and create a superuser/.
+You will be asked a username, email and password for the superuser at the end of the process.
+
+4. Run the web server:
 
 ```
 hatch run local:server
 ```
 
-5. Open your browser at `http://localhost:8000`
+5. Open your browser at [http://localhost:8000](http://localhost:8000) and login using the user credentials you created in step 3.
 
 
 ### Run Tests

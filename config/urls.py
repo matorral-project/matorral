@@ -19,7 +19,6 @@ urlpatterns = [
     # User management
     re_path(r"^users/", include("matorral.users.urls")),
     # App
-    path(r"<workspace>/workspaces/", include("matorral.workspaces.urls", namespace="workspaces")),
     path(r"<workspace>/", include("matorral.stories.urls", namespace="stories")),
     path(r"<workspace>/sprints/", include("matorral.sprints.urls", namespace="sprints")),
     path(r"", workspace_index, name="workspace:index"),  # disabled for now, until we finish all the features
