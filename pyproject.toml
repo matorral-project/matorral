@@ -44,7 +44,6 @@ dependencies = [
     "django-watchman",
     "msgpack",
     "pytz",
-    "ujson",
     "sentry-sdk",
     "whitenoise",
 ]
@@ -138,3 +137,8 @@ exclude = ["matorral.db", "static", "config/settings.py"]
 
 [tool.black]
 line-length = 120
+
+[tool.codespell]
+skip = "matorral.db,matorral/static/js/htmx.min.js"
+quiet-level = 3
+write-changes = true

@@ -1,9 +1,6 @@
 {% extends 'base.html' %}
 
 {% block object_list_url %}{% url 'stories:epic-list' current_workspace %}{% endblock %}
-{% block extra_head %}
-  <meta name="turbolinks-cache-control" content="no-cache">
-{% endblock %}
 
 {% block content %}
 	<nav class="level">

@@ -15,7 +15,10 @@ class SprintGroupByForm(Form):
         required=False,
         widget=Select(
             attrs={
-                "onchange": 'Turbolinks.visit(document.location.pathname + "?group_by=" + this.value); return false;'
+                "hx-get": ".",
+                "hx-trigger": "change",
+                "hx-target": "body",
+                "hx-replace-url": "true",
             }
         ),
     )

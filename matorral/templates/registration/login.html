@@ -14,7 +14,7 @@
         {% endfor %}
         </ol>
       {% endif %}
-      <form method="post" data-nofetch>
+      <form method="post">
         {% csrf_token %}
         {% for hidden in form.hidden_fields %}
           {{ hidden }}
