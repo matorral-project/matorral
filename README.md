@@ -33,7 +33,7 @@ Here are some screenshots:
 
 - ~~Migrate from Turbolinks to HTMX <3~~
 - Enhance test coverage
-- Run using docker compose
+- ~~Run using docker~~
 - Upgrade to Bulma 1.0
 - Dark mode
 - Support for multiple themes
@@ -51,12 +51,41 @@ Here are some screenshots:
 
 ## Quick Start
 
+There are 2 ways to run the project: using Docker or installing it locally (using `hatch`).
+
+### Run using Docker
+
+1. Clone the repository:
+
+```bash
+git clone git@github.com:matorral-project/matorral.git
+cd matorral
+```
+
+2. Run the following command:
+
+```bash
+docker-compose up -d
+```
+
+3. Create a superuser:
+
+```bash
+docker-compose run --rm web sh -c "hatch run prod:python manage.py createsuperuser
+```
+
+You will be asked a username, email and password for the superuser at the end of the process.
+
+4. Open your browser at [http://localhost:8000](http://localhost:8000) and login using the user credentials you created
+in step 3.
+
+
 ### Install and run locally
 
 1. Clone the repository:
 
 ```bash
-git clone git@github.com:alameda-project/matorral.git
+git clone git@github.com:matorral-project/matorral.git
 cd matorral
 ```
 

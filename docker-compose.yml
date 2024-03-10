@@ -1,0 +1,23 @@
+services:
+  db:
+    image: postgres:16.2-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data/
+
+  web:
+    build:
+      dockerfile: Dockerfile
+    environment:
+      - DJANGO_DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - db

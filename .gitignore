@@ -82,3 +82,5 @@ matorral.egg-info/
 celerybeat-schedule
 
 TODO.md
+
+data/
