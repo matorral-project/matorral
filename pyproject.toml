@@ -98,9 +98,10 @@ extra-dependencies = [
 ]
 
 [tool.hatch.envs.prod.scripts]
-server = "gunicorn config.wsgi:application --bind"
-migrate = "python manage.py migrate"
+server = "gunicorn --bind '0.0.0.0:8000' --worker-tmp-dir /dev/shm --workers 3 config.wsgi:application"
+migrate = "python manage.py migrate {args}"
 makemigrations = "python manage.py makemigrations {args}"
+run = ["migrate", "server"]
 
 # Test environment
 [tool.hatch.envs.test]
