@@ -62,16 +62,21 @@ git clone git@github.com:matorral-project/matorral.git
 cd matorral
 ```
 
-2. Run the following command:
+2. Create the .env file (and customize it if you want):
+```bash
+cp config/env.example config/.env
+```
+
+3. Run the following command:
 
 ```bash
 docker-compose up -d
 ```
 
-3. Create a superuser:
+4. Create a superuser:
 
 ```bash
-docker-compose run --rm web sh -c "hatch run prod:python manage.py createsuperuser
+docker-compose run --rm web sh -c "hatch run prod:python manage.py createsuperuser"
 ```
 
 You will be asked a username, email and password for the superuser at the end of the process.
