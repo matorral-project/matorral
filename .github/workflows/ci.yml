@@ -34,7 +34,7 @@ jobs:
       CELERY_ALWAYS_EAGER: 1
       DJANGO_EMAIL_BACKEND: "django.core.mail.backends.console.EmailBackend"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
