@@ -1,138 +1,57 @@
-# matorral
+# Matorral
 
-![Python Compatibility](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue.svg) ![Django Compatibility](https://img.shields.io/badge/django-4.0%20%7C%204.1%20%7C%204.2%20%7C%205.0-green.svg)
+Open source, built simple. Matorral is a lean project management tool for modern teams. It handles team collaboration, project planning, sprints, and task management—without unnecessary complexity  or bloated features.
 
-## Overview
+## A new version is coming!
 
-A very simple project managent tool built with Django & Bulma.io.
+https://github.com/user-attachments/assets/eab0ad32-0526-42bd-a657-77c7ff0d7c1b
 
-Here are some screenshots:
+We've been working on a brand new version of Matorral with a completely redesigned experience and new features. The code will be open sourced soon. A private beta is open -- if you're interested in trying it out early, sign up at **[matorral.matagus.dev](https://matorral.matagus.dev/)**.
 
-![](https://github.com/matagus/matorral/raw/main/matorral/static/screenshots/stories-1.png)
+Legacy code is available at [legacy-code](https://github.com/matorral-project/matorral/tree/legacy-code) branch.
 
-![](https://github.com/matagus/matorral/raw/main/matorral/static/screenshots/stories-2.png)
+## Why Matorral Exists
 
-![](https://github.com/matagus/matorral/raw/main/matorral/static/screenshots/stories-4.png)
+We all know the problem. Project management software has become bloated, expensive, and incredibly complex. Teams are drowning in features they don't need, paying for licensing they don't use, and dealing with tools that slow them down rather than speed them up.
 
-![](https://github.com/matagus/matorral/raw/main/matorral/static/screenshots/epics-1.png)
+Matorral is different. It's open source. It's simple. And it's designed to get out of your way.
 
-![](https://github.com/matagus/matorral/raw/main/matorral/static/screenshots/sprints-1.png)
+Built with modern tools, keeping simplicity in mind. We use [Django](https://www.djangoproject.com/) for a stable, maintainable backend; [HTMX](https://htmx.org/) and [Alpine.js](https://alpinejs.dev/) for responsive interactivity; and [Tailwind CSS](https://tailwindcss.com/) for beautiful, accessible design.
 
+### Features
 
-## Features
+#### Team Collaboration & Project Management
+  - Multi-tenant workspace management with team-based access control
+  - Project and roadmap planning with hierarchical epics and stories
+  - Sprint and milestone planning with status tracking
+  - Inline editing for quick updates to tasks and project details
+  - Bulk actions to update status, priority, assignee, and delete items
 
-- Create, edit, delete and list (with pagination) and search Stories, Epics and Sprints
-- Stories have assignee, status, priority, points and optionally belong to an Epic and Sprint
-- Epics have the same fields and they track progress
-- Sprints have start and end dates, and also track progress
-- Workspaces to separate stories, epics and sprints
-- Login / logout
+#### Interactive User Experience
 
+  - Single-page-app-like experience with HTMX and Alpine.js
+  - Responsive design built on Tailwind CSS and DaisyUI components
+  - Progressive enhancement for reliability
 
-## Roadmap
+#### Authentication & Multi-tenancy
 
-- ~~Migrate from Turbolinks to HTMX <3~~
-- Enhance test coverage
-- ~~Run using docker~~
-- Upgrade to Bulma 1.0
-- Dark mode
-- Support for multiple themes
-- Realtime updates
-- Milestones
-- Subtasks
-- Projects
-- Multiple assigness
-- Kanban view
-- History
-- Comments everywhere
-- Attachments for Stories, Epics and Milestones
-- Import data from Jira, Github, Asana, etc
+  - User authentication via django-allauth
+  - Team-based access control and permissions
+  - Free tier with usage limits for public beta
 
+### Technical Infrastructure
 
-## Quick Start
+#### Backend
 
-There are 2 ways to run the project: using Docker or installing it locally (using `hatch`).
+  - Django REST Framework for APIs with OpenAPI schema
+  - PostgreSQL database with optimized queries
+  - Celery for async jobs and scheduled tasks
+  - Redis for caching and message broker
 
-### Run using Docker
+#### Frontend & DevOps
 
-1. Clone the repository:
-
-```bash
-git clone git@github.com:matorral-project/matorral.git
-cd matorral
-```
-
-2. Create the .env file (and customize it if you want):
-```bash
-cp config/env.example config/.env
-```
-
-3. Run the following command:
-
-```bash
-docker-compose up -d
-```
-
-4. Create a superuser:
-
-```bash
-docker-compose run --rm web sh -c "hatch run prod:python manage.py createsuperuser"
-```
-
-You will be asked a username, email and password for the superuser at the end of the process.
-
-4. Open your browser at [http://localhost:8000](http://localhost:8000) and login using the user credentials you created
-in step 3.
-
-
-### Install and run locally
-
-1. Clone the repository:
-
-```bash
-git clone git@github.com:matorral-project/matorral.git
-cd matorral
-```
-
-2. Install [hatch](https://hatch.pypa.io/latest/) using `pip`:
-
-```
-pip install hatch
-```
-
-or see [instructions for alternative methods](https://hatch.pypa.io/latest/install/).
-
-3. Run the install command:
-
-```
-hatch run local:install
-```
-
-This will create the database, run the migrations, setup the `config/.env` configuration file and create a superuser/.
-You will be asked a username, email and password for the superuser at the end of the process.
-
-4. Run the web server:
-
-```
-hatch run local:server
-```
-
-5. Open your browser at [http://localhost:8000](http://localhost:8000) and login using the user credentials you created in step 3.
-
-
-### Run Tests
-
-`hatch run test:test` will run the tests in every Python + Django versions combination.
-
-`hatch run test.py3.11-4.2:test will run them for python 3.11 and Django 4.2. Please see possible combinations using
-`hatch env show` ("test" matrix).
-
-
-## Contributing
-
-Contributions are welcome! ❤️
-
-
-## License
-
-[MPL](https://www.mozilla.org/en-US/MPL/)
+  - Vite bundler with hot-reload development
+  - Docker-based development environment
+  - Comprehensive E2E tests (Playwright)
+  - Unit tests and code quality tools (Ruff)
+  - Sentry monitoring and error tracking
