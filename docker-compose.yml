@@ -12,6 +12,7 @@ services:
 
   web:
     build:
+      context: .
       dockerfile: Dockerfile
     environment:
       - DJANGO_DATABASE_URL=postgres://postgres:postgres@db:5432/postgres

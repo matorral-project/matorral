@@ -94,7 +94,13 @@ git clone git@github.com:matorral-project/matorral.git
 cd matorral
 ```
 
-2. Install [hatch](https://hatch.pypa.io/latest/) using `pip`:
+2. Create the .env file (and customize it if you want):
+
+```bash
+cp config/env.example config/.env
+```
+
+3. Install [hatch](https://hatch.pypa.io/latest/) using `pip`:
 
 ```
 pip install hatch
@@ -102,7 +108,7 @@ pip install hatch
 
 or see [instructions for alternative methods](https://hatch.pypa.io/latest/install/).
 
-3. Run the install command:
+4. Run the install command:
 
 ```
 hatch run local:install
@@ -111,13 +117,13 @@ hatch run local:install
 This will create the database, run the migrations, setup the `config/.env` configuration file and create a superuser/.
 You will be asked a username, email and password for the superuser at the end of the process.
 
-4. Run the web server:
+5. Run the web server:
 
 ```
 hatch run local:server
 ```
 
-5. Open your browser at [http://localhost:8000](http://localhost:8000) and login using the user credentials you created in step 3.
+6. Open your browser at [http://localhost:8000](http://localhost:8000) and login using the user credentials you created in step 3.
 
 
 ### Run Tests
