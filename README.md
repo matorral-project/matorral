@@ -2,11 +2,15 @@
 
 Open source, built simple. Matorral is a lean project management tool for modern teams. It handles team collaboration, project planning, sprints, and task management—without unnecessary complexity  or bloated features.
 
+Demo is available at **[matorral.matagus.dev](https://matorral.matagus.dev/)**
+ * username: `demo@example.com`
+ * password: `demouser789`
+
 ## A new version is coming!
 
 https://github.com/user-attachments/assets/eab0ad32-0526-42bd-a657-77c7ff0d7c1b
 
-We've been working on a brand new version of Matorral with a completely redesigned experience and new features. The code will be open sourced soon. A private beta is open -- if you're interested in trying it out early, sign up at **[matorral.matagus.dev](https://matorral.matagus.dev/)**.
+We've been working on a brand new version of Matorral with a completely redesigned experience and new features. The code will be open sourced soon.
 
 Legacy code is available at [legacy-code](https://github.com/matorral-project/matorral/tree/legacy-code) branch.
 
