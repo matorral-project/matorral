@@ -1,7 +1,15 @@
 # Matorral
 
+**WARNING** This is a work in progress. This codebase is not working yet.
+
 Matorral is a simple and fast open-source project management tool built with Django, HTMX, and Tailwind CSS.
 It supports workspaces, projects, milestones, epics, stories, and sprints.
+
+## Try it out!
+
+An example demo instance is available at **[matorral.matagus.dev](https://matorral.matagus.dev/)**
+ * username: `demo@example.com`
+ * password: `demouser789`
 
 ## Requirements
 
