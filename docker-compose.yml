@@ -1,0 +1,91 @@
+name: matorral
+
+services:
+  db:
+    image: postgres:17
+    volumes:
+      # named volume keeps data across container restarts
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=matorral
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}
+      interval: 2s
+      retries: 10
+  redis:
+    image: redis
+    # AOF persistence so data survives restarts
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: bash -c 'exec 6<>/dev/tcp/redis/6379'
+      interval: 2s
+      retries: 10
+  django:
+    build:
+      context: .
+      dockerfile: docker/dev/Dockerfile
+      args:
+        MY_UID: ${MY_UID:-1000}
+        MY_GID: ${MY_GID:-1000}
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    environment:
+      PYTHONUNBUFFERED: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    env_file:
+      - ./.env
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  vite:
+    build:
+      context: .
+      dockerfile: docker/vite/Dockerfile
+      args:
+        MY_UID: ${MY_UID:-1000}
+        MY_GID: ${MY_GID:-1000}
+    command: npm run dev -- --host
+    volumes:
+      - .:/code
+      - /code/node_modules
+    ports:
+      - "5173:5173"
+    restart: unless-stopped
+  celery:
+    build:
+      context: .
+      dockerfile: docker/dev/Dockerfile
+      args:
+        MY_UID: ${MY_UID:-1000}
+        MY_GID: ${MY_GID:-1000}
+    command: celery -A matorral worker -l INFO --beat --pool=prefork --concurrency=2
+    volumes:
+      - .:/code
+    environment:
+      PYTHONUNBUFFERED: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    env_file:
+      - ./.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:

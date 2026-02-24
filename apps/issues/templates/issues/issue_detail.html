@@ -1,0 +1,197 @@
+{% extends "apps/base.html" %}
+{% load i18n %}
+{% block app %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <section class="app-card" x-data="{ showAddToSprintModal: false, showConvertModal: false, showPromoteModal: false, showDeleteModal: false, showCascadeModal: false }">
+    {% if issue.get_issue_type == "epic" %}
+    {% include "issues/includes/epic_detail_header.html" %}
+
+    {% else %}
+    {# Non-epic layout - header with title, status, dropdown menu #}
+    {% include "issues/includes/issue_detail_header.html" %}
+    {% endif %}
+
+    {# Children and Comments - different layouts for epics vs other issue types #}
+    {% if issue.get_issue_type == "epic" %}
+    {# Epic: Tabbed interface with Issues, Comments, and History tabs #}
+    <div class="mt-6" x-data="{ activeTab: 'issues' }">
+      <div role="tablist" class="tabs tabs-lift">
+        <button role="tab" class="tab" :class="{ 'tab-active': activeTab === 'issues' }"
+                @click="activeTab = 'issues'">
+          {% translate "Issues" %}
+        </button>
+        <button role="tab" class="tab" :class="{ 'tab-active': activeTab === 'comments' }"
+                @click="activeTab = 'comments'">
+          {% translate "Comments" %}
+        </button>
+        <button role="tab" class="tab" :class="{ 'tab-active': activeTab === 'history' }"
+                @click="activeTab = 'history'">
+          {% translate "History" %}
+        </button>
+        <div class="tab flex-1 cursor-default"></div>
+      </div>
+
+      <div class="border border-base-300 border-t-0 rounded-b-box p-4">
+      {# Issues tab content - lazy-loaded embedded issue list #}
+      <div x-show="activeTab === 'issues'"
+           hx-get="{% url 'issues:epic_issues_embed' workspace.slug project.key issue.key %}"
+           hx-trigger="load"
+           hx-target="this"
+           hx-swap="innerHTML">
+        <div class="flex items-center justify-center py-8">
+          <span class="loading loading-spinner loading-md"></span>
+        </div>
+      </div>
+
+      {# Comments tab content #}
+      <div x-show="activeTab === 'comments'" x-cloak>
+        <div id="comments-section"
+             hx-get="{% url 'issues:issue_comments' workspace.slug project.key issue.key %}"
+             hx-trigger="intersect once"
+             hx-target="this"
+             hx-swap="innerHTML">
+          <span class="loading loading-spinner loading-md"></span>
+        </div>
+      </div>
+
+      {# History tab content #}
+      <div x-show="activeTab === 'history'" x-cloak>
+        <div id="history-section"
+             hx-get="{% url 'issues:issue_history' workspace.slug project.key issue.key %}"
+             hx-trigger="intersect once"
+             hx-target="this"
+             hx-swap="innerHTML">
+          <span class="loading loading-spinner loading-md"></span>
+        </div>
+      </div>
+      </div>
+    </div>
+    {% else %}
+    {# Non-epic: Children list (if any) followed by tabbed Comments/History #}
+    {% if children %}
+    <div class="mb-4">
+      <div class="flex items-center justify-between mb-2 mt-6">
+        <h2 class="text-lg font-semibold">{{ children_label }} ({{ children|length }})</h2>
+      </div>
+      <div class="table-responsive">
+        <table class="table mt-table table-sm">
+          <thead>
+            <tr>
+              <th>{% translate "Key" %}</th>
+              <th>{% translate "Type" %}</th>
+              <th>{% translate "Title" %}</th>
+              <th>{% translate "Priority" %}</th>
+              <th>{% translate "Assignee" %}</th>
+              <th>{% translate "Points" %}</th>
+              <th>{% translate "Status" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for child in children %}
+            <tr>
+              <td>
+                <a href="{{ child.get_absolute_url }}"
+                   hx-get="{{ child.get_absolute_url }}"
+                   hx-push-url="true"
+                   class="font-mono font-semibold">
+                  {{ child.key }}
+                </a>
+              </td>
+              <td>{% include "issues/includes/issue_type_badge.html" with issue=child %}</td>
+              <td>
+                <a href="{{ child.get_absolute_url }}"
+                   hx-get="{{ child.get_absolute_url }}"
+                   hx-push-url="true">
+                  {{ child.title }}
+                </a>
+              </td>
+              <td>
+                {% if child.priority %}
+                  {% include "issues/includes/issue_priority_badge.html" with priority=child.priority priority_display=child.get_priority_display %}
+                {% else %}
+                  <span class="text-gray-400">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if child.assignee %}
+                  {{ child.assignee.get_display_name }}
+                {% else %}
+                  <span class="text-gray-400">—</span>
+                {% endif %}
+              </td>
+              <td>{{ child.estimated_points|default:"—" }}</td>
+              <td>{% include "issues/includes/issue_status_badge.html" with status=child.status status_display=child.get_status_display %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {# Subtasks, Comments, and History tabs for non-epics #}
+    <div class="mt-6" x-data="{ activeTab: 'subtasks' }">
+      <div role="tablist" class="tabs tabs-lift">
+        <button role="tab" class="tab" :class="{ 'tab-active': activeTab === 'subtasks' }"
+                @click="activeTab = 'subtasks'">
+          {% translate "Subtasks" %}
+        </button>
+        <button role="tab" class="tab" :class="{ 'tab-active': activeTab === 'comments' }"
+                @click="activeTab = 'comments'">
+          {% translate "Comments" %}
+        </button>
+        <button role="tab" class="tab" :class="{ 'tab-active': activeTab === 'history' }"
+                @click="activeTab = 'history'">
+          {% translate "History" %}
+        </button>
+        <div class="tab flex-1 cursor-default"></div>
+      </div>
+
+      <div class="border border-base-300 border-t-0 rounded-b-box p-4">
+        {# Subtasks tab content #}
+        <div x-show="activeTab === 'subtasks'">
+          <div id="subtasks-section"
+               hx-get="{% url 'issues:issue_subtasks' workspace.slug project.key issue.key %}"
+               hx-trigger="load"
+               hx-target="this"
+               hx-swap="outerHTML">
+            <span class="loading loading-spinner loading-md"></span>
+          </div>
+        </div>
+
+        {# Comments tab content #}
+        <div x-show="activeTab === 'comments'" x-cloak>
+          <div id="comments-section"
+               hx-get="{% url 'issues:issue_comments' workspace.slug project.key issue.key %}"
+               hx-trigger="intersect once"
+               hx-target="this"
+               hx-swap="innerHTML">
+            <span class="loading loading-spinner loading-md"></span>
+          </div>
+        </div>
+
+        {# History tab content #}
+        <div x-show="activeTab === 'history'" x-cloak>
+          <div id="history-section"
+               hx-get="{% url 'issues:issue_history' workspace.slug project.key issue.key %}"
+               hx-trigger="intersect once"
+               hx-target="this"
+               hx-swap="innerHTML">
+            <span class="loading loading-spinner loading-md"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% include "issues/includes/add_to_sprint_modal.html" %}
+    {% if issue.get_issue_type != "epic" %}
+    {% include "issues/includes/issue_convert_modal.html" %}
+    {% include "issues/includes/issue_promote_modal.html" %}
+    {% endif %}
+    {% include "includes/delete_confirm_modal.html" with delete_modal_id="detail-delete-modal-content" %}
+    {% include "includes/cascade_status_modal.html" %}
+  </section>
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% load i18n %}
+<p class="mb-4">
+  {% blocktranslate with key=issue.key title=issue.title trimmed %}
+    Are you sure you want to delete <strong>{{ key }}</strong> - {{ title }}?
+  {% endblocktranslate %}
+</p>
+{% if descendant_count > 0 or subtask_count > 0 %}
+<div class="alert alert-error mb-4">
+  <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+  </svg>
+  <div>
+    <p class="font-semibold">{% translate "The following will also be permanently deleted:" %}</p>
+    <ul class="list-disc list-inside mt-1 text-sm">
+      {% if descendant_count > 0 %}
+      <li>{% blocktranslate count count=descendant_count %}{{ count }} child issue{% plural %}{{ count }} child issues{% endblocktranslate %}</li>
+      {% endif %}
+      {% if subtask_count > 0 %}
+      <li>{% blocktranslate count count=subtask_count %}{{ count }} subtask{% plural %}{{ count }} subtasks{% endblocktranslate %}</li>
+      {% endif %}
+    </ul>
+  </div>
+</div>
+{% endif %}
+<div class="modal-action">
+  <button class="btn btn-ghost" @click="showDeleteModal = false">{% translate "Cancel" %}</button>
+  <form hx-post="{% url 'issues:issue_delete' workspace.slug project.key issue.key %}" hx-swap="none">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-error">{% translate "Delete" %}</button>
+  </form>
+</div>

@@ -1,0 +1,22 @@
+{% load i18n history_tags %}
+{# History list component - displays audit log entries #}
+<div class="history-list">
+  {% if history_entries %}
+  <ul class="space-y-2">
+    {% for entry in history_entries %}
+    <li class="py-1 text-sm">
+      <span class="text-base-content/80">
+        {% if entry.actor %}
+        <span class="font-medium">{{ entry.actor.get_display_name }}</span>
+        {% else %}
+        <span class="font-medium text-base-content/60">{% translate "System" %}</span>
+        {% endif %}
+        {% format_history_entry entry model_verbose_name %}</span>
+      <span class="text-xs text-base-content/60">- {{ entry.timestamp|timesince }} {% translate "ago" %}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-sm text-base-content/60 text-center py-4">{% translate "No history recorded yet." %}</p>
+  {% endif %}
+</div>

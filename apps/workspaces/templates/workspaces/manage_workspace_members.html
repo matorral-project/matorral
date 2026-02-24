@@ -1,0 +1,67 @@
+{% extends "apps/base.html" %}
+{% load static %}
+{% load i18n %}
+{% load form_tags %}
+{% load django_vite %}
+{% block page_head %}
+  <style>
+    /* Adds fade out effect when invitations are canceled */
+    tr.htmx-swapping td {
+      opacity: 0;
+      transition: opacity 1s ease-out;
+    }
+  </style>
+{% endblock %}
+{% block app %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <section class="app-card">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="mt-subtitle mb-0">{% translate "Workspace Members" %}</h3>
+      {% if request.workspace_membership.is_admin %}
+        <label for="invite-modal-toggle" class="mt-button-primary modal-button">
+          {% translate "Invite Members" %}
+        </label>
+      {% endif %}
+    </div>
+    <div class="table-responsive">
+      <table class="table mt-table">
+        <thead>
+          <tr>
+            <th>{% translate "Member" %}</th>
+            <th>{% translate "Role" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for membership in workspace.sorted_memberships.all %}
+            <tr>
+              <td>
+                {% if request.workspace_membership.is_admin or request.workspace_membership == membership %}
+                  <a class="link" href="{% url 'workspaces:workspace_membership_details' workspace.slug membership.pk %}">{{ membership.user }}</a>
+                {% else %}
+                  {{ membership.user }}
+                {% endif %}
+              </td>
+              <td>{{ membership.get_role_display }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <div id="pending-invitations">
+    {% include 'workspaces/includes/pending_invitations.html' %}
+  </div>
+  {% if request.workspace_membership.is_admin %}
+    {% include 'workspaces/includes/invite_modal.html' %}
+  {% endif %}
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}
+{% block page_js %}
+<script>
+  document.body.addEventListener("invitationSent", function () {
+    document.getElementById("invite-modal-toggle").checked = false;
+  });
+</script>
+{% endblock %}

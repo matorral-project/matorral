@@ -1,0 +1,131 @@
+{% load i18n %}
+{# Display mode for epic detail header - click on editable areas triggers edit mode #}
+<div id="epic-header"
+     class="epic-detail-header"
+     x-data="{ expanded: localStorage.getItem('epic_{{ issue.pk }}_expanded') !== 'false' }"
+     @click="if ($event.target.closest('.no-edit') === null && !$event.target.closest('a') && !$event.target.closest('button') && !$event.target.closest('.dropdown')) { htmx.ajax('GET', '{% url 'issues:epic_detail_inline_edit' workspace.slug project.key issue.key %}', { target: '#epic-header', swap: 'outerHTML' }) }">
+  <div class="flex justify-between items-center mb-4">
+    <div class="cursor-pointer group flex-1">
+      <div class="flex items-center gap-2 mb-1">
+        {% include "issues/includes/issue_type_badge.html" with issue=issue %}
+        <span class="font-mono text-sm text-gray-500">{{ issue.key }}</span>
+        <span class="invisible group-hover:visible text-xs text-primary">[{% translate "Click to edit" %}]</span>
+      </div>
+      <h1 class="mt-title">{{ issue.title }}</h1>
+    </div>
+    <div class="flex items-center gap-3 no-edit">
+      {% if progress %}
+      <div class="flex items-center gap-2">
+        <span class="text-sm font-semibold text-nowrap">{% translate "Progress:" %}</span>
+        <div class="w-96">
+          {% include "issues/includes/progress_bar.html" with progress=progress hide_labels=True %}
+        </div>
+      </div>
+      {% endif %}
+      {% include "issues/includes/issue_status_badge.html" with status=issue.status status_display=issue.get_status_display %}
+      <button type="button"
+              class="btn btn-sm btn-ghost btn-square"
+              @click.stop="expanded = !expanded; localStorage.setItem('epic_{{ issue.pk }}_expanded', expanded)"
+              :title="expanded ? '{% translate "Collapse details" %}' : '{% translate "Expand details" %}'">
+        <i class="fa transition-transform duration-200" :class="expanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+      </button>
+      <div class="dropdown dropdown-end">
+        <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square">
+          <i class="fa fa-ellipsis-vertical"></i>
+        </div>
+        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-32 p-2 shadow">
+          <li>
+            <button type="button" @click="$refs.cloneForm.submit()">
+              <i class="fa fa-clone"></i> {% translate "Clone" %}
+            </button>
+          </li>
+          <li>
+            <button type="button" class="text-error"
+                    hx-get="{% url 'issues:issue_delete' workspace.slug project.key issue.key %}"
+                    hx-target="#detail-delete-modal-content"
+                    hx-swap="innerHTML"
+                    @click="showDeleteModal = true; document.activeElement.blur()">
+              <i class="fa fa-trash"></i> {% translate "Delete" %}
+            </button>
+          </li>
+        </ul>
+      </div>
+      <form x-ref="cloneForm"
+            action="{% url 'issues:issue_clone' workspace.slug project.key issue.key %}"
+            method="post" class="hidden">
+        {% csrf_token %}
+      </form>
+    </div>
+  </div>
+
+  {# Epic-specific 4-column layout: Priority, Assignee, Milestone, Project #}
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 cursor-pointer" x-show="expanded">
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Priority" %}</h3>
+      {% if issue.priority %}
+        {% include "issues/includes/issue_priority_badge.html" with priority=issue.priority priority_display=issue.get_priority_display %}
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Assignee" %}</h3>
+      {% if issue.assignee %}
+        <p class="text-sm">{{ issue.assignee.get_display_name }}</p>
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Milestone" %}</h3>
+      {% if milestone %}
+        <a href="{{ milestone.get_absolute_url }}"
+           hx-get="{{ milestone.get_absolute_url }}"
+           hx-push-url="true"
+           class="text-sm link link-primary no-edit">
+          {{ milestone.key }} - {{ milestone.title }}
+        </a>
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+    <div class="no-edit">
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Project" %}</h3>
+      <a href="{{ project.get_absolute_url }}"
+         hx-get="{{ project.get_absolute_url }}"
+         hx-push-url="true"
+         class="text-sm link link-primary">
+        {{ project.key }} - {{ project.name }}
+      </a>
+    </div>
+  </div>
+
+  {# Additional epic fields: Due Date, Creator #}
+  <div class="grid grid-cols-2 gap-4 mb-4 cursor-pointer" x-show="expanded">
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Due Date" %}</h3>
+      {% if issue.due_date %}
+      <p class="text-sm">{{ issue.due_date }}</p>
+      {% else %}
+      <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+    <div class="no-edit">
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Creator" %}</h3>
+      {% if issue.created_by %}
+        <p class="text-sm">{{ issue.created_by.get_display_name }}</p>
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="mb-4 cursor-pointer" x-show="expanded">
+    <h3 class="font-semibold mb-2">{% translate "Description" %}</h3>
+    {% if issue.description %}
+    <p class="text-sm text-gray-600 whitespace-pre-wrap [&_a]:text-primary [&_a]:underline">{{ issue.description|urlize }}</p>
+    {% else %}
+    <p class="text-sm text-gray-400 italic">{% translate "No description" %}</p>
+    {% endif %}
+  </div>
+</div>

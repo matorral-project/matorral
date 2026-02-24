@@ -1,0 +1,49 @@
+name: Migrations
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-migrations:
+    name: Check for missing migrations
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: matorral
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -d matorral -U postgres"
+          --health-interval 2s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/matorral
+      REDIS_URL: redis://localhost:6379/0
+      SECRET_KEY: github-actions-insecure-key-for-testing-only
+      DEBUG: "false"
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Check for missing migrations
+        run: uv run python manage.py makemigrations --check --dry-run

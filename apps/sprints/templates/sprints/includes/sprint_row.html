@@ -1,0 +1,72 @@
+{% load i18n %}
+{# Display mode for sprint row - click on editable cells triggers edit mode #}
+<tr class="has-[:checked]:bg-base-200 sprint-row">
+  <td>
+    <input type="checkbox"
+           class="checkbox checkbox-sm"
+           name="sprints"
+           value="{{ sprint.key }}"
+           @change="selectedCount = document.querySelectorAll('[name=sprints]:checked').length">
+  </td>
+  <td>
+    <a href="{{ sprint.get_absolute_url }}"
+       hx-get="{{ sprint.get_absolute_url }}"
+       hx-push-url="true"
+       class="font-mono text-sm link link-hover">
+      {{ sprint.key }}
+    </a>
+  </td>
+  <td class="group">
+    <div class="flex items-start gap-2">
+      <a href="{{ sprint.get_absolute_url }}"
+         hx-get="{{ sprint.get_absolute_url }}"
+         hx-push-url="true"
+         class="link link-hover flex-1">
+        {{ sprint.name }}
+      </a>
+      <a href="#"
+         class="invisible group-hover:visible text-xs link link-primary whitespace-nowrap"
+         hx-get="{% url 'sprints:sprint_inline_edit' workspace.slug sprint.key %}"
+         hx-target="closest tr"
+         hx-swap="outerHTML"
+         @click.prevent>
+        [{% translate "Edit" %}]
+      </a>
+    </div>
+  </td>
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'sprints:sprint_inline_edit' workspace.slug sprint.key %}"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {% include "sprints/includes/sprint_status_badge.html" with status=sprint.status status_display=sprint.get_status_display %}
+  </td>
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'sprints:sprint_inline_edit' workspace.slug sprint.key %}"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {% if sprint.start_date and sprint.end_date %}
+    <span class="whitespace-nowrap">{{ sprint.start_date|date:"N j" }} – {{ sprint.end_date|date:"N j" }}</span>
+    {% elif sprint.start_date %}
+    <span>{{ sprint.start_date|date:"N j" }}</span>
+    {% elif sprint.end_date %}
+    <span>{{ sprint.end_date|date:"N j" }}</span>
+    {% else %}
+    -
+    {% endif %}
+  </td>
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'sprints:sprint_inline_edit' workspace.slug sprint.key %}"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {{ sprint.owner.get_display_name|default:"-" }}
+  </td>
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'sprints:sprint_inline_edit' workspace.slug sprint.key %}"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {% if sprint.capacity %}{{ sprint.progress_total_weight|default:0 }} / {{ sprint.capacity }}{% else %}-{% endif %}
+  </td>
+  <td>
+    {% include "issues/includes/progress_bar.html" with progress=sprint.progress compact=True %}
+  </td>
+</tr>

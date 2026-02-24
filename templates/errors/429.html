@@ -1,0 +1,9 @@
+{% extends 'errors/base.html' %}
+{% load i18n %}
+{% block page_title %}{% translate "Too Many Requests" %}{% endblock %}
+{% block error_details %}
+  <h1 class="mt-title">{% translate "Even sprints need a retrospective break." %}</h1>
+  <h2 class="mt-subtitle">
+    {% translate "You're sending too many requests at once. Step away from the keyboard, breathe, and try again in a few minutes." %}
+  </h2>
+{% endblock %}

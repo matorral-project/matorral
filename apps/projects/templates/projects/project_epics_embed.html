@@ -1,0 +1,396 @@
+{% load i18n form_tags %}
+<div id="epics-embed">
+  {% partialdef embed-content inline %}
+  <section class="relative"
+           x-data="{ selectedCount: 0, showBulkDeleteModal: false, showBulkAssigneeModal: false, showEditModal: false, showActionModal: false, showNewMilestoneModal: false, showNewEpicModal: false, showNewIssueModal: false, showQuickViewModal: false, newIssueModalTitle: '', showDeleteModal: false, showConvertModal: false, showPromoteModal: false, showMoveModal: false, showAddToSprintModal: false, actionModalType: '', actionModalTitle: '', actionModalMessage: '', actionModalConfirmText: '', actionModalUrl: '', assigneeConfirmStep: false, selectedAssigneeName: '', selectedAssigneeValue: '', showFiltersModal: false, expandedEpics: {} }"
+           @htmx:after-swap="selectedCount = document.querySelectorAll('#epics-embed [name=epics]:checked').length"
+           @show-cascade-modal.document="showEditModal = false"
+           @issue-created.window="showNewIssueModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#epics-embed', swap: 'innerHTML'})"
+           @epic-created.window="showNewEpicModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#epics-embed', swap: 'innerHTML'})"
+           @milestone-created.window="showNewMilestoneModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#epics-embed', swap: 'innerHTML'})"
+           @filters-apply="
+             document.getElementById('epics-filters-status').value = $event.detail.status || '';
+             document.getElementById('epics-filters-priority').value = $event.detail.priority || '';
+             document.getElementById('epics-filters-assignee').value = $event.detail.assignee || '';
+             document.getElementById('epics-filters-milestone').value = $event.detail.milestone || '';
+             $nextTick(() => document.getElementById('epics-filters-trigger').click());
+           ">
+    <div class="flex justify-between items-center pb-4 sticky top-0 z-10 bg-base-100">
+      <div class="flex items-center gap-4">
+        {# Search and filters - hidden when epics are selected or when there are no epics #}
+        {% if total_epic_count %}
+        <div class="flex items-center gap-2" x-show="selectedCount === 0" x-cloak>
+          {% translate "Search epics..." as placeholder %}
+          {% json_vals status=status_filter priority=priority_filter assignee=assignee_filter milestone=milestone_filter as hx_vals %}
+          {% include "includes/search_input.html" with input_id="epics-search-input" search_url=embed_url hx_target="#epics-list" hx_indicator="#epics-list-loading" placeholder=placeholder hx_vals=hx_vals %}
+          <button type="button"
+                  class="btn btn-sm {% if active_filter_count %}btn-primary{% else %}btn-outline{% endif %}"
+                  @click="showFiltersModal = true">
+            {% translate "Filters" %}
+            <i class="fa-solid fa-filter ml-1"></i>
+            {% if active_filter_count %}
+            <span class="badge badge-sm">{{ active_filter_count }}</span>
+            {% endif %}
+          </button>
+          <input type="hidden" id="epics-filters-status" value="{{ status_filter|default:"" }}">
+          <input type="hidden" id="epics-filters-priority" value="{{ priority_filter|default:"" }}">
+          <input type="hidden" id="epics-filters-assignee" value="{{ assignee_filter|default:"" }}">
+          <input type="hidden" id="epics-filters-milestone" value="{{ milestone_filter|default:"" }}">
+          <button type="button"
+                  id="epics-filters-trigger"
+                  class="hidden"
+                  hx-get="{{ embed_url }}"
+                  hx-vals='js:{"status": document.getElementById("epics-filters-status").value, "priority": document.getElementById("epics-filters-priority").value, "assignee": document.getElementById("epics-filters-assignee").value, "milestone": document.getElementById("epics-filters-milestone").value, "search": "{{ search_query|default:"" }}"}'
+                  hx-target="#epics-embed"
+                  hx-swap="innerHTML"
+                  hx-indicator="#epics-list-loading">
+          </button>
+          {% if active_filter_count %}
+          <button type="button"
+                  class="btn btn-sm btn-ghost btn-square"
+                  title="{% translate "Clear filters" %}"
+                  hx-get="{{ embed_url }}"
+                  hx-vals='{"search": "{{ search_query|default:"" }}"}'
+                  hx-target="#epics-embed"
+                  hx-swap="innerHTML"
+                  hx-indicator="#epics-list-loading">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+      {# + New dropdown #}
+      <div class="dropdown dropdown-end" x-show="selectedCount === 0" x-cloak>
+        <div tabindex="0" role="button" class="mt-button-primary">
+          <span class="mt-icon"><i class="fa fa-plus"></i></span>
+          <span>{% translate "New" %}</span>
+          <i class="fa fa-chevron-down ml-1"></i>
+        </div>
+        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-44 p-2 shadow">
+          <li>
+            <button type="button"
+                    hx-get="{% url 'projects:project_milestone_create' workspace.slug project.key %}?modal=1"
+                    hx-target="#new-milestone-modal-content"
+                    hx-swap="innerHTML"
+                    @click="showNewMilestoneModal = true; document.activeElement.blur()">
+              <i class="fa fa-flag text-secondary"></i>
+              {% translate "Milestone" %}
+            </button>
+          </li>
+          <li>
+            <button type="button"
+                    hx-get="{% url 'projects:project_epic_create' workspace.slug project.key %}?modal=1"
+                    hx-target="#new-epic-modal-content"
+                    hx-swap="innerHTML"
+                    @click="showNewEpicModal = true; document.activeElement.blur()">
+              <i class="fa fa-layer-group text-accent"></i>
+              {% translate "Epic" %}
+            </button>
+          </li>
+          <div class="divider my-0"></div>
+          <li>
+            <button type="button"
+                    hx-get="{% url 'projects:project_issue_create_typed' workspace.slug project.key 'story' %}?modal=1"
+                    hx-target="#new-issue-modal-content"
+                    hx-swap="innerHTML"
+                    @click="newIssueModalTitle = '{% translate "New Story" %}'; showNewIssueModal = true; document.activeElement.blur()">
+              <i class="fa fa-book text-info"></i>
+              {% translate "Story" %}
+            </button>
+          </li>
+          <li>
+            <button type="button"
+                    hx-get="{% url 'projects:project_issue_create_typed' workspace.slug project.key 'bug' %}?modal=1"
+                    hx-target="#new-issue-modal-content"
+                    hx-swap="innerHTML"
+                    @click="newIssueModalTitle = '{% translate "New Bug" %}'; showNewIssueModal = true; document.activeElement.blur()">
+              <i class="fa fa-bug text-error"></i>
+              {% translate "Bug" %}
+            </button>
+          </li>
+          <li>
+            <button type="button"
+                    hx-get="{% url 'projects:project_issue_create_typed' workspace.slug project.key 'chore' %}?modal=1"
+                    hx-target="#new-issue-modal-content"
+                    hx-swap="innerHTML"
+                    @click="newIssueModalTitle = '{% translate "New Chore" %}'; showNewIssueModal = true; document.activeElement.blur()">
+              <i class="fa fa-wrench text-warning"></i>
+              {% translate "Chore" %}
+            </button>
+          </li>
+        </ul>
+      </div>
+      {# Bulk actions - shown when at least one epic is selected #}
+      <div class="flex items-center gap-2" x-show="selectedCount > 0" x-cloak>
+        <span class="text-sm text-base-content/70" x-text="selectedCount + ' {% translate "selected" %}'"></span>
+        <div class="dropdown dropdown-end">
+          <div tabindex="0" role="button" class="btn btn-sm btn-outline">
+            <i class="fa fa-flag mr-1"></i>
+            {% translate "Set Status" %}
+            <i class="fa fa-chevron-down ml-1"></i>
+          </div>
+          <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+            {% for status_value, status_label in status_choices %}
+            <li>
+              <button type="button"
+                      hx-post="{% url 'workspace_issues_bulk_status' workspace.slug %}"
+                      hx-vals='{"status": "{{ status_value }}", "search": "{{ search_query|default:"" }}", "status_filter": "{{ status_filter|default:"" }}", "priority_filter": "{{ priority_filter|default:"" }}", "assignee_filter": "{{ assignee_filter|default:"" }}", "project_filter": "{{ project.key }}", "embed": "project_epics"}'
+                      hx-include="#epics-embed [name='epics']:checked"
+                      hx-target="#epics-embed"
+                      hx-swap="innerHTML"
+                      hx-indicator="#epics-list-loading"
+                      hx-disabled-elt="this"
+                      @click="document.activeElement.blur()">
+                {{ status_label }}
+              </button>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div class="dropdown dropdown-end">
+          <div tabindex="0" role="button" class="btn btn-sm btn-outline">
+            <i class="fa fa-arrow-up mr-1"></i>
+            {% translate "Set Priority" %}
+            <i class="fa fa-chevron-down ml-1"></i>
+          </div>
+          <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+            {% for priority_value, priority_label in priority_choices %}
+            <li>
+              <button type="button"
+                      hx-post="{% url 'workspace_issues_bulk_priority' workspace.slug %}"
+                      hx-vals='{"priority": "{{ priority_value }}", "search": "{{ search_query|default:"" }}", "status_filter": "{{ status_filter|default:"" }}", "priority_filter": "{{ priority_filter|default:"" }}", "assignee_filter": "{{ assignee_filter|default:"" }}", "project_filter": "{{ project.key }}", "embed": "project_epics"}'
+                      hx-include="#epics-embed [name='epics']:checked"
+                      hx-target="#epics-embed"
+                      hx-swap="innerHTML"
+                      hx-indicator="#epics-list-loading"
+                      hx-disabled-elt="this"
+                      @click="document.activeElement.blur()">
+                {{ priority_label }}
+              </button>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        <button type="button"
+                class="btn btn-sm btn-outline"
+                @click="document.getElementById('epics-assignee-none').checked = true; assigneeConfirmStep = false; selectedAssigneeName = '{% translate "Unassigned" %}'; selectedAssigneeValue = ''; showBulkAssigneeModal = true">
+          <i class="fa fa-user mr-1"></i>
+          {% translate "Set Assignee" %}
+        </button>
+        <div class="dropdown dropdown-end">
+          <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square">
+            <i class="fa fa-ellipsis-vertical"></i>
+          </div>
+          <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-52 p-2 shadow">
+            <li>
+              <button type="button"
+                      class="text-error"
+                      hx-post="{% url 'workspace_issues_bulk_delete_preview' workspace.slug %}"
+                      hx-vals='{"search": "{{ search_query|default:"" }}", "status_filter": "{{ status_filter|default:"" }}", "priority_filter": "{{ priority_filter|default:"" }}", "assignee_filter": "{{ assignee_filter|default:"" }}", "project_filter": "{{ project.key }}", "embed": "project_epics"}'
+                      hx-include="#epics-embed [name='epics']:checked"
+                      hx-target="#epic-bulk-delete-modal-content"
+                      hx-swap="innerHTML"
+                      @click="showBulkDeleteModal = true; document.activeElement.blur()">
+                <i class="fa fa-trash"></i>
+                {% translate "Delete" %}
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    {% include "includes/loading_indicator.html" with indicator_id="epics-list-loading" %}
+    <div id="epics-list">
+      {% partialdef list-content inline %}
+      {% if grouped_epics %}
+      <div class="space-y-4">
+        {% for group in grouped_epics %}
+        <div class="bg-base-200 rounded-box">
+          {# Milestone group header #}
+          <div class="px-4 py-3 font-medium">
+            <div class="flex items-center justify-between">
+              {% if group.milestone %}
+              <a href="{{ group.milestone.get_absolute_url }}"
+                 hx-get="{{ group.milestone.get_absolute_url }}"
+                 hx-target="#page-content"
+                 hx-push-url="true"
+                 class="link link-hover">
+                {{ group.name }}
+              </a>
+              {% else %}
+              <span>{{ group.name }}</span>
+              {% endif %}
+              <div class="flex items-center gap-2">
+                {# Progress bar for milestone #}
+                {% if group.progress %}
+                {% include "issues/includes/progress_bar.html" with progress=group.progress compact=True %}
+                {% endif %}
+                {# Milestone status and due date #}
+                {% if group.milestone %}
+                <div class="flex gap-2 [&_.badge]:badge-sm">
+                  {% include "issues/includes/issue_status_badge.html" with status=group.milestone.status status_display=group.milestone.get_status_display %}
+                  {% if group.milestone.due_date %}
+                  <span class="badge badge-sm badge-outline">{{ group.milestone.due_date }}</span>
+                  {% endif %}
+                </div>
+                {# Milestone actions dropdown #}
+                <div class="dropdown dropdown-end">
+                  <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square tooltip tooltip-left" data-tip="{% translate "Actions" %}">
+                    <i class="fa fa-ellipsis-vertical"></i>
+                  </div>
+                  <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+                    <li>
+                      <a href="{{ group.milestone.get_absolute_url }}"
+                         hx-get="{{ group.milestone.get_absolute_url }}"
+                         hx-target="#page-content"
+                         hx-push-url="true">
+                        <i class="fa fa-eye"></i> {% translate "View" %}
+                      </a>
+                    </li>
+                    <li>
+                      <button type="button"
+                              hx-get="{{ group.milestone.get_absolute_url }}?quick_view=1"
+                              hx-target="#quick-view-modal-content"
+                              hx-swap="innerHTML"
+                              @click="showQuickViewModal = true; document.activeElement.blur()">
+                        <i class="fa fa-expand"></i> {% translate "Quick View" %}
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button"
+                              hx-get="{% url 'milestones:milestone_update' workspace.slug project.key group.milestone.key %}?modal=1"
+                              hx-target="#edit-modal-content"
+                              hx-swap="innerHTML"
+                              @click="showEditModal = true; document.activeElement.blur()">
+                        <i class="fa fa-pencil"></i> {% translate "Edit" %}
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button"
+                              @click="actionModalType = 'clone'; actionModalTitle = '{% translate "Clone Milestone" %}'; actionModalMessage = '{% translate "Are you sure you want to clone this milestone?" %}'; actionModalConfirmText = '{% translate "Clone" %}'; actionModalUrl = '{% url 'milestones:milestone_clone' workspace.slug project.key group.milestone.key %}'; showActionModal = true; document.activeElement.blur()">
+                        <i class="fa fa-clone"></i> {% translate "Clone" %}
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" class="text-error"
+                              hx-get="{% url 'milestones:milestone_delete' workspace.slug project.key group.milestone.key %}"
+                              hx-target="#delete-modal-content"
+                              hx-swap="innerHTML"
+                              @click="showDeleteModal = true; document.activeElement.blur()">
+                        <i class="fa fa-trash"></i> {% translate "Delete" %}
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {# Epics table #}
+          <div class="bg-base-100 rounded-b-box">
+            <div class="table-responsive">
+              <table class="table mt-table">
+                <thead>
+                  <tr>
+                    <th class="w-10">
+                      <input type="checkbox"
+                             class="checkbox checkbox-sm embed-group-select"
+                             data-group="{{ forloop.counter }}"
+                             @change="
+                               document.querySelectorAll('#epics-embed [data-group-row=\'{{ forloop.counter }}\']').forEach(cb => cb.checked = $event.target.checked);
+                               selectedCount = document.querySelectorAll('#epics-embed [name=epics]:checked').length;
+                             ">
+                    </th>
+                    <th>{% translate "Key" %}</th>
+                    <th>{% translate "Title" %}</th>
+                    <th>{% translate "Status" %}</th>
+                    <th>{% translate "Priority" %}</th>
+                    <th>{% translate "Assignee" %}</th>
+                    <th class="w-10"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for epic in group.epics %}
+                  {% include "projects/includes/epic_row_embed.html" with epic=epic group_row_counter=forloop.parentloop.counter %}
+                  {% empty %}
+                  <tr>
+                    <td colspan="7" class="text-left text-base-content/50 py-4">{% translate "No epics for this milestone." %}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {# Add epic button for milestone groups - opens modal with milestone pre-selected #}
+            <div class="flex justify-end px-4 py-2 border-t border-base-200">
+              <div class="tooltip tooltip-left" data-tip="{% translate "Create New Epic" %}{% if group.milestone %} {% translate "for this Milestone" %}{% endif %}">
+                <button type="button"
+                        class="btn btn-xs btn-square btn-success"
+                        hx-get="{% url 'projects:project_epic_create' workspace.slug project.key %}?modal=1{% if group.milestone %}&milestone={{ group.milestone.key }}{% endif %}"
+                        hx-target="#new-epic-modal-content"
+                        hx-swap="innerHTML"
+                        @click="showNewEpicModal = true">
+                  <i class="fa fa-plus text-xs"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if not grouped_epics %}
+      <div class="text-center py-8">
+        {% if search_query %}
+        <p class="text-gray-500 mb-4">{% translate "No epics found matching your search." %}</p>
+        {% else %}
+        <p class="text-gray-500 mb-4">{% translate "No epics yet." %}</p>
+        {% endif %}
+      </div>
+      {% endif %}
+      {% endpartialdef list-content %}
+    </div>
+    {# Bulk delete modal #}
+    {% include "projects/includes/epic_bulk_delete_modal.html" %}
+    {# Bulk assignee modal #}
+    {% include "projects/includes/epic_bulk_assignee_modal.html" %}
+    {# Edit modal #}
+    {% include "issues/includes/issue_edit_modal.html" %}
+    {# Action modal (clone, delete) #}
+    {% include "issues/includes/issue_action_modal.html" %}
+    {# Delete confirm modal (row-level with cascade info) #}
+    {% include "includes/delete_confirm_modal.html" %}
+    {# Convert type modal #}
+    {% include "issues/includes/issue_convert_modal.html" %}
+    {# Promote to epic modal #}
+    {% include "issues/includes/issue_promote_modal.html" %}
+    {# Move issue modal #}
+    {% include "issues/includes/issue_move_modal.html" %}
+    {# Add to sprint modal #}
+    {% include "issues/includes/add_to_sprint_modal.html" %}
+    {# New epic modal #}
+    {% include "projects/includes/new_epic_modal.html" %}
+    {# New issue modal (story, bug, chore, issue) #}
+    {% include "projects/includes/new_issue_modal.html" %}
+    {# New milestone modal #}
+    {% include "projects/includes/new_milestone_modal.html" %}
+    {# Quick view modal #}
+    {% include "includes/quick_view_modal.html" %}
+    {# Hidden trigger to reload epics list when an issue is changed (convert, promote, etc.) #}
+    <div class="hidden"
+         hx-get="{{ embed_url }}"
+         hx-vals='js:{"status": document.getElementById("epics-filters-status").value, "priority": document.getElementById("epics-filters-priority").value, "assignee": document.getElementById("epics-filters-assignee").value, "milestone": document.getElementById("epics-filters-milestone").value, "search": "{{ search_query|default:"" }}"}'
+         hx-target="#epics-embed"
+         hx-swap="innerHTML"
+         hx-trigger="issueChanged from:body">
+    </div>
+    {# Filters modal #}
+    {% include "includes/filters_modal.html" %}
+  </section>
+  <div id="messages" class="toast toast-end toast-bottom z-50" hx-swap-oob="true">
+    {% include "includes/messages.html" %}
+  </div>
+  {% endpartialdef embed-content %}
+</div>

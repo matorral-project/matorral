@@ -1,0 +1,22 @@
+{% load i18n form_tags %}
+<p class="text-sm text-gray-500 mb-4">
+  {% blocktranslate with key=project.key name=project.name %}Creating epic for project <strong>{{ key }}</strong> - {{ name }}{% endblocktranslate %}
+  {% if milestone %}
+  <br>{% blocktranslate with ms_key=milestone.key ms_title=milestone.title %}Milestone: <strong>{{ ms_key }}</strong> - {{ ms_title }}{% endblocktranslate %}
+  {% endif %}
+</p>
+<form method="post"
+      hx-post="{{ request.get_full_path }}"
+      hx-target="#new-epic-modal-content"
+      hx-swap="innerHTML">
+  {% csrf_token %}
+  {% render_form_fields form %}
+  <div class="modal-action mt-4">
+    <button type="button" class="btn btn-ghost" @click="showNewEpicModal = false">
+      {% translate "Cancel" %}
+    </button>
+    <button type="submit" class="btn btn-primary">
+      {% translate "Create Epic" %}
+    </button>
+  </div>
+</form>

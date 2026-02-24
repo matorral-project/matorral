@@ -1,0 +1,50 @@
+{% load i18n %}
+{# Single subtask row - display mode #}
+<div class="flex items-center gap-2 p-2 rounded hover:bg-base-200 group"
+     id="subtask-row-{{ subtask.pk }}">
+  {# Checkbox toggle button #}
+  <button type="button"
+          class="btn btn-xs btn-ghost btn-square"
+          hx-post="{% url 'issues:issue_subtask_toggle' workspace.slug project.key issue.key subtask.pk %}"
+          hx-target="#subtask-row-{{ subtask.pk }}"
+          hx-swap="outerHTML">
+    {% if subtask.status == "done" %}
+    <i class="fa fa-check-square text-success"></i>
+    {% elif subtask.status == "wont_do" %}
+    <i class="fa fa-ban text-error"></i>
+    {% elif subtask.status == "in_progress" %}
+    <i class="fa fa-spinner text-warning"></i>
+    {% else %}
+    <i class="fa fa-square-o text-base-content/60"></i>
+    {% endif %}
+  </button>
+
+  {# Title - clickable to edit #}
+  <span class="flex-grow cursor-pointer text-sm {% if subtask.status == 'done' or subtask.status == 'wont_do' %}line-through text-base-content/60{% endif %}"
+        hx-get="{% url 'issues:issue_subtask_edit' workspace.slug project.key issue.key subtask.pk %}"
+        hx-target="#subtask-row-{{ subtask.pk }}"
+        hx-swap="outerHTML">
+    {{ subtask.title }}
+  </span>
+
+  {# Status badge #}
+  {% if subtask.status == "todo" %}
+  <span class="badge badge-ghost badge-sm">{% translate "To Do" %}</span>
+  {% elif subtask.status == "in_progress" %}
+  <span class="badge badge-warning badge-sm">{% translate "In Progress" %}</span>
+  {% elif subtask.status == "done" %}
+  <span class="badge badge-success badge-sm">{% translate "Done" %}</span>
+  {% elif subtask.status == "wont_do" %}
+  <span class="badge badge-error badge-outline badge-sm">{% translate "Won't Do" %}</span>
+  {% endif %}
+
+  {# Delete button - visible on hover #}
+  <button type="button"
+          class="btn btn-xs btn-ghost btn-square text-error opacity-0 group-hover:opacity-100 transition-opacity"
+          hx-post="{% url 'issues:issue_subtask_delete' workspace.slug project.key issue.key subtask.pk %}"
+          hx-target="#subtasks-section"
+          hx-swap="outerHTML"
+          hx-confirm="{% translate "Delete this subtask?" %}">
+    <i class="fa fa-trash"></i>
+  </button>
+</div>

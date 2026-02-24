@@ -1,0 +1,41 @@
+{% load i18n %}
+<div id="subtasks-section">
+  {# Add subtask form #}
+  {% if can_add_subtask %}
+  <form hx-post="{% url 'issues:issue_subtask_add' workspace.slug project.key issue.key %}"
+        hx-target="#subtasks-section"
+        hx-swap="outerHTML"
+        class="mb-4">
+    {% csrf_token %}
+    <div class="flex gap-2">
+      <input type="text"
+             name="title"
+             class="input input-sm input-bordered flex-grow text-sm"
+             placeholder="{% translate "Add a subtask..." %}"
+             required>
+      <button type="submit" class="btn btn-sm btn-primary">
+        <i class="fa fa-plus mr-1"></i>
+        {% translate "Add" %}
+      </button>
+    </div>
+  </form>
+  {% else %}
+  <div class="alert alert-warning mb-4">
+    <i class="fa fa-exclamation-triangle"></i>
+    <span>{% blocktranslate with max=max_subtasks %}Maximum number of subtasks reached ({{ max }}).{% endblocktranslate %}</span>
+  </div>
+  {% endif %}
+
+  {# Subtasks list #}
+  {% if subtasks %}
+  <ul class="space-y-2">
+    {% for subtask in subtasks %}
+    <li id="subtask-{{ subtask.pk }}">
+      {% include "issues/includes/subtask_row.html" %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-sm text-gray-500 text-center py-4">{% translate "No subtasks yet." %}</p>
+  {% endif %}
+</div>

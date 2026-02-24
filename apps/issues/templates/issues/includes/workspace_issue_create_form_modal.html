@@ -1,0 +1,19 @@
+{% load i18n form_tags %}
+<p class="text-sm text-gray-500 mb-4">
+  {% blocktranslate with workspace_name=workspace.name %}Creating {{ issue_type_label }} in {{ workspace_name }}{% endblocktranslate %}
+</p>
+<form method="post"
+      hx-post="{{ request.get_full_path }}"
+      hx-target="#new-issue-modal-content"
+      hx-swap="innerHTML">
+  {% csrf_token %}
+  {% render_form_fields form %}
+  <div class="modal-action mt-4">
+    <button type="button" class="btn btn-ghost" @click="showNewIssueModal = false">
+      {% translate "Cancel" %}
+    </button>
+    <button type="submit" class="btn btn-primary">
+      {% translate "Create" %} {{ issue_type_label }}
+    </button>
+  </div>
+</form>

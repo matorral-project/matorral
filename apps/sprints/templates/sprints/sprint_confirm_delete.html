@@ -1,0 +1,38 @@
+{% extends "apps/base.html" %}
+{% load i18n %}
+{% block app %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <section class="app-card">
+    <h1 class="mt-title">{% translate "Delete Sprint" %}</h1>
+    <div class="alert alert-warning mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <div>
+        <p>{% blocktranslate with key=sprint.key name=sprint.name %}Are you sure you want to delete <strong>{{ key }}</strong> - {{ name }}?{% endblocktranslate %}</p>
+        {% if item_count > 0 %}
+        <p class="mt-2 text-warning font-semibold">
+          {% blocktranslate count count=item_count %}This sprint has {{ count }} assigned issue. The issue will be unassigned from the sprint but not deleted.{% plural %}This sprint has {{ count }} assigned issues. The issues will be unassigned from the sprint but not deleted.{% endblocktranslate %}
+        </p>
+        {% endif %}
+      </div>
+    </div>
+    <form method="post">
+      {% csrf_token %}
+      <div class="flex gap-2">
+        <button type="submit" class="mt-button-danger">
+          {% translate "Delete" %}
+        </button>
+        <a href="{{ sprint.get_absolute_url }}"
+           hx-get="{{ sprint.get_absolute_url }}"
+           hx-push-url="true"
+           class="mt-button-secondary">
+          {% translate "Cancel" %}
+        </a>
+      </div>
+    </form>
+  </section>
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}

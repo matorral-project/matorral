@@ -1,0 +1,89 @@
+{% load i18n %}
+{# Edit mode for sprint row - form inputs for inline editing #}
+<tr class="bg-base-200 sprint-row-edit"
+    x-data
+    @keydown.escape="htmx.ajax('GET', '{% url 'sprints:sprint_inline_edit' workspace.slug sprint.key %}?cancel=1', { target: $el, swap: 'outerHTML' })"
+    @keydown.enter.prevent="$el.querySelector('[hx-post]').click()">
+  <td>
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    <input type="checkbox"
+           class="checkbox checkbox-sm"
+           disabled>
+  </td>
+  <td>
+    <a href="{{ sprint.get_absolute_url }}"
+       hx-get="{{ sprint.get_absolute_url }}"
+       hx-push-url="true"
+       class="font-mono text-sm link link-hover"
+       @click.stop>
+      {{ sprint.key }}
+    </a>
+  </td>
+  <td>
+    <input type="text"
+           name="name"
+           value="{{ sprint.name }}"
+           class="input input-sm input-bordered w-full {% if form.name.errors %}input-error{% endif %}"
+           required
+           autofocus>
+    {% if form.name.errors %}
+    <span class="text-error text-xs">{{ form.name.errors.0 }}</span>
+    {% endif %}
+  </td>
+  <td>
+    <select name="status"
+            class="select select-sm select-bordered w-full {% if form.status.errors %}select-error{% endif %}">
+      {% for value, label in status_choices %}
+      <option value="{{ value }}" {% if sprint.status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </td>
+  <td>
+    <div class="flex gap-1 items-center">
+      <input type="date"
+             name="start_date"
+             value="{{ sprint.start_date|date:'Y-m-d' }}"
+             class="input input-sm input-bordered w-28">
+      <span>–</span>
+      <input type="date"
+             name="end_date"
+             value="{{ sprint.end_date|date:'Y-m-d' }}"
+             class="input input-sm input-bordered w-28">
+    </div>
+  </td>
+  <td>
+    {% include "includes/user_combobox.html" with combobox_name="owner" combobox_members=workspace_members combobox_selected_id=sprint.owner_id|default:"" combobox_selected_name=sprint.owner.get_display_name|default:"" combobox_size="sm" %}
+  </td>
+  <td>
+    <div class="flex gap-1 items-center">
+      <span class="text-sm text-base-content/70">{{ sprint.progress_total_weight|default:0 }} /</span>
+      <input type="number"
+             name="capacity"
+             value="{{ sprint.capacity|default:'' }}"
+             class="input input-sm input-bordered w-16"
+             min="0"
+             placeholder="-">
+    </div>
+  </td>
+  <td>
+    <div class="flex items-center gap-1">
+      <button type="button"
+              class="btn btn-sm btn-success btn-square tooltip tooltip-left"
+              data-tip="{% translate "Save" %}"
+              hx-post="{% url 'sprints:sprint_inline_edit' workspace.slug sprint.key %}"
+              hx-include="closest tr"
+              hx-target="closest tr"
+              hx-swap="outerHTML">
+        <i class="fa fa-check"></i>
+      </button>
+      <button type="button"
+              class="btn btn-sm btn-ghost btn-square tooltip tooltip-left"
+              data-tip="{% translate "Cancel" %}"
+              hx-get="{% url 'sprints:sprint_inline_edit' workspace.slug sprint.key %}?cancel=1"
+              hx-target="closest tr"
+              hx-swap="outerHTML">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+  </td>
+</tr>

@@ -1,0 +1,9 @@
+{% extends 'errors/base.html' %}
+{% load i18n %}
+{% block page_title %}{% translate "Bad Request" %}{% endblock %}
+{% block error_details %}
+  <h1 class="mt-title">{% translate "This request failed the definition of done." %}</h1>
+  <h2 class="mt-subtitle">
+    {% translate "Something about your request didn't meet our acceptance criteria. Review your input and try again. If it keeps failing, open a support ticket — we treat every bug as a blocker." %}
+  </h2>
+{% endblock %}

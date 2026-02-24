@@ -1,0 +1,93 @@
+{% load i18n %}
+{# Edit mode for milestone detail header - form inputs for inline editing #}
+<div id="milestone-header"
+     class="milestone-detail-header-edit bg-base-200 rounded-lg p-4"
+     x-data
+     @keydown.escape="htmx.ajax('GET', '{% url 'milestones:milestone_detail_inline_edit' workspace.slug milestone.project.key milestone.key %}?cancel=1', { target: $el, swap: 'outerHTML' })">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+  <div class="flex justify-between items-start mb-4">
+    <div class="flex-1">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="badge badge-outline">{% translate "Milestone" %}</span>
+        <span class="font-mono text-sm text-gray-500">{{ milestone.key }}</span>
+      </div>
+      <input type="text"
+             name="title"
+             value="{{ milestone.title }}"
+             class="input input-bordered w-full text-xl font-bold {% if form.title.errors %}input-error{% endif %}"
+             placeholder="{% translate 'Milestone title' %}"
+             required
+             autofocus>
+      {% if form.title.errors %}
+      <span class="text-error text-xs">{{ form.title.errors.0 }}</span>
+      {% endif %}
+    </div>
+    <div class="flex items-center gap-2 ml-4">
+      <button type="button"
+              class="btn btn-success tooltip"
+              data-tip="{% translate 'Save' %}"
+              hx-post="{% url 'milestones:milestone_detail_inline_edit' workspace.slug milestone.project.key milestone.key %}"
+              hx-include="#milestone-header"
+              hx-target="#milestone-header"
+              hx-swap="outerHTML">
+        <i class="fa fa-check"></i> {% translate "Save" %}
+      </button>
+      <button type="button"
+              class="btn btn-ghost tooltip"
+              data-tip="{% translate 'Cancel' %}"
+              hx-get="{% url 'milestones:milestone_detail_inline_edit' workspace.slug milestone.project.key milestone.key %}?cancel=1"
+              hx-target="#milestone-header"
+              hx-swap="outerHTML">
+        <i class="fa fa-times"></i> {% translate "Cancel" %}
+      </button>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <h3 class="font-semibold mb-2">{% translate "Description" %}</h3>
+    <textarea name="description"
+              class="textarea textarea-bordered w-full {% if form.description.errors %}textarea-error{% endif %}"
+              rows="3"
+              placeholder="{% translate 'Add a description...' %}">{{ milestone.description }}</textarea>
+    {% if form.description.errors %}
+    <span class="text-error text-xs">{{ form.description.errors.0 }}</span>
+    {% endif %}
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Priority" %}</h3>
+      <select name="priority"
+              class="select select-bordered select-sm w-full">
+        <option value="">—</option>
+        {% for value, label in priority_choices %}
+        <option value="{{ value }}" {% if milestone.priority == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Owner" %}</h3>
+      {% include "includes/user_combobox.html" with combobox_name="owner" combobox_members=workspace_members combobox_selected_id=milestone.owner_id|default:"" combobox_selected_name=milestone.owner.get_display_name|default:"" combobox_size="sm" %}
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Due Date" %}</h3>
+      <input type="date"
+             name="due_date"
+             value="{{ milestone.due_date|date:'Y-m-d' }}"
+             class="input input-bordered input-sm w-full">
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Status" %}</h3>
+      <select name="status"
+              class="select select-bordered select-sm w-full {% if form.status.errors %}select-error{% endif %}">
+        {% for value, label in status_choices %}
+        <option value="{{ value }}" {% if milestone.status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      {% if form.status.errors %}
+      <span class="text-error text-xs">{{ form.status.errors.0 }}</span>
+      {% endif %}
+    </div>
+  </div>
+</div>

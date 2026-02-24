@@ -1,0 +1,80 @@
+{% load i18n %}
+<div data-cascade-url="{{ apply_url }}">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+  {% if cascade_down %}
+  <div class="mb-4">
+    <label class="flex items-start gap-3 cursor-pointer">
+      <input type="checkbox" name="cascade_down" value="1" checked class="checkbox checkbox-sm mt-0.5" />
+      <div>
+        <p class="font-medium">
+          {% blocktranslate trimmed count count=cascade_down.total_count with status=cascade_down.target_status_display %}
+            Update {{ count }} descendant item to {{ status }}
+          {% plural %}
+            Update {{ count }} descendant items to {{ status }}
+          {% endblocktranslate %}
+        </p>
+        <p class="text-sm opacity-60">
+          {% translate "Items that are already in a completed state will be skipped." %}
+        </p>
+      </div>
+    </label>
+    <ul class="ml-10 mt-2 space-y-0.5 text-sm opacity-80">
+      {% for child in cascade_down.children_display %}
+      <li class="truncate">{{ child }}</li>
+      {% endfor %}
+      {% if cascade_down.children_remaining %}
+      <li class="opacity-60">
+        {% blocktranslate trimmed count count=cascade_down.children_remaining %}
+          + {{ count }} more item
+        {% plural %}
+          + {{ count }} more items
+        {% endblocktranslate %}
+      </li>
+      {% endif %}
+    </ul>
+    <input type="hidden" name="down_group_count" value="{{ cascade_down.down_group_count }}" />
+    {% for group in cascade_down.groups %}
+    <input type="hidden" name="down_ids_{{ forloop.counter0 }}" value="{{ group.child_pks }}" />
+    <input type="hidden" name="down_status_{{ forloop.counter0 }}" value="{{ group.target_status }}" />
+    <input type="hidden" name="down_model_type_{{ forloop.counter0 }}" value="{{ group.model_type }}" />
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if cascade_down and cascade_up %}
+  <div class="divider my-2"></div>
+  {% endif %}
+
+  {% if cascade_up %}
+  <div class="mb-4">
+    <label class="flex items-start gap-3 cursor-pointer">
+      <input type="checkbox" name="cascade_up" value="1" checked class="checkbox checkbox-sm mt-0.5" />
+      <div>
+        <p class="font-medium">
+          {% blocktranslate trimmed with parent=cascade_up.parent_display status=cascade_up.suggested_status_display %}
+            Mark {{ parent }} as {{ status }}
+          {% endblocktranslate %}
+        </p>
+        <p class="text-sm opacity-60">
+          {% translate "All items under this parent are now completed." %}
+        </p>
+      </div>
+    </label>
+    <input type="hidden" name="up_id" value="{{ cascade_up.parent_pk }}" />
+    <input type="hidden" name="up_status" value="{{ cascade_up.suggested_status }}" />
+    <input type="hidden" name="up_model_type" value="{{ cascade_up.model_type }}" />
+  </div>
+  {% endif %}
+
+  <div class="modal-action">
+    <button type="button" class="btn btn-ghost"
+            onclick="document.dispatchEvent(new CustomEvent('close-cascade-modal'))">
+      {% translate "Skip" %}
+    </button>
+    <button type="button" class="btn btn-primary"
+            onclick="var c=this.closest('[data-cascade-url]'),b=new URLSearchParams();c.querySelectorAll('input').forEach(function(i){if(i.type==='checkbox'){if(i.checked)b.append(i.name,i.value)}else{b.append(i.name,i.value)}});fetch(c.dataset.cascadeUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:b}).then(function(){window.location.reload()})">
+      {% translate "Apply" %}
+    </button>
+  </div>
+</div>

@@ -1,0 +1,206 @@
+/* typography helpers */
+
+.mt-title {
+  @apply text-3xl font-bold mb-2;
+}
+
+.mt-subtitle {
+  @apply text-xl mb-1;
+}
+
+.mt-link {
+  @apply text-primary hover:text-primary/70;
+}
+
+.mt-text-centered {
+  @apply text-center;
+}
+
+.mt-text-left {
+  @apply text-left;
+}
+
+.mt-text-right {
+  @apply text-right;
+}
+
+.mt-help {
+  @apply text-sm text-base-content/70;
+}
+
+.mt-text-primary {
+  @apply text-primary;
+}
+
+.mt-text-success {
+  @apply text-success;
+}
+
+.mt-text-info {
+  @apply text-info;
+}
+
+.mt-text-danger {
+  @apply text-error;
+}
+
+.mt-text-muted {
+  @apply text-base-content/70;
+}
+
+.mt-hidden-mobile-inline {
+  @apply hidden md:inline-block;
+}
+
+.mt-content {
+  @apply prose max-w-none lg:prose-lg;
+}
+
+/*buttons*/
+
+.mt-button-primary {
+  @apply btn btn-primary;
+}
+
+.mt-button-secondary {
+  @apply btn btn-outline;
+}
+
+.mt-button-light {
+  @apply btn btn-ghost;
+}
+
+.mt-button-danger {
+  @apply btn btn-outline text-error border-error hover:bg-error hover:border-error hover:text-error-content;
+}
+
+.mt-inline-buttons {
+  @apply flex space-x-1;
+}
+
+.mt-justify-content-end {
+  @apply justify-end;
+}
+
+.mt-icon {
+  @apply w-6 h-6 inline-flex justify-center items-center;
+}
+
+/* forms */
+.mt-input-group {
+  @apply mb-3;
+}
+
+.mt-label {
+  @apply block font-bold;
+}
+
+.mt-control {
+  @apply input w-full;
+}
+
+.mt-select {
+  & select {
+    @apply select w-full;
+  }
+}
+
+.mt-bg-danger {
+  @apply bg-error/10;
+}
+
+.mt-bg-success {
+  @apply bg-success/10;
+}
+
+/* columns */
+
+.mt-columns {
+  @apply flex flex-col space-y-4 lg:flex-row lg:space-x-4 lg:space-y-0;
+}
+
+.mt-columns-reversed {
+  @apply lg:flex-row-reverse;
+}
+
+.mt-column {
+  @apply flex-1;
+}
+
+.mt-column-one-quarter {
+  @apply basis-1/4 grow-0 shrink-0;
+}
+
+.mt-column-one-third {
+  @apply basis-1/3 grow-0 shrink-0;
+}
+
+.mt-align-items-center {
+  @apply items-center;
+}
+
+/* tables */
+
+.mt-table {
+  @apply table table-zebra table-sm w-full;
+
+  & thead {
+    @apply bg-base-200;
+  }
+}
+
+.mt-table-responsive {
+  @apply overflow-x-auto;
+}
+
+/* breadcrumbs */
+.mt-breadcrumbs {
+  display: flex;
+  align-items: center;
+
+  & a {
+    text-decoration: underline;
+  }
+
+  & li:first-child {
+    padding: 0;
+  }
+
+  & li:not(:first-child) {
+    padding: 0 0 0 0.75em;
+  }
+
+  & li:not(:first-child)::before {
+    color: gray;
+    content: '\0002f';
+    float: left;
+    padding-right: 0.75em;
+  }
+}
+
+.mt-breadcrumb-active {
+  color: color-mix(in oklch, var(--color-base-content) 50%, transparent);
+}
+
+/* cards */
+
+.mt-card {
+  @apply card shadow-sm border border-base-300;
+}
+
+.mt-card-body {
+  @apply card-body pt-0;
+}
+
+.mt-ratio-3x2 {
+  @apply aspect-3/2;
+}
+
+/* badges */
+.mt-badge-default {
+  @apply badge;
+}
+
+.mt-badge-success {
+  @apply badge badge-success;
+}

@@ -1,0 +1,46 @@
+{% extends "apps/base.html" %}
+{% load i18n %}
+{% load static %}
+{% load form_tags %}
+{% block app %}
+<section class="app-card">
+  <div class="mt-columns">
+    <div id="profile-picture" class="mt-column-one-quarter">
+      <div>
+        <img class="avatar" src="{{ membership.user.avatar_url }}">
+        <div class="mt-text-centered">{{ membership.user.get_display_name }}</div>
+      </div>
+    </div>
+    <div class="mt-column">
+      <div>
+        <div class="mt-label">{% translate "Email" %}</div>
+        <div class="mt-text-muted">{{ membership.user.email }}</div>
+      </div>
+      <div class="mt-2">
+        <div class="mt-label">{% translate "Date Joined" %}</div>
+        <div class="mt-text-muted">{{ membership.created_at }}</div>
+      </div>
+      <form class="mt-2" method="post">
+        {% csrf_token %}
+        {% render_form_fields membership_form %}
+        {% if not editing_self %}
+          <div class="mt-2">
+            <input type="submit" class="mt-button-secondary" value="{% translate 'Update Role' %}">
+          </div>
+        {% else %}
+          <p class="mt-help">{% translate "You are not allowed to modify your own role." %}</p>
+        {% endif %}
+        <hr class="my-2">
+        <label for="remove-member-modal" class="mt-button-danger modal-button">
+          {% if editing_self %}
+            {% translate 'Leave Workspace' %}
+          {% else %}
+            {% translate 'Remove from Workspace' %}
+          {% endif %}
+        </label>
+      </form>
+    </div>
+  </div>
+</section>
+{% include 'workspaces/includes/remove_member_modal.html' %}
+{% endblock %}

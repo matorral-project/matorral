@@ -1,0 +1,80 @@
+{% load i18n %}
+{% load waffle_tags %}
+<div class="navbar shadow-md bg-primary text-primary-content">
+  <div class="navbar-start">
+    <div class="dropdown">
+      <div class="lg:hidden">
+        <label tabindex="0" class="btn btn-ghost bg-primary/10">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" /></svg>
+        </label>
+      </div>
+      <ul tabindex="0" class="menu menu-compact dropdown-content mt-3 p-2 shadow-2xs bg-base-100 rounded-box w-52 z-10 text-base-content">
+        {% block mobile_nav %}
+        <li>
+          <a class="{% if request.path == '/' %}active{% endif %}" href="{% url 'landing_pages:home' %}">
+            <div>{{ site.name }}</div>
+          </a>
+        </li>
+        {% endblock %}
+      </ul>
+    </div>
+    {% block workspace_dropdown %}{% endblock %}
+  </div>
+  <div class="navbar-end">
+    {% block user_dropdown %}
+    {% if user.is_authenticated %}
+    <div class="dropdown dropdown-end">
+      <div tabindex="0" role="button" class="btn btn-ghost bg-primary/10 text-primary-content">
+        {{ user.get_display_name }}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+      <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-52 p-2 shadow-md text-base-content">
+        <li>
+          <a href="{% url 'users:user_profile' %}" {% if active_tab == 'profile' %}class="active"{% endif %}>
+            <i class="fa fa-user h-4 w-4"></i>
+            {% translate "Profile" %}
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'users:connected_accounts' %}" {% if active_tab == 'connected_accounts' %}class="active"{% endif %}>
+            <i class="fa fa-link h-4 w-4"></i>
+            {% translate "Connected Accounts" %}
+          </a>
+        </li>
+        {% if user.has_usable_password %}
+        <li>
+          <a href="{% url 'account_change_password' %}" {% if 'accounts/password/change' in request.path %}class="active"{% endif %}>
+            <i class="fa fa-unlock-alt h-4 w-4"></i>
+            {% translate "Change Password" %}
+          </a>
+        </li>
+        {% endif %}
+        {% if user.is_superuser %}
+        <li>
+          <a href="{% url 'admin:index' %}" target="_blank" rel="noopener noreferrer">
+            <i class="fa fa-cogs h-4 w-4"></i>
+            {% translate "Django Admin" %}
+          </a>
+        </li>
+        {% endif %}
+        <li>
+          <a href="{% url 'account_logout' %}">
+            <i class="fa fa-sign-out h-4 w-4"></i>
+            {% translate "Sign out" %}
+          </a>
+        </li>
+      </ul>
+    </div>
+    {% else %}
+    <a href="{% url 'account_signup' %}" class="btn btn-secondary">
+      {% translate "Sign Up" %}
+    </a>
+    <a href="{% url 'account_login' %}" class="btn btn-outline border-primary-content text-primary-content ml-2">
+      {% translate "Sign In" %}
+    </a>
+    {% endif %}
+    {% endblock %}
+  </div>
+</div>

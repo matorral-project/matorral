@@ -1,0 +1,34 @@
+{
+  "name": "matorral",
+  "version": "2.0.0",
+  "description": "The project management tool that doesn't get in your way.",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "vite build",
+    "dev": "vite",
+    "dev-watch": "vite",
+    "type-check": "tsc --noEmit",
+    "type-check-watch": "npm run type-check -- --watch"
+  },
+  "author": "Matias Agustín Mendez <matagus@gmail.com>",
+  "homepage": "http://matorral.dev/",
+  "devDependencies": {
+    "@types/node": "^25.3.0",
+    "autoprefixer": "^10.4.22",
+    "postcss": "^8.5.6",
+    "postcss-import": "^16.1.1",
+    "postcss-nested": "^7.0.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.4"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.1.17",
+    "@tailwindcss/typography": "^0.5.19",
+    "alpinejs": "^3.15.2",
+    "daisyui": "^5.5.5",
+    "htmx-ext-ws": "^2.0.4",
+    "htmx.org": "^2.0.8",
+    "js-cookie": "^3.0.5",
+    "tailwindcss": "^4.1.17"
+  }
+}

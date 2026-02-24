@@ -1,0 +1,103 @@
+{% load i18n %}
+<div class="space-y-4"
+     x-data="{ dismissed: false }"
+     x-show="!dismissed"
+     @onboarding-dismissed.window="dismissed = true; window.location.reload()">
+
+  <div class="flex justify-between items-start">
+    <div>
+      <h2 class="text-2xl font-bold">{% translate "Welcome to" %} {{ workspace.name }}!</h2>
+      <p class="text-base-content/70 mt-2">
+        {% translate "Let's get you started with these quick steps:" %}
+      </p>
+    </div>
+    <button
+      hx-post="{% url 'dashboard:dismiss_onboarding' workspace.slug %}"
+      hx-swap="none"
+      class="btn btn-ghost btn-sm"
+      title="{% translate 'Dismiss' %}">
+      <i class="fa fa-times"></i>
+    </button>
+  </div>
+
+  {# Progress indicator #}
+  {% with completed_count=onboarding.completed_count total=onboarding.steps|length %}
+  <div class="bg-base-200 rounded-lg p-4">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-sm font-medium">{% translate "Progress" %}</span>
+      <span class="text-sm text-base-content/60">
+        {{ completed_count }}/{{ total }}
+      </span>
+    </div>
+    <progress
+      class="progress progress-primary w-full"
+      value="{{ completed_count }}"
+      max="{{ total }}">
+    </progress>
+  </div>
+  {% endwith %}
+
+  {# Checklist items #}
+  <div class="space-y-3">
+    {% for step in onboarding.steps %}
+    <div class="flex items-start gap-4 p-4 bg-base-100 border border-base-300 rounded-lg {% if step.completed and not step.optional %}opacity-60{% endif %}">
+      <div class="flex-shrink-0 mt-1">
+        {% if step.completed %}
+          <i class="fa fa-check-circle text-2xl text-success"></i>
+        {% else %}
+          <i class="fa fa-circle text-2xl text-base-content/30"></i>
+        {% endif %}
+      </div>
+
+      <div class="flex-grow">
+        <h3 class="font-semibold text-lg {% if step.completed and not step.optional %}line-through{% endif %}">
+          <i class="fa {{ step.icon }} text-primary mr-2"></i>
+          {{ step.title }}
+          {% if step.completed and step.optional %}
+            <span class="badge badge-success badge-sm ml-2">{% translate "Done" %}</span>
+          {% endif %}
+        </h3>
+        <p class="text-sm text-base-content/60 mt-1">{{ step.description }}</p>
+
+        {% if not step.completed and step.url %}
+        <a
+          href="{{ step.url }}"
+          hx-get="{{ step.url }}"
+          hx-push-url="true"
+          hx-target="#page-content"
+          class="btn btn-sm btn-primary mt-3">
+          {% translate "Start" %}
+          <i class="fa fa-arrow-right ml-1"></i>
+        </a>
+        {% elif step.completed and step.optional and step.url %}
+        <a
+          href="{{ step.url }}"
+          hx-get="{{ step.url }}"
+          hx-push-url="true"
+          hx-target="#page-content"
+          class="btn btn-sm btn-ghost mt-3">
+          {% if step.key == "invite_teammates" %}
+            {% translate "Invite more" %}
+          {% elif step.key == "create_sprint" %}
+            {% translate "View sprints" %}
+          {% else %}
+            {% translate "View" %}
+          {% endif %}
+          <i class="fa fa-arrow-right ml-1"></i>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {# Bottom dismiss action #}
+  <div class="flex justify-center pt-4">
+    <button
+      hx-post="{% url 'dashboard:dismiss_onboarding' workspace.slug %}"
+      hx-swap="none"
+      class="btn btn-ghost btn-sm">
+      {% translate "Skip for now" %}
+    </button>
+  </div>
+</div>

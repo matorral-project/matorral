@@ -1,0 +1,9 @@
+{% extends 'errors/base.html' %}
+{% load i18n %}
+{% block page_title %}{% translate "Server Error" %}{% endblock %}
+{% block error_details %}
+  <h1 class="mt-title">{% translate "We've got a critical blocker on our end." %}</h1>
+  <h2 class="mt-subtitle">
+    {% translate "Something went wrong on our side. Our engineers have been paged and this is now P0. Sit tight and try again shortly." %}
+  </h2>
+{% endblock %}

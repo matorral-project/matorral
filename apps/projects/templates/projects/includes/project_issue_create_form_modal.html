@@ -1,0 +1,22 @@
+{% load i18n form_tags %}
+<p class="text-sm text-gray-500 mb-4">
+  {% blocktranslate with key=project.key name=project.name %}Creating {{ issue_type_label }} for project <strong>{{ key }}</strong> - {{ name }}{% endblocktranslate %}
+  {% if epic %}
+  <br>{% blocktranslate with epic_key=epic.key epic_title=epic.title %}Epic: <strong>{{ epic_key }}</strong> - {{ epic_title }}{% endblocktranslate %}
+  {% endif %}
+</p>
+<form method="post"
+      hx-post="{{ request.get_full_path }}"
+      hx-target="#new-issue-modal-content"
+      hx-swap="innerHTML">
+  {% csrf_token %}
+  {% render_form_fields form %}
+  <div class="modal-action mt-4">
+    <button type="button" class="btn btn-ghost" @click="showNewIssueModal = false">
+      {% translate "Cancel" %}
+    </button>
+    <button type="submit" class="btn btn-primary">
+      {% translate "Create" %} {{ issue_type_label }}
+    </button>
+  </div>
+</form>

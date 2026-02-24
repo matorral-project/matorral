@@ -1,0 +1,14 @@
+{% load i18n %}
+{% if severity == "trivial" %}
+<span class="badge badge-ghost badge-sm">{{ severity_display }}</span>
+{% elif severity == "minor" %}
+<span class="badge badge-info badge-sm">{{ severity_display }}</span>
+{% elif severity == "major" %}
+<span class="badge badge-warning badge-sm">{{ severity_display }}</span>
+{% elif severity == "critical" %}
+<span class="badge badge-error badge-sm">{{ severity_display }}</span>
+{% elif severity == "blocker" %}
+<span class="badge badge-error badge-sm font-bold">{{ severity_display }}</span>
+{% else %}
+<span class="badge badge-sm">{{ severity_display }}</span>
+{% endif %}

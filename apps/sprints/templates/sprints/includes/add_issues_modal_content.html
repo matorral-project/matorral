@@ -1,0 +1,76 @@
+{% load i18n %}
+<h3 class="font-bold text-lg mb-4">{% translate "Add Issues to Sprint" %}</h3>
+<div class="mb-4">
+  <div class="relative" x-data="{ query: '{{ search_query }}' }">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none text-base-content/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+    </svg>
+    <input type="text"
+           name="search"
+           class="input input-bordered pl-9 w-full"
+           placeholder="{% translate "Search for issues without a sprint..." %}"
+           x-model="query"
+           hx-get="{% url 'sprints:sprint_add_issues' workspace.slug sprint.key %}"
+           hx-trigger="input[this.value.length >= 3 || this.value.length === 0] changed delay:300ms"
+           hx-target="#add-issues-modal-content"
+           hx-swap="innerHTML">
+  </div>
+</div>
+<form method="post" action="{% url 'sprints:sprint_add_issues' workspace.slug sprint.key %}">
+  {% csrf_token %}
+  {% if issues %}
+  <div class="max-h-64 overflow-y-auto border border-base-300 rounded-box">
+    <table class="table table-sm">
+      <thead>
+        <tr>
+          <th class="w-10"></th>
+          <th>{% translate "Key" %}</th>
+          <th>{% translate "Title" %}</th>
+          <th>{% translate "Project" %}</th>
+          <th>{% translate "Status" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for issue in issues %}
+        <tr class="hover:bg-base-200">
+          <td>
+            <input type="checkbox" class="checkbox checkbox-sm" name="issues" value="{{ issue.key }}">
+          </td>
+          <td class="font-mono font-semibold">{{ issue.key }}</td>
+          <td>{{ issue.title|truncatewords:10 }}</td>
+          <td class="font-mono text-sm">{{ issue.project.key }}</td>
+          <td>
+            {% include "issues/includes/issue_status_badge.html" with status=issue.status status_display=issue.get_status_display %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="modal-action">
+    <button type="button" class="btn btn-ghost" @click="showAddIssuesModal = false">{% translate "Cancel" %}</button>
+    <button type="submit"
+            class="btn btn-primary"
+            hx-post="{% url 'sprints:sprint_add_issues' workspace.slug sprint.key %}"
+            hx-include="[name='issues']:checked"
+            hx-target="#issues-embed"
+            hx-swap="innerHTML"
+            @click="showAddIssuesModal = false">
+      {% translate "Add Selected" %}
+    </button>
+  </div>
+  {% else %}
+  <div class="text-center py-8">
+    <p class="text-gray-500">
+      {% if search_query %}
+        {% translate "No issues found matching your search." %}
+      {% else %}
+        {% translate "No unassigned issues available in this workspace." %}
+      {% endif %}
+    </p>
+  </div>
+  <div class="modal-action">
+    <button type="button" class="btn btn-ghost" @click="showAddIssuesModal = false">{% translate "Close" %}</button>
+  </div>
+  {% endif %}
+</form>

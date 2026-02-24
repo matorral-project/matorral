@@ -1,0 +1,16 @@
+{% load i18n form_tags %}
+{% translate "Set Assignee" as modal_title %}
+{% translate "Select an assignee for the selected issues:" as prompt_text %}
+{% translate "Unassigned" as none_label %}
+{% blocktranslate asvar confirm_text %}Assign selected issues to:{% endblocktranslate %}
+{% url 'workspace_issues_bulk_assignee' workspace.slug as post_url %}
+{% if sprint %}
+  {% json_vals page=page_obj.number search=search_query status_filter=status_filter assignee_filter=assignee_filter group_by=group_by sprint_filter=sprint.key embed="sprint" as bulk_hx_vals %}
+{% elif epic %}
+  {% json_vals page=page_obj.number search=search_query status_filter=status_filter assignee_filter=assignee_filter group_by=group_by project_filter=project.key epic_filter=epic.key embed="epic" as bulk_hx_vals %}
+{% elif milestone %}
+  {% json_vals page=page_obj.number search=search_query status_filter=status_filter assignee_filter=assignee_filter group_by=group_by project_filter=project.key milestone_filter=milestone.key embed="milestone" as bulk_hx_vals %}
+{% elif project_orphan %}
+  {% json_vals page=page_obj.number search=search_query status_filter=status_filter type_filter=type_filter priority_filter=priority_filter assignee_filter=assignee_filter sprint_filter=sprint_filter group_by=group_by project_filter=project.key embed="project_orphan" as bulk_hx_vals %}
+{% endif %}
+{% include "includes/bulk_person_modal.html" with show_var="showBulkAssigneeModal" confirm_step_var="assigneeConfirmStep" selected_name_var="selectedAssigneeName" selected_value_var="selectedAssigneeValue" hidden_input_id="embed-bulk-assignee-value" hidden_input_name="assignee" radio_name_prefix="embed-assignee" modal_title=modal_title prompt_text=prompt_text confirm_text=confirm_text none_label=none_label post_url=post_url hx_vals=bulk_hx_vals hx_include="#issues-embed [name='issues']:checked, #embed-bulk-assignee-value" hx_target="#issues-embed" hx_indicator="#embed-list-loading" current_user_id=request.user.pk current_user_name=request.user.get_display_name %}

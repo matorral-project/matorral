@@ -1,0 +1,76 @@
+{% load i18n %}
+{# Edit mode for an orphan work item row on project detail - 7 columns matching orphan_work_item_row.html #}
+<tr class="bg-base-200"
+    x-data
+    @keydown.escape="htmx.ajax('GET', '{% url 'issues:issue_inline_edit' workspace.slug issue.project.key issue.key %}?embed=project_orphan&cancel=1', { target: $el, swap: 'outerHTML' })"
+    @keydown.enter.prevent="$el.querySelector('[hx-post]').click()">
+  <td>
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    <input type="hidden" name="embed" value="project_orphan">
+  </td>
+  <td>
+    <span class="font-mono font-semibold text-base-content/60">{{ issue.key }}</span>
+  </td>
+  <td>
+    <div class="flex items-center gap-2">
+      {% include "issues/includes/issue_type_badge.html" %}
+      <input type="text"
+             name="title"
+             value="{{ issue.title }}"
+             class="input input-sm input-bordered w-full {% if form.title.errors %}input-error{% endif %}"
+             required
+             autofocus>
+    </div>
+    {% if form.title.errors %}
+    <span class="text-error text-xs">{{ form.title.errors.0 }}</span>
+    {% endif %}
+  </td>
+  <td>
+    <select name="status"
+            class="select select-sm select-bordered w-full {% if form.status.errors %}select-error{% endif %}">
+      {% for value, label in status_choices %}
+      <option value="{{ value }}" {% if issue.status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </td>
+  <td>
+    <select name="priority"
+            class="select select-sm select-bordered w-full">
+      <option value="">-</option>
+      {% for value, label in priority_choices %}
+      <option value="{{ value }}" {% if issue.priority == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </td>
+  <td>
+    {% include "includes/user_combobox.html" with combobox_name="assignee" combobox_members=workspace_members combobox_selected_id=issue.assignee_id|default:"" combobox_selected_name=issue.assignee.get_display_name|default:"" combobox_size="sm" %}
+  </td>
+  <td>
+    <div class="flex items-center gap-1">
+      <input type="number"
+             name="estimated_points"
+             value="{{ issue.estimated_points|default:'' }}"
+             class="input input-sm input-bordered w-16"
+             min="0"
+             step="1">
+      <button type="button"
+              class="btn btn-sm btn-success btn-square tooltip tooltip-left"
+              data-tip="{% translate "Save" %}"
+              hx-post="{% url 'issues:issue_inline_edit' workspace.slug issue.project.key issue.key %}"
+              hx-include="closest tr"
+              hx-vals='{"embed": "project_orphan"}'
+              hx-target="closest tr"
+              hx-swap="outerHTML">
+        <i class="fa fa-check"></i>
+      </button>
+      <button type="button"
+              class="btn btn-sm btn-ghost btn-square tooltip tooltip-left"
+              data-tip="{% translate "Cancel" %}"
+              hx-get="{% url 'issues:issue_inline_edit' workspace.slug issue.project.key issue.key %}?embed=project_orphan&cancel=1"
+              hx-target="closest tr"
+              hx-swap="outerHTML">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+  </td>
+</tr>

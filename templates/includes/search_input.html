@@ -1,0 +1,27 @@
+<div class="relative inline-block w-48 focus-within:w-64 transition-all duration-300" x-data="{ query: '{{ search_query }}' }">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none text-base-content/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+  </svg>
+  <input type="text"
+         name="search"
+         id="{{ input_id }}"
+         class="input input-sm input-bordered pl-9 pr-8 w-full"
+         placeholder="{{ placeholder }}"
+         x-model="query"
+         hx-get="{{ search_url }}"
+         hx-trigger="input[this.value.length >= 3 || this.value.length === 0] changed delay:300ms, search"
+         hx-target="{{ hx_target }}"
+         hx-swap="innerHTML"
+         hx-indicator="{{ hx_indicator }}"
+         {% if hx_vals %}hx-vals='{{ hx_vals }}'{% endif %}
+         {% if push_url %}hx-push-url="true"{% endif %}>
+  <button type="button"
+          class="absolute right-2 top-1/2 -translate-y-1/2 z-20 text-base-content/50 hover:text-base-content"
+          x-show="query.length > 0"
+          x-cloak
+          @click="query = ''; $nextTick(() => { let input = document.getElementById('{{ input_id }}'); input.dispatchEvent(new Event('input', { bubbles: true })); input.focus(); })">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 z-20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+    </svg>
+  </button>
+</div>

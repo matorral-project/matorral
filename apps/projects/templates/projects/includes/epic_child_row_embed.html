@@ -1,0 +1,136 @@
+{% load i18n %}
+{# Display mode for a single child row inside an expanded epic on project detail #}
+<tr class="bg-base-100/50" x-show="expandedEpics['{{ parent_key }}']" x-cloak>
+  <td></td>
+  <td class="pl-4">
+    <a href="{{ child.get_absolute_url }}"
+       hx-get="{{ child.get_absolute_url }}"
+       hx-target="#page-content"
+       hx-push-url="true"
+       class="font-mono font-semibold">
+      {{ child.key }}
+    </a>
+  </td>
+  <td class="group">
+    <div class="flex items-center gap-2">
+      {% include "issues/includes/issue_type_badge.html" with issue=child %}
+      <a href="{{ child.get_absolute_url }}"
+         hx-get="{{ child.get_absolute_url }}"
+         hx-target="#page-content"
+         hx-push-url="true"
+         class="link link-hover flex-1">
+        {{ child.title }}
+      </a>
+      <a href="#"
+         class="invisible group-hover:visible text-xs link link-primary whitespace-nowrap"
+         hx-get="{% url 'issues:issue_inline_edit' workspace.slug child.project.key child.key %}?embed=project_epic_children&parent_key={{ parent_key }}"
+         hx-target="closest tr"
+         hx-swap="outerHTML"
+         @click.prevent>
+        [{% translate "Edit" %}]
+      </a>
+    </div>
+  </td>
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'issues:issue_inline_edit' workspace.slug child.project.key child.key %}?embed=project_epic_children&parent_key={{ parent_key }}"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {% include "issues/includes/issue_status_badge.html" with status=child.status status_display=child.get_status_display %}
+  </td>
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'issues:issue_inline_edit' workspace.slug child.project.key child.key %}?embed=project_epic_children&parent_key={{ parent_key }}"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {% if child.priority %}
+      {% include "issues/includes/issue_priority_badge.html" with priority=child.priority priority_display=child.get_priority_display %}
+    {% else %}
+      <span class="text-base-content/40">-</span>
+    {% endif %}
+  </td>
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'issues:issue_inline_edit' workspace.slug child.project.key child.key %}?embed=project_epic_children&parent_key={{ parent_key }}"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {{ child.assignee.get_display_name|default:"-" }}
+  </td>
+  <td>
+    <div class="dropdown dropdown-end dropdown-left">
+      <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square tooltip tooltip-left" data-tip="{% translate "Actions" %}">
+        <i class="fa fa-ellipsis-vertical"></i>
+      </div>
+      <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+        <li>
+          <button type="button"
+                  hx-get="{{ child.get_absolute_url }}?quick_view=1"
+                  hx-target="#quick-view-modal-content"
+                  hx-swap="innerHTML"
+                  @click="showQuickViewModal = true; document.activeElement.blur()">
+            <i class="fa fa-eye"></i> {% translate "Quick View" %}
+          </button>
+        </li>
+        <li>
+          <button type="button"
+                  hx-get="{% url 'issues:issue_update' workspace.slug child.project.key child.key %}?project={{ child.project.key }}&modal=1"
+                  hx-target="#edit-modal-content"
+                  hx-swap="innerHTML"
+                  @click="showEditModal = true; document.activeElement.blur()">
+            <i class="fa fa-pencil"></i> {% translate "Edit" %}
+          </button>
+        </li>
+        <li>
+          <button type="button"
+                  @click="actionModalType = 'clone'; actionModalTitle = '{% translate "Clone Issue" %}'; actionModalMessage = '{% translate "Are you sure you want to clone this issue?" %}'; actionModalConfirmText = '{% translate "Clone" %}'; actionModalUrl = '{% url 'issues:issue_clone' workspace.slug child.project.key child.key %}'; showActionModal = true; document.activeElement.blur()">
+            <i class="fa fa-clone"></i> {% translate "Clone" %}
+          </button>
+        </li>
+        {% if child.get_issue_type != 'epic' %}
+        <li>
+          <button type="button"
+                  hx-get="{% url 'issues:issue_convert' workspace.slug child.project.key child.key %}?source=embed"
+                  hx-target="#convert-modal-content"
+                  hx-swap="innerHTML"
+                  @click="showConvertModal = true; document.activeElement.blur()">
+            <i class="fa fa-exchange"></i> {% translate "Convert" %}
+          </button>
+        </li>
+        <li>
+          <button type="button"
+                  hx-get="{% url 'issues:issue_promote' workspace.slug child.project.key child.key %}?source=embed"
+                  hx-target="#promote-modal-content"
+                  hx-swap="innerHTML"
+                  @click="showPromoteModal = true; document.activeElement.blur()">
+            <i class="fa fa-arrow-up"></i> {% translate "Promote to Epic" %}
+          </button>
+        </li>
+        <li>
+          <button type="button"
+                  hx-get="{% url 'issues:issue_move' workspace.slug child.project.key child.key %}"
+                  hx-target="#move-modal-content"
+                  hx-swap="innerHTML"
+                  @click="showMoveModal = true; document.activeElement.blur()">
+            <i class="fa fa-arrows-alt"></i> {% translate "Move to..." %}
+          </button>
+        </li>
+        <li>
+          <button type="button"
+                  hx-get="{% url 'sprints:issue_add_to_sprint' workspace.slug child.key %}"
+                  hx-target="#add-to-sprint-modal-content"
+                  hx-swap="innerHTML"
+                  @click="showAddToSprintModal = true; document.activeElement.blur()">
+            <i class="fa fa-bolt"></i> {% translate "Add to Sprint" %}
+          </button>
+        </li>
+        {% endif %}
+        <li>
+          <button type="button" class="text-error"
+                  hx-get="{% url 'issues:issue_delete' workspace.slug child.project.key child.key %}"
+                  hx-target="#delete-modal-content"
+                  hx-swap="innerHTML"
+                  @click="showDeleteModal = true; document.activeElement.blur()">
+            <i class="fa fa-trash"></i> {% translate "Delete" %}
+          </button>
+        </li>
+      </ul>
+    </div>
+  </td>
+</tr>

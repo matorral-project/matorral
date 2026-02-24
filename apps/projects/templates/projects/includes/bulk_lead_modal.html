@@ -1,0 +1,90 @@
+{% load i18n %}
+<div class="modal" :class="{ 'modal-open': showBulkLeadModal }">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg">{% translate "Set Lead" %}</h3>
+    <input type="hidden" name="lead" id="lead-hidden" :value="selectedLeadValue">
+
+    {# Step 1: Selection #}
+    <div x-show="!leadConfirmStep">
+      <p class="py-4">
+        {% blocktranslate trimmed %}
+          Select an organization member to assign as lead for the selected projects.
+        {% endblocktranslate %}
+      </p>
+      <p class="text-sm text-base-content/70 mb-4" x-text="selectedCount + ' {% translate "project(s) will be updated" %}'"></p>
+      <button type="button"
+              class="btn btn-sm btn-ghost gap-2 mb-3"
+              @click="selectedLeadName = '{{ request.user.get_display_name }}'; selectedLeadValue = '{{ request.user.pk }}'; leadConfirmStep = true">
+        <i class="fa fa-user-check text-sm"></i>
+        {% translate "Assign to me" %}
+      </button>
+      <div class="max-h-60 overflow-y-auto border border-base-300 rounded-lg">
+        <ul class="menu p-2">
+          <li>
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="radio" name="lead-selection" value="" class="radio radio-sm" id="lead-none" checked
+                     data-label="{% translate "No lead" %}">
+              <span class="text-base-content/70 italic">{% translate "No lead (remove current)" %}</span>
+            </label>
+          </li>
+          {% for member in workspace_members %}
+          <li>
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="radio" name="lead-selection" value="{{ member.pk }}" class="radio radio-sm"
+                     data-label="{{ member.get_display_name }}">
+              <span>{{ member.get_display_name }}</span>
+            </label>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="modal-action">
+        <button type="button"
+                class="btn btn-primary"
+                @click="
+                  let selected = document.querySelector('[name=lead-selection]:checked');
+                  selectedLeadName = selected.dataset.label;
+                  selectedLeadValue = selected.value;
+                  leadConfirmStep = true;
+                ">
+          {% translate "Continue" %}
+        </button>
+        <button type="button" class="btn" @click="showBulkLeadModal = false">
+          {% translate "Cancel" %}
+        </button>
+      </div>
+    </div>
+
+    {# Step 2: Confirmation #}
+    <div x-show="leadConfirmStep" x-cloak>
+      <p class="py-4">
+        {% blocktranslate trimmed %}
+          Are you sure you want to set the lead for the selected projects?
+        {% endblocktranslate %}
+      </p>
+      <div class="bg-base-200 rounded-lg p-4 my-2">
+        <p class="text-sm text-base-content/70">{% translate "New lead" %}</p>
+        <p class="font-semibold" x-text="selectedLeadName"></p>
+      </div>
+      <p class="text-sm text-base-content/70" x-text="selectedCount + ' {% translate "project(s) will be updated" %}'"></p>
+      <div class="modal-action">
+        <button type="button"
+                class="btn btn-primary"
+                hx-post="{% url 'projects:projects_bulk_lead' workspace.slug %}"
+                hx-vals='{"page": "{{ page_obj.number|default:1 }}", "search": "{{ search_query|default:"" }}", "status_filter": "{{ status_filter|default:"" }}", "lead_filter": "{{ lead_filter|default:"" }}", "group_by": "{{ group_by|default:"" }}"}'
+                hx-include="[name='projects']:checked, #lead-hidden"
+                hx-target="#page-content"
+                hx-swap="innerHTML"
+                hx-indicator="#list-loading"
+                hx-disabled-elt="this"
+                @click="showBulkLeadModal = false; leadConfirmStep = false">
+          {% translate "Confirm" %}
+        </button>
+        <button type="button" class="btn" @click="leadConfirmStep = false">
+          {% translate "Back" %}
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop" @click="showBulkLeadModal = false; leadConfirmStep = false"></div>
+</div>

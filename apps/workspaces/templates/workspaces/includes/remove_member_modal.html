@@ -1,0 +1,27 @@
+{% load i18n %}
+<input type="checkbox" id="remove-member-modal" class="modal-toggle" />
+<div class="modal">
+  <div class="modal-box w-11/12 max-w-5xl">
+    <h3 class="font-bold text-lg">{% if editing_self %}{% translate "Leave workspace?" %}{% else %}{% translate "Remove workspace member?" %}{% endif %}</h3>
+    <p class="py-4">
+      {% if editing_self %}
+        You will be removed from the workspace: <em><strong>{{ request.workspace.name }}</strong></em>.
+        After this, you will no longer be able to access any workspace pages, and will have to be invited again to regain access.
+      {% else %}
+        This will remove <em><strong>{{ membership.user.get_display_name }}</strong></em> from your workspace: <em>{{ request.workspace.name }}</em>.
+        They will no longer be able to access any workspace pages, and will have to be invited again to regain access.
+      {% endif %}
+    </p>
+    <footer class="modal-card-foot">
+      <div class="modal-action">
+        <form action="{% url 'workspaces:remove_workspace_membership' request.workspace.slug membership.pk %}" method="post">
+          {% csrf_token %}
+          <button class="btn btn-error" type="submit">
+            {% if editing_self %}{% translate "I understand, leave workspace" %}{% else %}{% translate "I understand, remove workspace member" %}{% endif %}
+          </button>
+        </form>
+        <label for="remove-member-modal" class="btn">{% translate "Cancel" %}</label>
+      </div>
+    </footer>
+  </div>
+</div>

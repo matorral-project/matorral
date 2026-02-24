@@ -1,0 +1,153 @@
+{% load i18n %}
+{# Read-only quick view for issues and epics #}
+{% with issue_type=issue.get_issue_type %}
+<div class="issue-quick-view">
+  <div class="flex items-center gap-2 mb-1">
+    {% include "issues/includes/issue_type_badge.html" with issue=issue %}
+    <span class="font-mono text-sm text-gray-500">{{ issue.key }}</span>
+    {% include "issues/includes/issue_status_badge.html" with status=issue.status status_display=issue.get_status_display %}
+  </div>
+  <h2 class="text-xl font-bold mb-4">{{ issue.title }}</h2>
+
+  <div class="mb-4">
+    <h3 class="font-semibold mb-2 text-sm text-gray-500">{% translate "Description" %}</h3>
+    {% if issue.description %}
+    <p class="text-sm text-gray-600 whitespace-pre-wrap [&_a]:text-primary [&_a]:underline">{{ issue.description|urlize }}</p>
+    {% else %}
+    <p class="text-sm text-gray-400 italic">{% translate "No description" %}</p>
+    {% endif %}
+  </div>
+
+  {% if issue_type == "epic" %}
+  {# Epic-specific fields #}
+  <div class="grid grid-cols-2 gap-4 mb-4">
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Priority" %}</h3>
+      {% if issue.priority %}
+        {% include "issues/includes/issue_priority_badge.html" with priority=issue.priority priority_display=issue.get_priority_display %}
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Assignee" %}</h3>
+      {% if issue.assignee %}
+        <p class="text-sm">{{ issue.assignee.get_display_name }}</p>
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Milestone" %}</h3>
+      {% if milestone %}
+        <p class="text-sm">{{ milestone.key }} — {{ milestone.title }}</p>
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Project" %}</h3>
+      <p class="text-sm">{{ project.key }} — {{ project.name }}</p>
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Due Date" %}</h3>
+      {% if issue.due_date %}
+        <p class="text-sm">{{ issue.due_date }}</p>
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Creator" %}</h3>
+      {% if issue.created_by %}
+        <p class="text-sm">{{ issue.created_by.get_display_name }}</p>
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+  </div>
+  {% if progress %}
+  <div class="mb-4">
+    <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Progress" %}</h3>
+    {% include "issues/includes/progress_bar.html" with progress=progress %}
+  </div>
+  {% endif %}
+  {% else %}
+  {# Work item fields (story, bug, chore, issue) #}
+  <div class="grid grid-cols-2 gap-4 mb-4">
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Priority" %}</h3>
+      {% if issue.priority %}
+        {% include "issues/includes/issue_priority_badge.html" with priority=issue.priority priority_display=issue.get_priority_display %}
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+    {% if is_bug %}
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Severity" %}</h3>
+      {% if issue.severity %}
+        {% include "issues/includes/issue_severity_badge.html" with severity=issue.severity severity_display=issue.get_severity_display %}
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+    {% endif %}
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Assignee" %}</h3>
+      {% if issue.assignee %}
+        <p class="text-sm">{{ issue.assignee.get_display_name }}</p>
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Due Date" %}</h3>
+      {% if issue.due_date %}
+        <p class="text-sm">{{ issue.due_date }}</p>
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Points" %}</h3>
+      {% if issue.estimated_points %}
+        <p class="text-sm">{{ issue.estimated_points }}</p>
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Parent" %}</h3>
+      {% if parent %}
+        <p class="text-sm">{{ parent.key }} — {{ parent.title }}</p>
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Project" %}</h3>
+      <p class="text-sm">{{ project.key }} — {{ project.name }}</p>
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Creator" %}</h3>
+      {% if issue.created_by %}
+        <p class="text-sm">{{ issue.created_by.get_display_name }}</p>
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="mt-4 pt-4 border-t border-base-200">
+    <a href="{{ issue.get_absolute_url }}"
+       hx-get="{{ issue.get_absolute_url }}"
+       hx-target="#page-content"
+       hx-push-url="true"
+       class="btn btn-sm btn-outline">
+      {% translate "View Full Page" %} →
+    </a>
+  </div>
+</div>
+{% endwith %}

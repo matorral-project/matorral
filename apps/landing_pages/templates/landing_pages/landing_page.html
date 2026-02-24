@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block top_nav %}{% endblock %}
+{% block body %}
+<main class="min-h-screen flex flex-col">
+  {# Hero Section #}
+  <section class="hero bg-base-200 min-h-[49vh]">
+    <div class="hero-content text-center">
+      <div class="max-w-2xl">
+        <h1 class="text-5xl font-bold text-primary">Matorral</h1>
+        <p class="py-6 text-lg text-center">
+          {% translate "A project management tool." %} <span class="font-bold text-emerald-600">{% translate "Simple" %}</span>. <span class="font-bold text-gray-900">{% translate "Open Source" %}</span>.
+        </p>
+        <p class="pb-6 text-lg text-center">
+          {% translate "Made with" %} <a href="https://www.djangoproject.com/" target="_blank" rel="noopener" class="text-primary no-underline">Django</a>, <a href="https://htmx.org/" target="_blank" rel="noopener" class="text-primary no-underline">HTMX</a>, {% translate "and" %} <a href="https://tailwindcss.com/" target="_blank" rel="noopener" class="text-primary no-underline">Tailwind CSS</a>.</p>
+        <div class="flex gap-4 justify-center">
+          <a href="{% url 'account_signup' %}" class="btn btn-primary">{% translate "Sign Up" %}</a>
+          <a href="{% url 'account_login' %}" class="btn btn-outline">{% translate "Sign In" %}</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# Features Section #}
+  <section class="py-16 px-4">
+    <div class="max-w-6xl mx-auto">
+      <h2 class="text-3xl font-bold text-center mb-12">{% translate "Features" %}</h2>
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body items-center text-center">
+            <div class="text-4xl text-primary mb-4">
+              <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <h3 class="card-title">{% translate "Hierarchical Issues" %}</h3>
+            <p>{% translate "Organize epics, stories, and tasks in a flexible tree structure." %}</p>
+          </div>
+        </div>
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body items-center text-center">
+            <div class="text-4xl text-primary mb-4">
+              <i class="fa-solid fa-users"></i>
+            </div>
+            <h3 class="card-title">{% translate "Workspaces" %}</h3>
+            <p>{% translate "Collaborate with your team in dedicated workspaces." %}</p>
+          </div>
+        </div>
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body items-center text-center">
+            <div class="text-4xl text-primary mb-4">
+              <i class="fa-solid fa-bolt"></i>
+            </div>
+            <h3 class="card-title">{% translate "Sprints" %}</h3>
+            <p>{% translate "Plan and track sprints with automatic cadence." %}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# CTA Section #}
+  <section class="py-16 px-4 bg-base-200">
+    <div class="max-w-2xl mx-auto text-center">
+      <h2 class="text-3xl font-bold mb-4">{% translate "Ready to get started?" %}</h2>
+      <p class="mb-8 text-lg">{% translate "Join thousands of teams using Matorral to ship better software." %}</p>
+      <a href="{% url 'account_signup' %}" class="btn btn-primary btn-lg">{% translate "Sign Up" %}</a>
+    </div>
+  </section>
+</main>
+{% endblock %}

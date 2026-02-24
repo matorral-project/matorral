@@ -1,0 +1,12 @@
+{% load i18n %}
+{% if priority == "low" %}
+<span class="badge badge-soft badge-ghost badge-sm text-xs whitespace-nowrap">{{ priority_display }}</span>
+{% elif priority == "medium" %}
+<span class="badge badge-soft badge-info badge-sm text-xs whitespace-nowrap">{{ priority_display }}</span>
+{% elif priority == "high" %}
+<span class="badge badge-soft badge-warning badge-sm text-xs whitespace-nowrap">{{ priority_display }}</span>
+{% elif priority == "critical" %}
+<span class="badge badge-soft badge-error badge-sm text-xs whitespace-nowrap">{{ priority_display }}</span>
+{% else %}
+<span class="badge badge-soft badge-sm text-xs whitespace-nowrap">{{ priority_display }}</span>
+{% endif %}

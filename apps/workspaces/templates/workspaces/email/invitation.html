@@ -1,0 +1,8 @@
+{% extends 'account/email/email_template_base.html' %}
+{% load i18n %}
+{% block message_body %}{% blocktranslate trimmed with workspace_name=invitation.workspace.name invited_by=invitation.invited_by.get_display_name %}
+  You've been invited by {{ invited_by }} to join {{ workspace_name }} on {{ project_name }}!
+  Click the link below to accept the invitation.
+{% endblocktranslate %}{% endblock %}
+{% block cta_link %}{{ invitation.get_url }}{% endblock %}
+{% block cta_text %}{% translate "Accept Invitation" %}{% endblock %}

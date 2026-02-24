@@ -1,0 +1,23 @@
+{% load i18n %}
+<div class="modal" :class="{ 'modal-open': showBulkRemoveFromSprintModal }" @keydown.escape="showBulkRemoveFromSprintModal = false">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg mb-4">{% translate "Remove Issues from Sprint" %}</h3>
+    <p class="mb-4">
+      {% blocktranslate %}Are you sure you want to remove the selected issues from this sprint?{% endblocktranslate %}
+    </p>
+    <div class="modal-action">
+      <button class="btn btn-ghost" @click="showBulkRemoveFromSprintModal = false">{% translate "Cancel" %}</button>
+      <button class="btn btn-error"
+              hx-post="{% url 'workspace_issues_bulk_remove_from_sprint' workspace.slug %}"
+              hx-vals='{"page": "{{ page_obj.number|default:1 }}", "search": "{{ search_query|default:"" }}", "status_filter": "{{ status_filter|default:"" }}", "assignee_filter": "{{ assignee_filter|default:"" }}", "group_by": "{{ group_by|default:"" }}", "sprint_filter": "{{ sprint.key }}", "embed": "sprint"}'
+              hx-include="#issues-embed [name='issues']:checked"
+              hx-target="#issues-embed"
+              hx-swap="innerHTML"
+              hx-indicator="#embed-list-loading"
+              @click="showBulkRemoveFromSprintModal = false">
+        {% translate "Remove" %}
+      </button>
+    </div>
+  </div>
+  <div class="modal-backdrop" @click="showBulkRemoveFromSprintModal = false"></div>
+</div>

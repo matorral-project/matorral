@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block top_nav %}{% include 'includes/top_nav_app.html' %}{% endblock %}
+{% block body %}
+  {% block notifications %}
+  {% endblock %}
+  <main class="flex-1 overflow-y-auto p-0">
+    {% block app %}
+    {% endblock %}
+  </main>
+{% endblock %}
+{% block footer %}{% endblock %}

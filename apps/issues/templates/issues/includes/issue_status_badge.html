@@ -1,0 +1,22 @@
+{% load i18n %}
+{% if status == "draft" %}
+<span class="badge badge-ghost badge-sm text-xs whitespace-nowrap">{{ status_display }}</span>
+{% elif status == "planning" %}
+<span class="badge badge-info badge-outline badge-sm text-xs whitespace-nowrap">{{ status_display }}</span>
+{% elif status == "ready" %}
+<span class="badge badge-primary badge-outline badge-sm text-xs whitespace-nowrap">{{ status_display }}</span>
+{% elif status == "in_progress" %}
+<span class="badge badge-primary badge-sm text-xs whitespace-nowrap">{{ status_display }}</span>
+{% elif status == "blocked" %}
+<span class="badge badge-error badge-sm text-xs whitespace-nowrap">{{ status_display }}</span>
+{% elif status == "in_review" %}
+<span class="badge badge-secondary badge-sm text-xs whitespace-nowrap">{{ status_display }}</span>
+{% elif status == "done" %}
+<span class="badge badge-success badge-sm text-xs whitespace-nowrap">{{ status_display }}</span>
+{% elif status == "wont_do" %}
+<span class="badge badge-error badge-outline badge-sm text-xs whitespace-nowrap">{{ status_display }}</span>
+{% elif status == "archived" %}
+<span class="badge badge-neutral badge-sm text-xs whitespace-nowrap">{{ status_display }}</span>
+{% else %}
+<span class="badge badge-sm text-xs whitespace-nowrap">{{ status_display }}</span>
+{% endif %}

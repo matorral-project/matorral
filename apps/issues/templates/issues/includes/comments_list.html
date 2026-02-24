@@ -1,0 +1,117 @@
+{% load i18n %}
+<div class="space-y-4">
+  {# Comment form #}
+  <form hx-post="{% url 'issues:issue_comment_post' workspace.slug project.key issue.key %}"
+        hx-target="#comments-section"
+        hx-swap="innerHTML"
+        class="mb-4">
+    {% csrf_token %}
+    <div class="flex gap-3">
+      <div class="avatar placeholder flex-shrink-0">
+        <div class="bg-neutral text-neutral-content rounded-full w-10 h-10">
+          <span class="text-sm">{{ request.user.get_display_name|slice:":2"|upper }}</span>
+        </div>
+      </div>
+      <div class="flex-grow">
+        <textarea name="comment"
+                  class="textarea textarea-bordered w-full"
+                  placeholder="{% translate "Add a comment..." %}"
+                  rows="2"></textarea>
+        <div class="flex justify-end mt-2">
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="fa fa-paper-plane mr-1"></i>
+            {% translate "Post Comment" %}
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  {# Comments list #}
+  {% if comments %}
+  <div class="space-y-4">
+    {% for comment in comments %}
+    <div class="flex gap-3 group" x-data="{ editing: false, confirmDelete: false }">
+      <div class="avatar placeholder flex-shrink-0">
+        <div class="bg-base-200 text-base-content rounded-full w-10 h-10">
+          {% if comment.user %}
+          <span class="text-sm">{{ comment.user.get_display_name|slice:":2"|upper }}</span>
+          {% else %}
+          <span class="text-sm">?</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="flex-grow">
+        <div class="flex items-baseline gap-2">
+          <span class="font-semibold">
+            {% if comment.user %}
+            {{ comment.user.get_display_name }}
+            {% else %}
+            {% translate "Anonymous" %}
+            {% endif %}
+          </span>
+          <span class="text-xs text-gray-500">
+            {{ comment.submit_date|timesince }} {% translate "ago" %}
+          </span>
+        </div>
+
+        {# Display mode #}
+        <div x-show="!editing">
+          <p class="text-sm text-gray-700 whitespace-pre-wrap mt-1 [&_a]:text-primary [&_a]:underline">{{ comment.comment|urlize }}</p>
+          {% if comment.user.pk == request.user.pk %}
+          <div class="mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button @click="editing = true" class="text-xs text-primary hover:underline cursor-pointer">
+              {% translate "Edit" %}
+            </button>
+            <button @click="confirmDelete = true" class="text-xs text-error hover:underline cursor-pointer ml-2">
+              {% translate "Delete" %}
+            </button>
+          </div>
+          {% endif %}
+
+          {# Delete confirmation #}
+          {% if comment.user.pk == request.user.pk %}
+          <div x-show="confirmDelete" x-cloak class="mt-1 text-xs text-gray-600 flex items-center gap-2">
+            <span>{% translate "Delete this comment?" %}</span>
+            <button hx-post="{% url 'issues:issue_comment_delete' workspace.slug project.key issue.key comment.pk %}"
+                    hx-target="#comments-section"
+                    hx-swap="innerHTML"
+                    class="text-error hover:underline cursor-pointer font-semibold">
+              {% translate "Yes" %}
+            </button>
+            <button @click="confirmDelete = false" class="hover:underline cursor-pointer">
+              {% translate "No" %}
+            </button>
+          </div>
+          {% endif %}
+        </div>
+
+        {# Edit mode #}
+        {% if comment.user.pk == request.user.pk %}
+        <div x-show="editing" x-cloak class="mt-1">
+          <form hx-post="{% url 'issues:issue_comment_edit' workspace.slug project.key issue.key comment.pk %}"
+                hx-target="#comments-section"
+                hx-swap="innerHTML">
+            {% csrf_token %}
+            <textarea name="comment"
+                      class="textarea textarea-bordered textarea-sm w-full"
+                      rows="2">{{ comment.comment }}</textarea>
+            <div class="flex gap-2 mt-1">
+              <button type="submit" class="btn btn-primary btn-xs">
+                {% translate "Save" %}
+              </button>
+              <button type="button" @click="editing = false" class="btn btn-ghost btn-xs">
+                {% translate "Cancel" %}
+              </button>
+            </div>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-sm text-gray-500 text-center py-4">{% translate "No comments yet. Be the first to comment!" %}</p>
+  {% endif %}
+</div>

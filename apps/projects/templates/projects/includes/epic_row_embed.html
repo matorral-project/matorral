@@ -1,0 +1,119 @@
+{% load i18n %}
+{# Display mode for epic row in embedded list #}
+<tr class="has-[:checked]:bg-base-200 epic-row">
+  <td>
+    <input type="checkbox"
+           class="checkbox checkbox-sm"
+           name="epics"
+           value="{{ epic.key }}"
+           {% if group_row_counter %}data-group-row="{{ group_row_counter }}"{% endif %}
+           @change="selectedCount = document.querySelectorAll('#epics-embed [name=epics]:checked').length;">
+  </td>
+  <td>
+    <div class="flex items-center gap-1">
+      <button type="button"
+              class="btn btn-xs btn-ghost btn-square"
+              @click="expandedEpics['{{ epic.key }}'] = !expandedEpics['{{ epic.key }}']"
+              hx-get="{% url 'projects:project_epic_children' workspace.slug project.key epic.key %}"
+              hx-target="closest tr"
+              hx-swap="afterend"
+              hx-trigger="click once">
+        <i class="fa fa-chevron-right text-xs transition-transform duration-200"
+           :class="expandedEpics['{{ epic.key }}'] && 'rotate-90'"></i>
+      </button>
+      <a href="{{ epic.get_absolute_url }}"
+         hx-get="{{ epic.get_absolute_url }}"
+         hx-target="#page-content"
+         hx-push-url="true"
+         class="font-mono font-semibold">
+        {{ epic.key }}
+      </a>
+    </div>
+  </td>
+  <td class="group">
+    <div class="flex items-start gap-2">
+      <a href="{{ epic.get_absolute_url }}"
+         hx-get="{{ epic.get_absolute_url }}"
+         hx-target="#page-content"
+         hx-push-url="true"
+         class="link link-hover flex-1">
+        {{ epic.title }}
+        {% if epic.child_count %}
+        <span class="badge badge-sm badge-ghost ml-1">{{ epic.child_count }}</span>
+        {% endif %}
+      </a>
+      <a href="#"
+         class="invisible group-hover:visible text-xs link link-primary whitespace-nowrap"
+         hx-get="{% url 'issues:issue_inline_edit' workspace.slug epic.project.key epic.key %}?embed=project_epics"
+         hx-target="closest tr"
+         hx-swap="outerHTML"
+         @click.prevent>
+        [{% translate "Edit" %}]
+      </a>
+    </div>
+  </td>
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'issues:issue_inline_edit' workspace.slug epic.project.key epic.key %}?embed=project_epics"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {% include "issues/includes/issue_status_badge.html" with status=epic.status status_display=epic.get_status_display %}
+  </td>
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'issues:issue_inline_edit' workspace.slug epic.project.key epic.key %}?embed=project_epics"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {% if epic.priority %}
+      {% include "issues/includes/issue_priority_badge.html" with priority=epic.priority priority_display=epic.get_priority_display %}
+    {% else %}
+      -
+    {% endif %}
+  </td>
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'issues:issue_inline_edit' workspace.slug epic.project.key epic.key %}?embed=project_epics"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {{ epic.assignee.get_display_name|default:"-" }}
+  </td>
+  <td>
+    <div class="dropdown dropdown-end dropdown-left">
+      <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square tooltip tooltip-left" data-tip="{% translate "Actions" %}">
+        <i class="fa fa-ellipsis-vertical"></i>
+      </div>
+      <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+        <li>
+          <button type="button"
+                  hx-get="{{ epic.get_absolute_url }}?quick_view=1"
+                  hx-target="#quick-view-modal-content"
+                  hx-swap="innerHTML"
+                  @click="showQuickViewModal = true; document.activeElement.blur()">
+            <i class="fa fa-eye"></i> {% translate "Quick View" %}
+          </button>
+        </li>
+        <li>
+          <button type="button"
+                  hx-get="{% url 'issues:issue_update' workspace.slug epic.project.key epic.key %}?project={{ project.key }}&modal=1"
+                  hx-target="#edit-modal-content"
+                  hx-swap="innerHTML"
+                  @click="showEditModal = true; document.activeElement.blur()">
+            <i class="fa fa-pencil"></i> {% translate "Edit" %}
+          </button>
+        </li>
+        <li>
+          <button type="button"
+                  @click="actionModalType = 'clone'; actionModalTitle = '{% translate "Clone Epic" %}'; actionModalMessage = '{% translate "Are you sure you want to clone this epic?" %}'; actionModalConfirmText = '{% translate "Clone" %}'; actionModalUrl = '{% url 'issues:issue_clone' workspace.slug epic.project.key epic.key %}'; showActionModal = true; document.activeElement.blur()">
+            <i class="fa fa-clone"></i> {% translate "Clone" %}
+          </button>
+        </li>
+        <li>
+          <button type="button" class="text-error"
+                  hx-get="{% url 'issues:issue_delete' workspace.slug epic.project.key epic.key %}"
+                  hx-target="#delete-modal-content"
+                  hx-swap="innerHTML"
+                  @click="showDeleteModal = true; document.activeElement.blur()">
+            <i class="fa fa-trash"></i> {% translate "Delete" %}
+          </button>
+        </li>
+      </ul>
+    </div>
+  </td>
+</tr>

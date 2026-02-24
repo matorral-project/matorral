@@ -1,0 +1,26 @@
+{% load i18n %}
+<div class="overflow-x-auto">
+  <table class="table mt-table">
+    <thead>
+      <tr>
+        <th>{% translate "Key" %}</th>
+        <th>{% translate "Type" %}</th>
+        <th>{% translate "Title" %}</th>
+        <th>{% translate "Status" %}</th>
+        <th>{% translate "Priority" %}</th>
+        <th>{% translate "Points" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for issue in issues %}
+        {% include "dashboard/includes/dashboard_issue_row.html" with issue=issue %}
+      {% empty %}
+      <tr>
+        <td colspan="6" class="text-center text-base-content/50">
+          {% translate "No issues found." %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

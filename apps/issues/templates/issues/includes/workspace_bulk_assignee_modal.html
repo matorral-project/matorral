@@ -1,0 +1,8 @@
+{% load i18n form_tags %}
+{% translate "Set Assignee" as modal_title %}
+{% translate "Select an assignee for the selected issues:" as prompt_text %}
+{% translate "Unassigned" as none_label %}
+{% blocktranslate asvar confirm_text %}Assign selected issues to:{% endblocktranslate %}
+{% url 'workspace_issues_bulk_assignee' workspace.slug as post_url %}
+{% json_vals page=page_obj.number search=search_query status_filter=status_filter type_filter=type_filter assignee_filter=assignee_filter group_by=group_by project_filter=project_filter as bulk_hx_vals %}
+{% include "includes/bulk_person_modal.html" with show_var="showBulkAssigneeModal" confirm_step_var="assigneeConfirmStep" selected_name_var="selectedAssigneeName" selected_value_var="selectedAssigneeValue" hidden_input_id="bulk-assignee-value" radio_name_prefix="assignee" modal_title=modal_title prompt_text=prompt_text confirm_text=confirm_text none_label=none_label post_url=post_url hx_vals=bulk_hx_vals hx_include="[name='issues']:checked, #bulk-assignee-value" hx_target="#page-content" hx_indicator="#list-loading" current_user_id=request.user.pk current_user_name=request.user.get_display_name %}

@@ -1,0 +1,75 @@
+{% load i18n %}
+{# Read-only quick view for milestones #}
+<div class="milestone-quick-view">
+  <div class="flex items-center gap-2 mb-1">
+    <span class="badge badge-outline">{% translate "Milestone" %}</span>
+    <span class="font-mono text-sm text-gray-500">{{ milestone.key }}</span>
+    {% include "issues/includes/issue_status_badge.html" with status=milestone.status status_display=milestone.get_status_display %}
+  </div>
+  <h2 class="text-xl font-bold mb-4">{{ milestone.title }}</h2>
+
+  {% if progress %}
+  <div class="mb-4">
+    <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Progress" %}</h3>
+    {% include "issues/includes/progress_bar.html" with progress=progress %}
+  </div>
+  {% endif %}
+
+  <div class="mb-4">
+    <h3 class="font-semibold mb-2 text-sm text-gray-500">{% translate "Description" %}</h3>
+    {% if milestone.description %}
+    <p class="text-sm text-gray-600 whitespace-pre-wrap [&_a]:text-primary [&_a]:underline">{{ milestone.description|urlize }}</p>
+    {% else %}
+    <p class="text-sm text-gray-400 italic">{% translate "No description" %}</p>
+    {% endif %}
+  </div>
+
+  <div class="grid grid-cols-2 gap-4 mb-4">
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Priority" %}</h3>
+      {% if milestone.priority %}
+        {% include "issues/includes/issue_priority_badge.html" with priority=milestone.priority priority_display=milestone.get_priority_display %}
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Owner" %}</h3>
+      {% if milestone.owner %}
+        <p class="text-sm">{{ milestone.owner.get_display_name }}</p>
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Due Date" %}</h3>
+      {% if milestone.due_date %}
+        <p class="text-sm">{{ milestone.due_date }}</p>
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Project" %}</h3>
+      <p class="text-sm">{{ milestone.project.name }}</p>
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Creator" %}</h3>
+      {% if milestone.created_by %}
+        <p class="text-sm">{{ milestone.created_by.get_display_name }}</p>
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="mt-4 pt-4 border-t border-base-200">
+    <a href="{{ milestone.get_absolute_url }}"
+       hx-get="{{ milestone.get_absolute_url }}"
+       hx-target="#page-content"
+       hx-push-url="true"
+       class="btn btn-sm btn-outline">
+      {% translate "View Full Page" %} →
+    </a>
+  </div>
+</div>

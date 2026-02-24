@@ -1,0 +1,13 @@
+{% if type == "milestone" %}
+<i class="fa fa-flag text-secondary"></i>
+{% elif type == "epic" %}
+<i class="fa fa-bolt text-primary"></i>
+{% elif type == "story" %}
+<i class="fa fa-book text-info"></i>
+{% elif type == "bug" %}
+<i class="fa fa-bug text-error"></i>
+{% elif type == "chore" %}
+<i class="fa fa-wrench text-warning"></i>
+{% else %}
+<i class="fa fa-circle"></i>
+{% endif %}

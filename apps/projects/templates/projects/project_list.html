@@ -1,0 +1,218 @@
+{% extends "apps/base.html" %}
+{% load i18n form_tags %}
+{% block app %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <section class="app-card relative"
+           x-data="{ selectedCount: 0, showBulkDeleteModal: false, showBulkLeadModal: false, showCascadeModal: false, leadConfirmStep: false, selectedLeadName: '', selectedLeadValue: '', showFiltersModal: false }"
+           @htmx:after-swap="selectedCount = document.querySelectorAll('[name=projects]:checked').length"
+           @filters-apply.window="
+             document.getElementById('filters-status').value = $event.detail.status || '';
+             document.getElementById('filters-lead').value = $event.detail.lead || '';
+             document.getElementById('filters-group-by').value = $event.detail.group_by || '';
+             $nextTick(() => document.getElementById('filters-trigger').click());
+           ">
+    <div class="flex justify-between items-center pb-4 sticky top-0 z-10 bg-base-100">
+      <div class="flex items-center gap-4">
+        <h1 class="mt-title">{% translate "Projects" %}</h1>
+        {# Search and filters - hidden when projects are selected #}
+        <div class="flex items-center gap-2" x-show="selectedCount === 0" x-cloak>
+          {% url 'projects:project_list' workspace.slug as search_url %}
+          {% translate "Search projects..." as placeholder %}
+          {% json_vals status=status_filter lead=lead_filter group_by=group_by as hx_vals %}
+          {% include "includes/search_input.html" with input_id="search-input" search_url=search_url hx_target="#list-content" hx_indicator="#list-loading" placeholder=placeholder hx_vals=hx_vals push_url=True %}
+          <button type="button"
+                  class="btn btn-sm {% if active_filter_count %}btn-primary{% else %}btn-outline{% endif %}"
+                  @click="showFiltersModal = true">
+            {% translate "Filters" %}
+            <i class="fa-solid fa-filter ml-1"></i>
+            {% if active_filter_count %}
+            <span class="badge badge-sm">{{ active_filter_count }}</span>
+            {% endif %}
+          </button>
+          <input type="hidden" id="filters-status" value="{{ status_filter|default:"" }}">
+          <input type="hidden" id="filters-lead" value="{{ lead_filter|default:"" }}">
+          <input type="hidden" id="filters-group-by" value="{{ group_by|default:"" }}">
+          <button type="button"
+                  id="filters-trigger"
+                  class="hidden"
+                  hx-get="{% url 'projects:project_list' workspace.slug %}"
+                  hx-vals='js:{"status": document.getElementById("filters-status").value, "lead": document.getElementById("filters-lead").value, "group_by": document.getElementById("filters-group-by").value, "search": "{{ search_query|default:"" }}"}'
+                  hx-target="#page-content"
+                  hx-swap="innerHTML"
+                  hx-indicator="#list-loading"
+                  hx-push-url="true">
+          </button>
+          {% if active_filter_count %}
+          <button type="button"
+                  class="btn btn-sm btn-ghost btn-square"
+                  title="{% translate "Clear filters" %}"
+                  hx-get="{% url 'projects:project_list' workspace.slug %}"
+                  hx-vals='{"search": "{{ search_query|default:"" }}"}'
+                  hx-target="#page-content"
+                  hx-swap="innerHTML"
+                  hx-indicator="#list-loading"
+                  hx-push-url="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+          {% endif %}
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        {# Bulk actions - shown when at least one project is selected #}
+        <div class="flex items-center gap-2" x-show="selectedCount > 0" x-cloak>
+          <span class="text-sm text-base-content/70" x-text="selectedCount + ' {% translate "selected" %}'"></span>
+          <div class="dropdown dropdown-end">
+            <div tabindex="0" role="button" class="btn btn-sm btn-outline">
+              <i class="fa fa-flag mr-1"></i>
+              {% translate "Set Status" %}
+              <i class="fa fa-chevron-down ml-1"></i>
+            </div>
+            <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+              {% for status_value, status_label in status_choices %}
+              <li>
+                <button type="button"
+                        hx-post="{% url 'projects:projects_bulk_status' workspace.slug %}"
+                        hx-vals='{"status": "{{ status_value }}", "page": "{{ page_obj.number|default:1 }}", "search": "{{ search_query|default:"" }}", "status_filter": "{{ status_filter|default:"" }}", "lead_filter": "{{ lead_filter|default:"" }}", "group_by": "{{ group_by|default:"" }}"}'
+                        hx-include="[name='projects']:checked"
+                        hx-target="#page-content"
+                        hx-swap="innerHTML"
+                        hx-indicator="#list-loading"
+                        hx-disabled-elt="this"
+                        @click="document.activeElement.blur()">
+                  {{ status_label }}
+                </button>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          <button type="button"
+                  class="btn btn-sm btn-outline"
+                  @click="document.getElementById('lead-none').checked = true; leadConfirmStep = false; selectedLeadName = ''; selectedLeadValue = ''; showBulkLeadModal = true">
+            <i class="fa fa-user mr-1"></i>
+            {% translate "Set Lead" %}
+          </button>
+          <div class="dropdown dropdown-end">
+            <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square">
+              <i class="fa fa-ellipsis-vertical"></i>
+            </div>
+            <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+              <li>
+                <button type="button"
+                        class="text-error"
+                        @click="showBulkDeleteModal = true; document.activeElement.blur()">
+                  <i class="fa fa-trash"></i>
+                  {% translate "Delete" %}
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <a class="mt-button-primary"
+           href="{% url 'projects:project_create' workspace.slug %}"
+           hx-get="{% url 'projects:project_create' workspace.slug %}"
+           hx-push-url="true">
+          <span class="mt-icon"><i class="fa fa-plus"></i></span>
+          <span>{% translate "New Project" %}</span>
+        </a>
+      </div>
+    </div>
+    {% include "includes/loading_indicator.html" with indicator_id="list-loading" %}
+    <div id="list-content">
+      {% partialdef list-content inline %}
+      {% if projects %}
+      {% if group_by %}
+      {# Grouped view #}
+      <div class="space-y-4">
+        {% for group_name, group_projects in grouped_projects.items %}
+        <details class="collapse collapse-arrow bg-base-200" open>
+          <summary class="collapse-title font-medium">
+            {{ group_name }} ({{ group_projects|length }})
+          </summary>
+          <div class="collapse-content bg-base-100 p-0">
+            <div class="table-responsive">
+              <table class="table mt-table">
+                <thead>
+                  <tr>
+                    <th class="w-10">
+                      <input type="checkbox"
+                             class="checkbox checkbox-sm group-select"
+                             data-group="{{ forloop.counter }}"
+                             @change="
+                               document.querySelectorAll('[data-group-row=\'{{ forloop.counter }}\']').forEach(cb => cb.checked = $event.target.checked);
+                               selectedCount = document.querySelectorAll('[name=projects]:checked').length;
+                             ">
+                    </th>
+                    <th>{% translate "Key" %}</th>
+                    <th>{% translate "Name" %}</th>
+                    {% if group_by != "status" %}<th>{% translate "Status" %}</th>{% endif %}
+                    {% if group_by != "lead" %}<th>{% translate "Lead" %}</th>{% endif %}
+                    <th>{% translate "Progress" %}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for project in group_projects %}
+                  {% include "projects/includes/project_row.html" with group_row_counter=forloop.parentloop.counter %}
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </details>
+        {% endfor %}
+      </div>
+      {% else %}
+      {# Flat table view #}
+      <div class="table-responsive">
+        <table class="table mt-table">
+          <thead>
+            <tr>
+              <th class="w-10">
+                <input type="checkbox"
+                       class="checkbox checkbox-sm"
+                       id="select-all"
+                       @change="
+                         document.querySelectorAll('[name=projects]').forEach(cb => cb.checked = $event.target.checked);
+                         selectedCount = $event.target.checked ? {{ projects|length }} : 0;
+                       ">
+              </th>
+              <th>{% translate "Key" %}</th>
+              <th>{% translate "Name" %}</th>
+              <th>{% translate "Status" %}</th>
+              <th>{% translate "Lead" %}</th>
+              <th>{% translate "Progress" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for project in projects %}
+            {% include "projects/includes/project_row.html" with total_projects=projects|length %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% include "includes/paginator_htmx.html" %}
+      {% endif %}
+      {% else %}
+      <div class="text-center py-8">
+        {% if search_query %}
+        <p class="text-gray-500 mb-4">{% translate "No projects found matching your search." %}</p>
+        {% else %}
+        <p class="text-gray-500 mb-4">{% translate "No projects yet. Create your first project to get started." %}</p>
+        {% endif %}
+      </div>
+      {% endif %}
+      {% endpartialdef list-content %}
+    </div>
+    {% include "projects/includes/bulk_delete_modal.html" %}
+    {% include "projects/includes/bulk_lead_modal.html" %}
+    {% include "includes/filters_modal.html" %}
+    {% include "includes/cascade_status_modal.html" %}
+  </section>
+  <div id="messages" class="toast toast-end toast-bottom z-50" hx-swap-oob="true">
+    {% include "includes/messages.html" %}
+  </div>
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}

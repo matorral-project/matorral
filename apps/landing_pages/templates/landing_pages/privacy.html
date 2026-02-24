@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block page_title %}{% translate "Privacy Policy" %}{% endblock %}
+{% block body %}
+<section class="section mt-7">
+  <div class="container max-w-4xl mx-auto px-4">
+    <div class="prose max-w-none">
+      <h1>{% translate "Privacy Policy" %}</h1>
+      <p class="text-sm text-gray-500">{% translate "Last updated:" %} {% translate "February 2026" %}</p>
+
+      <h2>{% translate "1. Information We Collect" %}</h2>
+      <p>
+        {% blocktranslate trimmed with name=site.name %}
+          When you use {{ name }}, we may collect the following types of information:
+        {% endblocktranslate %}
+      </p>
+      <ul>
+        <li>
+          <strong>{% translate "Account Information:" %}</strong>
+          {% translate "Name, email address, and password when you create an account." %}
+        </li>
+        <li>
+          <strong>{% translate "Profile Information:" %}</strong>
+          {% translate "Profile picture, timezone, and language preferences." %}
+        </li>
+        <li>
+          <strong>{% translate "Usage Data:" %}</strong>
+          {% translate "Information about how you interact with the service, including pages visited and features used." %}
+        </li>
+        <li>
+          <strong>{% translate "Device Information:" %}</strong>
+          {% translate "Browser type, operating system, and IP address." %}
+        </li>
+      </ul>
+
+      <h2>{% translate "2. How We Use Your Information" %}</h2>
+      <p>{% translate "We use the information we collect to:" %}</p>
+      <ul>
+        <li>{% translate "Provide, maintain, and improve the service" %}</li>
+        <li>{% translate "Create and manage your account" %}</li>
+        <li>{% translate "Send you important service-related communications" %}</li>
+        <li>{% translate "Respond to your requests and support inquiries" %}</li>
+        <li>{% translate "Protect against fraud and abuse" %}</li>
+        <li>{% translate "Comply with legal obligations" %}</li>
+      </ul>
+
+      <h2>{% translate "3. Data Sharing" %}</h2>
+      <p>
+        {% blocktranslate trimmed %}
+          We do not sell your personal information. We may share your data with:
+        {% endblocktranslate %}
+      </p>
+      <ul>
+        <li>
+          <strong>{% translate "Service Providers:" %}</strong>
+          {% translate "Third-party services that help us operate the platform (e.g., hosting, analytics)." %}
+        </li>
+        <li>
+          <strong>{% translate "Workspace Members:" %}</strong>
+          {% translate "Other members of your organization may see your profile information and activity within shared workspaces." %}
+        </li>
+        <li>
+          <strong>{% translate "Legal Requirements:" %}</strong>
+          {% translate "When required by law or to protect our rights and the safety of our users." %}
+        </li>
+      </ul>
+
+      <h2>{% translate "4. Data Security" %}</h2>
+      <p>
+        {% blocktranslate trimmed %}
+          We implement appropriate technical and organizational measures to protect your personal
+          data against unauthorized access, alteration, disclosure, or destruction. However, no
+          method of transmission over the internet is completely secure.
+        {% endblocktranslate %}
+      </p>
+
+      <h2>{% translate "5. Data Retention" %}</h2>
+      <p>
+        {% blocktranslate trimmed %}
+          We retain your personal data for as long as your account is active or as needed to
+          provide you with the service. We may retain certain information as required by law
+          or for legitimate business purposes after account deletion.
+        {% endblocktranslate %}
+      </p>
+
+      <h2>{% translate "6. Your Rights" %}</h2>
+      <p>{% translate "Depending on your location, you may have the right to:" %}</p>
+      <ul>
+        <li>{% translate "Access the personal data we hold about you" %}</li>
+        <li>{% translate "Request correction of inaccurate data" %}</li>
+        <li>{% translate "Request deletion of your data" %}</li>
+        <li>{% translate "Object to or restrict the processing of your data" %}</li>
+        <li>{% translate "Request a copy of your data in a portable format" %}</li>
+      </ul>
+      <p>{% translate "To exercise any of these rights, please contact us through the platform." %}</p>
+
+      <h2>{% translate "7. Cookies" %}</h2>
+      <p>
+        {% blocktranslate trimmed %}
+          We use cookies and similar technologies to maintain your session, remember your
+          preferences (such as theme and language), and improve the service. You can control
+          cookie settings through your browser preferences.
+        {% endblocktranslate %}
+      </p>
+
+      <h2>{% translate "8. Children's Privacy" %}</h2>
+      <p>
+        {% blocktranslate trimmed %}
+          The service is not intended for children under the age of 16. We do not knowingly
+          collect personal information from children. If we become aware that we have collected
+          data from a child, we will take steps to delete it promptly.
+        {% endblocktranslate %}
+      </p>
+
+      <h2>{% translate "9. Changes to This Policy" %}</h2>
+      <p>
+        {% blocktranslate trimmed %}
+          We may update this Privacy Policy from time to time. We will notify you of
+          significant changes by posting the updated policy on this page. Your continued
+          use of the service after changes are posted constitutes acceptance of the updated policy.
+        {% endblocktranslate %}
+      </p>
+
+      <h2>{% translate "10. Contact" %}</h2>
+      <p>
+        {% blocktranslate trimmed with name=site.name %}
+          If you have any questions about this Privacy Policy, please contact us through
+          the {{ name }} platform.
+        {% endblocktranslate %}
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

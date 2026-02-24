@@ -1,0 +1,91 @@
+{% extends "apps/base.html" %}
+{% load i18n %}
+{% block app %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <section class="app-card" x-data="{ showDeleteModal: false, showCascadeModal: false }">
+    {% if not project.created_by %}
+    <div x-data="{ dismissed: localStorage.getItem('demo_banner_dismissed_{{ project.pk }}') === 'true' }"
+         x-show="!dismissed" x-cloak>
+      <div class="alert alert-info mb-4">
+        <i class="fa fa-info-circle"></i>
+        <div>
+          <p class="font-semibold">{% translate "This is a demo project" %}</p>
+          <p class="text-sm">{% translate "Explore it to see how projects, milestones, epics, and sprints work together. When you're ready, feel free to delete it and create your own." %}</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn btn-sm btn-error btn-outline"
+                  hx-get="{% url 'projects:project_delete' workspace.slug project.key %}"
+                  hx-target="#detail-delete-modal-content"
+                  hx-swap="innerHTML"
+                  @click="showDeleteModal = true">
+            <i class="fa fa-trash"></i> {% translate "Delete" %}
+          </button>
+          <button class="btn btn-sm btn-ghost"
+                  @click="localStorage.setItem('demo_banner_dismissed_{{ project.pk }}', 'true'); dismissed = true">
+            <i class="fa fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% include "projects/includes/project_detail_header.html" %}
+
+    {# Milestones and History Tabs #}
+    <div class="mt-6" x-data="{ activeTab: 'milestones' }">
+      <div role="tablist" class="tabs tabs-lift">
+        <button role="tab" class="tab" :class="{ 'tab-active': activeTab === 'milestones' }"
+                @click="activeTab = 'milestones'">
+          {% translate "Issue Hierarchy" %}
+        </button>
+        <button role="tab" class="tab" :class="{ 'tab-active': activeTab === 'history' }"
+                @click="activeTab = 'history'">
+          {% translate "History" %}
+        </button>
+        <div class="tab flex-1 cursor-default"></div>
+      </div>
+
+      <div class="border border-base-300 border-t-0 rounded-b-box p-4">
+        {# Milestones tab content - shows epics grouped by milestone #}
+        <div x-show="activeTab === 'milestones'">
+          {# HTMX-loaded embedded epics list #}
+          <div hx-get="{% url 'projects:project_epics_embed' workspace.slug project.key %}"
+               hx-trigger="load"
+               hx-target="this"
+               hx-swap="innerHTML">
+            <div class="flex justify-center py-8">
+              <span class="loading loading-spinner loading-md"></span>
+            </div>
+          </div>
+          {# HTMX-loaded orphan issues list (work items with no parent epic) #}
+          <div class="mt-6">
+            <h3 class="text-lg font-semibold mb-3">{% translate "Unassigned Work Items" %}</h3>
+            <div hx-get="{% url 'projects:project_orphan_issues_embed' workspace.slug project.key %}"
+                 hx-trigger="load"
+                 hx-target="this"
+                 hx-swap="innerHTML">
+              <div class="flex justify-center py-8">
+                <span class="loading loading-spinner loading-md"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {# History tab content #}
+        <div x-show="activeTab === 'history'" x-cloak>
+          <div id="history-section"
+               hx-get="{% url 'projects:project_history' workspace.slug project.key %}"
+               hx-trigger="intersect once"
+               hx-target="this"
+               hx-swap="innerHTML">
+            <span class="loading loading-spinner loading-md"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% include "includes/delete_confirm_modal.html" with delete_modal_id="detail-delete-modal-content" %}
+    {% include "includes/cascade_status_modal.html" %}
+  </section>
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}

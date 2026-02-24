@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block page_title %}{% translate "Terms of Service" %}{% endblock %}
+{% block body %}
+<section class="section mt-7">
+  <div class="container max-w-4xl mx-auto px-4">
+    <div class="prose max-w-none">
+      <h1>{% translate "Terms of Service" %}</h1>
+      <p class="text-sm text-gray-500">{% translate "Last updated:" %} {% translate "February 2026" %}</p>
+
+      <h2>{% blocktranslate trimmed with name=site.name %}1. Acceptance of Terms{% endblocktranslate %}</h2>
+      <p>
+        {% blocktranslate trimmed with name=site.name %}
+          By accessing or using {{ name }}, you agree to be bound by these Terms of Service.
+          If you do not agree to these terms, please do not use the service.
+        {% endblocktranslate %}
+      </p>
+
+      <h2>{% translate "2. Description of Service" %}</h2>
+      <p>
+        {% blocktranslate trimmed with name=site.name %}
+          {{ name }} is a web-based project management and collaboration platform. We reserve the right
+          to modify, suspend, or discontinue any part of the service at any time with reasonable notice.
+        {% endblocktranslate %}
+      </p>
+
+      <h2>{% translate "3. User Accounts" %}</h2>
+      <p>
+        {% blocktranslate trimmed %}
+          You are responsible for maintaining the confidentiality of your account credentials
+          and for all activities that occur under your account. You agree to provide accurate
+          and complete information when creating your account and to keep this information up to date.
+        {% endblocktranslate %}
+      </p>
+
+      <h2>{% translate "4. Acceptable Use" %}</h2>
+      <p>{% translate "You agree not to:" %}</p>
+      <ul>
+        <li>{% translate "Use the service for any unlawful purpose or in violation of any applicable laws" %}</li>
+        <li>{% translate "Attempt to gain unauthorized access to any part of the service or its related systems" %}</li>
+        <li>{% translate "Interfere with or disrupt the integrity or performance of the service" %}</li>
+        <li>{% translate "Upload or transmit viruses, malware, or any other malicious code" %}</li>
+        <li>{% translate "Harass, abuse, or harm other users of the service" %}</li>
+        <li>{% translate "Use the service to send unsolicited communications (spam)" %}</li>
+      </ul>
+
+      <h2>{% translate "5. Intellectual Property" %}</h2>
+      <p>
+        {% blocktranslate trimmed with name=site.name %}
+          The service, including its original content, features, and functionality, is owned by
+          {{ name }} and is protected by intellectual property laws. You retain ownership of any
+          content you submit to the service.
+        {% endblocktranslate %}
+      </p>
+
+      <h2>{% translate "6. User Data and Privacy" %}</h2>
+      <p>
+        {% blocktranslate trimmed with name=site.name %}
+          Your use of the service is also governed by our Privacy Policy. By using {{ name }},
+          you consent to the collection and use of your data as described in our
+        {% endblocktranslate %}
+        <a class="link" href="{% url 'landing_pages:privacy' %}">{% translate "Privacy Policy" %}</a>.
+      </p>
+
+      <h2>{% translate "7. Payment and Billing" %}</h2>
+      <p>
+        {% blocktranslate trimmed %}
+          Certain features of the service may require payment. You agree to pay all fees
+          associated with your use of paid features. All fees are non-refundable unless
+          otherwise stated. We reserve the right to change our pricing with reasonable notice.
+        {% endblocktranslate %}
+      </p>
+
+      <h2>{% translate "8. Termination" %}</h2>
+      <p>
+        {% blocktranslate trimmed %}
+          We may terminate or suspend your account at any time for violation of these terms.
+          You may terminate your account at any time by contacting us. Upon termination, your
+          right to use the service will immediately cease.
+        {% endblocktranslate %}
+      </p>
+
+      <h2>{% translate "9. Disclaimers and Limitation of Liability" %}</h2>
+      <p>
+        {% blocktranslate trimmed %}
+          The service is provided "as is" and "as available" without warranties of any kind.
+          We do not guarantee that the service will be uninterrupted, secure, or error-free.
+          To the fullest extent permitted by law, we shall not be liable for any indirect,
+          incidental, special, consequential, or punitive damages arising from your use of the service.
+        {% endblocktranslate %}
+      </p>
+
+      <h2>{% translate "10. Changes to Terms" %}</h2>
+      <p>
+        {% blocktranslate trimmed %}
+          We reserve the right to modify these terms at any time. We will notify users of
+          significant changes by posting the updated terms on this page. Your continued use
+          of the service after changes are posted constitutes acceptance of the modified terms.
+        {% endblocktranslate %}
+      </p>
+
+      <h2>{% translate "11. Governing Law" %}</h2>
+      <p>
+        {% blocktranslate trimmed %}
+          These terms shall be governed by and construed in accordance with applicable laws,
+          without regard to conflict of law principles.
+        {% endblocktranslate %}
+      </p>
+
+      <h2>{% translate "12. Contact" %}</h2>
+      <p>
+        {% blocktranslate trimmed with name=site.name %}
+          If you have any questions about these Terms of Service, please contact us through
+          the {{ name }} platform.
+        {% endblocktranslate %}
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

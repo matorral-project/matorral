@@ -1,0 +1,8 @@
+{% load i18n form_tags %}
+{% translate "Set Assignee" as modal_title %}
+{% translate "Select an assignee for the selected epics:" as prompt_text %}
+{% translate "Unassigned" as none_label %}
+{% blocktranslate asvar confirm_text %}Assign selected epics to:{% endblocktranslate %}
+{% url 'workspace_issues_bulk_assignee' workspace.slug as post_url %}
+{% json_vals search=search_query status_filter=status_filter priority_filter=priority_filter assignee_filter=assignee_filter project_filter=project.key embed="project_epics" as bulk_hx_vals %}
+{% include "includes/bulk_person_modal.html" with show_var="showBulkAssigneeModal" confirm_step_var="assigneeConfirmStep" selected_name_var="selectedAssigneeName" selected_value_var="selectedAssigneeValue" hidden_input_id="epics-bulk-assignee-value" hidden_input_name="assignee" radio_name_prefix="epics-assignee" modal_title=modal_title prompt_text=prompt_text confirm_text=confirm_text none_label=none_label post_url=post_url hx_vals=bulk_hx_vals hx_include="#epics-embed [name='epics']:checked, #epics-bulk-assignee-value" hx_target="#epics-embed" hx_indicator="#epics-list-loading" current_user_id=request.user.pk current_user_name=request.user.get_display_name %}

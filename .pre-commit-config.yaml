@@ -1,0 +1,72 @@
+default_stages: [pre-commit]
+exclude: ^static/.*|assets/.*|/migrations/.*|\.min\.js$|\.min\.css$|\.css\.map$|\.min\.js$|\.js\.map$|\.svg$
+default_language_version:
+   python: python3.14
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: "v0.15.2"
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+
+  - repo: https://github.com/psf/black
+    rev: 25.9.0
+    hooks:
+      - id: black
+        args:
+          - "--target-version=py39"
+          - "--target-version=py310"
+          - "--target-version=py311"
+          - "--target-version=py312"
+          - "--target-version=py313"
+          - "--target-version=py314"
+        types: [python]
+
+  - repo: https://github.com/pycqa/isort
+    rev: 7.0.0
+    hooks:
+      - id: isort
+        name: isort
+        types: [python]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-ast
+      - id: check-builtin-literals
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-shebang-scripts-are-executable
+      - id: check-merge-conflict
+      - id: check-json
+        exclude: tsconfig\.json$
+      - id: check-toml
+      - id: check-xml
+      - id: check-yaml
+      - id: debug-statements
+      - id: destroyed-symlinks
+      - id: detect-private-key
+      - id: end-of-file-fixer
+        exclude: ^LICENSE|\.(html|csv|txt|svg|py)$
+      - id: pretty-format-json
+        args: ["--autofix", "--no-ensure-ascii", "--no-sort-keys"]
+        exclude: tsconfig\.json$
+      - id: requirements-txt-fixer
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+        exclude: \.(html|svg)$
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+        args:
+          - "--write-changes"
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.21.2
+    hooks:
+      - id: pyupgrade
+        args: [--py314]

@@ -1,0 +1,181 @@
+{% load i18n %}
+{# Display mode for sprint detail header - click on editable areas triggers edit mode #}
+<div id="sprint-header"
+     class="sprint-detail-header"
+     x-data="{ showCompleteModal: false, showArchiveModal: false, expanded: localStorage.getItem('sprint_{{ sprint.pk }}_expanded') !== 'false' }"
+     @click="if ($event.target.closest('.no-edit') === null && !$event.target.closest('a') && !$event.target.closest('button') && !$event.target.closest('.dropdown') && !$event.target.closest('.modal')) { htmx.ajax('GET', '{% url 'sprints:sprint_detail_inline_edit' workspace.slug sprint.key %}', { target: '#sprint-header', swap: 'outerHTML' }) }">
+  <div class="flex justify-between items-center mb-4">
+    <div class="cursor-pointer group flex-1">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="badge badge-outline">{% translate "Sprint" %}</span>
+        <span class="font-mono text-sm text-gray-500">{{ sprint.key }}</span>
+        <span class="invisible group-hover:visible text-xs text-primary">[{% translate "Click to edit" %}]</span>
+      </div>
+      <h1 class="mt-title">{{ sprint.name }}</h1>
+    </div>
+    <div class="flex items-center gap-2 no-edit">
+      {% if progress %}
+      <div class="flex items-center gap-2">
+        <span class="text-sm font-semibold text-nowrap">{% translate "Progress:" %}</span>
+        <div class="w-96">
+          {% include "issues/includes/progress_bar.html" with progress=progress hide_labels=True %}
+        </div>
+      </div>
+      {% endif %}
+      {% include "sprints/includes/sprint_status_badge.html" with status=sprint.status status_display=sprint.get_status_display %}
+      {# Action buttons based on status #}
+      {% if sprint.status == "planning" %}
+      <form action="{% url 'sprints:sprint_start' workspace.slug sprint.key %}" method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-primary">
+          <i class="fa fa-play mr-1"></i>
+          {% translate "Start Sprint" %}
+        </button>
+      </form>
+      {% elif sprint.status == "active" %}
+      <button type="button" class="btn btn-sm btn-success" @click="showCompleteModal = true">
+        <i class="fa fa-check mr-1"></i>
+        {% translate "Complete Sprint" %}
+      </button>
+      {% endif %}
+      <button type="button"
+              class="btn btn-sm btn-ghost btn-square"
+              @click.stop="expanded = !expanded; localStorage.setItem('sprint_{{ sprint.pk }}_expanded', expanded)"
+              :title="expanded ? '{% translate "Collapse details" %}' : '{% translate "Expand details" %}'">
+        <i class="fa transition-transform duration-200" :class="expanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+      </button>
+      <div class="dropdown dropdown-end">
+        <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square">
+          <i class="fa fa-ellipsis-vertical"></i>
+        </div>
+        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+          {% if sprint.status != "archived" and sprint.status != "active" %}
+          <li>
+            <button type="button" @click="showArchiveModal = true; document.activeElement.blur()">
+              <i class="fa fa-archive"></i> {% translate "Archive" %}
+            </button>
+          </li>
+          {% endif %}
+          <li>
+            <button type="button" class="text-error"
+                    hx-get="{% url 'sprints:sprint_delete' workspace.slug sprint.key %}"
+                    hx-target="#detail-delete-modal-content"
+                    hx-swap="innerHTML"
+                    @click="showDeleteModal = true; document.activeElement.blur()">
+              <i class="fa fa-trash"></i> {% translate "Delete" %}
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+    {# Complete Sprint Modal #}
+    <div class="modal" :class="{ 'modal-open': showCompleteModal }" @keydown.escape="showCompleteModal = false">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg mb-4">{% translate "Complete Sprint" %}</h3>
+        <p class="text-sm mb-4">
+          {% blocktranslate %}Are you sure you want to complete this sprint? Incomplete issues will be moved to the next planning sprint if available.{% endblocktranslate %}
+        </p>
+        <div class="modal-action">
+          <button class="btn btn-ghost" @click="showCompleteModal = false">{% translate "Cancel" %}</button>
+          <form action="{% url 'sprints:sprint_complete' workspace.slug sprint.key %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">{% translate "Complete Sprint" %}</button>
+          </form>
+        </div>
+      </div>
+      <div class="modal-backdrop" @click="showCompleteModal = false"></div>
+    </div>
+    {# Archive Sprint Modal #}
+    <div class="modal" :class="{ 'modal-open': showArchiveModal }" @keydown.escape="showArchiveModal = false">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg mb-4">{% translate "Archive Sprint" %}</h3>
+        <p class="text-sm mb-4">
+          {% blocktranslate %}Are you sure you want to archive this sprint?{% endblocktranslate %}
+        </p>
+        <div class="modal-action">
+          <button class="btn btn-ghost" @click="showArchiveModal = false">{% translate "Cancel" %}</button>
+          <form action="{% url 'sprints:sprint_archive' workspace.slug sprint.key %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% translate "Archive" %}</button>
+          </form>
+        </div>
+      </div>
+      <div class="modal-backdrop" @click="showArchiveModal = false"></div>
+    </div>
+  </div>
+
+  <div class="mb-4 cursor-pointer" x-show="expanded">
+    <h3 class="font-semibold mb-2">{% translate "Goal" %}</h3>
+    {% if sprint.goal %}
+    <p class="text-sm text-gray-600 whitespace-pre-wrap">{{ sprint.goal }}</p>
+    {% else %}
+    <p class="text-sm text-gray-400 italic">{% translate "No goal set" %}</p>
+    {% endif %}
+  </div>
+
+  {# Sprint fields - 6-column layout #}
+  <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-4 cursor-pointer" x-show="expanded">
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Duration" %}</h3>
+      <p class="text-sm">{% blocktranslate count weeks=sprint.duration_weeks %}{{ weeks }} week{% plural %}{{ weeks }} weeks{% endblocktranslate %}</p>
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Start Date" %}</h3>
+      <p class="text-sm">{{ sprint.start_date }}</p>
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "End Date" %}</h3>
+      <p class="text-sm">{{ sprint.end_date }}</p>
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Owner" %}</h3>
+      {% if sprint.owner %}
+      <p class="text-sm">{{ sprint.owner.get_display_name }}</p>
+      {% else %}
+      <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+    <div class="no-edit">
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Total Points" %}</h3>
+      <p class="text-sm">{{ total_points }}</p>
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Capacity" %}</h3>
+      {% if sprint.capacity %}
+      <p class="text-sm">{{ sprint.capacity }} {% translate "points" %}</p>
+      {% else %}
+      <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+    <div class="no-edit">
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Creator" %}</h3>
+      {% if sprint.created_by %}
+        <p class="text-sm">{{ sprint.created_by.get_display_name }}</p>
+      {% else %}
+        <span class="text-gray-400">—</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if sprint.status == "active" or sprint.status == "completed" %}
+  <div class="mb-4 no-edit" x-show="expanded">
+    <div class="stats shadow text-sm">
+      <div class="stat">
+        <div class="stat-title">{% translate "Committed" %}</div>
+        <div class="stat-value text-primary">{{ sprint.committed_points }}</div>
+        <div class="stat-desc">{% translate "points at sprint start" %}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-title">{% translate "Completed" %}</div>
+        <div class="stat-value text-success">{{ sprint.completed_points }}</div>
+        <div class="stat-desc">{% translate "points done" %}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-title">{% translate "Velocity" %}</div>
+        <div class="stat-value">{{ sprint.velocity_percentage }}%</div>
+        <div class="stat-desc">{% translate "of committed" %}</div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>

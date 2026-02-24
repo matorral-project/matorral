@@ -1,0 +1,112 @@
+{% load i18n %}
+{# Edit mode for epic detail header - form inputs for inline editing #}
+<div id="epic-header"
+     class="epic-detail-header-edit bg-base-200 rounded-lg p-4"
+     x-data
+     @keydown.escape="htmx.ajax('GET', '{% url 'issues:epic_detail_inline_edit' workspace.slug project.key issue.key %}?cancel=1', { target: $el, swap: 'outerHTML' })">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+  <div class="flex justify-between items-start mb-4">
+    <div class="flex-1">
+      <div class="flex items-center gap-2 mb-2">
+        {% include "issues/includes/issue_type_badge.html" with issue=issue %}
+        <span class="font-mono text-sm text-gray-500">{{ issue.key }}</span>
+      </div>
+      <input type="text"
+             name="title"
+             value="{{ issue.title }}"
+             class="input input-bordered w-full text-xl font-bold {% if form.title.errors %}input-error{% endif %}"
+             placeholder="{% translate 'Epic title' %}"
+             required
+             autofocus>
+      {% if form.title.errors %}
+      <span class="text-error text-xs">{{ form.title.errors.0 }}</span>
+      {% endif %}
+    </div>
+    <div class="flex items-center gap-2 ml-4">
+      <button type="button"
+              class="btn btn-success tooltip"
+              data-tip="{% translate 'Save' %}"
+              hx-post="{% url 'issues:epic_detail_inline_edit' workspace.slug project.key issue.key %}"
+              hx-include="#epic-header"
+              hx-target="#epic-header"
+              hx-swap="outerHTML">
+        <i class="fa fa-check"></i> {% translate "Save" %}
+      </button>
+      <button type="button"
+              class="btn btn-ghost tooltip"
+              data-tip="{% translate 'Cancel' %}"
+              hx-get="{% url 'issues:epic_detail_inline_edit' workspace.slug project.key issue.key %}?cancel=1"
+              hx-target="#epic-header"
+              hx-swap="outerHTML">
+        <i class="fa fa-times"></i> {% translate "Cancel" %}
+      </button>
+    </div>
+  </div>
+
+  {# Epic-specific 4-column layout: Priority, Assignee, Milestone, Project (read-only) #}
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Priority" %}</h3>
+      <select name="priority"
+              class="select select-bordered select-sm w-full">
+        <option value="">—</option>
+        {% for value, label in priority_choices %}
+        <option value="{{ value }}" {% if issue.priority == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Assignee" %}</h3>
+      {% include "includes/user_combobox.html" with combobox_name="assignee" combobox_members=workspace_members combobox_selected_id=issue.assignee_id|default:"" combobox_selected_name=issue.assignee.get_display_name|default:"" combobox_size="sm" %}
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Milestone" %}</h3>
+      <select name="milestone"
+              class="select select-bordered select-sm w-full">
+        <option value="">—</option>
+        {% for m in milestones %}
+        <option value="{{ m.pk }}" {% if issue.milestone_id == m.pk %}selected{% endif %}>{{ m.key }} - {{ m.title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Project" %}</h3>
+      <p class="text-sm py-1">{{ project.key }} - {{ project.name }}</p>
+    </div>
+  </div>
+
+  {# Additional epic fields: Status, Due Date #}
+  <div class="grid grid-cols-2 gap-4 mb-4">
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Status" %}</h3>
+      <select name="status"
+              class="select select-bordered select-sm w-full {% if form.status.errors %}select-error{% endif %}">
+        {% for value, label in status_choices %}
+        <option value="{{ value }}" {% if issue.status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      {% if form.status.errors %}
+      <span class="text-error text-xs">{{ form.status.errors.0 }}</span>
+      {% endif %}
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Due Date" %}</h3>
+      <input type="date"
+             name="due_date"
+             value="{{ issue.due_date|date:'Y-m-d' }}"
+             class="input input-bordered input-sm w-full">
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <h3 class="font-semibold mb-2">{% translate "Description" %}</h3>
+    <textarea name="description"
+              class="textarea textarea-bordered w-full {% if form.description.errors %}textarea-error{% endif %}"
+              rows="3"
+              placeholder="{% translate 'Add a description...' %}">{{ issue.description }}</textarea>
+    {% if form.description.errors %}
+    <span class="text-error text-xs">{{ form.description.errors.0 }}</span>
+    {% endif %}
+  </div>
+</div>

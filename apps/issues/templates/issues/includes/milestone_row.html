@@ -1,0 +1,74 @@
+{% load i18n %}
+{# Display mode for milestone row - click on editable cells triggers edit mode #}
+<tr class="has-[:checked]:bg-base-200 milestone-row">
+  <td>
+    <input type="checkbox"
+           class="checkbox checkbox-sm"
+           name="milestones"
+           value="{{ milestone.key }}"
+           @change="selectedCount = document.querySelectorAll('[name=milestones]:checked').length">
+  </td>
+  <td>
+    <a href="{{ milestone.get_absolute_url }}"
+       hx-get="{{ milestone.get_absolute_url }}"
+       hx-push-url="true"
+       class="font-mono font-semibold">
+      {{ milestone.key }}
+    </a>
+  </td>
+  <td>
+    <a href="{{ milestone.project.get_absolute_url }}"
+       hx-get="{{ milestone.project.get_absolute_url }}"
+       hx-push-url="true"
+       class="font-mono text-sm link link-hover">
+      {{ milestone.project.key }}
+    </a>
+  </td>
+  <td class="group">
+    <div class="flex items-start gap-2">
+      <a href="{{ milestone.get_absolute_url }}"
+         hx-get="{{ milestone.get_absolute_url }}"
+         hx-push-url="true"
+         class="link link-hover flex-1">
+        {{ milestone.title }}
+      </a>
+      <a href="#"
+         class="invisible group-hover:visible text-xs link link-primary whitespace-nowrap"
+         hx-get="{% url 'milestones:milestone_inline_edit' workspace.slug milestone.project.key milestone.key %}"
+         hx-target="closest tr"
+         hx-swap="outerHTML"
+         @click.prevent>
+        [{% translate "Edit" %}]
+      </a>
+    </div>
+  </td>
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'milestones:milestone_inline_edit' workspace.slug milestone.project.key milestone.key %}"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {% include "issues/includes/issue_status_badge.html" with status=milestone.status status_display=milestone.get_status_display %}
+  </td>
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'milestones:milestone_inline_edit' workspace.slug milestone.project.key milestone.key %}"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {% if milestone.priority %}
+      {% include "issues/includes/issue_priority_badge.html" with priority=milestone.priority priority_display=milestone.get_priority_display %}
+    {% else %}
+      -
+    {% endif %}
+  </td>
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'milestones:milestone_inline_edit' workspace.slug milestone.project.key milestone.key %}"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {{ milestone.due_date|default:"-" }}
+  </td>
+  <td>
+    {% if milestone.progress %}
+      {% include "issues/includes/progress_bar.html" with progress=milestone.progress compact=True %}
+    {% else %}
+      <span class="text-gray-400">—</span>
+    {% endif %}
+  </td>
+</tr>

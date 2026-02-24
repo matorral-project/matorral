@@ -1,61 +1,94 @@
 # Matorral
 
-Open source, built simple. Matorral is a lean project management tool for modern teams. It handles team collaboration, project planning, sprints, and task management—without unnecessary complexity  or bloated features.
+Matorral is a simple and fast open-source project management tool built with Django, HTMX, and Tailwind CSS.
+It supports workspaces, projects, milestones, epics, stories, and sprints.
 
-Demo is available at **[matorral.matagus.dev](https://matorral.matagus.dev/)**
- * username: `demo@example.com`
- * password: `demouser789`
+## Requirements
 
-## A new version is coming!
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
+- [just](https://github.com/casey/just) command runner
 
-https://github.com/user-attachments/assets/eab0ad32-0526-42bd-a657-77c7ff0d7c1b
+## Getting started
 
-We've been working on a brand new version of Matorral with a completely redesigned experience and new features. The code will be open sourced soon.
+```bash
+git clone https://github.com/matorral-project/matorral.git
+cd matorral
+just init
+```
 
-Legacy code is available at [legacy-code](https://github.com/matorral-project/matorral/tree/legacy-code) branch.
+This copies `.env.example` to `.env`, builds the containers, runs migrations, and seeds the database. Then:
 
-## Why Matorral Exists
+```bash
+just start        # start with logs
+just start-bg     # start in background
+just logs         # tail logs (useful after start-bg)
+```
 
-We all know the problem. Project management software has become bloated, expensive, and incredibly complex. Teams are drowning in features they don't need, paying for licensing they don't use, and dealing with tools that slow them down rather than speed them up.
+Open http://localhost:8000. Create an admin account:
 
-Matorral is different. It's open source. It's simple. And it's designed to get out of your way.
+```bash
+just createsuperuser
+```
 
-Built with modern tools, keeping simplicity in mind. We use [Django](https://www.djangoproject.com/) for a stable, maintainable backend; [HTMX](https://htmx.org/) and [Alpine.js](https://alpinejs.dev/) for responsive interactivity; and [Tailwind CSS](https://tailwindcss.com/) for beautiful, accessible design.
+To stop:
 
-### Features
+```bash
+just stop
+```
 
-#### Team Collaboration & Project Management
-  - Multi-tenant workspace management with team-based access control
-  - Project and roadmap planning with hierarchical epics and stories
-  - Sprint and milestone planning with status tracking
-  - Inline editing for quick updates to tasks and project details
-  - Bulk actions to update status, priority, assignee, and delete items
+## Configuration
 
-#### Interactive User Experience
+Copy `.env.example` to `.env` and adjust the values as needed. Key settings:
 
-  - Single-page-app-like experience with HTMX and Alpine.js
-  - Responsive design built on Tailwind CSS and DaisyUI components
-  - Progressive enhancement for reliability
+| Variable | Description |
+|---|---|
+| `SECRET_KEY` | Django secret key |
+| `DATABASE_URL` | Postgres connection string |
+| `REDIS_URL` | Redis connection string |
+| `DEBUG` | Set to `False` in production |
 
-#### Authentication & Multi-tenancy
+## Contributing
 
-  - User authentication via django-allauth
-  - Team-based access control and permissions
-  - Free tier with usage limits for public beta
+```bash
+# Run all tests
+just test
 
-### Technical Infrastructure
+# Run a specific test
+just test apps.issues.tests.test_views
 
-#### Backend
+# Lint and format
+just ruff
 
-  - Django REST Framework for APIs with OpenAPI schema
-  - PostgreSQL database with optimized queries
-  - Celery for async jobs and scheduled tasks
-  - Redis for caching and message broker
+# Run E2E tests (requires built assets)
+just npm-build
+just e2e
+```
 
-#### Frontend & DevOps
+Pull requests are welcome. Please run `just ruff` and `just test` before submitting.
 
-  - Vite bundler with hot-reload development
-  - Docker-based development environment
-  - Comprehensive E2E tests (Playwright)
-  - Unit tests and code quality tools (Ruff)
-  - Sentry monitoring and error tracking
+## Deployment
+
+Matorral is configured to deploy to [Fly.io](https://fly.io) via the `fly.toml` at the root of the repo.
+
+### Manual deploy
+
+```bash
+flyctl deploy
+```
+
+### Continuous deployment (GitHub Actions)
+
+The `deploy.yml` workflow deploys automatically on every push to `main`. It requires a `FLY_API_TOKEN` secret to be set in your GitHub repository:
+
+1. Generate a token: `flyctl auth token`
+2. Add it to your repo: **Settings → Secrets and variables → Actions → New repository secret**
+   - Name: `FLY_API_TOKEN`
+   - Value: the token from step 1
+
+## Tech stack
+
+Django · PostgreSQL · Redis · Celery · HTMX · Alpine.js · Tailwind CSS · DaisyUI · Vite
+
+## License
+
+[GNU Affero General Public License v3.0](LICENSE)

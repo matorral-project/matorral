@@ -1,0 +1,97 @@
+{% load i18n %}
+<form method="post"
+      action="{% url 'issues:issue_promote' workspace.slug project.key issue.key %}">
+  {% csrf_token %}
+  {% if source %}<input type="hidden" name="source" value="{{ source }}">{% endif %}
+
+  <p class="mb-4">
+    {% blocktranslate with key=issue.key type=current_type|title trimmed %}
+    Promote <strong>{{ key }}</strong> from <strong>{{ type }}</strong> to <strong>Epic</strong>.
+    {% endblocktranslate %}
+  </p>
+
+  {# Milestone selection #}
+  <div class="form-control mb-4">
+    <label class="label">
+      <span class="label-text font-semibold">{{ form.milestone.label }}</span>
+    </label>
+    <select name="milestone" class="select select-bordered w-full">
+      <option value="">---------</option>
+      {% for milestone in form.milestone.field.queryset %}
+      <option value="{{ milestone.pk }}" {% if form.milestone.value|stringformat:"s" == milestone.pk|stringformat:"s" %}selected{% endif %}>
+        {{ milestone.key }} - {{ milestone.title }}
+      </option>
+      {% endfor %}
+    </select>
+    <label class="label">
+      <span class="label-text-alt">{{ form.milestone.help_text }}</span>
+    </label>
+  </div>
+
+  {# Subtask conversion option (only shown if there are subtasks) #}
+  {% if subtask_count > 0 %}
+  <div class="form-control mb-4">
+    <label class="label cursor-pointer justify-start gap-3">
+      <input type="checkbox" name="convert_subtasks" class="checkbox checkbox-primary"
+             {% if form.convert_subtasks.value %}checked{% endif %}>
+      <div>
+        <span class="label-text font-semibold">{{ form.convert_subtasks.label }}</span>
+        <p class="text-sm text-base-content/70">
+          {% blocktranslate count count=subtask_count trimmed %}
+          {{ count }} subtask will be converted to a Story under the new Epic.
+          {% plural %}
+          {{ count }} subtasks will be converted to Stories under the new Epic.
+          {% endblocktranslate %}
+        </p>
+      </div>
+    </label>
+  </div>
+  {% endif %}
+
+  {# Data loss warnings #}
+  <div class="space-y-2 mb-4">
+    {% if has_points %}
+    <div class="alert alert-warning py-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <span class="text-sm">{% translate "Estimated points will be lost." %}</span>
+    </div>
+    {% endif %}
+
+    {% if has_sprint %}
+    <div class="alert alert-warning py-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <span class="text-sm">{% translate "Sprint assignment will be removed." %}</span>
+    </div>
+    {% endif %}
+
+    {% if is_bug %}
+    <div class="alert alert-warning py-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <span class="text-sm">{% translate "Severity will be lost." %}</span>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <p class="text-sm text-base-content/70 mb-4">
+    {% translate "Comments and history will be preserved." %}
+  </p>
+
+  <div class="modal-action">
+    <button type="button" class="btn btn-ghost" @click="showPromoteModal = false">
+      {% translate "Cancel" %}
+    </button>
+    <button type="submit" class="btn btn-primary"
+            hx-post="{% url 'issues:issue_promote' workspace.slug project.key issue.key %}"
+            hx-target="#promote-modal-content"
+            hx-swap="innerHTML">
+      {% translate "Promote to Epic" %}
+    </button>
+  </div>
+</form>

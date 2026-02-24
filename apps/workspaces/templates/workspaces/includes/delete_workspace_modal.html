@@ -1,0 +1,39 @@
+{% load i18n %}
+<input type="checkbox" id="delete-modal" class="modal-toggle" />
+<div class="modal">
+  <div class="modal-box w-11/12 max-w-5xl">
+    <h3 class="font-bold text-lg">{% translate "Really delete workspace?" %}</h3>
+    <p class="py-4">
+      {% blocktranslate trimmed with workspace_name=request.workspace.name %}
+      This will permanently delete the <em><strong>{{ workspace_name }}</strong></em> workspace and all associated data.
+      <strong>This action cannot be undone.</strong>
+      {% endblocktranslate %}
+    </p>
+    {% if is_only_workspace %}
+    <p class="py-2 text-warning">
+      {% translate "This is your only workspace. You must either create a new workspace first, or delete your account along with this workspace." %}
+    </p>
+    <footer class="modal-card-foot">
+      <div class="modal-action flex-wrap gap-2">
+        <a href="{% url 'workspaces:create_workspace' %}" class="btn btn-primary">{% translate "Create a new workspace first" %}</a>
+        <form action="{% url 'workspaces:delete_workspace' request.workspace.slug %}" method="post">
+          {% csrf_token %}
+          <input type="hidden" name="delete_account" value="1">
+          <button class="btn btn-error" type="submit">{% translate "Delete workspace and my account" %}</button>
+        </form>
+        <label for="delete-modal" class="btn">{% translate "Cancel" %}</label>
+      </div>
+    </footer>
+    {% else %}
+    <footer class="modal-card-foot">
+      <div class="modal-action">
+        <form action="{% url 'workspaces:delete_workspace' request.workspace.slug %}" method="post">
+          {% csrf_token %}
+          <button class="btn btn-error" type="submit">{% translate "I understand, permanently delete this workspace" %}</button>
+        </form>
+        <label for="delete-modal" class="btn">{% translate "Cancel" %}</label>
+      </div>
+    </footer>
+    {% endif %}
+  </div>
+</div>

@@ -1,0 +1,80 @@
+{% load i18n %}
+{% load waffle_tags %}
+<div class="navbar shadow-md px-0 relative z-20 bg-primary text-primary-content">
+  <div class="navbar-start">
+    <a href="{% url 'landing_pages:home' %}" class="btn btn-ghost text-lg font-semibold text-primary-content hover:text-black">
+      {{ site.name }}
+      <span class="badge badge-neutral badge-xs">Beta</span>
+    </a>
+    {% if default_workspace %}
+    <a href="{% url 'projects:project_list' workspace_slug=default_workspace.slug %}" class="btn btn-ghost bg-primary/10 text-primary-content">{% translate "Projects" %}</a>
+    <a href="{% url 'sprints:sprint_list' workspace_slug=default_workspace.slug %}" class="btn btn-ghost bg-primary/10 text-primary-content">{% translate "Sprints" %}</a>
+    <a href="{% url 'workspace_issue_list' workspace_slug=default_workspace.slug %}" class="btn btn-ghost bg-primary/10 text-primary-content">{% translate "Issues" %}</a>
+    {% endif %}
+  </div>
+  <div class="navbar-end">
+    {% if user.is_authenticated %}
+    <div class="dropdown dropdown-end">
+      <div tabindex="0" role="button" class="btn btn-ghost bg-primary/10 text-primary-content">
+        {% if default_workspace %}{{ default_workspace.name }}{% else %}{% translate "Workspace" %}{% endif %}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+      <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-64 p-2 shadow-md text-base-content">
+        {% include "includes/workspace_nav_items.html" %}
+      </ul>
+    </div>
+    <div class="dropdown dropdown-end">
+      <div tabindex="0" role="button" class="btn btn-ghost btn-circle text-primary-content"
+           title="{{ user.get_display_name }}">
+        <i class="fa fa-user text-primary-content"></i>
+      </div>
+      <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-52 p-2 shadow-md text-base-content">
+        <li>
+          <a href="{% url 'users:user_profile' %}" {% if active_tab == 'profile' %}class="active"{% endif %}>
+            <i class="fa fa-user text-base-content h-4 w-4"></i>
+            {% translate "Profile" %}
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'users:connected_accounts' %}" {% if active_tab == 'connected_accounts' %}class="active"{% endif %}>
+            <i class="fa fa-link text-base-content h-4 w-4"></i>
+            {% translate "Connected Accounts" %}
+          </a>
+        </li>
+        {% if user.has_usable_password %}
+        <li>
+          <a href="{% url 'account_change_password' %}"
+             {% if 'accounts/password/change' in request.path %}class="active"{% endif %}>
+            <i class="fa fa-unlock-alt text-base-content h-4 w-4"></i>
+            {% translate "Change Password" %}
+          </a>
+        </li>
+        {% endif %}
+        {% if user.is_superuser %}
+        <li>
+          <a href="{% url 'admin:index' %}" target="_blank" rel="noopener noreferrer">
+            <i class="fa fa-cogs text-base-content h-4 w-4"></i>
+            {% translate "Django Admin" %}
+          </a>
+        </li>
+        {% endif %}
+        <li>
+          <a href="https://github.com/matorral-project/matorral/issues"
+             target="_blank" rel="noopener noreferrer">
+            <i class="fa fa-bug text-base-content h-4 w-4"></i>
+            {% translate "Report an Issue" %}
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'account_logout' %}">
+            <i class="fa fa-sign-out text-base-content h-4 w-4"></i>
+            {% translate "Sign out" %}
+          </a>
+        </li>
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+</div>

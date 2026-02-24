@@ -1,0 +1,55 @@
+{% load i18n %}
+{# Display mode for dashboard issue row - simplified version with inline editing #}
+<tr class="issue-row">
+  <td>
+    <a href="{{ issue.get_absolute_url }}"
+       hx-get="{{ issue.get_absolute_url }}"
+       hx-push-url="true"
+       class="font-mono font-semibold link link-hover">
+      {{ issue.key }}
+    </a>
+  </td>
+  <td>
+    {% include "issues/includes/issue_type_badge.html" with issue=issue %}
+  </td>
+  <td class="group">
+    <div class="flex items-start gap-2">
+      <a href="{{ issue.get_absolute_url }}"
+         hx-get="{{ issue.get_absolute_url }}"
+         hx-push-url="true"
+         class="link link-hover flex-1">
+        {{ issue.title }}
+      </a>
+      <a href="#"
+         class="invisible group-hover:visible text-xs link link-primary whitespace-nowrap"
+         hx-get="{% url 'issues:issue_inline_edit' issue.project.workspace.slug issue.project.key issue.key %}?dashboard=1"
+         hx-target="closest tr"
+         hx-swap="outerHTML"
+         @click.prevent>
+        [{% translate "Edit" %}]
+      </a>
+    </div>
+  </td>
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'issues:issue_inline_edit' issue.project.workspace.slug issue.project.key issue.key %}?dashboard=1"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {% include "issues/includes/issue_status_badge.html" with status=issue.status status_display=issue.get_status_display %}
+  </td>
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'issues:issue_inline_edit' issue.project.workspace.slug issue.project.key issue.key %}?dashboard=1"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {% if issue.priority %}
+      {% include "issues/includes/issue_priority_badge.html" with priority=issue.priority priority_display=issue.get_priority_display %}
+    {% else %}
+      -
+    {% endif %}
+  </td>
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'issues:issue_inline_edit' issue.project.workspace.slug issue.project.key issue.key %}?dashboard=1"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {{ issue.estimated_points|default:"-" }}
+  </td>
+</tr>

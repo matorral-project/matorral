@@ -1,0 +1,54 @@
+{% load static django_vite %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% block meta %}
+          <title>{% block page_title %}{% if page_title %}{{ page_title }} | {{ site.name }}{% else %}{{ site.name }}{% endif %}{% endblock %}</title>
+          <meta name="description" content="{{ site_description }}">
+          <meta name="keywords" content="{{ site_keywords }}">
+          <link rel="canonical" href="{% if page_canonical_url %}{{ page_canonical_url }}{% else %}{{ page_url }}{% endif %}">
+    {% endblock meta %}
+    {% include 'includes/favicon.html' %}
+    <link rel="stylesheet" href="{% vite_asset_url 'assets/css/site-base.css' %}">
+    <link rel="stylesheet" href="{% vite_asset_url 'assets/css/site-tailwind.css' %}">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/v4-shims.min.css" integrity="sha512-7LGn7K+dj+CdmuqnrbIF/57brSK+L1DGyHMgby+dTT5n3Y6Bgmy/MmwHdaFRgLfLr6vwBA2yHplAutXldP8qAQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    {% if GOOGLE_ANALYTICS_ID %}
+        {% include 'includes/google_analytics.html' %}
+    {% endif %}
+    {% vite_asset 'assets/js/site.js' %}
+    {% vite_hmr_client %}
+    <script>__cssFramework = 'tailwind';</script>
+    <script src="{% url 'javascript-catalog' %}" defer></script>
+    {% block page_head %}
+    {% endblock %}
+</head>
+<body class="bg-base-100" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  {% block body_wrapper %}
+    {% if is_debug %}{% include 'includes/dev_ribbon.html' %}{% endif %}
+    {% block top_nav %}
+    {% include 'includes/top_nav.html' %}
+    {% endblock %}
+
+    {% block messages %}
+    <div id="messages" class="toast toast-end toast-bottom z-50">
+      {% include 'includes/messages.html' %}
+    </div>
+    {% endblock messages %}
+
+    {% block body %}
+    {% endblock body %}
+
+    {% block footer %}
+      {% include 'includes/footer.html' %}
+    {% endblock footer %}
+  {% endblock body_wrapper %}
+  {% include 'includes/messages-js.html' %}
+  {% block page_js %}
+  {% endblock page_js %}
+</body>
+</html>

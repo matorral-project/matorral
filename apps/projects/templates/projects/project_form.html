@@ -1,0 +1,36 @@
+{% extends "apps/base.html" %}
+{% load i18n form_tags %}
+{% block app %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <section class="app-card mt-form-page">
+    <h1 class="mt-title">
+      {% if project %}
+        {% translate "Edit Project" %}
+      {% else %}
+        {% translate "New Project" %}
+      {% endif %}
+    </h1>
+    <form method="post">
+      {% csrf_token %}
+      {% render_form_fields form %}
+      <div class="flex gap-2 mt-4">
+        <button type="submit" class="mt-button-primary">
+          {% if project %}
+            {% translate "Save Changes" %}
+          {% else %}
+            {% translate "Create Project" %}
+          {% endif %}
+        </button>
+        <a href="{% if project %}{{ project.get_absolute_url }}{% else %}{% url 'projects:project_list' workspace.slug %}{% endif %}"
+           hx-get="{% if project %}{{ project.get_absolute_url }}{% else %}{% url 'projects:project_list' workspace.slug %}{% endif %}"
+           hx-push-url="true"
+           class="mt-button-secondary">
+          {% translate "Cancel" %}
+        </a>
+      </div>
+    </form>
+  </section>
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}

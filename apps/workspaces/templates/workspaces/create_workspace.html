@@ -1,0 +1,17 @@
+{% extends "apps/base.html" %}
+{% load i18n %}
+{% load form_tags %}
+{% block app %}
+<div id="page-content">
+  <section class="app-card mt-form-page">
+    <h3 class="mt-subtitle">{% translate "Create Workspace" %}</h3>
+    <form method="post">
+      {% csrf_token %}
+      {% render_form_fields form %}
+      <div class="mt-2 mt-inline-buttons">
+        <input class="mt-button-primary" type="submit" value="{% translate 'Create Workspace' %}">
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}

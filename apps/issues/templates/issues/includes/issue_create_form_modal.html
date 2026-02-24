@@ -1,0 +1,25 @@
+{% load i18n form_tags %}
+{% if parent %}
+<p class="text-sm text-gray-500 mb-4">
+  {% blocktranslate with key=parent.key title=parent.title %}Creating {{ issue_type_label }} under <strong>{{ key }}</strong> - {{ title }}{% endblocktranslate %}
+</p>
+{% else %}
+<p class="text-sm text-gray-500 mb-4">
+  {% blocktranslate with key=milestone.key title=milestone.title %}Creating {{ issue_type_label }} for milestone <strong>{{ key }}</strong> - {{ title }}{% endblocktranslate %}
+</p>
+{% endif %}
+<form method="post"
+      hx-post="{{ request.get_full_path }}"
+      hx-target="#new-issue-modal-content"
+      hx-swap="innerHTML">
+  {% csrf_token %}
+  {% render_form_fields form %}
+  <div class="modal-action mt-4">
+    <button type="button" class="btn btn-ghost" @click="showNewIssueModal = false">
+      {% translate "Cancel" %}
+    </button>
+    <button type="submit" class="btn btn-primary">
+      {% translate "Create" %} {{ issue_type_label }}
+    </button>
+  </div>
+</form>

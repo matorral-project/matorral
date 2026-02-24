@@ -1,0 +1,43 @@
+{% load i18n %}
+{% load form_tags %}
+<div id="invitation-form-and-table">
+  {% if request.workspace_membership.is_admin %}
+  <section class="app-card">
+    <h3 class="mt-subtitle">{% translate "Invite Workspace Members" %}</h3>
+    <form hx-post="{% url 'workspaces:send_invitation' request.workspace.slug %}" hx-target="#invitation-form-and-table">
+      {% csrf_token %}
+      {% render_form_fields invitation_form %}
+      {{ invitation_form.non_field_errors }}
+      <div class="mt-inline-buttons mt-2">
+        <input class="mt-button-secondary" type="submit" value="{% translate 'Send Invitation' %}">
+      </div>
+    </form>
+  </section>
+  {% endif %}
+  <section class="app-card">
+    {% if pending_invitations.count %}
+      <h3 class='mt-subtitle'>{% translate "Pending Invitations" %}</h3>
+      <div class='table-responsive'>
+        <table class="table mt-table">
+          <thead>
+          <tr>
+            <th>{% translate "Email" %}</th>
+            <th>{% translate "Invited" %}</th>
+            <th>{% translate "Role" %}</th>
+            {% if request.workspace_membership.is_admin %}<th></th>{% endif %}
+          </tr>
+          </thead>
+          <tbody>
+          {% for invitation in pending_invitations %}
+            {% include 'workspaces/includes/invitation_row.html' %}
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="my-2 mt-text-muted">
+        {% translate "Any pending invitations will show up here until accepted." %}
+      </p>
+    {% endif %}
+  </section>
+</div>

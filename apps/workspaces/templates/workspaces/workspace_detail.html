@@ -1,0 +1,17 @@
+{% extends "apps/base.html" %}
+{% load i18n %}
+{% block app %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <section class="app-card">
+    <div class="flex justify-between items-center">
+      <h1 class="mt-title">{{ workspace.name }}</h1>
+    </div>
+    {% if workspace.description %}
+    <p class="text-sm text-gray-600 mt-2 [&_a]:text-primary [&_a]:underline">{{ workspace.description|urlize }}</p>
+    {% endif %}
+  </section>
+
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}

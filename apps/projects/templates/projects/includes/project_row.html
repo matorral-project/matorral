@@ -1,0 +1,75 @@
+{% load i18n %}
+{# Display mode for project row - click on editable cells triggers edit mode #}
+{# Column visibility based on group_by: when grouping by a field, that column is hidden #}
+<tr class="has-[:checked]:bg-base-200 project-row">
+  <td>
+    <input type="checkbox"
+           class="checkbox checkbox-sm"
+           name="projects"
+           value="{{ project.key }}"
+           {% if group_row_counter %}data-group-row="{{ group_row_counter }}"{% endif %}
+           @change="
+             selectedCount = document.querySelectorAll('[name=projects]:checked').length;
+             {% if not group_row_counter %}
+             let all = document.getElementById('select-all');
+             let total = {{ total_projects|default:0 }};
+             if (all && total) {
+               all.checked = selectedCount === total;
+               all.indeterminate = selectedCount > 0 && selectedCount < total;
+             }
+             {% endif %}
+           ">
+  </td>
+  <td>
+    <a href="{{ project.get_absolute_url }}"
+       hx-get="{{ project.get_absolute_url }}"
+       hx-push-url="true"
+       class="font-mono font-semibold">
+      {{ project.key }}
+    </a>
+  </td>
+  <td class="group">
+    <div class="flex items-start gap-2">
+      <a href="{{ project.get_absolute_url }}"
+         hx-get="{{ project.get_absolute_url }}"
+         hx-push-url="true"
+         class="link link-hover flex-1">
+        {{ project.name }}
+        {% if not project.created_by %}
+        <span class="badge badge-outline badge-sm badge-info ml-1">{% translate "Demo" %}</span>
+        {% endif %}
+      </a>
+      <a href="#"
+         class="invisible group-hover:visible text-xs link link-primary whitespace-nowrap"
+         hx-get="{% url 'projects:project_inline_edit' workspace.slug project.key %}{% if group_by %}?show_status={% if group_by == 'status' %}0{% else %}1{% endif %}&amp;show_lead={% if group_by == 'lead' %}0{% else %}1{% endif %}{% endif %}"
+         hx-target="closest tr"
+         hx-swap="outerHTML"
+         @click.prevent>
+        [{% translate "Edit" %}]
+      </a>
+    </div>
+  </td>
+  {% if group_by != "status" %}
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'projects:project_inline_edit' workspace.slug project.key %}{% if group_by %}?show_status={% if group_by == 'status' %}0{% else %}1{% endif %}&amp;show_lead={% if group_by == 'lead' %}0{% else %}1{% endif %}{% endif %}"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {% include "projects/includes/project_status_badge.html" with status=project.status status_display=project.get_status_display %}
+  </td>
+  {% endif %}
+  {% if group_by != "lead" %}
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'projects:project_inline_edit' workspace.slug project.key %}{% if group_by %}?show_status={% if group_by == 'status' %}0{% else %}1{% endif %}&amp;show_lead={% if group_by == 'lead' %}0{% else %}1{% endif %}{% endif %}"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {{ project.lead.get_display_name|default:"-" }}
+  </td>
+  {% endif %}
+  <td>
+    {% if project.progress %}
+      {% include "issues/includes/progress_bar.html" with progress=project.progress compact=True %}
+    {% else %}
+      <span class="text-gray-400">&mdash;</span>
+    {% endif %}
+  </td>
+</tr>

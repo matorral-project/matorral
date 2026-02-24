@@ -1,0 +1,56 @@
+{% load i18n %}
+{# Single subtask row - edit mode #}
+<div class="flex items-center gap-2 p-2 rounded bg-base-200"
+     id="subtask-row-{{ subtask.pk }}"
+     x-data
+     @keydown.escape="htmx.ajax('GET', '{% url 'issues:issue_subtask_edit' workspace.slug project.key issue.key subtask.pk %}?cancel=1', { target: '#subtask-row-{{ subtask.pk }}', swap: 'outerHTML' })">
+  {# Checkbox (disabled in edit mode) #}
+  <button type="button" class="btn btn-xs btn-ghost btn-square" disabled>
+    {% if subtask.status == "done" %}
+    <i class="fa fa-check-square text-success"></i>
+    {% elif subtask.status == "wont_do" %}
+    <i class="fa fa-ban text-error"></i>
+    {% elif subtask.status == "in_progress" %}
+    <i class="fa fa-spinner text-primary"></i>
+    {% else %}
+    <i class="fa fa-square-o text-base-content/60"></i>
+    {% endif %}
+  </button>
+
+  {# Title input #}
+  <input type="text"
+         name="title"
+         value="{{ subtask.title }}"
+         class="input input-sm input-bordered flex-grow text-sm"
+         required
+         autofocus>
+
+  {# Status select #}
+  <select name="status"
+          class="select select-sm select-bordered">
+    {% for value, label in status_choices %}
+    <option value="{{ value }}" {% if subtask.status == value %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+
+  {# Action buttons #}
+  <div class="flex gap-1">
+    <button type="button"
+            class="btn btn-xs btn-success btn-square tooltip tooltip-left"
+            data-tip="{% translate "Save" %}"
+            hx-post="{% url 'issues:issue_subtask_edit' workspace.slug project.key issue.key subtask.pk %}"
+            hx-include="#subtask-row-{{ subtask.pk }}"
+            hx-target="#subtask-row-{{ subtask.pk }}"
+            hx-swap="outerHTML">
+      <i class="fa fa-check"></i>
+    </button>
+    <button type="button"
+            class="btn btn-xs btn-ghost btn-square tooltip tooltip-left"
+            data-tip="{% translate "Cancel" %}"
+            hx-get="{% url 'issues:issue_subtask_edit' workspace.slug project.key issue.key subtask.pk %}?cancel=1"
+            hx-target="#subtask-row-{{ subtask.pk }}"
+            hx-swap="outerHTML">
+      <i class="fa fa-times"></i>
+    </button>
+  </div>
+</div>

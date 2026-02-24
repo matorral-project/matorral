@@ -1,0 +1,27 @@
+{% load i18n %}
+<section class="app-card">
+  {% if pending_invitations %}
+    <h3 class="mt-subtitle">{% translate "Pending Invitations" %}</h3>
+    <div class="table-responsive">
+      <table class="table mt-table">
+        <thead>
+          <tr>
+            <th>{% translate "Email" %}</th>
+            <th>{% translate "Invited" %}</th>
+            <th>{% translate "Role" %}</th>
+            {% if request.workspace_membership.is_admin %}<th></th>{% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for invitation in pending_invitations %}
+            {% include 'workspaces/includes/invitation_row.html' %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="my-2 mt-text-muted">
+      {% translate "Any pending invitations will show up here until accepted." %}
+    </p>
+  {% endif %}
+</section>

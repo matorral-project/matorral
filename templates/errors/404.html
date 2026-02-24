@@ -1,0 +1,9 @@
+{% extends 'errors/base.html' %}
+{% load i18n %}
+{% block page_title %}{% translate "Not Found" %}{% endblock %}
+{% block error_details %}
+  <h1 class="mt-title">{% translate "Looks like this task got moved to the icebox." %}</h1>
+  <h2 class="mt-subtitle">
+    {% translate "We couldn't find what you were looking for. It may have been archived, deleted, or never groomed into existence." %}
+  </h2>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% load i18n %}
+<div class="modal" :class="{ 'modal-open': showCascadeModal }" @keydown.escape="showCascadeModal = false" @show-cascade-modal.document="showCascadeModal = true" @close-cascade-modal.document="showCascadeModal = false">
+  <div class="modal-box max-w-2xl">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-bold text-lg">{% translate "Update Related Items" %}</h3>
+      <button type="button" class="btn btn-sm btn-ghost btn-square" @click="showCascadeModal = false">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div id="cascade-modal-content">
+      <div class="flex items-center justify-center py-8">
+        <span class="loading loading-spinner loading-md"></span>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop" @click="showCascadeModal = false"></div>
+</div>

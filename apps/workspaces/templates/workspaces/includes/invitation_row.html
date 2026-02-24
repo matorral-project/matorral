@@ -1,0 +1,18 @@
+{% load i18n %}
+<tr>
+  <td>{{ invitation.email }}</td>
+  <td>{{ invitation.created_at }}</td>
+  <td>{{ invitation.get_role_display }}</td>
+{% if request.workspace_membership.is_admin %}
+  <td class="mt-inline-buttons mt-justify-content-end">
+    <form hx-post="{% url 'workspaces:resend_invitation' request.workspace.slug invitation.id %}" hx-target="this" hx-swap="outerHTML">
+      {% csrf_token %}
+      <input class="mt-button-secondary" type="submit" value="{% translate "Resend Invitation" %}">
+    </form>
+    <form hx-post="{% url 'workspaces:cancel_invitation' request.workspace.slug invitation.id %}" hx-target="closest tr" hx-swap="outerHTML swap:1s">
+      {% csrf_token %}
+      <input class="mt-button-secondary mx-2" type="submit" value="{% translate "Cancel Invitation" %}">
+    </form>
+  </td>
+{% endif %}
+</tr>

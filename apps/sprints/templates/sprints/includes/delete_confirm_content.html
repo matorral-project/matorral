@@ -1,0 +1,25 @@
+{% load i18n %}
+<p class="mb-4">
+  {% blocktranslate with key=sprint.key name=sprint.name trimmed %}
+    Are you sure you want to delete <strong>{{ key }}</strong> - {{ name }}?
+  {% endblocktranslate %}
+</p>
+{% if item_count > 0 %}
+<div class="alert alert-info mb-4">
+  <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+  <div>
+    <p class="font-semibold">
+      {% blocktranslate count count=item_count %}{{ count }} issue will be unassigned from this sprint but not deleted.{% plural %}{{ count }} issues will be unassigned from this sprint but not deleted.{% endblocktranslate %}
+    </p>
+  </div>
+</div>
+{% endif %}
+<div class="modal-action">
+  <button class="btn btn-ghost" @click="showDeleteModal = false">{% translate "Cancel" %}</button>
+  <form action="{% url 'sprints:sprint_delete' workspace.slug sprint.key %}" method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-error">{% translate "Delete Sprint" %}</button>
+  </form>
+</div>

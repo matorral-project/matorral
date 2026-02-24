@@ -1,0 +1,108 @@
+@import 'tailwindcss';
+@import './app/tailwind/app-components.css';
+@import './matorral/tailwind.css';
+
+
+@plugin "@tailwindcss/typography";
+@plugin "daisyui";
+
+/* Custom light theme - green, black and gray palette */
+@plugin "daisyui/theme" {
+  name: "light";
+  default: true;
+  color-scheme: light;
+
+  /* Base surfaces - neutral grays */
+  --color-base-100: oklch(0.99 0.002 264);     /* #fafbfc - main background */
+  --color-base-200: oklch(0.96 0.004 264);      /* #f0f2f5 - elevated surfaces */
+  --color-base-300: oklch(0.92 0.006 264);      /* #e1e4e8 - borders, dividers */
+  --color-base-content: oklch(0.27 0.015 264);  /* #24292f - primary text */
+
+  /* Primary - forest green */
+  --color-primary: oklch(0.45 0.15 150);         /* green */
+  --color-primary-content: oklch(0.99 0.002 264); /* white text on primary */
+
+  /* Secondary - cool slate gray */
+  --color-secondary: oklch(0.45 0.03 264);        /* gray-600 equivalent */
+  --color-secondary-content: oklch(0.99 0.002 264);
+
+  /* Accent - lighter green */
+  --color-accent: oklch(0.55 0.12 150);           /* light green */
+  --color-accent-content: oklch(0.99 0.002 264);
+
+  /* Neutral - dark charcoal/black */
+  --color-neutral: oklch(0.20 0.015 264);         /* near black */
+  --color-neutral-content: oklch(0.96 0.004 264);
+
+  /* Info - green */
+  --color-info: oklch(0.55 0.14 150);
+  --color-info-content: oklch(0.99 0.002 264);
+
+  /* Success - green */
+  --color-success: oklch(0.50 0.14 150);
+  --color-success-content: oklch(0.99 0.002 264);
+
+  /* Warning - amber */
+  --color-warning: oklch(0.75 0.15 75);
+  --color-warning-content: oklch(0.25 0.02 75);
+
+  /* Error - red (kept for error states) */
+  --color-error: oklch(0.57 0.18 25);
+  --color-error-content: oklch(0.99 0.002 264);
+
+  /* Design tokens - tighter, more refined */
+  --radius-selector: 0.375rem;
+  --radius-field: 0.375rem;
+  --radius-box: 0.5rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    font-size: 1.25em;
+  }
+
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  .btn {
+    transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+:root {
+  --primary: var(--color-primary);
+  --danger: var(--color-error);
+  --success: var(--color-success);
+}

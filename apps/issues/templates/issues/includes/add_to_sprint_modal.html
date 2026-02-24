@@ -1,0 +1,11 @@
+{% load i18n %}
+{# Add to Sprint Modal #}
+<div class="modal" :class="{ 'modal-open': showAddToSprintModal }" @keydown.escape="showAddToSprintModal = false">
+  <div class="modal-box">
+    <div id="{{ embed_modal_content_id|default:'add-to-sprint-modal-content' }}">
+      <h3 class="font-bold text-lg mb-4">{% translate "Add to Sprint" %}</h3>
+      <p class="text-base-content/70">{% translate "Loading..." %}</p>
+    </div>
+  </div>
+  <div class="modal-backdrop" @click="showAddToSprintModal = false"></div>
+</div>

@@ -1,0 +1,7 @@
+{% comment %}
+Project status badge component.
+Usage: {% include "projects/includes/project_status_badge.html" with status=project.status status_display=project.get_status_display %}
+{% endcomment %}
+<span class="badge badge-sm text-xs whitespace-nowrap {% if status == 'active' %}badge-success{% elif status == 'completed' %}badge-info{% elif status == 'archived' %}badge-warning{% else %}badge-neutral{% endif %}">
+  {{ status_display }}
+</span>

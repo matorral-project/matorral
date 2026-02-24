@@ -1,0 +1,36 @@
+{% extends "apps/base.html" %}
+{% load i18n form_tags %}
+{% block app %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <section class="app-card mt-form-page">
+    <h1 class="mt-title">
+      {% if milestone %}
+        {% translate "Edit Milestone" %}
+      {% else %}
+        {% translate "New Milestone" %}
+      {% endif %}
+    </h1>
+    <form method="post">
+      {% csrf_token %}
+      {% render_form_fields form %}
+      <div class="flex gap-2 mt-4">
+        <button type="submit" class="mt-button-primary">
+          {% if milestone %}
+            {% translate "Save Changes" %}
+          {% else %}
+            {% translate "Create Milestone" %}
+          {% endif %}
+        </button>
+        <a href="{% if milestone %}{{ milestone.get_absolute_url }}{% else %}{{ project.get_absolute_url }}{% endif %}"
+           hx-get="{% if milestone %}{{ milestone.get_absolute_url }}{% else %}{{ project.get_absolute_url }}{% endif %}"
+           hx-push-url="true"
+           class="mt-button-secondary">
+          {% translate "Cancel" %}
+        </a>
+      </div>
+    </form>
+  </section>
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}

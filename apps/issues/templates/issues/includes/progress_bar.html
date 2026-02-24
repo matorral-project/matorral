@@ -1,0 +1,21 @@
+{% load i18n %}
+{% if progress %}
+<div class="{% if compact %}w-32{% else %}w-full{% endif %}"
+     title="{% blocktranslate with done=progress.done_weight in_progress=progress.in_progress_weight todo=progress.todo_weight total=progress.total_weight %}Done: {{ done }}/{{ total }}, In Progress: {{ in_progress }}/{{ total }}, To Do: {{ todo }}/{{ total }}{% endblocktranslate %}">
+  <div class="flex w-full rounded-full overflow-hidden bg-base-300 {% if compact %}h-1.5{% else %}h-3{% endif %}">
+    {% if progress.done_pct %}
+    <div class="bg-success" style="width: {{ progress.done_pct }}%"></div>
+    {% endif %}
+    {% if progress.in_progress_pct %}
+    <div class="bg-info" style="width: {{ progress.in_progress_pct }}%"></div>
+    {% endif %}
+  </div>
+  {% if not compact and not hide_labels %}
+  <div class="flex justify-between text-xs text-base-content/60 mt-1">
+    <span>{% blocktranslate with pct=progress.done_pct %}{{ pct }}% done{% endblocktranslate %}</span>
+    <span>{% blocktranslate with pct=progress.in_progress_pct %}{{ pct }}% in progress{% endblocktranslate %}</span>
+    <span>{% blocktranslate with pct=progress.todo_pct %}{{ pct }}% to do{% endblocktranslate %}</span>
+  </div>
+  {% endif %}
+</div>
+{% endif %}

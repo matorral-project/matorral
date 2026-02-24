@@ -1,0 +1,216 @@
+{% extends "apps/base.html" %}
+{% load i18n form_tags %}
+{% block app %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <section class="app-card relative"
+           x-data="{ selectedCount: 0, showBulkDeleteModal: false, showBulkOwnerModal: false, ownerConfirmStep: false, selectedOwnerName: '', selectedOwnerValue: '', showFiltersModal: false }"
+           @filters-apply.window="
+             document.getElementById('sprint-filters-status').value = $event.detail.status || '';
+             document.getElementById('sprint-filters-owner').value = $event.detail.owner || '';
+             $nextTick(() => document.getElementById('sprint-filters-trigger').click());
+           ">
+    <div class="flex justify-between items-center pb-4 sticky top-0 z-10 bg-base-100">
+      <div class="flex items-center gap-4">
+        <h1 class="mt-title">{% translate "Sprints" %}</h1>
+        <div class="flex items-center gap-2" x-show="selectedCount === 0">
+          {% url 'sprints:sprint_list' workspace.slug as search_url %}
+          {% translate "Search sprints..." as placeholder %}
+          {% json_vals status=status_filter owner=owner_filter as hx_vals %}
+          {% include "includes/search_input.html" with input_id="search-input" search_url=search_url hx_target="#list-content" hx_indicator="#list-loading" placeholder=placeholder hx_vals=hx_vals push_url=True %}
+          <button type="button"
+                  class="btn btn-sm {% if active_filter_count %}btn-primary{% else %}btn-outline{% endif %}"
+                  @click="showFiltersModal = true">
+            {% translate "Filters" %}
+            <i class="fa-solid fa-filter ml-1"></i>
+            {% if active_filter_count %}
+            <span class="badge badge-sm">{{ active_filter_count }}</span>
+            {% endif %}
+          </button>
+          <input type="hidden" id="sprint-filters-status" value="{{ status_filter|default:"" }}">
+          <input type="hidden" id="sprint-filters-owner" value="{{ owner_filter|default:"" }}">
+          <button type="button"
+                  id="sprint-filters-trigger"
+                  class="hidden"
+                  hx-get="{% url 'sprints:sprint_list' workspace.slug %}"
+                  hx-vals='js:{"status": document.getElementById("sprint-filters-status").value, "owner": document.getElementById("sprint-filters-owner").value, "search": "{{ search_query|default:"" }}"}'
+                  hx-target="#page-content"
+                  hx-swap="innerHTML"
+                  hx-indicator="#list-loading"
+                  hx-push-url="true">
+          </button>
+          {% if active_filter_count %}
+          <button type="button"
+                  class="btn btn-sm btn-ghost btn-square"
+                  title="{% translate "Clear filters" %}"
+                  hx-get="{% url 'sprints:sprint_list' workspace.slug %}"
+                  hx-vals='{"search": "{{ search_query|default:"" }}", "status": "all"}'
+                  hx-target="#page-content"
+                  hx-swap="innerHTML"
+                  hx-indicator="#list-loading"
+                  hx-push-url="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+          {% endif %}
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        {# Bulk actions - shown when at least one sprint is selected #}
+        <div class="flex items-center gap-2" x-show="selectedCount > 0" x-cloak>
+          <span class="text-sm text-base-content/70" x-text="selectedCount + ' {% translate "selected" %}'"></span>
+          <div class="dropdown dropdown-end">
+            <div tabindex="0" role="button" class="btn btn-sm btn-outline">
+              <i class="fa fa-flag mr-1"></i>
+              {% translate "Set Status" %}
+              <i class="fa fa-chevron-down ml-1"></i>
+            </div>
+            <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+              {% for status_value, status_label in status_choices %}
+              <li>
+                <button type="button"
+                        hx-post="{% url 'sprints:sprints_bulk_status' workspace.slug %}"
+                        hx-vals='{"status": "{{ status_value }}", "page": "{{ page_obj.number|default:1 }}", "search": "{{ search_query|default:"" }}", "status_filter": "{{ status_filter|default:"" }}", "owner_filter": "{{ owner_filter|default:"" }}"}'
+                        hx-include="[name='sprints']:checked"
+                        hx-target="#page-content"
+                        hx-swap="innerHTML"
+                        hx-indicator="#list-loading"
+                        hx-disabled-elt="this"
+                        @click="document.activeElement.blur()">
+                  {{ status_label }}
+                </button>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          <button type="button"
+                  class="btn btn-sm btn-outline"
+                  @click="document.getElementById('owner-none').checked = true; ownerConfirmStep = false; selectedOwnerName = '{% translate "Unassigned" %}'; selectedOwnerValue = ''; showBulkOwnerModal = true">
+            <i class="fa fa-user mr-1"></i>
+            {% translate "Set Owner" %}
+          </button>
+          <div class="dropdown dropdown-end">
+            <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square">
+              <i class="fa fa-ellipsis-vertical"></i>
+            </div>
+            <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+              <li>
+                <button type="button"
+                        class="text-error"
+                        @click="showBulkDeleteModal = true; document.activeElement.blur()">
+                  <i class="fa fa-trash"></i>
+                  {% translate "Delete" %}
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <a href="{% url 'sprints:sprint_create' workspace.slug %}"
+           hx-get="{% url 'sprints:sprint_create' workspace.slug %}"
+           hx-push-url="true"
+           class="mt-button-primary">
+          <span class="mt-icon"><i class="fa fa-plus"></i></span>
+          <span>{% translate "New Sprint" %}</span>
+        </a>
+      </div>
+    </div>
+    {% include "includes/loading_indicator.html" with indicator_id="list-loading" %}
+    <div id="list-content">
+      {% partialdef list-content inline %}
+      {% if sprints %}
+      <div class="table-responsive">
+        <table class="table mt-table">
+          <thead>
+            <tr>
+              <th class="w-10">
+                <input type="checkbox"
+                       class="checkbox checkbox-sm"
+                       id="select-all"
+                       @change="
+                         document.querySelectorAll('[name=sprints]').forEach(cb => cb.checked = $event.target.checked);
+                         selectedCount = $event.target.checked ? {{ sprints|length }} : 0;
+                       ">
+              </th>
+              <th>{% translate "Key" %}</th>
+              <th>{% translate "Title" %}</th>
+              <th>{% translate "Status" %}</th>
+              <th>{% translate "Dates" %}</th>
+              <th>{% translate "Owner" %}</th>
+              <th>{% translate "Points" %}</th>
+              <th>{% translate "Progress" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sprint in sprints %}
+            {% include "sprints/includes/sprint_row.html" %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% include "includes/paginator_htmx.html" %}
+      {% else %}
+      <div class="text-center py-8">
+        {% if search_query or active_filter_count %}
+        <p class="text-gray-500 mb-4">{% translate "No sprints found matching your filters." %}</p>
+        {% if using_default_status_filter %}
+        <p class="text-gray-500 text-sm">
+          {% translate "Showing only Planning and Active sprints by default." %}
+          <button type="button"
+                  class="link link-primary"
+                  hx-get="{% url 'sprints:sprint_list' workspace.slug %}"
+                  hx-vals='{"status": "all"}'
+                  hx-target="#page-content"
+                  hx-swap="innerHTML"
+                  hx-indicator="#list-loading"
+                  hx-push-url="true">
+            {% translate "Show all sprints" %}
+          </button>
+        </p>
+        {% endif %}
+        {% else %}
+        <p class="text-gray-500 mb-4">{% translate "No sprints yet. Create your first sprint to get started." %}</p>
+        {% endif %}
+      </div>
+      {% endif %}
+      {% endpartialdef list-content %}
+    </div>
+    {# Bulk Delete Modal #}
+    <div class="modal" :class="{ 'modal-open': showBulkDeleteModal }" @keydown.escape="showBulkDeleteModal = false">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg mb-4">{% translate "Delete Sprints" %}</h3>
+        <p class="mb-4">
+          {% blocktranslate %}Are you sure you want to delete the selected sprints? This action cannot be undone.{% endblocktranslate %}
+        </p>
+        <div class="modal-action">
+          <button class="btn btn-ghost" @click="showBulkDeleteModal = false">{% translate "Cancel" %}</button>
+          <button class="btn btn-error"
+                  hx-post="{% url 'sprints:sprints_bulk_delete' workspace.slug %}"
+                  hx-vals='{"page": "{{ page_obj.number|default:1 }}", "search": "{{ search_query|default:"" }}", "status_filter": "{{ status_filter|default:"" }}", "owner_filter": "{{ owner_filter|default:"" }}"}'
+                  hx-include="[name='sprints']:checked"
+                  hx-target="#page-content"
+                  hx-swap="innerHTML"
+                  hx-indicator="#list-loading"
+                  @click="showBulkDeleteModal = false">
+            {% translate "Delete" %}
+          </button>
+        </div>
+      </div>
+      <div class="modal-backdrop" @click="showBulkDeleteModal = false"></div>
+    </div>
+    {# Bulk Owner Modal #}
+    {% translate "Set Owner" as owner_modal_title %}
+    {% translate "Select an owner for the selected sprints:" as owner_prompt_text %}
+    {% translate "Unassigned" as owner_none_label %}
+    {% blocktranslate asvar owner_confirm_text %}Assign selected sprints to:{% endblocktranslate %}
+    {% url 'sprints:sprints_bulk_owner' workspace.slug as owner_post_url %}
+    {% json_vals page=page_obj.number search=search_query status_filter=status_filter owner_filter=owner_filter as owner_hx_vals %}
+    {% include "includes/bulk_person_modal.html" with show_var="showBulkOwnerModal" confirm_step_var="ownerConfirmStep" selected_name_var="selectedOwnerName" selected_value_var="selectedOwnerValue" hidden_input_id="bulk-owner-value" hidden_input_name="owner" radio_name_prefix="owner" modal_title=owner_modal_title prompt_text=owner_prompt_text confirm_text=owner_confirm_text none_label=owner_none_label post_url=owner_post_url hx_vals=owner_hx_vals hx_include="[name='sprints']:checked, #bulk-owner-value" hx_target="#page-content" hx_indicator="#list-loading" current_user_id=request.user.pk current_user_name=request.user.get_display_name %}
+    {% include "includes/filters_modal.html" %}
+  </section>
+  <div id="messages" class="toast toast-end toast-bottom z-50" hx-swap-oob="true">
+    {% include "includes/messages.html" %}
+  </div>
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}

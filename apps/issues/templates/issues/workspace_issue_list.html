@@ -1,0 +1,418 @@
+{% extends "apps/base.html" %}
+{% load i18n form_tags %}
+{% block app %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <section class="app-card relative"
+           x-data="{ selectedCount: 0, showBulkDeleteModal: false, showBulkAssigneeModal: false, showEditModal: false, showActionModal: false, showMoveModal: false, showAddToSprintModal: false, showConvertModal: false, showPromoteModal: false, showDeleteModal: false, showCascadeModal: false, showNewIssueModal: false, showQuickViewModal: false, newIssueModalTitle: '', actionModalType: '', actionModalTitle: '', actionModalMessage: '', actionModalConfirmText: '', actionModalUrl: '', assigneeConfirmStep: false, selectedAssigneeName: '', selectedAssigneeValue: '', showFiltersModal: false }"
+           @htmx:after-swap="selectedCount = document.querySelectorAll('[name=issues]:checked').length"
+           @show-cascade-modal.document="showEditModal = false"
+           @issue-created.window="showNewIssueModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#page-content', swap: 'innerHTML'})"
+           @filters-apply.window="
+             document.getElementById('ws-filters-status').value = $event.detail.status || '';
+             document.getElementById('ws-filters-type').value = $event.detail.type || '';
+             document.getElementById('ws-filters-assignee').value = $event.detail.assignee || '';
+             document.getElementById('ws-filters-sprint').value = $event.detail.sprint || '';
+             document.getElementById('ws-filters-group-by').value = $event.detail.group_by || '';
+             document.getElementById('ws-filters-sort-by').value = $event.detail.sort_by || '';
+             $nextTick(() => document.getElementById('ws-filters-trigger').click());
+           ">
+    <div class="flex justify-between items-center pb-4 sticky top-0 z-10 bg-base-100">
+      <div class="flex items-center gap-4">
+        <h2 class="text-2xl font-bold">{% translate "Issues" %}</h2>
+        {# Search and filters - hidden when issues are selected #}
+        <div class="flex items-center gap-2" x-show="selectedCount === 0" x-cloak>
+          {% url 'workspace_issue_list' workspace.slug as search_url %}
+          {% translate "Search issues..." as placeholder %}
+          {% json_vals status=status_filter type=type_filter assignee=assignee_filter sprint=sprint_filter group_by=group_by project=project_filter as hx_vals %}
+          {% include "includes/search_input.html" with input_id="search-input" search_url=search_url hx_target="#list-content" hx_indicator="#list-loading" placeholder=placeholder hx_vals=hx_vals push_url=True %}
+          <button type="button"
+                  class="btn btn-sm {% if active_filter_count %}btn-primary{% else %}btn-outline{% endif %}"
+                  @click="showFiltersModal = true">
+            {% translate "Filters" %}
+            <i class="fa-solid fa-filter ml-1"></i>
+            {% if active_filter_count %}
+            <span class="badge badge-sm">{{ active_filter_count }}</span>
+            {% endif %}
+          </button>
+          <input type="hidden" id="ws-filters-status" value="{{ status_filter|default:"" }}">
+          <input type="hidden" id="ws-filters-type" value="{{ type_filter|default:"" }}">
+          <input type="hidden" id="ws-filters-assignee" value="{{ assignee_filter|default:"" }}">
+          <input type="hidden" id="ws-filters-sprint" value="{{ sprint_filter|default:"" }}">
+          <input type="hidden" id="ws-filters-group-by" value="{{ group_by|default:"" }}">
+          <input type="hidden" id="ws-filters-sort-by" value="{{ sort_by|default:"" }}">
+          <button type="button"
+                  id="ws-filters-trigger"
+                  class="hidden"
+                  hx-get="{% url 'workspace_issue_list' workspace.slug %}"
+                  hx-vals='js:{"status": document.getElementById("ws-filters-status").value, "type": document.getElementById("ws-filters-type").value, "assignee": document.getElementById("ws-filters-assignee").value, "sprint": document.getElementById("ws-filters-sprint").value, "group_by": document.getElementById("ws-filters-group-by").value, "sort_by": document.getElementById("ws-filters-sort-by").value, "search": "{{ search_query|default:"" }}", "project": "{{ project_filter|default:"" }}"}'
+                  hx-target="#page-content"
+                  hx-swap="innerHTML"
+                  hx-indicator="#list-loading"
+                  hx-push-url="true">
+          </button>
+          {% if active_filter_count %}
+          <button type="button"
+                  class="btn btn-sm btn-ghost btn-square"
+                  title="{% translate "Clear filters" %}"
+                  hx-get="{% url 'workspace_issue_list' workspace.slug %}"
+                  hx-vals='{"search": "{{ search_query|default:"" }}", "project": "{{ project_filter|default:"" }}", "group_by": "{{ group_by|default:"" }}"}'
+                  hx-target="#page-content"
+                  hx-swap="innerHTML"
+                  hx-indicator="#list-loading"
+                  hx-push-url="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+          {% endif %}
+          {% if not group_by %}
+          <div class="dropdown">
+            <div tabindex="0" role="button" class="btn btn-sm {% if sort_by %}btn-primary{% else %}btn-outline{% endif %}">
+              {% if sort_by_label %}
+                {% translate "Sort:" %} {{ sort_by_label }}
+              {% else %}
+                {% translate "Sort by" %}
+              {% endif %}
+              <i class="fa fa-chevron-down ml-1"></i>
+            </div>
+            <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-48 p-2 shadow">
+              <li>
+                <button type="button"
+                        {% if not sort_by %}class="active"{% endif %}
+                        @click="document.getElementById('ws-filters-sort-by').value = ''; $nextTick(() => document.getElementById('ws-filters-trigger').click()); document.activeElement.blur()">
+                  {% translate "Default" %}
+                </button>
+              </li>
+              {% for sort_value, sort_label in sort_by_choices %}
+              <li>
+                <button type="button"
+                        {% if sort_by == sort_value %}class="active"{% endif %}
+                        @click="document.getElementById('ws-filters-sort-by').value = '{{ sort_value }}'; $nextTick(() => document.getElementById('ws-filters-trigger').click()); document.activeElement.blur()">
+                  {{ sort_label }}
+                </button>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {# New Issue dropdown - always shown when no issues selected #}
+      <div class="dropdown dropdown-end" x-show="selectedCount === 0" x-cloak>
+        <div tabindex="0" role="button" class="mt-button-primary">
+          <span class="mt-icon"><i class="fa fa-plus"></i></span>
+          <span>{% translate "New" %}</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow-md">
+          <li>
+            <button type="button"
+                    hx-get="{% url 'workspace_issue_create_typed' workspace.slug 'story' %}?modal=1"
+                    hx-target="#new-issue-modal-content"
+                    hx-swap="innerHTML"
+                    @click="newIssueModalTitle = '{% translate "New Story" %}'; showNewIssueModal = true; document.activeElement.blur()">
+              <i class="fa fa-book text-info"></i>
+              {% translate "Story" %}
+            </button>
+          </li>
+          <li>
+            <button type="button"
+                    hx-get="{% url 'workspace_issue_create_typed' workspace.slug 'bug' %}?modal=1"
+                    hx-target="#new-issue-modal-content"
+                    hx-swap="innerHTML"
+                    @click="newIssueModalTitle = '{% translate "New Bug" %}'; showNewIssueModal = true; document.activeElement.blur()">
+              <i class="fa fa-bug text-error"></i>
+              {% translate "Bug" %}
+            </button>
+          </li>
+          <li>
+            <button type="button"
+                    hx-get="{% url 'workspace_issue_create_typed' workspace.slug 'chore' %}?modal=1"
+                    hx-target="#new-issue-modal-content"
+                    hx-swap="innerHTML"
+                    @click="newIssueModalTitle = '{% translate "New Chore" %}'; showNewIssueModal = true; document.activeElement.blur()">
+              <i class="fa fa-wrench text-warning"></i>
+              {% translate "Chore" %}
+            </button>
+          </li>
+        </ul>
+      </div>
+      {# Bulk actions - shown when at least one issue is selected #}
+      <div class="flex items-center gap-2" x-show="selectedCount > 0" x-cloak>
+        <span class="text-sm text-base-content/70" x-text="selectedCount + ' {% translate "selected" %}'"></span>
+        <div class="dropdown dropdown-end">
+          <div tabindex="0" role="button" class="btn btn-sm btn-outline">
+            <i class="fa fa-flag mr-1"></i>
+            {% translate "Set Status" %}
+            <i class="fa fa-chevron-down ml-1"></i>
+          </div>
+          <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+            {% for status_value, status_label in status_choices %}
+            <li>
+              <button type="button"
+                      hx-post="{% url 'workspace_issues_bulk_status' workspace.slug %}"
+                      hx-vals='{"status": "{{ status_value }}", "page": "{{ page_obj.number|default:1 }}", "search": "{{ search_query|default:"" }}", "status_filter": "{{ status_filter|default:"" }}", "type_filter": "{{ type_filter|default:"" }}", "assignee_filter": "{{ assignee_filter|default:"" }}", "sprint_filter": "{{ sprint_filter|default:"" }}", "group_by": "{{ group_by|default:"" }}", "project_filter": "{{ project_filter|default:"" }}"}'
+                      hx-include="[name='issues']:checked"
+                      hx-target="#page-content"
+                      hx-swap="innerHTML"
+                      hx-indicator="#list-loading"
+                      hx-disabled-elt="this"
+                      @click="document.activeElement.blur()">
+                {{ status_label }}
+              </button>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div class="dropdown dropdown-end">
+          <div tabindex="0" role="button" class="btn btn-sm btn-outline">
+            <i class="fa fa-arrow-up mr-1"></i>
+            {% translate "Set Priority" %}
+            <i class="fa fa-chevron-down ml-1"></i>
+          </div>
+          <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+            {% for priority_value, priority_label in priority_choices %}
+            <li>
+              <button type="button"
+                      hx-post="{% url 'workspace_issues_bulk_priority' workspace.slug %}"
+                      hx-vals='{"priority": "{{ priority_value }}", "page": "{{ page_obj.number|default:1 }}", "search": "{{ search_query|default:"" }}", "status_filter": "{{ status_filter|default:"" }}", "type_filter": "{{ type_filter|default:"" }}", "assignee_filter": "{{ assignee_filter|default:"" }}", "sprint_filter": "{{ sprint_filter|default:"" }}", "group_by": "{{ group_by|default:"" }}", "project_filter": "{{ project_filter|default:"" }}"}'
+                      hx-include="[name='issues']:checked"
+                      hx-target="#page-content"
+                      hx-swap="innerHTML"
+                      hx-indicator="#list-loading"
+                      hx-disabled-elt="this"
+                      @click="document.activeElement.blur()">
+                {{ priority_label }}
+              </button>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        <button type="button"
+                class="btn btn-sm btn-outline"
+                @click="document.getElementById('assignee-none').checked = true; assigneeConfirmStep = false; selectedAssigneeName = '{% translate "Unassigned" %}'; selectedAssigneeValue = ''; showBulkAssigneeModal = true">
+          <i class="fa fa-user mr-1"></i>
+          {% translate "Set Assignee" %}
+        </button>
+        <div class="dropdown dropdown-end">
+          <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square">
+            <i class="fa fa-ellipsis-vertical"></i>
+          </div>
+          <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+            <li>
+              <button type="button"
+                      class="text-error"
+                      hx-post="{% url 'workspace_issues_bulk_delete_preview' workspace.slug %}"
+                      hx-vals='{"page": "{{ page_obj.number|default:1 }}", "search": "{{ search_query|default:"" }}", "status_filter": "{{ status_filter|default:"" }}", "type_filter": "{{ type_filter|default:"" }}", "assignee_filter": "{{ assignee_filter|default:"" }}", "group_by": "{{ group_by|default:"" }}", "project_filter": "{{ project_filter|default:"" }}"}'
+                      hx-include="[name='issues']:checked"
+                      hx-target="#bulk-delete-modal-content"
+                      hx-swap="innerHTML"
+                      @click="showBulkDeleteModal = true; document.activeElement.blur()">
+                <i class="fa fa-trash"></i>
+                {% translate "Delete" %}
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    {% include "includes/loading_indicator.html" with indicator_id="list-loading" %}
+    <div id="list-content">
+      {% partialdef list-content inline %}
+      {% if group_by and grouped_issues %}
+      {# Grouped view #}
+      <div class="space-y-4">
+        {% for group in grouped_issues %}
+        <div class="bg-base-200 rounded-box">
+          <div class="px-4 py-3 font-medium">
+            <div class="flex items-center justify-between">
+              <span>{{ group.name }} ({{ group.issues|length }})</span>
+              {% if group_by == "epic" and group.epic %}
+              <div class="flex items-center gap-2">
+                {% if group.progress %}
+                {% include "issues/includes/progress_bar.html" with progress=group.progress compact=True %}
+                {% endif %}
+                <div class="flex gap-2 [&_.badge]:badge-sm">
+                  {% include "issues/includes/issue_status_badge.html" with status=group.epic.status status_display=group.epic.get_status_display %}
+                  {% include "issues/includes/issue_priority_badge.html" with priority=group.epic.priority priority_display=group.epic.get_priority_display %}
+                </div>
+                <div class="dropdown dropdown-end">
+                  <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square tooltip tooltip-left" data-tip="{% translate "Actions" %}">
+                    <i class="fa fa-ellipsis-vertical"></i>
+                  </div>
+                  <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-32 p-2 shadow">
+                    <li>
+                      <button type="button"
+                              hx-get="{% url 'issues:issue_update' workspace.slug group.epic.project.key group.epic.key %}?modal=1"
+                              hx-target="#edit-modal-content"
+                              hx-swap="innerHTML"
+                              @click="showEditModal = true; document.activeElement.blur()">
+                        <i class="fa fa-pencil"></i> {% translate "Edit" %}
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button"
+                              @click="actionModalType = 'clone'; actionModalTitle = '{% translate "Clone Epic" %}'; actionModalMessage = '{% translate "Are you sure you want to clone this epic?" %}'; actionModalConfirmText = '{% translate "Clone" %}'; actionModalUrl = '{% url 'issues:issue_clone' workspace.slug group.epic.project.key group.epic.key %}'; showActionModal = true; document.activeElement.blur()">
+                        <i class="fa fa-clone"></i> {% translate "Clone" %}
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" class="text-error"
+                              hx-get="{% url 'issues:issue_delete' workspace.slug group.epic.project.key group.epic.key %}"
+                              hx-target="#delete-modal-content"
+                              hx-swap="innerHTML"
+                              @click="showDeleteModal = true; document.activeElement.blur()">
+                        <i class="fa fa-trash"></i> {% translate "Delete" %}
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="bg-base-100 rounded-b-box">
+            <div class="table-responsive">
+              <table class="table mt-table">
+                <thead>
+                  <tr>
+                    <th class="w-10">
+                      <input type="checkbox"
+                             class="checkbox checkbox-sm group-select"
+                             data-group="{{ forloop.counter }}"
+                             @change="
+                               document.querySelectorAll('[data-group-row=\'{{ forloop.counter }}\']').forEach(cb => cb.checked = $event.target.checked);
+                               selectedCount = document.querySelectorAll('[name=issues]:checked').length;
+                             ">
+                    </th>
+                    <th>{% translate "Key" %}</th>
+                    <th>{% translate "Type" %}</th>
+                    <th>{% translate "Title" %}</th>
+                    {% if group_by != "status" %}<th>{% translate "Status" %}</th>{% endif %}
+                    {% if group_by != "priority" %}<th>{% translate "Priority" %}</th>{% endif %}
+                    {% if group_by != "assignee" %}<th>{% translate "Assignee" %}</th>{% endif %}
+                    <th>{% translate "Points" %}</th>
+                    <th class="w-10"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for issue in group.issues %}
+                  {% include "issues/includes/issue_row.html" with issue=issue group_row_counter=forloop.parentloop.counter group_by=group_by %}
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% if group_by == "epic" %}
+            {# Add issue button for epic groups #}
+            <div class="flex justify-end px-4 py-2 border-t border-base-200">
+              <div class="dropdown dropdown-end dropdown-top tooltip tooltip-left" data-tip="{% translate "Create New Issue for this Epic" %}">
+                <div tabindex="0" role="button" class="btn btn-xs btn-square btn-success">
+                  <i class="fa fa-plus text-xs"></i>
+                </div>
+                <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow-md mb-1">
+                  <li>
+                    <a href="{% url 'issues:issue_create_typed' workspace.slug project_filter 'story' %}{% if group.epic_key %}?parent={{ group.epic_key }}{% endif %}"
+                       hx-get="{% url 'issues:issue_create_typed' workspace.slug project_filter 'story' %}{% if group.epic_key %}?parent={{ group.epic_key }}{% endif %}"
+                       hx-push-url="true">
+                      <i class="fa fa-book text-info"></i>
+                      {% translate "Story" %}
+                    </a>
+                  </li>
+                  <li>
+                    <a href="{% url 'issues:issue_create_typed' workspace.slug project_filter 'bug' %}{% if group.epic_key %}?parent={{ group.epic_key }}{% endif %}"
+                       hx-get="{% url 'issues:issue_create_typed' workspace.slug project_filter 'bug' %}{% if group.epic_key %}?parent={{ group.epic_key }}{% endif %}"
+                       hx-push-url="true">
+                      <i class="fa fa-bug text-error"></i>
+                      {% translate "Bug" %}
+                    </a>
+                  </li>
+                  <li>
+                    <a href="{% url 'issues:issue_create_typed' workspace.slug project_filter 'chore' %}{% if group.epic_key %}?parent={{ group.epic_key }}{% endif %}"
+                       hx-get="{% url 'issues:issue_create_typed' workspace.slug project_filter 'chore' %}{% if group.epic_key %}?parent={{ group.epic_key }}{% endif %}"
+                       hx-push-url="true">
+                      <i class="fa fa-wrench text-warning"></i>
+                      {% translate "Chore" %}
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% elif issues %}
+      {# Flat table view #}
+      <div class="table-responsive">
+        <table class="table mt-table">
+          <thead>
+            <tr>
+              <th class="w-10">
+                <input type="checkbox"
+                       class="checkbox checkbox-sm"
+                       id="select-all"
+                       @change="
+                         document.querySelectorAll('[name=issues]').forEach(cb => cb.checked = $event.target.checked);
+                         selectedCount = $event.target.checked ? {{ issues|length }} : 0;
+                       ">
+              </th>
+              <th>{% translate "Key" %}</th>
+              <th>{% translate "Type" %}</th>
+              <th>{% translate "Title" %}</th>
+              <th>{% translate "Status" %}</th>
+              <th>{% translate "Priority" %}</th>
+              <th>{% translate "Assignee" %}</th>
+              <th>{% translate "Points" %}</th>
+              <th class="w-10"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for issue in issues %}
+            {% include "issues/includes/issue_row.html" with issue=issue total_issues=issues|length %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% include "includes/paginator_htmx.html" %}
+      {% else %}
+      <div class="text-center py-8">
+        {% if search_query %}
+        <p class="text-gray-500 mb-4">{% translate "No issues found matching your search." %}</p>
+        {% else %}
+        <p class="text-gray-500 mb-4">{% translate "No issues yet." %}</p>
+        {% endif %}
+      </div>
+      {% endif %}
+      {% endpartialdef list-content %}
+    </div>
+    {% include "issues/includes/workspace_bulk_delete_modal.html" %}
+    {% include "issues/includes/workspace_bulk_assignee_modal.html" %}
+    {% include "issues/includes/issue_edit_modal.html" %}
+    {% include "issues/includes/issue_action_modal.html" %}
+    {% include "issues/includes/issue_move_modal.html" %}
+    {% include "issues/includes/add_to_sprint_modal.html" %}
+    {% include "includes/delete_confirm_modal.html" %}
+    {% include "includes/cascade_status_modal.html" %}
+    {% include "issues/includes/issue_convert_modal.html" %}
+    {% include "issues/includes/issue_promote_modal.html" %}
+    {% include "issues/includes/workspace_new_issue_modal.html" %}
+    {% include "includes/quick_view_modal.html" %}
+    <div class="hidden"
+         hx-get="{% url 'workspace_issue_list' workspace.slug %}"
+         hx-vals='js:{"status": document.getElementById("ws-filters-status").value, "type": document.getElementById("ws-filters-type").value, "assignee": document.getElementById("ws-filters-assignee").value, "sprint": document.getElementById("ws-filters-sprint").value, "group_by": document.getElementById("ws-filters-group-by").value, "sort_by": document.getElementById("ws-filters-sort-by").value, "search": "{{ search_query|default:"" }}", "project": "{{ project_filter|default:"" }}"}'
+         hx-target="#page-content"
+         hx-swap="innerHTML"
+         hx-trigger="issueChanged from:body">
+    </div>
+    {% include "includes/filters_modal.html" %}
+  </section>
+  <div id="messages" class="toast toast-end toast-bottom z-50" hx-swap-oob="true">
+    {% include "includes/messages.html" %}
+  </div>
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% load i18n %}
+{# Edit mode for sprint detail header - form inputs for inline editing #}
+<div id="sprint-header"
+     class="sprint-detail-header-edit bg-base-200 rounded-lg p-4"
+     x-data
+     @keydown.escape="htmx.ajax('GET', '{% url 'sprints:sprint_detail_inline_edit' workspace.slug sprint.key %}?cancel=1', { target: $el, swap: 'outerHTML' })">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+  <div class="flex justify-between items-start mb-4">
+    <div class="flex-1">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="badge badge-outline">{% translate "Sprint" %}</span>
+        <span class="font-mono text-sm text-gray-500">{{ sprint.key }}</span>
+      </div>
+      <input type="text"
+             name="name"
+             value="{{ sprint.name }}"
+             class="input input-bordered w-full text-xl font-bold {% if form.name.errors %}input-error{% endif %}"
+             placeholder="{% translate 'Sprint name' %}"
+             required
+             autofocus>
+      {% if form.name.errors %}
+      <span class="text-error text-xs">{{ form.name.errors.0 }}</span>
+      {% endif %}
+    </div>
+    <div class="flex items-center gap-2 ml-4">
+      <button type="button"
+              class="btn btn-success tooltip"
+              data-tip="{% translate 'Save' %}"
+              hx-post="{% url 'sprints:sprint_detail_inline_edit' workspace.slug sprint.key %}"
+              hx-include="#sprint-header"
+              hx-target="#sprint-header"
+              hx-swap="outerHTML">
+        <i class="fa fa-check"></i> {% translate "Save" %}
+      </button>
+      <button type="button"
+              class="btn btn-ghost tooltip"
+              data-tip="{% translate 'Cancel' %}"
+              hx-get="{% url 'sprints:sprint_detail_inline_edit' workspace.slug sprint.key %}?cancel=1"
+              hx-target="#sprint-header"
+              hx-swap="outerHTML">
+        <i class="fa fa-times"></i> {% translate "Cancel" %}
+      </button>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <h3 class="font-semibold mb-2">{% translate "Goal" %}</h3>
+    <textarea name="goal"
+              class="textarea textarea-bordered w-full {% if form.goal.errors %}textarea-error{% endif %}"
+              rows="3"
+              placeholder="{% translate 'Add a sprint goal...' %}">{{ sprint.goal }}</textarea>
+    {% if form.goal.errors %}
+    <span class="text-error text-xs">{{ form.goal.errors.0 }}</span>
+    {% endif %}
+  </div>
+
+  {# Sprint fields - 6-column layout #}
+  <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-4">
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Status" %}</h3>
+      <select name="status"
+              class="select select-bordered select-sm w-full {% if form.status.errors %}select-error{% endif %}">
+        {% for value, label in status_choices %}
+        <option value="{{ value }}" {% if sprint.status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      {% if form.status.errors %}
+      <span class="text-error text-xs">{{ form.status.errors.0 }}</span>
+      {% endif %}
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Start Date" %}</h3>
+      <input type="date"
+             name="start_date"
+             value="{{ sprint.start_date|date:'Y-m-d' }}"
+             class="input input-bordered input-sm w-full {% if form.start_date.errors %}input-error{% endif %}"
+             required>
+      {% if form.start_date.errors %}
+      <span class="text-error text-xs">{{ form.start_date.errors.0 }}</span>
+      {% endif %}
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "End Date" %}</h3>
+      <input type="date"
+             name="end_date"
+             value="{{ sprint.end_date|date:'Y-m-d' }}"
+             class="input input-bordered input-sm w-full {% if form.end_date.errors %}input-error{% endif %}"
+             required>
+      {% if form.end_date.errors %}
+      <span class="text-error text-xs">{{ form.end_date.errors.0 }}</span>
+      {% endif %}
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Owner" %}</h3>
+      {% include "includes/user_combobox.html" with combobox_name="owner" combobox_members=workspace_members combobox_selected_id=sprint.owner_id|default:"" combobox_selected_name=sprint.owner.get_display_name|default:"" combobox_size="sm" %}
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Total Points" %}</h3>
+      <p class="text-sm py-1">{{ total_points }}</p>
+    </div>
+    <div>
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Capacity" %}</h3>
+      <input type="number"
+             name="capacity"
+             value="{{ sprint.capacity|default:'' }}"
+             min="0"
+             class="input input-bordered input-sm w-full"
+             placeholder="—">
+    </div>
+  </div>
+</div>

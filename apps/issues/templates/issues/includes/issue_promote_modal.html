@@ -1,0 +1,3 @@
+{% load i18n %}
+{% translate "Promote to Epic" as modal_title %}
+{% include "includes/modal_shell.html" with show_var="showPromoteModal" modal_title=modal_title content_id=embed_modal_content_id|default:"promote-modal-content" %}

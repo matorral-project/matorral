@@ -1,0 +1,20 @@
+{% load i18n %}
+{% load form_tags %}
+<input type="checkbox" id="invite-modal-toggle" class="modal-toggle" />
+<div class="modal">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg">{% translate "Invite a Member" %}</h3>
+    <form hx-post="{% url 'workspaces:send_invitation' request.workspace.slug %}"
+          hx-target="#invite-form-inner">
+      {% csrf_token %}
+      <div id="invite-form-inner">
+        {% render_form_fields invitation_form %}
+        {{ invitation_form.non_field_errors }}
+      </div>
+      <div class="modal-action">
+        <label for="invite-modal-toggle" class="btn">{% translate "Cancel" %}</label>
+        <input class="mt-button-secondary" type="submit" value="{% translate 'Send Invitation' %}">
+      </div>
+    </form>
+  </div>
+</div>

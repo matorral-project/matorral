@@ -1,0 +1,45 @@
+{% extends "apps/base.html" %}
+{% load i18n form_tags %}
+{% block app %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <section class="app-card mt-form-page">
+    <h1 class="mt-title">
+      {% if sprint %}
+        {% translate "Edit Sprint" %}
+      {% else %}
+        {% translate "New Sprint" %}
+      {% endif %}
+    </h1>
+    <form method="post" action="" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+      <div class="alert alert-error mb-4">
+        <ul class="list-disc list-inside">
+          {% for error in form.non_field_errors %}
+          <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      {% render_form_fields form %}
+      <div class="flex gap-2 mt-4">
+        <button type="submit" class="mt-button-primary">
+          {% if sprint %}
+            {% translate "Save Changes" %}
+          {% else %}
+            {% translate "Create Sprint" %}
+          {% endif %}
+        </button>
+        <a href="{% if sprint %}{{ sprint.get_absolute_url }}{% else %}{% url 'sprints:sprint_list' workspace.slug %}{% endif %}"
+           hx-get="{% if sprint %}{{ sprint.get_absolute_url }}{% else %}{% url 'sprints:sprint_list' workspace.slug %}{% endif %}"
+           hx-push-url="true"
+           class="mt-button-secondary">
+          {% translate "Cancel" %}
+        </a>
+      </div>
+    </form>
+  </section>
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}

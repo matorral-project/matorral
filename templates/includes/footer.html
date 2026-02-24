@@ -1,0 +1,29 @@
+{% load i18n %}
+<div class="bg-neutral text-neutral-content">
+  <footer class="max-w-6xl mx-auto p-10">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div>
+        <h6 class="footer-title text-white">{% translate "Company" %}</h6>
+        <a class="link link-hover block mb-2" href="{% url 'landing_pages:terms' %}">{% translate "Terms of Service" %}</a>
+        <a class="link link-hover block mb-2" href="{% url 'landing_pages:privacy' %}">{% translate "Privacy Policy" %}</a>
+        <a class="link link-hover block" href="#">{% translate "License" %}</a>
+      </div>
+      <div>
+        <h6 class="footer-title text-white">{% translate "Support" %}</h6>
+        <a class="link link-hover block" href="https://github.com/matorral-project/matorral/issues" target="_blank" rel="noopener noreferrer">{% translate "Report an issue" %}</a>
+      </div>
+      <div>
+        <h6 class="footer-title text-white">{% translate "Connect" %}</h6>
+        <a class="link link-hover block" href="https://github.com/matorral-project/matorral" target="_blank" rel="noopener noreferrer">{% translate "GitHub" %}</a>
+      </div>
+    </div>
+  </footer>
+  <footer class="border-t border-neutral-content/20 px-4 py-4">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+      <p>{{ site.name }} &mdash; {% translate "Copyright" %} <span id="copyright-year">2024</span></p>
+    </div>
+  </footer>
+</div>
+<script>
+    document.getElementById('copyright-year').innerText = (new Date()).getFullYear();
+</script>

@@ -1,0 +1,48 @@
+{% load i18n %}
+{% for child in children %}
+  {% include "projects/includes/epic_child_row_embed.html" with parent_key=parent.key %}
+{% endfor %}
+{# Add work item to epic - type picker #}
+<tr class="bg-base-100/50" x-show="expandedEpics['{{ parent.key }}']" x-cloak>
+  <td colspan="7">
+    <div class="flex justify-end px-4 py-1">
+      <div class="dropdown dropdown-end dropdown-top">
+        <div tabindex="0"
+             role="button"
+             class="btn btn-xs btn-square btn-success tooltip tooltip-left"
+             data-tip="{% translate "Add work item to this Epic" %}">
+          <i class="fa fa-plus text-xs"></i>
+        </div>
+        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-36 p-2 shadow">
+          <li>
+            <button type="button"
+                    hx-get="{% url 'projects:project_issue_create_typed' workspace.slug project.key 'story' %}?modal=1&epic={{ parent.key }}"
+                    hx-target="#new-issue-modal-content"
+                    hx-swap="innerHTML"
+                    @click="newIssueModalTitle = '{% translate "New Story" %}'; showNewIssueModal = true; document.activeElement.blur()">
+              <i class="fa fa-book text-info"></i> {% translate "Story" %}
+            </button>
+          </li>
+          <li>
+            <button type="button"
+                    hx-get="{% url 'projects:project_issue_create_typed' workspace.slug project.key 'bug' %}?modal=1&epic={{ parent.key }}"
+                    hx-target="#new-issue-modal-content"
+                    hx-swap="innerHTML"
+                    @click="newIssueModalTitle = '{% translate "New Bug" %}'; showNewIssueModal = true; document.activeElement.blur()">
+              <i class="fa fa-bug text-error"></i> {% translate "Bug" %}
+            </button>
+          </li>
+          <li>
+            <button type="button"
+                    hx-get="{% url 'projects:project_issue_create_typed' workspace.slug project.key 'chore' %}?modal=1&epic={{ parent.key }}"
+                    hx-target="#new-issue-modal-content"
+                    hx-swap="innerHTML"
+                    @click="newIssueModalTitle = '{% translate "New Chore" %}'; showNewIssueModal = true; document.activeElement.blur()">
+              <i class="fa fa-wrench text-warning"></i> {% translate "Chore" %}
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </td>
+</tr>

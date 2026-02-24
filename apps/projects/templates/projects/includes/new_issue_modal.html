@@ -1,0 +1,3 @@
+{% load i18n %}
+{% translate "New Issue" as default_title %}
+{% include "includes/modal_shell.html" with show_var="showNewIssueModal" dynamic_title="newIssueModalTitle" default_title=default_title content_id=embed_modal_content_id|default:"new-issue-modal-content" modal_size="max-w-2xl" %}

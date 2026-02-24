@@ -1,0 +1,156 @@
+{% extends "apps/base.html" %}
+{% load i18n %}
+{% load static %}
+{% block app %}
+<div id="page-content" hx-target="#page-content"
+     hx-get="{% url 'dashboard:home' workspace.slug %}"
+     hx-trigger="dashboard-updated from:body"
+     hx-swap="innerHTML">
+  {% partialdef page-content inline %}
+  {% if onboarding.should_show %}
+  <section class="app-card mt-4">
+    {% include "dashboard/includes/onboarding_checklist.html" %}
+  </section>
+  {% else %}
+  <section class="app-card">
+    <h1 class="mt-title">{% blocktranslate with name=request.user.get_display_name %}Welcome back, {{ name }}!{% endblocktranslate %}</h1>
+    <h2 class="mt-subtitle">
+      {% blocktranslate trimmed with workspace_name=workspace.name %}
+        Here's what's happening in "{{ workspace_name }}".
+      {% endblocktranslate %}
+    </h2>
+  </section>
+
+  {% if active_sprint %}
+  <section class="app-card mt-4">
+    <div class="flex justify-between items-center mb-4">
+      <div>
+        <h2 class="text-lg font-semibold flex items-center gap-2">
+          <i class="fa fa-bolt text-primary"></i>
+          {% translate "Active Sprint" %}
+        </h2>
+      </div>
+      <a href="{{ active_sprint.get_absolute_url }}"
+         hx-get="{{ active_sprint.get_absolute_url }}"
+         hx-push-url="true"
+         class="btn btn-sm btn-soft btn-primary">
+        {% translate "View Sprint" %}
+        <i class="fa fa-arrow-right ml-1"></i>
+      </a>
+    </div>
+    <div class="bg-base-200 rounded-lg p-4">
+      <div class="flex justify-between items-start">
+        <div>
+          <a href="{{ active_sprint.get_absolute_url }}"
+             hx-get="{{ active_sprint.get_absolute_url }}"
+             hx-push-url="true"
+             class="font-mono font-semibold link link-hover">
+            {{ active_sprint.key }}
+          </a>
+          <span class="mx-2">-</span>
+          <a href="{{ active_sprint.get_absolute_url }}"
+             hx-get="{{ active_sprint.get_absolute_url }}"
+             hx-push-url="true"
+             class="link link-hover font-medium">
+            {{ active_sprint.name }}
+          </a>
+        </div>
+        <div>
+          {% include "sprints/includes/sprint_status_badge.html" with status=active_sprint.status status_display=active_sprint.get_status_display %}
+        </div>
+      </div>
+      {% if active_sprint.goal %}
+      <p class="text-sm text-base-content/70 mt-2">{{ active_sprint.goal|truncatechars:150 }}</p>
+      {% else %}
+      <p class="text-sm text-base-content/40 italic mt-2">{% translate "No goal set." %}</p>
+      {% endif %}
+      <div class="flex items-end justify-between mt-2">
+        <div class="text-sm text-base-content/60">
+          <i class="fa fa-calendar mr-1"></i>
+          {{ active_sprint.start_date }} - {{ active_sprint.end_date }}
+        </div>
+        {% if sprint_progress %}
+        <div class="w-1/2">
+          {% include "issues/includes/progress_bar.html" with progress=sprint_progress %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if in_progress_issues %}
+  <section class="app-card mt-4">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-lg font-semibold flex items-center gap-2">
+        <i class="fa fa-spinner text-warning"></i>
+        {% translate "In Progress" %}
+        <span class="badge badge-warning badge-sm">{{ in_progress_issues|length }}</span>
+      </h2>
+    </div>
+    {% include "dashboard/includes/dashboard_issue_table.html" with issues=in_progress_issues %}
+  </section>
+  {% endif %}
+
+  {% if in_review_issues %}
+  <section class="app-card mt-4">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-lg font-semibold flex items-center gap-2">
+        <i class="fa fa-eye text-secondary"></i>
+        {% translate "In Review" %}
+        <span class="badge badge-secondary badge-sm">{{ in_review_issues|length }}</span>
+      </h2>
+    </div>
+    {% include "dashboard/includes/dashboard_issue_table.html" with issues=in_review_issues %}
+  </section>
+  {% endif %}
+
+  {% if ready_issues %}
+  <section class="app-card mt-4">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-lg font-semibold flex items-center gap-2">
+        <i class="fa fa-check-circle text-info"></i>
+        {% translate "Ready to Start" %}
+        <span class="badge badge-info badge-sm">{{ ready_issues|length }}</span>
+      </h2>
+    </div>
+    {% include "dashboard/includes/dashboard_issue_table.html" with issues=ready_issues %}
+  </section>
+  {% endif %}
+
+  {% if blocked_issues %}
+  <section class="app-card mt-4">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-lg font-semibold flex items-center gap-2">
+        <i class="fa fa-exclamation-triangle text-error"></i>
+        {% translate "Blocked" %}
+        <span class="badge badge-error badge-sm">{{ blocked_issues|length }}</span>
+      </h2>
+    </div>
+    {% include "dashboard/includes/dashboard_issue_table.html" with issues=blocked_issues %}
+  </section>
+  {% endif %}
+
+  {% if not in_progress_issues and not in_review_issues and not ready_issues and not blocked_issues %}
+  <section class="app-card mt-4">
+    <div class="text-center py-8">
+      <i class="fa fa-inbox text-4xl text-base-content/30 mb-4"></i>
+      <p class="text-base-content/70">
+        {% if active_sprint %}
+          {% translate "You have no issues assigned in the current sprint." %}
+        {% else %}
+          {% translate "You have no active issues assigned." %}
+        {% endif %}
+      </p>
+      <p class="text-sm text-base-content/50 mt-2">
+        {% translate "Issues assigned to you will appear here." %}
+      </p>
+    </div>
+  </section>
+  {% endif %}
+
+  {% endif %}{# end onboarding check #}
+
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}

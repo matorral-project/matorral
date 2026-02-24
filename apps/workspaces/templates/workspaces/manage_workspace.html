@@ -1,0 +1,34 @@
+{% extends "apps/base.html" %}
+{% load static %}
+{% load i18n %}
+{% load form_tags %}
+{% load django_vite %}
+{% block app %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <section class="app-card mt-form-page">
+    <h3 class="mt-subtitle">
+      {% translate "Workspace Details" %}
+    </h3>
+    <form method="post">
+      {% csrf_token %}
+      {% render_form_fields workspace_form %}
+      {% if request.workspace_membership.is_admin %}
+        <div class="mt-2 mt-inline-buttons">
+          <input class="mt-button-primary" type="submit" value="{% translate 'Save' %}">
+        </div>
+      {% endif %}
+    </form>
+  </section>
+  {% if request.workspace_membership.is_admin %}
+    <section class="app-card mt-form-page">
+      <h3 class="mt-subtitle">
+        {% translate "Danger Zone" %}
+      </h3>
+      <label for="delete-modal" class="mt-button-danger modal-button">{% translate 'Delete Workspace' %}</label>
+    </section>
+    {% include 'workspaces/includes/delete_workspace_modal.html' %}
+  {% endif %}
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% load i18n %}
+{% if issue %}
+<h3 class="font-bold text-lg mb-4">{% translate "Add to Sprint" %}</h3>
+<p class="mb-4">
+  {% blocktranslate with key=issue.key title=issue.title %}Add <strong>{{ key }}</strong> - {{ title }} to a sprint:{% endblocktranslate %}
+</p>
+{% if current_sprint %}
+<div class="alert alert-warning mb-4">
+  <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+  </svg>
+  <span>{% blocktranslate with sprint=current_sprint.name %}This issue is already assigned to <strong>{{ sprint }}</strong>. Selecting a different sprint will move it.{% endblocktranslate %}</span>
+</div>
+{% endif %}
+<form method="post" action="{% url 'sprints:issue_add_to_sprint_confirm' workspace.slug issue.key %}">
+  {% csrf_token %}
+  {% if sprints %}
+  <div class="form-control">
+    {% for sprint in sprints %}
+    <label class="label cursor-pointer justify-start gap-3">
+      <input type="radio" name="sprint" value="{{ sprint.key }}" class="radio radio-primary"
+             {% if default_sprint.pk == sprint.pk %}checked{% endif %}>
+      <div class="flex items-center gap-2">
+        <span class="font-mono text-sm">{{ sprint.key }}</span>
+        <span>{{ sprint.name }}</span>
+        {% include "sprints/includes/sprint_status_badge.html" with status=sprint.status status_display=sprint.get_status_display %}
+      </div>
+    </label>
+    {% endfor %}
+  </div>
+  <div class="modal-action">
+    <button type="button" class="btn btn-ghost" @click="showAddToSprintModal = false">{% translate "Cancel" %}</button>
+    <button type="submit"
+            class="btn btn-primary"
+            hx-post="{% url 'sprints:issue_add_to_sprint_confirm' workspace.slug issue.key %}"
+            hx-target="#messages"
+            hx-swap="innerHTML"
+            @click="showAddToSprintModal = false">
+      {% translate "Add to Sprint" %}
+    </button>
+  </div>
+  {% else %}
+  <p class="text-gray-500 py-4">{% translate "No active or planning sprints available." %}</p>
+  <div class="modal-action">
+    <button type="button" class="btn btn-ghost" @click="showAddToSprintModal = false">{% translate "Close" %}</button>
+  </div>
+  {% endif %}
+</form>
+{% else %}
+<p class="text-error">{% translate "Issue not found." %}</p>
+<div class="modal-action">
+  <button type="button" class="btn btn-ghost" @click="showAddToSprintModal = false">{% translate "Close" %}</button>
+</div>
+{% endif %}

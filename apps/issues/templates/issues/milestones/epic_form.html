@@ -1,0 +1,29 @@
+{% extends "apps/base.html" %}
+{% load i18n form_tags %}
+{% block app %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <section class="app-card mt-form-page">
+    <h1 class="mt-title">{% translate "New Epic" %}</h1>
+    <p class="text-sm text-gray-500 mb-4">
+      {% blocktranslate with key=milestone.key title=milestone.title %}Creating epic for milestone <strong>{{ key }}</strong> - {{ title }}{% endblocktranslate %}
+    </p>
+    <form method="post">
+      {% csrf_token %}
+      {% render_form_fields form %}
+      <div class="flex gap-2 mt-4">
+        <button type="submit" class="mt-button-primary">
+          {% translate "Create Epic" %}
+        </button>
+        <a href="{{ milestone.get_absolute_url }}"
+           hx-get="{{ milestone.get_absolute_url }}"
+           hx-push-url="true"
+           class="mt-button-secondary">
+          {% translate "Cancel" %}
+        </a>
+      </div>
+    </form>
+  </section>
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}

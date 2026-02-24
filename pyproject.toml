@@ -1,0 +1,133 @@
+[project]
+name = "matorral"
+version = "2.0.0"
+description = "The project management tool that doesn't get in your way."
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "Django>=6.0.2",
+    "boto3",
+    "celery",
+    "celery-progress",
+    "celery[redis]",
+    "channels",
+    "channels_redis",
+    "django-allauth[socialaccount]>=65.13.0",
+    "django-anymail[mailgun]",
+    "django-auditlog>=3.4.1",
+    "django-browser-reload",
+    "django-celery-beat",
+    "django-comments-xtd>=2.10",
+    "django-environ",
+    "django-health-check",
+    "django-hijack",
+    "django-htmx",
+    "django-polymorphic>=4.10.4",
+    "django-storages",
+    "django-treebeard>=4.8.0",
+    "django-vite>=3.1.0",
+    "django-waffle",
+    "django-watchfiles",
+    "factory-boy>=3.3.3",
+    "psycopg2-binary",
+    "python-dateutil",
+    "redis",
+    "sentry-sdk[django]>=2.33.2",
+    "unittest-parametrize>=1.8.0",
+    "whitenoise[brotli]",
+]
+
+[dependency-groups]
+dev = [
+    "channels[daphne]",
+    "django-debug-toolbar",
+    "pre-commit",
+    "ruff>=0.15.2",
+    "pytest",
+    "pytest-django",
+]
+prod = [
+    "gunicorn",
+    "uvicorn[standard]",
+]
+
+[tool.ruff]
+# Exclude a variety of commonly ignored directories.
+extend-exclude = [
+    ".direnv",
+    ".git",
+    ".ruff_cache",
+    "node_modules",
+    "migrations",
+]
+line-length = 120
+indent-width = 4
+target-version = "py314"
+
+[tool.ruff.lint]
+fixable = [
+    "ALL",
+]
+unfixable = []
+select = ["E", "F", "UP", "B", "SIM"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.uv.sources]
+# allow installing django-celery-beat 2.8.1 with django 6.0
+# until https://github.com/celery/django-celery-beat/issues/977 is resolved
+django-celery-beat = { git = "https://github.com/celery/django-celery-beat", rev = "bd429063cbb227c00905e7693c38895e44ff8e47" }
+
+[tool.setuptools]
+py-modules = []
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "matorral.settings"
+pythonpath = ["."]
+testpaths = ["apps"]
+
+[tool.black]
+line-length = 120
+
+[tool.isort]
+profile = "black"
+line_length = 120
+known_django = ["django"]
+known_localfolder = ["matorral"]
+known_first_party = ["issues", "landing_pages", "matorral", "projects", "sprints", "users", "utils", "workspaces"]
+known_third_party = [
+    "allauth",
+    "anymail",
+    "boto3",
+    "celery",
+    "celery_progress",
+    "channels",
+    "channels_redis",
+    "dateutil",
+    "debug_toolbar",
+    "django_auditlog",
+    "django_celery_beat",
+    "django_comments_xtd",
+    "django_htmx",
+    "django_vite",
+    "environ",
+    "factory",
+    "health_check",
+    "hijack",
+    "polymorphic",
+    "psycopg2",
+    "pytest",
+    "redis",
+    "requests",
+    "sentry_sdk",
+    "storages",
+    "treebeard",
+    "waffle",
+    "watchfiles",
+    "whitenoise",
+]
+sections = ["FUTURE", "STDLIB", "DJANGO", "FIRSTPARTY", "LOCALFOLDER", "THIRDPARTY"]  # codespell:ignore

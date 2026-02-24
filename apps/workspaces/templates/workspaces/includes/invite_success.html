@@ -1,0 +1,6 @@
+{% load form_tags %}
+{% render_form_fields invitation_form %}
+
+<div id="pending-invitations" hx-swap-oob="true">
+  {% include 'workspaces/includes/pending_invitations.html' %}
+</div>

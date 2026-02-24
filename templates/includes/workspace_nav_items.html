@@ -1,0 +1,35 @@
+{% load i18n %}
+{% if default_workspace %}
+<li>
+  <a href="{% url 'workspaces:manage_workspace' default_workspace.slug %}"
+     hx-get="{% url 'workspaces:manage_workspace' default_workspace.slug %}"
+     hx-push-url="true"
+     hx-target="#page-content">
+    <i class="fa fa-gear text-xl"></i>
+    {% translate "Settings" %}
+  </a>
+</li>
+<li>
+  <a href="{% url 'workspaces:manage_workspace_members' default_workspace.slug %}"
+     hx-get="{% url 'workspaces:manage_workspace_members' default_workspace.slug %}"
+     hx-push-url="true"
+     hx-target="#page-content">
+    <i class="fa fa-users text-xl"></i>
+    {% translate "Members" %}
+  </a>
+</li>
+{% endif %}
+{% if request.user.is_authenticated %}
+<li class="menu-title">
+  <hr/>
+</li>
+<li>
+  <a href="{% url 'workspaces:manage_workspaces' %}"
+     hx-get="{% url 'workspaces:manage_workspaces' %}"
+     hx-push-url="true"
+     hx-target="#page-content">
+    <i class="fa fa-building text-xl"></i>
+    {% translate "My Workspaces" %}
+  </a>
+</li>
+{% endif %}

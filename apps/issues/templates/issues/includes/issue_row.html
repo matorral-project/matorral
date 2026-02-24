@@ -1,0 +1,166 @@
+{% load i18n %}
+{# Display mode for issue row - click on editable cells triggers edit mode #}
+{# Column visibility based on group_by: when grouping by a field, that column is hidden #}
+{% with inline_edit_url=issue.get_absolute_url|slice:":-1"|add:"/inline-edit/"|add:"?"|add:"show_status="|add:group_by|default:"1"|slice:":1"|add:"&show_priority="|add:group_by|default:"1"|slice:":1"|add:"&show_assignee="|add:group_by|default:"1"|slice:":1" %}
+<tr class="has-[:checked]:bg-base-200 issue-row">
+  <td>
+    <input type="checkbox"
+           class="checkbox checkbox-sm"
+           name="issues"
+           value="{{ issue.key }}"
+           {% if group_row_counter %}data-group-row="{{ group_row_counter }}"{% endif %}
+           @change="
+             selectedCount = document.querySelectorAll('[name=issues]:checked').length;
+             {% if not group_row_counter %}
+             let all = document.getElementById('select-all');
+             let total = {{ total_issues|default:0 }};
+             all.checked = selectedCount === total;
+             all.indeterminate = selectedCount > 0 && selectedCount < total;
+             {% endif %}
+           ">
+  </td>
+  <td>
+    <a href="{{ issue.get_absolute_url }}"
+       hx-get="{{ issue.get_absolute_url }}"
+       hx-push-url="true"
+       class="font-mono font-semibold">
+      {{ issue.key }}
+    </a>
+  </td>
+  <td>
+    {% include "issues/includes/issue_type_badge.html" with issue=issue %}
+  </td>
+  <td class="group">
+    <div class="flex items-start gap-2">
+      <a href="{{ issue.get_absolute_url }}"
+         hx-get="{{ issue.get_absolute_url }}"
+         hx-push-url="true"
+         class="link link-hover flex-1">
+        {{ issue.title }}
+      </a>
+      <a href="#"
+         class="invisible group-hover:visible text-xs link link-primary whitespace-nowrap"
+       hx-get="{% url 'issues:issue_inline_edit' workspace.slug issue.project.key issue.key %}{% if group_by %}?show_status={% if group_by == 'status' %}0{% else %}1{% endif %}&amp;show_priority={% if group_by == 'priority' %}0{% else %}1{% endif %}&amp;show_assignee={% if group_by == 'assignee' %}0{% else %}1{% endif %}{% endif %}"
+       hx-target="closest tr"
+       hx-swap="outerHTML"
+       @click.prevent>
+      [{% translate "Edit" %}]
+      </a>
+    </div>
+  </td>
+  {% if group_by != "status" %}
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'issues:issue_inline_edit' workspace.slug issue.project.key issue.key %}{% if group_by %}?show_status={% if group_by == 'status' %}0{% else %}1{% endif %}&amp;show_priority={% if group_by == 'priority' %}0{% else %}1{% endif %}&amp;show_assignee={% if group_by == 'assignee' %}0{% else %}1{% endif %}{% endif %}"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {% include "issues/includes/issue_status_badge.html" with status=issue.status status_display=issue.get_status_display %}
+  </td>
+  {% endif %}
+  {% if group_by != "priority" %}
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'issues:issue_inline_edit' workspace.slug issue.project.key issue.key %}{% if group_by %}?show_status={% if group_by == 'status' %}0{% else %}1{% endif %}&amp;show_priority={% if group_by == 'priority' %}0{% else %}1{% endif %}&amp;show_assignee={% if group_by == 'assignee' %}0{% else %}1{% endif %}{% endif %}"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {% if issue.priority %}
+      {% include "issues/includes/issue_priority_badge.html" with priority=issue.priority priority_display=issue.get_priority_display %}
+    {% else %}
+      -
+    {% endif %}
+  </td>
+  {% endif %}
+  {% if group_by != "assignee" %}
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'issues:issue_inline_edit' workspace.slug issue.project.key issue.key %}{% if group_by %}?show_status={% if group_by == 'status' %}0{% else %}1{% endif %}&amp;show_priority={% if group_by == 'priority' %}0{% else %}1{% endif %}&amp;show_assignee={% if group_by == 'assignee' %}0{% else %}1{% endif %}{% endif %}"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {{ issue.assignee.get_display_name|default:"-" }}
+  </td>
+  {% endif %}
+  <td class="editable cursor-pointer"
+      hx-get="{% url 'issues:issue_inline_edit' workspace.slug issue.project.key issue.key %}{% if group_by %}?show_status={% if group_by == 'status' %}0{% else %}1{% endif %}&amp;show_priority={% if group_by == 'priority' %}0{% else %}1{% endif %}&amp;show_assignee={% if group_by == 'assignee' %}0{% else %}1{% endif %}{% endif %}"
+      hx-target="closest tr"
+      hx-swap="outerHTML">
+    {{ issue.estimated_points|default:"-" }}
+  </td>
+  <td>
+    <div class="dropdown dropdown-end dropdown-left">
+      <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square tooltip tooltip-left" data-tip="{% translate "Actions" %}">
+        <i class="fa fa-ellipsis-vertical"></i>
+      </div>
+      <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+        <li>
+          <button type="button"
+                  hx-get="{{ issue.get_absolute_url }}?quick_view=1"
+                  hx-target="#quick-view-modal-content"
+                  hx-swap="innerHTML"
+                  @click="showQuickViewModal = true; document.activeElement.blur()">
+            <i class="fa fa-eye"></i> {% translate "Quick View" %}
+          </button>
+        </li>
+        <li>
+          <button type="button"
+                  hx-get="{% url 'issues:issue_update' workspace.slug issue.project.key issue.key %}?modal=1"
+                  hx-target="#edit-modal-content"
+                  hx-swap="innerHTML"
+                  @click="showEditModal = true; document.activeElement.blur()">
+            <i class="fa fa-pencil"></i> {% translate "Edit" %}
+          </button>
+        </li>
+        <li>
+          <button type="button"
+                  @click="actionModalType = 'clone'; actionModalTitle = '{% translate "Clone Issue" %}'; actionModalMessage = '{% translate "Are you sure you want to clone this issue?" %}'; actionModalConfirmText = '{% translate "Clone" %}'; actionModalUrl = '{% url 'issues:issue_clone' workspace.slug issue.project.key issue.key %}'; showActionModal = true; document.activeElement.blur()">
+            <i class="fa fa-clone"></i> {% translate "Clone" %}
+          </button>
+        </li>
+        {% if issue.get_issue_type != 'epic' %}
+        <li>
+          <button type="button"
+                  hx-get="{% url 'issues:issue_convert' workspace.slug issue.project.key issue.key %}?source=list"
+                  hx-target="#convert-modal-content"
+                  hx-swap="innerHTML"
+                  @click="showConvertModal = true; document.activeElement.blur()">
+            <i class="fa fa-exchange"></i> {% translate "Convert" %}
+          </button>
+        </li>
+        <li>
+          <button type="button"
+                  hx-get="{% url 'issues:issue_promote' workspace.slug issue.project.key issue.key %}?source=list"
+                  hx-target="#promote-modal-content"
+                  hx-swap="innerHTML"
+                  @click="showPromoteModal = true; document.activeElement.blur()">
+            <i class="fa fa-arrow-up"></i> {% translate "Promote to Epic" %}
+          </button>
+        </li>
+        <li>
+          <button type="button"
+                  hx-get="{% url 'issues:issue_move' workspace.slug issue.project.key issue.key %}"
+                  hx-target="#move-modal-content"
+                  hx-swap="innerHTML"
+                  @click="showMoveModal = true; document.activeElement.blur()">
+            <i class="fa fa-arrows-alt"></i> {% translate "Move to..." %}
+          </button>
+        </li>
+        <li>
+          <button type="button"
+                  hx-get="{% url 'sprints:issue_add_to_sprint' workspace.slug issue.key %}"
+                  hx-target="#add-to-sprint-modal-content"
+                  hx-swap="innerHTML"
+                  @click="showAddToSprintModal = true; document.activeElement.blur()">
+            <i class="fa fa-bolt"></i> {% translate "Add to Sprint" %}
+          </button>
+        </li>
+        {% endif %}
+        <li>
+          <button type="button" class="text-error"
+                  hx-get="{% url 'issues:issue_delete' workspace.slug issue.project.key issue.key %}"
+                  hx-target="#delete-modal-content"
+                  hx-swap="innerHTML"
+                  @click="showDeleteModal = true; document.activeElement.blur()">
+            <i class="fa fa-trash"></i> {% translate "Delete" %}
+          </button>
+        </li>
+      </ul>
+    </div>
+  </td>
+</tr>
+{% endwith %}

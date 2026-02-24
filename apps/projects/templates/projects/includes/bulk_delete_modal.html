@@ -1,0 +1,31 @@
+{% load i18n %}
+<div class="modal" :class="{ 'modal-open': showBulkDeleteModal }">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg">{% translate "Delete Projects" %}</h3>
+    <p class="py-4">
+      {% blocktranslate trimmed %}
+        Are you sure you want to delete the selected projects?
+        This action cannot be undone.
+      {% endblocktranslate %}
+    </p>
+    <p class="text-sm text-base-content/70" x-text="selectedCount + ' {% translate "project(s) will be deleted" %}'"></p>
+    <div class="modal-action">
+      <button type="button"
+              class="btn btn-error"
+              hx-post="{% url 'projects:projects_bulk_delete' workspace.slug %}"
+              hx-vals='{"page": "{{ page_obj.number|default:1 }}", "search": "{{ search_query|default:"" }}", "status_filter": "{{ status_filter|default:"" }}", "lead_filter": "{{ lead_filter|default:"" }}", "group_by": "{{ group_by|default:"" }}"}'
+              hx-include="[name='projects']:checked"
+              hx-target="#page-content"
+              hx-swap="innerHTML"
+              hx-indicator="#list-loading"
+              hx-disabled-elt="this"
+              @click="showBulkDeleteModal = false">
+        {% translate "Delete Projects" %}
+      </button>
+      <button type="button" class="btn" @click="showBulkDeleteModal = false">
+        {% translate "Cancel" %}
+      </button>
+    </div>
+  </div>
+  <div class="modal-backdrop" @click="showBulkDeleteModal = false"></div>
+</div>

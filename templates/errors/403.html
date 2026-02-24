@@ -1,0 +1,9 @@
+{% extends 'errors/base.html' %}
+{% load i18n %}
+{% block page_title %}{% translate "Forbidden" %}{% endblock %}
+{% block error_details %}
+  <h1 class="mt-title">{% translate "You're not assigned to this task." %}</h1>
+  <h2 class="mt-subtitle">
+    {% translate "This area is restricted to workspace members with the right permissions. If you think this is a mistake, ask your workspace admin — they control the access board." %}
+  </h2>
+{% endblock %}

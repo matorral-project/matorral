@@ -1,0 +1,16 @@
+{% load i18n %}
+{% with issue_type=issue.get_issue_type %}
+{% if issue_type == "milestone" %}
+<span class="badge badge-secondary badge-outline badge-sm text-xs whitespace-nowrap gap-1"><i class="fa fa-flag"></i> {% translate "Milestone" %}</span>
+{% elif issue_type == "epic" %}
+<span class="badge badge-primary badge-outline badge-sm text-xs whitespace-nowrap gap-1"><i class="fa fa-bolt"></i> {% translate "Epic" %}</span>
+{% elif issue_type == "story" %}
+<span class="badge badge-info badge-outline badge-sm text-xs whitespace-nowrap gap-1"><i class="fa fa-book"></i> {% translate "Story" %}</span>
+{% elif issue_type == "bug" %}
+<span class="badge badge-error badge-outline badge-sm text-xs whitespace-nowrap gap-1"><i class="fa fa-bug"></i> {% translate "Bug" %}</span>
+{% elif issue_type == "chore" %}
+<span class="badge badge-warning badge-outline badge-sm text-xs whitespace-nowrap gap-1"><i class="fa fa-wrench"></i> {% translate "Chore" %}</span>
+{% else %}
+<span class="badge badge-outline badge-sm text-xs whitespace-nowrap gap-1"><i class="fa fa-circle"></i> {{ issue.get_issue_type_display }}</span>
+{% endif %}
+{% endwith %}

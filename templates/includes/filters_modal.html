@@ -1,0 +1,191 @@
+{% load i18n %}
+{% comment %}
+Filters Modal - Unified filter modal supporting multiple filter types
+
+Expects from parent context:
+- filter_sections: list of filter section dicts with keys:
+  - name: URL parameter name (e.g., "status", "assignee")
+  - label: Display label
+  - type: "multi_select" or "single_select"
+  - choices: list of (value, label) tuples
+  - current_value: current filter value (comma-separated for multi_select)
+  - empty_label: Label for "no filter" option (single_select only, defaults to "All")
+- active_filter_count: number of active filters (for badge display)
+
+Parent template must include in its x-data:
+- showFiltersModal: false
+
+Parent template must listen for the filters-apply event and trigger the HTMX request.
+{% endcomment %}
+<div class="modal"
+     :class="{ 'modal-open': showFiltersModal }"
+     @keydown.escape="showFiltersModal = false"
+     x-data="{
+       filterValues: {},
+       allChoices: {},
+       init() {
+         this.reset();
+         this.$watch('showFiltersModal', (val) => { if (val) this.reset(); });
+       },
+       reset() {
+         {# Initialize filter values from current context #}
+         {% for section in filter_sections %}
+         {% if section.type == 'multi_select' %}
+         this.filterValues['{{ section.name }}'] = '{{ section.current_value|default:"" }}'.split(',').filter(s => s.trim());
+         this.allChoices['{{ section.name }}'] = [{% for v, l in section.choices %}'{{ v }}'{% if not forloop.last %}, {% endif %}{% endfor %}];
+         {% else %}
+         this.filterValues['{{ section.name }}'] = '{{ section.current_value|default:"" }}';
+         {% endif %}
+         {% endfor %}
+       },
+       toggleMulti(name, value) {
+         let arr = this.filterValues[name] || [];
+         let idx = arr.indexOf(value);
+         if (idx >= 0) {
+           arr.splice(idx, 1);
+         } else {
+           arr.push(value);
+         }
+         this.filterValues[name] = [...arr];
+       },
+       isChecked(name, value) {
+         let arr = this.filterValues[name] || [];
+         return arr.includes(value);
+       },
+       selectAll(name) {
+         this.filterValues[name] = [...(this.allChoices[name] || [])];
+       },
+       clearSection(name, type) {
+         if (type === 'multi_select') {
+           this.filterValues[name] = [];
+         } else {
+           this.filterValues[name] = '';
+         }
+       },
+       setSingle(name, value) {
+         this.filterValues[name] = value;
+       },
+       clearAll() {
+         {% for section in filter_sections %}
+         {% if section.type == 'multi_select' %}
+         this.filterValues['{{ section.name }}'] = [];
+         {% else %}
+         this.filterValues['{{ section.name }}'] = '';
+         {% endif %}
+         {% endfor %}
+       },
+       getFilterData() {
+         let data = {};
+         {% for section in filter_sections %}
+         {% if section.type == 'multi_select' %}
+         data['{{ section.name }}'] = (this.filterValues['{{ section.name }}'] || []).join(',');
+         {% else %}
+         data['{{ section.name }}'] = this.filterValues['{{ section.name }}'] || '';
+         {% endif %}
+         {% endfor %}
+         return data;
+       },
+       apply() {
+         $dispatch('filters-apply', this.getFilterData());
+         this.showFiltersModal = false;
+       },
+       countActive() {
+         let count = 0;
+         {% for section in filter_sections %}
+         {% if section.type == 'multi_select' %}
+         if ((this.filterValues['{{ section.name }}'] || []).length > 0) count++;
+         {% else %}
+         if (this.filterValues['{{ section.name }}']) count++;
+         {% endif %}
+         {% endfor %}
+         return count;
+       }
+     }">
+  <div class="modal-box max-w-md">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-bold text-lg">
+        {% translate "Filters" %}
+        <span class="badge badge-sm badge-primary ml-2" x-show="countActive() > 0" x-text="countActive()"></span>
+      </h3>
+      <button type="button" class="btn btn-xs btn-ghost" @click="clearAll()" x-show="countActive() > 0">
+        {% translate "Clear All" %}
+      </button>
+    </div>
+
+    <div x-data="{ activeTab: '{{ filter_sections.0.name }}' }">
+      {# Tab navigation #}
+      <div role="tablist" class="tabs tabs-border mb-4">
+        {% for section in filter_sections %}
+        <button type="button"
+                role="tab"
+                class="tab"
+                :class="{ 'tab-active': activeTab === '{{ section.name }}' }"
+                @click="activeTab = '{{ section.name }}'">
+          {{ section.label }}
+        </button>
+        {% endfor %}
+      </div>
+
+      {# Tab content - fixed height to prevent layout shift #}
+      <div class="h-72">
+      {% for section in filter_sections %}
+      <div x-show="activeTab === '{{ section.name }}'" x-cloak class="h-full flex flex-col">
+        {% if section.type == "multi_select" %}
+        <div class="flex justify-end gap-1 mb-2">
+          <button type="button" class="btn btn-xs btn-ghost" @click="selectAll('{{ section.name }}')">
+            {% translate "All" %}
+          </button>
+          <button type="button" class="btn btn-xs btn-ghost" @click="clearSection('{{ section.name }}', 'multi_select')">
+            {% translate "None" %}
+          </button>
+        </div>
+        <div class="space-y-1 flex-1 overflow-y-auto">
+          {% for value, label in section.choices %}
+          <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded hover:bg-base-200">
+            <input type="checkbox"
+                   class="checkbox checkbox-sm checkbox-primary"
+                   :checked="isChecked('{{ section.name }}', '{{ value }}')"
+                   @change="toggleMulti('{{ section.name }}', '{{ value }}')">
+            <span class="label-text text-sm">{{ label }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        {% else %}
+        {# single_select #}
+        <div class="space-y-1 flex-1 overflow-y-auto">
+          <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded hover:bg-base-200">
+            <input type="radio"
+                   name="filter-{{ section.name }}"
+                   class="radio radio-sm radio-primary"
+                   :checked="!filterValues['{{ section.name }}']"
+                   @change="setSingle('{{ section.name }}', '')">
+            <span class="label-text text-sm text-base-content/70">{{ section.empty_label|default:_("All") }}</span>
+          </label>
+          {% for value, label in section.choices %}
+          <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded hover:bg-base-200">
+            <input type="radio"
+                   name="filter-{{ section.name }}"
+                   class="radio radio-sm radio-primary"
+                   :checked="filterValues['{{ section.name }}'] === '{{ value }}'"
+                   @change="setSingle('{{ section.name }}', '{{ value }}')">
+            <span class="label-text text-sm">{{ label }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+      </div>
+    </div>
+
+    <div class="modal-action">
+      <button type="button" class="btn btn-ghost" @click="showFiltersModal = false">
+        {% translate "Cancel" %}
+      </button>
+      <button type="button" class="btn btn-primary" @click="apply()">
+        {% translate "Apply" %}
+      </button>
+    </div>
+  </div>
+  <div class="modal-backdrop" @click="showFiltersModal = false"></div>
+</div>

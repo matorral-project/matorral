@@ -1,0 +1,3 @@
+{% load i18n %}
+{% translate "Edit Issue" as modal_title %}
+{% include "includes/modal_shell.html" with show_var="showEditModal" modal_title=modal_title title_id="edit-modal-title" content_id=embed_modal_content_id|default:"edit-modal-content" modal_size="max-w-2xl" %}

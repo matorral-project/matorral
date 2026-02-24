@@ -1,0 +1,52 @@
+{% extends "apps/base.html" %}
+{% load i18n %}
+{% block app %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <div class="app-card">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="mt-subtitle mb-0">{% translate "My Workspaces" %}</h3>
+      <a href="{% url 'workspaces:create_workspace' %}" class="btn btn-primary btn-sm">
+        <i class="fa fa-plus mr-1"></i> {% translate "New Workspace" %}
+      </a>
+    </div>
+    {% if workspaces %}
+      <div class="table-responsive">
+        <table class="table mt-table">
+          <thead>
+          <tr>
+            <th>{% translate "Name" %}</th>
+            <th/>
+            <th/>
+          </tr>
+          </thead>
+          <tbody>
+          {% for workspace in workspaces %}
+            <tr>
+              <td>{{ workspace.name }}</td>
+              <td><a class="link" href="{{ workspace.get_absolute_url }}">{% translate "View Workspace" %}</a></td>
+              <td class="mt-inline-buttons mt-justify-content-end">
+                <a class="mt-button-secondary mx-1" href="{% url 'workspaces:manage_workspace' workspace.slug %}">
+                  <span class="mt-icon">
+                    <i class="fa fa-gear"></i>
+                  </span>
+                  <span class="mt-hidden-mobile-inline">{% translate "Settings" %}</span>
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div>
+        <div>
+          <h1 class="mt-title">{% translate "No Workspaces Yet!" %}</h1>
+          <h2 class="mt-subtitle">{% translate "You don't have any workspaces yet." %}</h2>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}

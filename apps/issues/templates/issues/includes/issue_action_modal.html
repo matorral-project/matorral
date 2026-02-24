@@ -1,0 +1,23 @@
+{% load i18n %}
+<div class="modal" :class="{ 'modal-open': showActionModal }" @keydown.escape="showActionModal = false">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg mb-4" x-text="actionModalTitle"></h3>
+    <p class="mb-4" x-text="actionModalMessage"></p>
+    <div class="modal-action">
+      <button type="button" class="btn btn-ghost" @click="showActionModal = false">{% translate "Cancel" %}</button>
+      <button type="button"
+              class="btn"
+              :class="actionModalType === 'delete' ? 'btn-error' : 'btn-primary'"
+              @click="
+                showActionModal = false;
+                htmx.ajax('POST', actionModalUrl, {
+                  headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                  swap: 'none'
+                });
+              ">
+        <span x-text="actionModalConfirmText"></span>
+      </button>
+    </div>
+  </div>
+  <div class="modal-backdrop" @click="showActionModal = false"></div>
+</div>

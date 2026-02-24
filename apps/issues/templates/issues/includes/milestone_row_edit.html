@@ -1,0 +1,74 @@
+{% load i18n %}
+{# Edit mode for milestone row - form inputs for inline editing #}
+<tr class="bg-base-200 milestone-row-edit"
+    x-data
+    @keydown.escape="htmx.ajax('GET', '{% url 'milestones:milestone_inline_edit' workspace.slug milestone.project.key milestone.key %}?cancel=1', { target: $el, swap: 'outerHTML' })"
+    @keydown.enter.prevent="$el.querySelector('[hx-post]').click()">
+  <td>
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    <input type="checkbox"
+           class="checkbox checkbox-sm"
+           disabled>
+  </td>
+  <td>
+    <span class="font-mono font-semibold text-base-content/60">{{ milestone.key }}</span>
+  </td>
+  <td>
+    <span class="font-mono text-sm text-base-content/60">{{ milestone.project.key }}</span>
+  </td>
+  <td>
+    <input type="text"
+           name="title"
+           value="{{ milestone.title }}"
+           class="input input-sm input-bordered w-full {% if form.title.errors %}input-error{% endif %}"
+           required
+           autofocus>
+    {% if form.title.errors %}
+    <span class="text-error text-xs">{{ form.title.errors.0 }}</span>
+    {% endif %}
+  </td>
+  <td>
+    <select name="status"
+            class="select select-sm select-bordered w-full {% if form.status.errors %}select-error{% endif %}">
+      {% for value, label in status_choices %}
+      <option value="{{ value }}" {% if milestone.status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </td>
+  <td>
+    <select name="priority"
+            class="select select-sm select-bordered w-full">
+      <option value="">-</option>
+      {% for value, label in priority_choices %}
+      <option value="{{ value }}" {% if milestone.priority == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </td>
+  <td>
+    <input type="date"
+           name="due_date"
+           value="{{ milestone.due_date|date:'Y-m-d' }}"
+           class="input input-sm input-bordered w-full">
+  </td>
+  <td>
+    <div class="flex items-center gap-1">
+      <button type="button"
+              class="btn btn-sm btn-success btn-square tooltip tooltip-left"
+              data-tip="{% translate "Save" %}"
+              hx-post="{% url 'milestones:milestone_inline_edit' workspace.slug milestone.project.key milestone.key %}"
+              hx-include="closest tr"
+              hx-target="closest tr"
+              hx-swap="outerHTML">
+        <i class="fa fa-check"></i>
+      </button>
+      <button type="button"
+              class="btn btn-sm btn-ghost btn-square tooltip tooltip-left"
+              data-tip="{% translate "Cancel" %}"
+              hx-get="{% url 'milestones:milestone_inline_edit' workspace.slug milestone.project.key milestone.key %}?cancel=1"
+              hx-target="closest tr"
+              hx-swap="outerHTML">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+  </td>
+</tr>

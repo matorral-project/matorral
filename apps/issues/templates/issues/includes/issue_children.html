@@ -1,0 +1,37 @@
+{% load i18n %}
+{% for child in children %}
+<tr style="padding-left: {{ depth|add:"-1"|stringformat:"d" }}rem;">
+  <td class="pl-{{ depth|add:"2"|stringformat:"d" }}">
+    <a href="{{ child.get_absolute_url }}"
+       hx-get="{{ child.get_absolute_url }}"
+       hx-push-url="true"
+       class="font-mono font-semibold">
+      {{ child.key }}
+    </a>
+  </td>
+  <td>{% include "issues/includes/issue_type_badge.html" with issue=child %}</td>
+  <td>
+    <a href="{{ child.get_absolute_url }}"
+       hx-get="{{ child.get_absolute_url }}"
+       hx-push-url="true">
+      {{ child.title }}
+    </a>
+  </td>
+  <td>
+    {% if child.priority %}
+      {% include "issues/includes/issue_priority_badge.html" with priority=child.priority priority_display=child.get_priority_display %}
+    {% else %}
+      <span class="text-gray-400">—</span>
+    {% endif %}
+  </td>
+  <td>
+    {% if child.assignee %}
+      {{ child.assignee.get_display_name }}
+    {% else %}
+      <span class="text-gray-400">—</span>
+    {% endif %}
+  </td>
+  <td>{{ child.estimated_points|default:"—" }}</td>
+  <td>{% include "issues/includes/issue_status_badge.html" with status=child.status status_display=child.get_status_display %}</td>
+</tr>
+{% endfor %}

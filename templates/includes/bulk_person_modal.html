@@ -1,0 +1,58 @@
+{% load i18n %}
+<div class="modal" :class="{ 'modal-open': {{ show_var }} }" @keydown.escape="{{ show_var }} = false">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg mb-4">{{ modal_title }}</h3>
+    <input type="hidden" name="{{ hidden_input_name|default:'assignee' }}" :value="{{ selected_value_var }}" id="{{ hidden_input_id }}">
+    <div x-show="!{{ confirm_step_var }}" x-cloak>
+      <p class="mb-4">{{ prompt_text }}</p>
+      {% if current_user_id %}
+      <button type="button"
+              class="btn btn-sm btn-ghost gap-2 mb-3"
+              @click="{{ selected_name_var }} = '{{ current_user_name }}'; {{ selected_value_var }} = '{{ current_user_id }}'; {{ confirm_step_var }} = true">
+        <i class="fa fa-user-check text-sm"></i>
+        {% translate "Assign to me" %}
+      </button>
+      {% endif %}
+      <div class="form-control">
+        <label class="label cursor-pointer justify-start gap-3">
+          <input type="radio" name="{{ radio_name_prefix }}-select" id="{{ radio_name_prefix }}-none" class="radio radio-primary" checked
+                 @change="{{ selected_name_var }} = '{{ none_label }}'; {{ selected_value_var }} = ''">
+          <span class="label-text italic text-base-content/70">{{ none_label }}</span>
+        </label>
+      </div>
+      {% for member in workspace_members %}
+      <div class="form-control">
+        <label class="label cursor-pointer justify-start gap-3">
+          <input type="radio" name="{{ radio_name_prefix }}-select" class="radio radio-primary" value="{{ member.pk }}"
+                 @change="{{ selected_name_var }} = '{{ member.get_display_name }}'; {{ selected_value_var }} = '{{ member.pk }}'">
+          <span class="label-text">{{ member.get_display_name }}</span>
+        </label>
+      </div>
+      {% endfor %}
+      <div class="modal-action">
+        <button class="btn btn-ghost" @click="{{ show_var }} = false">{% translate "Cancel" %}</button>
+        <button class="btn btn-primary" @click="{{ confirm_step_var }} = true">{% translate "Continue" %}</button>
+      </div>
+    </div>
+    <div x-show="{{ confirm_step_var }}" x-cloak>
+      <p class="mb-4">
+        {{ confirm_text }}
+        <strong x-text="{{ selected_name_var }}"></strong>
+      </p>
+      <div class="modal-action">
+        <button class="btn btn-ghost" @click="{{ confirm_step_var }} = false">{% translate "Back" %}</button>
+        <button class="btn btn-primary"
+                hx-post="{{ post_url }}"
+                {% if hx_vals %}hx-vals='{{ hx_vals }}'{% endif %}
+                hx-include="{{ hx_include }}"
+                hx-target="{{ hx_target }}"
+                hx-swap="innerHTML"
+                hx-indicator="{{ hx_indicator }}"
+                @click="{{ show_var }} = false">
+          {% translate "Assign" %}
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop" @click="{{ show_var }} = false"></div>
+</div>

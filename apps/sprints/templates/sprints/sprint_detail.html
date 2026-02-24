@@ -1,0 +1,55 @@
+{% extends "apps/base.html" %}
+{% load i18n %}
+{% block app %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <section class="app-card pb-2 lg:pb-2" x-data="{ showDeleteModal: false, showCascadeModal: false }">
+    {% include "sprints/includes/sprint_detail_header.html" %}
+
+    {% include "includes/delete_confirm_modal.html" with delete_modal_id="detail-delete-modal-content" %}
+    {% include "includes/cascade_status_modal.html" %}
+  </section>
+
+  {# Embedded Issues List and History Tabs #}
+  <section class="app-card" x-data="{ activeTab: 'issues' }">
+    <div role="tablist" class="tabs tabs-lift">
+      <button role="tab" class="tab" :class="{ 'tab-active': activeTab === 'issues' }"
+              @click="activeTab = 'issues'">
+        {% translate "Issues" %}
+      </button>
+      <button role="tab" class="tab" :class="{ 'tab-active': activeTab === 'history' }"
+              @click="activeTab = 'history'">
+        {% translate "History" %}
+      </button>
+      <div class="tab flex-1 cursor-default"></div>
+    </div>
+
+    <div class="border border-base-300 border-t-0 rounded-b-box p-4">
+      {# Issues tab content #}
+      <div x-show="activeTab === 'issues'">
+        <div hx-get="{% url 'sprints:sprint_issues_embed' workspace.slug sprint.key %}?group_by=status"
+             hx-trigger="load"
+             hx-target="this"
+             hx-swap="innerHTML">
+          <span class="loading loading-spinner loading-md"></span>
+        </div>
+      </div>
+
+      {# History tab content #}
+      <div x-show="activeTab === 'history'" x-cloak>
+        <div id="history-section"
+             hx-get="{% url 'sprints:sprint_history' workspace.slug sprint.key %}"
+             hx-trigger="intersect once"
+             hx-target="this"
+             hx-swap="innerHTML">
+          <span class="loading loading-spinner loading-md"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div id="messages" class="toast toast-end toast-bottom z-50" hx-swap-oob="true">
+    {% include "includes/messages.html" %}
+  </div>
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}

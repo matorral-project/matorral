@@ -1,0 +1,63 @@
+{% load i18n %}
+<p class="mb-4">{% translate "Select new parent for" %} <strong>{{ issue.key }}</strong>:</p>
+
+<div class="max-h-64 overflow-y-auto space-y-1">
+  <div class="form-control">
+    <label class="label cursor-pointer justify-start gap-3 py-2">
+      <input type="radio" name="parent-select" class="radio radio-primary" value="" checked>
+      <span class="label-text italic text-base-content/70">{% translate "None" %}</span>
+    </label>
+  </div>
+  {% if grouped_parents %}
+    {% for milestone, epics in grouped_parents %}
+    <div class="divider divider-start my-1 text-xs font-semibold text-base-content/50">
+      {% if milestone %}
+        {{ milestone.key }} &mdash; {{ milestone.title|truncatechars:30 }}
+      {% else %}
+        {% translate "No milestone" %}
+      {% endif %}
+    </div>
+    {% for parent in epics %}
+    <div class="form-control">
+      <label class="label cursor-pointer justify-start gap-3 py-2">
+        <input type="radio" name="parent-select" class="radio radio-primary" value="{{ parent.key }}">
+        <span class="label-text">
+          <span class="font-mono font-semibold">{{ parent.key }}</span>
+          <span class="ml-2">{{ parent.title|truncatechars:40 }}</span>
+        </span>
+      </label>
+    </div>
+    {% endfor %}
+    {% endfor %}
+  {% else %}
+    {% for parent in valid_parents %}
+    <div class="form-control">
+      <label class="label cursor-pointer justify-start gap-3 py-2">
+        <input type="radio" name="parent-select" class="radio radio-primary" value="{{ parent.key }}">
+        <span class="label-text">
+          <span class="font-mono font-semibold">{{ parent.key }}</span>
+          <span class="ml-2">{{ parent.title|truncatechars:40 }}</span>
+        </span>
+      </label>
+    </div>
+    {% empty %}
+    <p class="text-base-content/70 italic py-2">{% translate "No valid parents available." %}</p>
+    {% endfor %}
+  {% endif %}
+</div>
+
+<div class="modal-action">
+  <button type="button" class="btn btn-ghost" @click="showMoveModal = false">{% translate "Cancel" %}</button>
+  <button type="button" class="btn btn-primary"
+          @click="
+            let selected = document.querySelector('[name=parent-select]:checked');
+            htmx.ajax('POST', '{{ move_url }}', {
+              values: { parent_key: selected ? selected.value : '' },
+              headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+              swap: 'none'
+            });
+            showMoveModal = false;
+          ">
+    {% translate "Move" %}
+  </button>
+</div>

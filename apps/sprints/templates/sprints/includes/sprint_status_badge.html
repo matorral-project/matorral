@@ -1,0 +1,12 @@
+{% load i18n %}
+{% if status == "planning" %}
+<span class="badge badge-info badge-sm">{{ status_display }}</span>
+{% elif status == "active" %}
+<span class="badge badge-primary badge-sm">{{ status_display }}</span>
+{% elif status == "completed" %}
+<span class="badge badge-success badge-sm">{{ status_display }}</span>
+{% elif status == "archived" %}
+<span class="badge badge-neutral badge-sm">{{ status_display }}</span>
+{% else %}
+<span class="badge badge-ghost badge-sm">{{ status_display }}</span>
+{% endif %}

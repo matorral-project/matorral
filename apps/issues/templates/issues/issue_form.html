@@ -1,0 +1,71 @@
+{% extends "apps/base.html" %}
+{% load i18n form_tags %}
+{% block app %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <section class="app-card mt-form-page">
+    <h1 class="mt-title">
+      {% if issue %}
+        {% translate "Edit" %} {{ issue_type_label }}
+      {% else %}
+        {% translate "New" %} {{ issue_type_label }}
+      {% endif %}
+    </h1>
+    {% if project_locked %}
+    <p class="text-sm text-gray-500 mb-4">
+      {% blocktranslate with key=project.key name=project.name %}Creating {{ issue_type_label|lower }} for project <strong>{{ key }}</strong> - {{ name }}{% endblocktranslate %}
+    </p>
+    {% endif %}
+    <form method="post">
+      {% csrf_token %}
+      {% render_form_fields form %}
+      <div class="flex gap-2 mt-4">
+        <button type="submit" class="mt-button-primary">
+          {% if issue %}
+            {% translate "Save Changes" %}
+          {% else %}
+            {% translate "Create" %} {{ issue_type_label }}
+          {% endif %}
+        </button>
+        {% if issue %}
+        <a href="{{ issue.get_absolute_url }}"
+           hx-get="{{ issue.get_absolute_url }}"
+           hx-push-url="true"
+           class="mt-button-secondary">
+          {% translate "Cancel" %}
+        </a>
+        {% elif next_url %}
+        <a href="{{ next_url }}"
+           hx-get="{{ next_url }}"
+           hx-push-url="true"
+           class="mt-button-secondary">
+          {% translate "Cancel" %}
+        </a>
+        {% elif parent_preset %}
+        <a href="{{ parent_preset.get_absolute_url }}"
+           hx-get="{{ parent_preset.get_absolute_url }}"
+           hx-push-url="true"
+           class="mt-button-secondary">
+          {% translate "Cancel" %}
+        </a>
+        {% elif project_locked %}
+        <a href="{{ project.get_absolute_url }}"
+           hx-get="{{ project.get_absolute_url }}"
+           hx-push-url="true"
+           class="mt-button-secondary">
+          {% translate "Cancel" %}
+        </a>
+        {% else %}
+        <a href="{% url 'workspace_issue_list' workspace.slug %}?project={{ project.key }}"
+           hx-get="{% url 'workspace_issue_list' workspace.slug %}?project={{ project.key }}"
+           hx-push-url="true"
+           class="mt-button-secondary">
+          {% translate "Cancel" %}
+        </a>
+        {% endif %}
+      </div>
+    </form>
+  </section>
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}

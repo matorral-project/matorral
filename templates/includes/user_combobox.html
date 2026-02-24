@@ -1,0 +1,114 @@
+{% load i18n %}
+{# Reusable Alpine.js combobox for user selection (assignee, lead, owner). #}
+{# Required: combobox_name, and one of: combobox_members (queryset) or combobox_choices (list of tuples) #}
+{# Optional: combobox_selected_id, combobox_selected_name, combobox_size ("sm" for rows/headers), combobox_id #}
+{# Optional: combobox_current_user_id, combobox_current_user_name (enables "Assign to me" button) #}
+<div class="relative"
+     x-data="{
+       open: false,
+       search: '',
+       selectedValue: '{{ combobox_selected_id|default:"" }}',
+       selectedLabel: '{{ combobox_selected_name|default:""|escapejs }}',
+       activeIndex: -1,
+       currentUserId: '{{ combobox_current_user_id|default:"" }}',
+       currentUserLabel: '{{ combobox_current_user_name|default:""|escapejs }}',
+       options: [
+         {% if combobox_choices %}
+         {% for value, label in combobox_choices %}
+         { value: '{{ value }}', label: '{{ label|escapejs }}', initials: '{{ label|slice:":2"|upper }}' }{% if not forloop.last %},{% endif %}
+         {% endfor %}
+         {% elif combobox_members %}
+         {% for member in combobox_members %}
+         { value: '{{ member.pk }}', label: '{{ member.get_display_name|escapejs }}', initials: '{{ member.get_display_name|slice:":2"|upper }}' }{% if not forloop.last %},{% endif %}
+         {% endfor %}
+         {% endif %}
+       ],
+       get filtered() {
+         if (!this.search.trim()) return this.options;
+         const s = this.search.toLowerCase();
+         return this.options.filter(o => o.label.toLowerCase().includes(s));
+       },
+       select(opt) {
+         this.selectedValue = opt.value;
+         this.selectedLabel = opt.label;
+         this.open = false;
+         this.search = '';
+         this.activeIndex = -1;
+       },
+       clear() {
+         this.selectedValue = '';
+         this.selectedLabel = '';
+         this.open = false;
+         this.search = '';
+         this.activeIndex = -1;
+       },
+       toggle() {
+         this.open = !this.open;
+         if (this.open) this.$nextTick(() => this.$refs.searchInput.focus());
+       },
+       assignMe() {
+         const me = this.options.find(o => o.value === this.currentUserId);
+         if (me) this.select(me);
+       }
+     }"
+     @click.outside="open = false; search = ''"
+     @keydown.enter.stop
+     @keydown.escape="if (open) { $event.stopPropagation(); $event.preventDefault(); open = false; search = ''; }">
+  <input type="hidden" name="{{ combobox_name }}" :value="selectedValue">
+  <div class="flex items-center gap-1">
+    <button type="button"
+            @click="toggle()"
+            x-ref="trigger"
+            :aria-expanded="open"
+            class="input input-bordered w-full flex items-center cursor-pointer {% if combobox_size == 'sm' %}input-sm{% endif %}">
+      <span x-show="selectedLabel" x-text="selectedLabel" class="truncate flex-1 text-left"></span>
+      <span x-show="!selectedLabel" class="text-base-content/40 flex-1 text-left">&mdash;</span>
+      <i class="fa fa-chevron-down text-xs opacity-50 shrink-0"></i>
+    </button>
+    {% if combobox_current_user_id %}
+    <button type="button"
+            x-show="currentUserId && selectedValue !== currentUserId"
+            @click="assignMe()"
+            class="btn btn-ghost btn-square {% if combobox_size == 'sm' %}btn-sm{% else %}btn-md{% endif %} shrink-0 tooltip tooltip-left"
+            data-tip="{% translate 'Assign to me' %}">
+      <i class="fa fa-user-check text-sm"></i>
+    </button>
+    {% endif %}
+  </div>
+  <div x-show="open"
+       x-transition
+       class="absolute z-50 mt-1 w-full min-w-48 bg-base-100 border border-base-content/20 rounded-lg shadow-lg overflow-hidden">
+    <div class="p-2">
+      <input type="text"
+             x-model="search"
+             x-ref="searchInput"
+             placeholder="{% translate 'Search...' %}"
+             class="input input-sm input-bordered w-full"
+             @keydown.down.prevent="activeIndex = Math.min(activeIndex + 1, filtered.length - 1)"
+             @keydown.up.prevent="activeIndex = Math.max(activeIndex - 1, 0)"
+             @keydown.enter.prevent="if (activeIndex >= 0 && activeIndex < filtered.length) select(filtered[activeIndex])"
+             @keydown.escape.prevent="open = false; search = ''; $refs.trigger.focus()">
+    </div>
+    <div class="overflow-y-auto max-h-48">
+      <button type="button"
+              @click="clear()"
+              class="flex items-center gap-2 w-full px-3 py-1.5 text-sm hover:bg-base-200">
+        <span class="w-6 h-6"></span>
+        <span class="text-base-content/50">&mdash;</span>
+        <i x-show="!selectedValue" class="fa fa-check ml-auto text-success text-xs"></i>
+      </button>
+      <template x-for="(opt, idx) in filtered" :key="opt.value">
+        <button type="button"
+                @click="select(opt)"
+                @mouseenter="activeIndex = idx"
+                class="flex items-center gap-2 w-full px-3 py-1.5 text-sm hover:bg-base-200"
+                :class="{ 'bg-base-200': activeIndex === idx }">
+          <span class="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-semibold shrink-0"
+                x-text="opt.initials"></span>
+          <span x-text="opt.label" class="truncate"></span>
+          <i x-show="opt.value === selectedValue" class="fa fa-check ml-auto text-success text-xs shrink-0"></i>
+        </button>
+      </template>
+    </div>
+  </div>
+</div>

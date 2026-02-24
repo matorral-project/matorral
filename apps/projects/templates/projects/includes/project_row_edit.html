@@ -1,0 +1,67 @@
+{% load i18n %}
+{# Edit mode for project row - form inputs for inline editing #}
+{# Column visibility based on show_* variables (passed from view based on group_by) #}
+<tr class="bg-base-200 project-row-edit"
+    x-data
+    @keydown.escape="htmx.ajax('GET', '{% url 'projects:project_inline_edit' workspace.slug project.key %}?cancel=1{% if not show_status %}&show_status=0{% endif %}{% if not show_lead %}&show_lead=0{% endif %}', { target: $el, swap: 'outerHTML' })"
+    @keydown.enter.prevent="$el.querySelector('[hx-post]').click()">
+  <td>
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    {# Include hidden fields for columns that aren't shown to preserve values #}
+    {% if not show_status %}<input type="hidden" name="status" value="{{ project.status }}">{% endif %}
+    {% if not show_lead %}<input type="hidden" name="lead" value="{{ project.lead_id|default:'' }}">{% endif %}
+    <input type="checkbox"
+           class="checkbox checkbox-sm"
+           disabled>
+  </td>
+  <td>
+    <span class="font-mono font-semibold text-base-content/60">{{ project.key }}</span>
+  </td>
+  <td>
+    <input type="text"
+           name="name"
+           value="{{ project.name }}"
+           class="input input-sm input-bordered w-full {% if form.name.errors %}input-error{% endif %}"
+           required
+           autofocus>
+    {% if form.name.errors %}
+    <span class="text-error text-xs">{{ form.name.errors.0 }}</span>
+    {% endif %}
+  </td>
+  {% if show_status %}
+  <td>
+    <select name="status"
+            class="select select-sm select-bordered w-full {% if form.status.errors %}select-error{% endif %}">
+      {% for value, label in status_choices %}
+      <option value="{{ value }}" {% if project.status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </td>
+  {% endif %}
+  {% if show_lead %}
+  <td>
+    {% include "includes/user_combobox.html" with combobox_name="lead" combobox_members=workspace_members combobox_selected_id=project.lead_id|default:"" combobox_selected_name=project.lead.get_display_name|default:"" combobox_size="sm" %}
+  </td>
+  {% endif %}
+  <td>
+    <div class="flex items-center gap-1">
+      <button type="button"
+              class="btn btn-sm btn-success btn-square tooltip tooltip-left"
+              data-tip="{% translate "Save" %}"
+              hx-post="{% url 'projects:project_inline_edit' workspace.slug project.key %}{% if not show_status %}?show_status=0{% endif %}{% if not show_lead %}{% if not show_status %}&{% else %}?{% endif %}show_lead=0{% endif %}"
+              hx-include="closest tr"
+              hx-target="closest tr"
+              hx-swap="outerHTML">
+        <i class="fa fa-check"></i>
+      </button>
+      <button type="button"
+              class="btn btn-sm btn-ghost btn-square tooltip tooltip-left"
+              data-tip="{% translate "Cancel" %}"
+              hx-get="{% url 'projects:project_inline_edit' workspace.slug project.key %}?cancel=1{% if not show_status %}&show_status=0{% endif %}{% if not show_lead %}&show_lead=0{% endif %}"
+              hx-target="closest tr"
+              hx-swap="outerHTML">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+  </td>
+</tr>
