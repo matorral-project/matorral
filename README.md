@@ -1,7 +1,5 @@
 # Matorral
 
-**WARNING** This is a work in progress. This codebase is not working yet.
-
 Matorral is a simple and fast open-source project management tool built with Django, HTMX, and Tailwind CSS.
 It supports workspaces, projects, milestones, epics, stories, and sprints.
 
@@ -63,20 +61,9 @@ just test
 
 # Run a specific test
 just test apps.issues.tests.test_views
-
-# Lint and format
-just ruff
-
-# Run E2E tests (requires built assets)
-just npm-build
-just e2e
 ```
 
 Pull requests are welcome. Please run `just test` and configure `pre-commit` before committing and pushing changes.
-
-## Deployment
-
-Matorral is configured to deploy to [Fly.io](https://fly.io) via the `fly.toml` at the root of the repo.
 
 ## Tech stack
 
