@@ -1,0 +1,34 @@
+{% extends 'account/email/email_template_base.html' %}
+{% load i18n %}
+{% block preheader %}{% translate "Verify your email address to activate your Matorral account." %}{% endblock %}
+{% block email_title %}{% translate "Confirm your email" %}{% endblock %}
+{% block message_body %}
+{% block message_body_start %}{% endblock %}
+{% if code %}
+  <p>
+    {% blocktranslate trimmed %}
+      Your sign-in code for Matorral is listed below.
+      Please enter it in your open browser window.
+    {% endblocktranslate %}
+  </p>
+  <p style="text-align: center; margin: 24px 0;">
+    <span style="display: inline-block; background-color: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 24px; font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace; font-size: 24px; font-weight: 600; letter-spacing: 4px; color: #1a1a1a;">
+      {{ code }}
+    </span>
+  </p>
+{% else %}
+  <p>
+    {% blocktranslate trimmed %}
+      Thank you for signing up for Matorral. Please click the button below to verify your email address and activate your account.
+    {% endblocktranslate %}
+  </p>
+{% endif %}
+{% endblock %}
+{% block cta %}
+{# only show the cta if not using the code-based confirmation #}
+{% if not code %}
+  {{ block.super }}
+{% endif %}
+{% endblock %}
+{% block cta_link %}{{ activate_url }}{% endblock %}
+{% block cta_text %}{% translate "Verify Email Address" %}{% endblock %}

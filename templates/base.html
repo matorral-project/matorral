@@ -29,8 +29,7 @@
 </head>
 <body class="bg-base-100" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
   {% block body_wrapper %}
-    {% if is_debug %}{% include 'includes/dev_ribbon.html' %}{% endif %}
-    {% block top_nav %}
+{% block top_nav %}
     {% include 'includes/top_nav.html' %}
     {% endblock %}
 

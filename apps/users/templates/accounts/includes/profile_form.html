@@ -1,0 +1,36 @@
+{% load i18n %}
+{% load issues_tags %}
+<div class="mt-columns">
+  <div class="mt-column">
+    <h2 class="mt-subtitle">{% translate "Profile Details" %}</h2>
+    <form method="post">
+      {% csrf_token %}
+      {% render_text_input form.email %}
+      {% if user.emailaddress_set.count > 1 %}
+        <div class="mt-help"><a href="{% url "account_email" %}" class="link">{%  translate "Manage email addresses" %}</a></div>
+      {% endif %}
+      {% render_text_input form.first_name %}
+      {% render_text_input form.last_name %}
+      {% if form.fields.language.choices %}
+        {% render_select_input form.language %}
+      {% endif %}
+      {% render_select_input form.timezone %}
+      <div class="mt-2">
+        <input class="mt-button-primary" type="submit" value="{% translate "Save" %}">
+      </div>
+    </form>
+  </div>
+  <div id="profile-picture" class="mt-column-one-quarter">
+    <div class="mt-text-centered">
+      <img class="avatar" src="{{ user.avatar_url }}">
+      <div id='profile-upload-holder'>
+        <label for="profile-upload" >
+          <a id="profile-upload-label" class="mt-button-light">
+            {% translate "Modify Avatar" %}
+          </a>
+        </label>
+        <input id="profile-upload" type="file" accept="image/*"/>
+      </div>
+    </div>
+  </div>
+</div>

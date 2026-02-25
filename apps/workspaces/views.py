@@ -11,8 +11,11 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 from django.views.generic import DetailView
 
-from apps.users.models import CustomUser
+from apps.users.models import User
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
+
+from allauth.account.models import EmailAddress
+from allauth.account.views import SignupView
 
 from .decorators import login_and_workspace_membership_required, workspace_admin_required
 from .forms import InvitationForm, MembershipForm, WorkspaceChangeForm
@@ -20,9 +23,6 @@ from .invitations import clear_invite_from_session, process_invitation, send_inv
 from .limits import LimitExceededError, check_invitation_limit, check_member_limit
 from .models import Invitation, Membership, Workspace
 from .roles import ROLE_ADMIN, is_admin, is_member
-
-from allauth.account.models import EmailAddress
-from allauth.account.views import SignupView
 
 
 class WorkspaceDetailView(LoginAndWorkspaceRequiredMixin, DetailView):
@@ -94,7 +94,7 @@ def accept_invitation(request, invitation_id):
                 )
                 return HttpResponseRedirect(reverse("landing_pages:home"))
 
-    account_exists = CustomUser.objects.filter(email=invitation.email).exists()
+    account_exists = User.objects.filter(email=invitation.email).exists()
     owned_email_address = None
     user_workspace_count = 0
     if request.user.is_authenticated:

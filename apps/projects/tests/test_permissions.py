@@ -3,7 +3,7 @@ from django.urls import reverse
 
 from apps.projects.factories import ProjectFactory
 from apps.projects.models import Project, ProjectStatus
-from apps.users.factories import CustomUserFactory
+from apps.users.factories import UserFactory
 from apps.workspaces.factories import MembershipFactory, WorkspaceFactory
 from apps.workspaces.roles import ROLE_ADMIN, ROLE_MEMBER
 
@@ -14,9 +14,9 @@ class ProjectPermissionTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.workspace = WorkspaceFactory()
-        cls.admin = CustomUserFactory()
-        cls.member = CustomUserFactory()
-        cls.outsider = CustomUserFactory()
+        cls.admin = UserFactory()
+        cls.member = UserFactory()
+        cls.outsider = UserFactory()
 
         MembershipFactory(workspace=cls.workspace, user=cls.admin, role=ROLE_ADMIN)
         MembershipFactory(workspace=cls.workspace, user=cls.member, role=ROLE_MEMBER)
@@ -262,13 +262,13 @@ class WorkspaceIsolationTest(TestCase):
     def setUpTestData(cls):
         # Workspace 1 with member and project
         cls.workspace1 = WorkspaceFactory()
-        cls.user1 = CustomUserFactory()
+        cls.user1 = UserFactory()
         MembershipFactory(workspace=cls.workspace1, user=cls.user1, role=ROLE_MEMBER)
         cls.project1 = ProjectFactory(workspace=cls.workspace1, name="Workspace 1 Project")
 
         # Workspace 2 with member and project
         cls.workspace2 = WorkspaceFactory()
-        cls.user2 = CustomUserFactory()
+        cls.user2 = UserFactory()
         MembershipFactory(workspace=cls.workspace2, user=cls.user2, role=ROLE_MEMBER)
         cls.project2 = ProjectFactory(workspace=cls.workspace2, name="Workspace 2 Project")
 

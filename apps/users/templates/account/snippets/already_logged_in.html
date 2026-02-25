@@ -1,0 +1,9 @@
+{% load i18n %}
+{% load account %}
+{% user_display user as user_display %}
+<div class="alert alert-info mb-4">
+  <span>
+    <strong>{% translate "Note" %}:</strong>
+    {% blocktranslate %}You are already logged in as {{ user_display }}.{% endblocktranslate %}
+  </span>
+</div>

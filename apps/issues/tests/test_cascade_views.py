@@ -7,7 +7,7 @@ from apps.issues.factories import EpicFactory, MilestoneFactory, StoryFactory, S
 from apps.issues.models import IssueStatus, SubtaskStatus
 from apps.projects.factories import ProjectFactory
 from apps.projects.models import ProjectStatus
-from apps.users.factories import CustomUserFactory
+from apps.users.factories import UserFactory
 from apps.workspaces.factories import MembershipFactory, WorkspaceFactory
 from apps.workspaces.roles import ROLE_ADMIN
 
@@ -19,7 +19,7 @@ class CascadeViewTestBase(TestCase):
     def setUpTestData(cls):
         cls.workspace = WorkspaceFactory()
         cls.project = ProjectFactory(workspace=cls.workspace)
-        cls.user = CustomUserFactory()
+        cls.user = UserFactory()
         MembershipFactory(workspace=cls.workspace, user=cls.user, role=ROLE_ADMIN)
 
     def setUp(self):

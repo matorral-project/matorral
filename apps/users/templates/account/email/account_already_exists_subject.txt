@@ -1,0 +1,1 @@
+{% load i18n %}{% autoescape off %}{% blocktranslate %}Account Already Exists{% endblocktranslate %}{% endautoescape %}

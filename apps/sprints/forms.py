@@ -3,8 +3,8 @@ from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 
 from apps.issues.models import BaseIssue
+from apps.issues.widgets import UserComboboxWidget
 from apps.sprints.models import Sprint, SprintStatus
-from apps.ui.widgets import UserComboboxWidget
 from apps.workspaces.models import Workspace
 
 User = get_user_model()

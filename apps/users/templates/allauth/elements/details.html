@@ -1,0 +1,9 @@
+{% load allauth %}
+<details class="collapse collapse-arrow bg-base-200 mb-2" {% if attrs.open %}open{% endif %}>
+  <summary class="collapse-title font-medium">
+    {% slot summary %}{% endslot %}
+  </summary>
+  <div class="collapse-content">
+    {% slot body %}{% endslot %}
+  </div>
+</details>

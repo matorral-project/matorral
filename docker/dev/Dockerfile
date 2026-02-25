@@ -15,7 +15,7 @@ RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
       libpq-dev
 
 # uv package manager
-COPY --from=ghcr.io/astral-sh/uv:0.8 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.10.6 /uv /uvx /bin/
 
 ARG MY_UID=1000
 ARG MY_GID=1000

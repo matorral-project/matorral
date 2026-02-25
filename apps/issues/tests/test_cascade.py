@@ -13,7 +13,7 @@ from apps.issues.factories import EpicFactory, MilestoneFactory, StoryFactory, S
 from apps.issues.models import IssueStatus, SubtaskStatus
 from apps.projects.factories import ProjectFactory
 from apps.projects.models import ProjectStatus
-from apps.users.factories import CustomUserFactory
+from apps.users.factories import UserFactory
 from apps.workspaces.factories import WorkspaceFactory
 
 
@@ -436,7 +436,7 @@ class ApplyCascadeTest(TestCase):
     def setUpTestData(cls):
         cls.workspace = WorkspaceFactory()
         cls.project = ProjectFactory(workspace=cls.workspace)
-        cls.actor = CustomUserFactory()
+        cls.actor = UserFactory()
 
     def test_apply_cascade_down_issues(self):
         epic = EpicFactory(project=self.project)

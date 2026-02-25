@@ -1,0 +1,4482 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-25 04:07+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: apps/dashboard/helpers.py:100
+msgid "Explore the demo project"
+msgstr ""
+
+#: apps/dashboard/helpers.py:101
+msgid "See how projects and issues work with example data"
+msgstr ""
+
+#: apps/dashboard/helpers.py:108
+msgid "Create your first project"
+msgstr ""
+
+#: apps/dashboard/helpers.py:109
+msgid "Set up a project to organize your team's work"
+msgstr ""
+
+#: apps/dashboard/helpers.py:118
+msgid "Invite your teammates"
+msgstr ""
+
+#: apps/dashboard/helpers.py:119
+msgid "Collaborate by bringing your team onboard"
+msgstr ""
+
+#: apps/dashboard/helpers.py:127
+msgid "Create your first sprint"
+msgstr ""
+
+#: apps/dashboard/helpers.py:128
+msgid "Start planning work in time-boxed iterations"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/home.html:16
+#, python-format
+msgid "Welcome back, %(name)s!"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/home.html:18
+#, python-format
+msgid "Here's what's happening in \"%(workspace_name)s\"."
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/home.html:30
+msgid "Active Sprint"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/home.html:37
+msgid "View Sprint"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/home.html:65
+msgid "No goal set."
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/home.html:87 apps/issues/models.py:26
+#: apps/issues/models.py:527
+#: apps/issues/templates/issues/includes/subtask_row.html:34
+msgid "In Progress"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/home.html:100 apps/issues/models.py:28
+msgid "In Review"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/home.html:113
+msgid "Ready to Start"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/home.html:126 apps/issues/models.py:27
+msgid "Blocked"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/home.html:140
+msgid "You have no issues assigned in the current sprint."
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/home.html:142
+msgid "You have no active issues assigned."
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/home.html:146
+msgid "Issues assigned to you will appear here."
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/includes/dashboard_issue_row.html:29
+#: apps/issues/templates/issues/includes/comments_list.html:64
+#: apps/issues/templates/issues/includes/issue_row.html:47
+#: apps/issues/templates/issues/includes/issue_row.html:106
+#: apps/issues/templates/issues/includes/issue_row_embed.html:48
+#: apps/issues/templates/issues/includes/issue_row_embed.html:118
+#: apps/issues/templates/issues/includes/milestone_row.html:41
+#: apps/issues/templates/issues/issue_form.html:9
+#: apps/issues/templates/issues/issues_embed.html:481
+#: apps/issues/templates/issues/issues_embed.html:527
+#: apps/issues/templates/issues/workspace_issue_list.html:253
+#: apps/projects/templates/projects/includes/epic_child_row_embed.html:30
+#: apps/projects/templates/projects/includes/epic_child_row_embed.html:77
+#: apps/projects/templates/projects/includes/epic_row_embed.html:51
+#: apps/projects/templates/projects/includes/epic_row_embed.html:98
+#: apps/projects/templates/projects/includes/orphan_work_item_row.html:36
+#: apps/projects/templates/projects/includes/orphan_work_item_row.html:83
+#: apps/projects/templates/projects/includes/project_row.html:48
+#: apps/projects/templates/projects/project_epics_embed.html:268
+#: apps/sprints/templates/sprints/includes/sprint_row.html:33
+msgid "Edit"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/includes/dashboard_issue_table.html:6
+#: apps/issues/models.py:86 apps/issues/models.py:196
+#: apps/issues/templates/issues/issue_detail.html:81
+#: apps/issues/templates/issues/issues_embed.html:550
+#: apps/issues/templates/issues/issues_embed.html:671
+#: apps/issues/templates/issues/workspace_issue_list.html:291
+#: apps/issues/templates/issues/workspace_issue_list.html:363
+#: apps/projects/models.py:70
+#: apps/projects/templates/projects/project_epics_embed.html:307
+#: apps/projects/templates/projects/project_list.html:148
+#: apps/projects/templates/projects/project_list.html:181
+#: apps/sprints/models.py:50
+#: apps/sprints/templates/sprints/includes/add_issues_modal_content.html:27
+#: apps/sprints/templates/sprints/sprint_list.html:135
+msgid "Key"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/includes/dashboard_issue_table.html:7
+#: apps/issues/templates/issues/issue_detail.html:82
+#: apps/issues/templates/issues/issues_embed.html:551
+#: apps/issues/templates/issues/issues_embed.html:672
+#: apps/issues/templates/issues/workspace_issue_list.html:292
+#: apps/issues/templates/issues/workspace_issue_list.html:364
+#: apps/issues/views/mixins.py:313 apps/issues/views/mixins.py:323
+msgid "Type"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/includes/dashboard_issue_table.html:8
+#: apps/issues/models.py:92 apps/issues/models.py:202 apps/issues/models.py:547
+#: apps/issues/templates/issues/issue_detail.html:83
+#: apps/issues/templates/issues/issues_embed.html:552
+#: apps/issues/templates/issues/issues_embed.html:673
+#: apps/issues/templates/issues/workspace_issue_list.html:293
+#: apps/issues/templates/issues/workspace_issue_list.html:365
+#: apps/projects/templates/projects/project_epics_embed.html:308
+#: apps/sprints/templates/sprints/includes/add_issues_modal_content.html:28
+#: apps/sprints/templates/sprints/sprint_list.html:136
+msgid "Title"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/includes/dashboard_issue_table.html:9
+#: apps/issues/models.py:95 apps/issues/models.py:205 apps/issues/models.py:549
+#: apps/issues/templates/issues/includes/epic_detail_header_edit.html:82
+#: apps/issues/templates/issues/includes/issue_detail_header_edit.html:95
+#: apps/issues/templates/issues/includes/milestone_detail_header.html:96
+#: apps/issues/templates/issues/includes/milestone_detail_header_edit.html:81
+#: apps/issues/templates/issues/issue_detail.html:87
+#: apps/issues/templates/issues/issues_embed.html:554
+#: apps/issues/templates/issues/issues_embed.html:675
+#: apps/issues/templates/issues/workspace_issue_list.html:294
+#: apps/issues/templates/issues/workspace_issue_list.html:366
+#: apps/issues/views/bulk.py:163 apps/issues/views/bulk.py:293
+#: apps/issues/views/crud.py:896 apps/issues/views/mixins.py:47
+#: apps/issues/views/mixins.py:301 apps/projects/admin.py:54
+#: apps/projects/models.py:78
+#: apps/projects/templates/projects/includes/project_detail_header_edit.html:60
+#: apps/projects/templates/projects/project_epics_embed.html:309
+#: apps/projects/templates/projects/project_list.html:150
+#: apps/projects/templates/projects/project_list.html:183
+#: apps/projects/views/crud.py:38 apps/projects/views/crud.py:157
+#: apps/projects/views/crud.py:547 apps/projects/views/crud.py:679
+#: apps/projects/views/crud.py:826 apps/sprints/models.py:59
+#: apps/sprints/templates/sprints/includes/add_issues_modal_content.html:30
+#: apps/sprints/templates/sprints/includes/sprint_detail_header_edit.html:61
+#: apps/sprints/templates/sprints/sprint_list.html:137
+#: apps/sprints/views/mixins.py:90
+msgid "Status"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/includes/dashboard_issue_table.html:10
+#: apps/issues/models.py:119 apps/issues/models.py:212
+#: apps/issues/templates/issues/includes/epic_detail_header.html:64
+#: apps/issues/templates/issues/includes/epic_detail_header_edit.html:50
+#: apps/issues/templates/issues/includes/issue_detail_header.html:68
+#: apps/issues/templates/issues/includes/issue_detail_header_edit.html:50
+#: apps/issues/templates/issues/includes/issue_quick_view.html:25
+#: apps/issues/templates/issues/includes/issue_quick_view.html:79
+#: apps/issues/templates/issues/includes/milestone_detail_header.html:72
+#: apps/issues/templates/issues/includes/milestone_detail_header_edit.html:60
+#: apps/issues/templates/issues/issue_detail.html:84
+#: apps/issues/templates/issues/issues_embed.html:555
+#: apps/issues/templates/issues/issues_embed.html:676
+#: apps/issues/templates/issues/milestones/milestone_quick_view.html:29
+#: apps/issues/templates/issues/workspace_issue_list.html:295
+#: apps/issues/templates/issues/workspace_issue_list.html:367
+#: apps/issues/views/bulk.py:164 apps/issues/views/bulk.py:294
+#: apps/issues/views/crud.py:897 apps/issues/views/mixins.py:48
+#: apps/issues/views/mixins.py:335
+#: apps/projects/templates/projects/project_epics_embed.html:310
+#: apps/projects/views/crud.py:548 apps/projects/views/crud.py:686
+#: apps/projects/views/crud.py:827
+msgid "Priority"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/includes/dashboard_issue_table.html:11
+#: apps/issues/templates/issues/includes/issue_detail_header.html:102
+#: apps/issues/templates/issues/includes/issue_detail_header_edit.html:82
+#: apps/issues/templates/issues/includes/issue_quick_view.html:113
+#: apps/issues/templates/issues/issue_detail.html:86
+#: apps/issues/templates/issues/issues_embed.html:557
+#: apps/issues/templates/issues/issues_embed.html:678
+#: apps/issues/templates/issues/workspace_issue_list.html:297
+#: apps/issues/templates/issues/workspace_issue_list.html:369
+#: apps/sprints/templates/sprints/sprint_list.html:140
+msgid "Points"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/includes/dashboard_issue_table.html:20
+msgid "No issues found."
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:9
+msgid "Welcome to"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:11
+msgid "Let's get you started with these quick steps:"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:18
+msgid "Dismiss"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:27
+#: apps/issues/templates/issues/includes/issue_quick_view.html:71
+#: apps/issues/templates/issues/milestones/milestone_quick_view.html:13
+#: apps/projects/templates/projects/project_list.html:152
+#: apps/projects/templates/projects/project_list.html:185
+#: apps/sprints/templates/sprints/sprint_list.html:141
+msgid "Progress"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:57
+#: apps/issues/models.py:29 apps/issues/models.py:528
+#: apps/issues/templates/issues/includes/subtask_row.html:36
+msgid "Done"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:69
+msgid "Start"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:80
+msgid "Invite more"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:82
+msgid "View sprints"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:84
+#: apps/issues/templates/issues/issues_embed.html:463
+#: apps/issues/templates/issues/issues_embed.html:519
+#: apps/projects/templates/projects/project_epics_embed.html:250
+msgid "View"
+msgstr ""
+
+#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:100
+msgid "Skip for now"
+msgstr ""
+
+#: apps/issues/forms.py:31
+#: apps/issues/templates/issues/includes/issue_detail_header.html:114
+#: apps/issues/templates/issues/includes/issue_detail_header_edit.html:107
+#: apps/issues/templates/issues/includes/issue_quick_view.html:121
+msgid "Parent"
+msgstr ""
+
+#: apps/issues/forms.py:32
+msgid "Select a parent issue for this item."
+msgstr ""
+
+#: apps/issues/forms.py:101 apps/issues/forms.py:633 apps/issues/models.py:136
+#: apps/issues/models.py:382
+#: apps/issues/templates/issues/includes/epic_detail_header.html:80
+#: apps/issues/templates/issues/includes/epic_detail_header_edit.html:64
+#: apps/issues/templates/issues/includes/issue_quick_view.html:41
+#: apps/issues/templates/issues/includes/issue_type_badge.html:4
+#: apps/issues/templates/issues/includes/milestone_detail_header.html:10
+#: apps/issues/templates/issues/includes/milestone_detail_header_edit.html:12
+#: apps/issues/templates/issues/issues_embed.html:214
+#: apps/issues/templates/issues/milestones/milestone_quick_view.html:5
+#: apps/projects/templates/projects/project_epics_embed.html:80
+#: apps/projects/views/crud.py:701
+msgid "Milestone"
+msgstr ""
+
+#: apps/issues/forms.py:102 apps/issues/models.py:387
+msgid "Optionally link this epic to a project-level milestone."
+msgstr ""
+
+#: apps/issues/forms.py:187 apps/issues/forms.py:216 apps/issues/forms.py:246
+#: apps/issues/models.py:391
+#: apps/issues/templates/issues/includes/issue_type_badge.html:6
+#: apps/issues/templates/issues/issues_embed.html:224
+#: apps/issues/templates/issues/issues_embed.html:278
+#: apps/issues/views/milestones.py:458 apps/issues/views/mixins.py:23
+#: apps/issues/views/mixins.py:46
+#: apps/projects/templates/projects/project_epics_embed.html:90
+#: apps/projects/views/crud.py:934
+msgid "Epic"
+msgstr ""
+
+#: apps/issues/forms.py:188
+msgid "Optionally assign this story to an epic."
+msgstr ""
+
+#: apps/issues/forms.py:217
+msgid "Optionally assign this chore to an epic."
+msgstr ""
+
+#: apps/issues/forms.py:247
+msgid "Optionally assign this bug to an epic."
+msgstr ""
+
+#: apps/issues/forms.py:273 apps/issues/forms.py:370
+#: apps/issues/views/bulk.py:71 apps/sprints/views/actions.py:141
+msgid "No issues selected."
+msgstr ""
+
+#: apps/issues/forms.py:385 apps/issues/forms.py:490 apps/issues/forms.py:561
+msgid "Title is required."
+msgstr ""
+
+#: apps/issues/forms.py:582 apps/issues/models.py:446
+#: apps/issues/templates/issues/includes/issue_type_badge.html:8
+#: apps/issues/templates/issues/issues_embed.html:158
+#: apps/issues/templates/issues/issues_embed.html:235
+#: apps/issues/templates/issues/issues_embed.html:288
+#: apps/issues/templates/issues/issues_embed.html:587
+#: apps/issues/templates/issues/issues_embed.html:627
+#: apps/issues/templates/issues/workspace_issue_list.html:118
+#: apps/issues/templates/issues/workspace_issue_list.html:321
+#: apps/issues/views/crud.py:320 apps/issues/views/mixins.py:24
+#: apps/issues/views/mixins.py:31
+#: apps/projects/templates/projects/includes/epic_children_embed.html:23
+#: apps/projects/templates/projects/project_epics_embed.html:101
+msgid "Story"
+msgstr ""
+
+#: apps/issues/forms.py:583 apps/issues/models.py:485
+#: apps/issues/templates/issues/includes/issue_type_badge.html:10
+#: apps/issues/templates/issues/issues_embed.html:168
+#: apps/issues/templates/issues/issues_embed.html:245
+#: apps/issues/templates/issues/issues_embed.html:297
+#: apps/issues/templates/issues/issues_embed.html:597
+#: apps/issues/templates/issues/issues_embed.html:636
+#: apps/issues/templates/issues/workspace_issue_list.html:128
+#: apps/issues/templates/issues/workspace_issue_list.html:329
+#: apps/issues/views/mixins.py:25 apps/issues/views/mixins.py:32
+#: apps/projects/templates/projects/includes/epic_children_embed.html:32
+#: apps/projects/templates/projects/project_epics_embed.html:111
+msgid "Bug"
+msgstr ""
+
+#: apps/issues/forms.py:584 apps/issues/models.py:515
+#: apps/issues/templates/issues/includes/issue_type_badge.html:12
+#: apps/issues/templates/issues/issues_embed.html:178
+#: apps/issues/templates/issues/issues_embed.html:255
+#: apps/issues/templates/issues/issues_embed.html:306
+#: apps/issues/templates/issues/issues_embed.html:607
+#: apps/issues/templates/issues/issues_embed.html:645
+#: apps/issues/templates/issues/workspace_issue_list.html:138
+#: apps/issues/templates/issues/workspace_issue_list.html:337
+#: apps/issues/views/mixins.py:26 apps/issues/views/mixins.py:33
+#: apps/projects/templates/projects/includes/epic_children_embed.html:41
+#: apps/projects/templates/projects/project_epics_embed.html:121
+msgid "Chore"
+msgstr ""
+
+#: apps/issues/forms.py:594
+msgid "Convert to"
+msgstr ""
+
+#: apps/issues/forms.py:600 apps/issues/models.py:477
+#: apps/issues/templates/issues/includes/issue_detail_header.html:77
+#: apps/issues/templates/issues/includes/issue_detail_header_edit.html:61
+#: apps/issues/templates/issues/includes/issue_quick_view.html:88
+msgid "Severity"
+msgstr ""
+
+#: apps/issues/forms.py:601
+msgid "Required when converting to Bug."
+msgstr ""
+
+#: apps/issues/forms.py:634
+msgid "Optionally link the new Epic to a milestone."
+msgstr ""
+
+#: apps/issues/forms.py:639
+msgid "Convert subtasks to Stories"
+msgstr ""
+
+#: apps/issues/forms.py:640
+msgid ""
+"If checked, subtasks will become Stories under the new Epic. Otherwise they "
+"will be deleted."
+msgstr ""
+
+#: apps/issues/helpers.py:155 apps/projects/views/crud.py:633
+#: apps/projects/views/crud.py:670
+msgid "No Milestone"
+msgstr ""
+
+#: apps/issues/helpers.py:315
+msgid "No Epic"
+msgstr ""
+
+#: apps/issues/helpers.py:361
+msgid "No Priority"
+msgstr ""
+
+#: apps/issues/helpers.py:372
+#: apps/issues/templates/issues/includes/embed_bulk_assignee_modal.html:4
+#: apps/issues/templates/issues/includes/workspace_bulk_assignee_modal.html:4
+#: apps/issues/templates/issues/issues_embed.html:366
+#: apps/issues/templates/issues/workspace_issue_list.html:196
+#: apps/issues/views/mixins.py:259 apps/issues/views/mixins.py:290
+#: apps/projects/templates/projects/includes/epic_bulk_assignee_modal.html:4
+#: apps/projects/templates/projects/project_epics_embed.html:179
+#: apps/projects/views/crud.py:621 apps/projects/views/crud.py:663
+#: apps/sprints/templates/sprints/sprint_list.html:89
+#: apps/sprints/templates/sprints/sprint_list.html:204
+#: apps/sprints/views/mixins.py:68 apps/sprints/views/mixins.py:82
+msgid "Unassigned"
+msgstr ""
+
+#: apps/issues/helpers.py:383
+msgid "No Project"
+msgstr ""
+
+#: apps/issues/helpers.py:406
+msgid "No Sprint"
+msgstr ""
+
+#: apps/issues/helpers.py:435
+msgid "Overdue"
+msgstr ""
+
+#: apps/issues/helpers.py:436
+msgid "Today"
+msgstr ""
+
+#: apps/issues/helpers.py:437
+msgid "This Week"
+msgstr ""
+
+#: apps/issues/helpers.py:438
+msgid "Later"
+msgstr ""
+
+#: apps/issues/helpers.py:439
+msgid "No Date"
+msgstr ""
+
+#: apps/issues/management/commands/fix_orphaned_issues.py:13
+msgid ""
+"Find and fix orphaned issues (issues with depth > 1 whose parent no longer "
+"exists)"
+msgstr ""
+
+#: apps/issues/models.py:23 apps/projects/models.py:18
+msgid "Draft"
+msgstr ""
+
+#: apps/issues/models.py:24 apps/sprints/models.py:19
+msgid "Planning"
+msgstr ""
+
+#: apps/issues/models.py:25
+msgid "Ready"
+msgstr ""
+
+#: apps/issues/models.py:30 apps/issues/models.py:529
+#: apps/issues/templates/issues/includes/subtask_row.html:38
+msgid "Won't Do"
+msgstr ""
+
+#: apps/issues/models.py:31 apps/projects/models.py:21
+#: apps/sprints/models.py:22
+msgid "Archived"
+msgstr ""
+
+#: apps/issues/models.py:48
+msgid "Low"
+msgstr ""
+
+#: apps/issues/models.py:49
+msgid "Medium"
+msgstr ""
+
+#: apps/issues/models.py:50
+msgid "High"
+msgstr ""
+
+#: apps/issues/models.py:51 apps/issues/models.py:58
+msgid "Critical"
+msgstr ""
+
+#: apps/issues/models.py:55
+msgid "Trivial"
+msgstr ""
+
+#: apps/issues/models.py:56
+msgid "Minor"
+msgstr ""
+
+#: apps/issues/models.py:57
+msgid "Major"
+msgstr ""
+
+#: apps/issues/models.py:59
+msgid "Blocker"
+msgstr ""
+
+#: apps/issues/models.py:81 apps/issues/models.py:191
+#: apps/issues/templates/issues/includes/epic_detail_header.html:93
+#: apps/issues/templates/issues/includes/epic_detail_header_edit.html:74
+#: apps/issues/templates/issues/includes/issue_detail_header.html:128
+#: apps/issues/templates/issues/includes/issue_detail_header_edit.html:117
+#: apps/issues/templates/issues/includes/issue_quick_view.html:49
+#: apps/issues/templates/issues/includes/issue_quick_view.html:129
+#: apps/issues/templates/issues/includes/milestone_detail_header.html:100
+#: apps/issues/templates/issues/issues_embed.html:553
+#: apps/issues/templates/issues/issues_embed.html:674
+#: apps/issues/templates/issues/milestones/milestone_quick_view.html:53
+#: apps/issues/views/bulk.py:198 apps/projects/models.py:114
+#: apps/sprints/templates/sprints/includes/add_issues_modal_content.html:29
+#: apps/sprints/views/crud.py:300
+msgid "Project"
+msgstr ""
+
+#: apps/issues/models.py:90
+msgid "Auto-generated unique identifier (e.g., M-1)."
+msgstr ""
+
+#: apps/issues/models.py:93 apps/issues/models.py:203
+#: apps/issues/templates/issues/includes/epic_detail_header.html:124
+#: apps/issues/templates/issues/includes/epic_detail_header_edit.html:103
+#: apps/issues/templates/issues/includes/issue_detail_header.html:182
+#: apps/issues/templates/issues/includes/issue_detail_header_edit.html:131
+#: apps/issues/templates/issues/includes/issue_quick_view.html:13
+#: apps/issues/templates/issues/includes/milestone_detail_header.html:62
+#: apps/issues/templates/issues/includes/milestone_detail_header_edit.html:48
+#: apps/issues/templates/issues/milestones/milestone_quick_view.html:19
+#: apps/projects/models.py:76
+#: apps/projects/templates/projects/includes/project_detail_header.html:61
+#: apps/projects/templates/projects/includes/project_detail_header_edit.html:47
+#: apps/workspaces/models.py:64
+msgid "Description"
+msgstr ""
+
+#: apps/issues/models.py:101 apps/issues/models.py:228
+#: apps/issues/templates/issues/includes/epic_detail_header.html:106
+#: apps/issues/templates/issues/includes/epic_detail_header_edit.html:94
+#: apps/issues/templates/issues/includes/issue_detail_header.html:94
+#: apps/issues/templates/issues/includes/issue_detail_header_edit.html:75
+#: apps/issues/templates/issues/includes/issue_quick_view.html:53
+#: apps/issues/templates/issues/includes/issue_quick_view.html:105
+#: apps/issues/templates/issues/includes/milestone_detail_header.html:88
+#: apps/issues/templates/issues/includes/milestone_detail_header_edit.html:74
+#: apps/issues/templates/issues/milestones/milestone_quick_view.html:45
+#: apps/issues/views/bulk.py:166 apps/projects/views/crud.py:829
+msgid "Due Date"
+msgstr ""
+
+#: apps/issues/models.py:104
+#: apps/issues/templates/issues/includes/milestone_detail_header.html:80
+#: apps/issues/templates/issues/includes/milestone_detail_header_edit.html:70
+#: apps/issues/templates/issues/milestones/milestone_quick_view.html:37
+#: apps/sprints/models.py:69
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:131
+#: apps/sprints/templates/sprints/includes/sprint_detail_header_edit.html:95
+#: apps/sprints/templates/sprints/sprint_list.html:139
+#: apps/sprints/views/mixins.py:97
+msgid "Owner"
+msgstr ""
+
+#: apps/issues/models.py:112 apps/issues/models.py:239
+#: apps/issues/templates/issues/includes/epic_detail_header.html:114
+#: apps/issues/templates/issues/includes/issue_detail_header.html:172
+#: apps/issues/templates/issues/includes/issue_quick_view.html:61
+#: apps/issues/templates/issues/includes/issue_quick_view.html:133
+#: apps/issues/templates/issues/includes/milestone_detail_header.html:107
+#: apps/issues/templates/issues/milestones/milestone_quick_view.html:57
+#: apps/projects/models.py:94
+#: apps/projects/templates/projects/includes/project_detail_header.html:79
+#: apps/sprints/models.py:77
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:151
+msgid "Creator"
+msgstr ""
+
+#: apps/issues/models.py:137
+msgid "Milestones"
+msgstr ""
+
+#: apps/issues/models.py:200
+msgid "Auto-generated unique identifier (e.g., PROJ-1-123)."
+msgstr ""
+
+#: apps/issues/models.py:223
+msgid "Estimated Points"
+msgstr ""
+
+#: apps/issues/models.py:226
+msgid ""
+"Story points or effort estimate. Only meaningful on work items (Story, Bug, "
+"Chore)."
+msgstr ""
+
+#: apps/issues/models.py:231
+#: apps/issues/templates/issues/includes/epic_detail_header.html:72
+#: apps/issues/templates/issues/includes/epic_detail_header_edit.html:60
+#: apps/issues/templates/issues/includes/issue_detail_header.html:86
+#: apps/issues/templates/issues/includes/issue_detail_header_edit.html:71
+#: apps/issues/templates/issues/includes/issue_quick_view.html:33
+#: apps/issues/templates/issues/includes/issue_quick_view.html:97
+#: apps/issues/templates/issues/issue_detail.html:85
+#: apps/issues/templates/issues/issues_embed.html:556
+#: apps/issues/templates/issues/issues_embed.html:677
+#: apps/issues/templates/issues/workspace_issue_list.html:296
+#: apps/issues/templates/issues/workspace_issue_list.html:368
+#: apps/issues/views/bulk.py:165 apps/issues/views/bulk.py:295
+#: apps/issues/views/crud.py:898 apps/issues/views/mixins.py:49
+#: apps/issues/views/mixins.py:345
+#: apps/projects/templates/projects/project_epics_embed.html:311
+#: apps/projects/views/crud.py:549 apps/projects/views/crud.py:693
+#: apps/projects/views/crud.py:828
+msgid "Assignee"
+msgstr ""
+
+#: apps/issues/models.py:245
+msgid "Created At"
+msgstr ""
+
+#: apps/issues/models.py:246
+msgid "Updated At"
+msgstr ""
+
+#: apps/issues/models.py:266 apps/issues/views/crud.py:177
+#: apps/issues/views/crud.py:220 apps/issues/views/crud.py:971
+#: apps/issues/views/crud.py:1000 apps/issues/views/milestones.py:577
+#: apps/issues/views/milestones.py:612 apps/projects/views/crud.py:1050
+#: apps/projects/views/crud.py:1093
+msgid "Issue"
+msgstr ""
+
+#: apps/issues/models.py:267 apps/issues/templates/issues/issue_detail.html:22
+#: apps/issues/templates/issues/workspace_issue_list.html:22
+#: apps/issues/views/crud.py:114 apps/issues/views/crud.py:288
+#: apps/sprints/templates/sprints/sprint_detail.html:18
+#: templates/includes/top_nav_app.html:12
+msgid "Issues"
+msgstr ""
+
+#: apps/issues/models.py:392
+msgid "Epics"
+msgstr ""
+
+#: apps/issues/models.py:398
+msgid "Milestone must belong to the same project as the Epic."
+msgstr ""
+
+#: apps/issues/models.py:404 apps/issues/views/tree.py:104
+msgid "Epics cannot have a parent issue."
+msgstr ""
+
+#: apps/issues/models.py:415
+#: apps/issues/templates/issues/includes/issue_detail_header.html:137
+#: apps/issues/templates/issues/includes/issue_detail_header_edit.html:121
+#: apps/issues/views/bulk.py:292 apps/issues/views/crud.py:895
+#: apps/issues/views/milestones.py:209 apps/issues/views/mixins.py:358
+#: apps/sprints/models.py:117
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:10
+#: apps/sprints/templates/sprints/includes/sprint_detail_header_edit.html:12
+msgid "Sprint"
+msgstr ""
+
+#: apps/issues/models.py:447
+msgid "Stories"
+msgstr ""
+
+#: apps/issues/models.py:453
+msgid "Stories can only be children of Epics."
+msgstr ""
+
+#: apps/issues/models.py:486
+msgid "Bugs"
+msgstr ""
+
+#: apps/issues/models.py:492
+msgid "Bugs can only be children of Epics."
+msgstr ""
+
+#: apps/issues/models.py:516
+msgid "Chores"
+msgstr ""
+
+#: apps/issues/models.py:522
+msgid "Chores can only be children of Epics."
+msgstr ""
+
+#: apps/issues/models.py:526
+#: apps/issues/templates/issues/includes/subtask_row.html:32
+msgid "To Do"
+msgstr ""
+
+#: apps/issues/models.py:555
+msgid "Position"
+msgstr ""
+
+#: apps/issues/models.py:562
+msgid "Subtask"
+msgstr ""
+
+#: apps/issues/models.py:563 apps/issues/templates/issues/issue_detail.html:138
+msgid "Subtasks"
+msgstr ""
+
+#: apps/issues/services.py:52
+#, python-format
+msgid "%(type)s cannot be converted to another type."
+msgstr ""
+
+#: apps/issues/services.py:56
+#, python-format
+msgid "Cannot convert to %(type)s."
+msgstr ""
+
+#: apps/issues/services.py:67
+msgid "Invalid severity value."
+msgstr ""
+
+#: apps/issues/services.py:233 apps/issues/views/crud.py:713
+#: apps/issues/views/crud.py:760
+msgid "Epic cannot be promoted to Epic."
+msgstr ""
+
+#: apps/issues/services.py:236
+#, python-format
+msgid "%(type)s cannot be promoted to Epic."
+msgstr ""
+
+#: apps/issues/templates/issues/includes/add_to_sprint_modal.html:6
+#: apps/issues/templates/issues/includes/embed_bulk_add_to_sprint_modal.html:4
+#: apps/issues/templates/issues/includes/embed_bulk_add_to_sprint_modal.html:49
+#: apps/issues/templates/issues/includes/issue_detail_header.html:167
+#: apps/issues/templates/issues/includes/issue_row.html:149
+#: apps/issues/templates/issues/includes/issue_row_embed.html:174
+#: apps/issues/templates/issues/issues_embed.html:390
+#: apps/projects/templates/projects/includes/epic_child_row_embed.html:120
+#: apps/projects/templates/projects/includes/orphan_work_item_row.html:125
+#: apps/sprints/templates/sprints/includes/add_to_sprint_modal.html:3
+#: apps/sprints/templates/sprints/includes/add_to_sprint_modal.html:39
+msgid "Add to Sprint"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/add_to_sprint_modal.html:7
+#: apps/sprints/templates/sprints/includes/add_issues_modal.html:7
+msgid "Loading..."
+msgstr ""
+
+#: apps/issues/templates/issues/includes/bulk_delete_confirm_content.html:3
+#, python-format
+msgid ""
+"\n"
+"    %(count)s issue selected for deletion.\n"
+"  "
+msgid_plural ""
+"\n"
+"    %(count)s issues selected for deletion.\n"
+"  "
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/issues/templates/issues/includes/bulk_delete_confirm_content.html:15
+#: apps/issues/templates/issues/includes/delete_confirm_content.html:13
+msgid "The following will also be permanently deleted:"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/bulk_delete_confirm_content.html:18
+#: apps/issues/templates/issues/includes/delete_confirm_content.html:16
+#, python-format
+msgid "%(count)s child issue"
+msgid_plural "%(count)s child issues"
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/issues/templates/issues/includes/bulk_delete_confirm_content.html:21
+#: apps/issues/templates/issues/includes/delete_confirm_content.html:19
+#: apps/issues/templates/issues/milestones/delete_confirm_content.html:20
+#: apps/projects/templates/projects/includes/delete_confirm_content.html:26
+#: apps/projects/templates/projects/project_confirm_delete.html:34
+#, python-format
+msgid "%(count)s subtask"
+msgid_plural "%(count)s subtasks"
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/issues/templates/issues/includes/bulk_delete_confirm_content.html:28
+#: apps/issues/templates/issues/includes/comments_list.html:104
+#: apps/issues/templates/issues/includes/delete_confirm_content.html:26
+#: apps/issues/templates/issues/includes/embed_bulk_add_to_sprint_modal.html:24
+#: apps/issues/templates/issues/includes/embed_bulk_remove_from_sprint_modal.html:9
+#: apps/issues/templates/issues/includes/epic_detail_header_edit.html:38
+#: apps/issues/templates/issues/includes/epic_detail_header_edit.html:42
+#: apps/issues/templates/issues/includes/epic_form_modal.html:13
+#: apps/issues/templates/issues/includes/issue_action_modal.html:7
+#: apps/issues/templates/issues/includes/issue_convert_modal_content.html:69
+#: apps/issues/templates/issues/includes/issue_create_form_modal.html:19
+#: apps/issues/templates/issues/includes/issue_detail_header_edit.html:38
+#: apps/issues/templates/issues/includes/issue_detail_header_edit.html:42
+#: apps/issues/templates/issues/includes/issue_form_modal.html:10
+#: apps/issues/templates/issues/includes/issue_move_modal_content.html:50
+#: apps/issues/templates/issues/includes/issue_promote_modal_content.html:88
+#: apps/issues/templates/issues/includes/issue_row_edit.html:90
+#: apps/issues/templates/issues/includes/issue_row_edit_embed.html:95
+#: apps/issues/templates/issues/includes/milestone_detail_header_edit.html:38
+#: apps/issues/templates/issues/includes/milestone_detail_header_edit.html:42
+#: apps/issues/templates/issues/includes/milestone_row_edit.html:66
+#: apps/issues/templates/issues/includes/subtask_row_edit.html:49
+#: apps/issues/templates/issues/includes/workspace_issue_create_form_modal.html:13
+#: apps/issues/templates/issues/issue_confirm_delete.html:36
+#: apps/issues/templates/issues/issue_form.html:35
+#: apps/issues/templates/issues/issue_form.html:42
+#: apps/issues/templates/issues/issue_form.html:49
+#: apps/issues/templates/issues/issue_form.html:56
+#: apps/issues/templates/issues/issue_form.html:63
+#: apps/issues/templates/issues/milestones/delete_confirm_content.html:27
+#: apps/issues/templates/issues/milestones/epic_form.html:22
+#: apps/issues/templates/issues/milestones/milestone_confirm_delete.html:41
+#: apps/issues/templates/issues/milestones/milestone_form.html:29
+#: apps/issues/templates/issues/milestones/milestone_form_modal.html:10
+#: apps/projects/templates/projects/includes/bulk_delete_modal.html:26
+#: apps/projects/templates/projects/includes/bulk_lead_modal.html:53
+#: apps/projects/templates/projects/includes/delete_confirm_content.html:33
+#: apps/projects/templates/projects/includes/epic_children_row_edit_embed.html:70
+#: apps/projects/templates/projects/includes/epic_form_modal.html:16
+#: apps/projects/templates/projects/includes/epic_row_edit_embed.html:57
+#: apps/projects/templates/projects/includes/milestone_form_modal.html:13
+#: apps/projects/templates/projects/includes/orphan_work_item_row_edit.html:68
+#: apps/projects/templates/projects/includes/project_detail_header_edit.html:37
+#: apps/projects/templates/projects/includes/project_detail_header_edit.html:41
+#: apps/projects/templates/projects/includes/project_issue_create_form_modal.html:16
+#: apps/projects/templates/projects/includes/project_row_edit.html:59
+#: apps/projects/templates/projects/project_confirm_delete.html:48
+#: apps/projects/templates/projects/project_form.html:29
+#: apps/sprints/templates/sprints/includes/add_issues_modal_content.html:51
+#: apps/sprints/templates/sprints/includes/add_to_sprint_modal.html:32
+#: apps/sprints/templates/sprints/includes/delete_confirm_content.html:20
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:79
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:96
+#: apps/sprints/templates/sprints/includes/sprint_detail_header_edit.html:38
+#: apps/sprints/templates/sprints/includes/sprint_detail_header_edit.html:42
+#: apps/sprints/templates/sprints/includes/sprint_row_edit.html:81
+#: apps/sprints/templates/sprints/sprint_confirm_delete.html:31
+#: apps/sprints/templates/sprints/sprint_form.html:38
+#: apps/sprints/templates/sprints/sprint_list.html:186
+#: apps/workspaces/templates/workspaces/includes/delete_workspace_modal.html:24
+#: apps/workspaces/templates/workspaces/includes/delete_workspace_modal.html:34
+#: apps/workspaces/templates/workspaces/includes/invite_modal.html:15
+#: apps/workspaces/templates/workspaces/includes/remove_member_modal.html:23
+#: templates/includes/bulk_person_modal.html:33
+#: templates/includes/dashboard_issue_row_edit.html:73
+#: templates/includes/filters_modal.html:183
+msgid "Cancel"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/bulk_delete_confirm_content.html:43
+#: apps/issues/templates/issues/includes/comments_list.html:67
+#: apps/issues/templates/issues/includes/delete_confirm_content.html:29
+#: apps/issues/templates/issues/includes/epic_detail_header.html:48
+#: apps/issues/templates/issues/includes/issue_detail_header.html:52
+#: apps/issues/templates/issues/includes/issue_row.html:159
+#: apps/issues/templates/issues/includes/issue_row_embed.html:185
+#: apps/issues/templates/issues/includes/milestone_detail_header.html:48
+#: apps/issues/templates/issues/issue_confirm_delete.html:7
+#: apps/issues/templates/issues/issue_confirm_delete.html:30
+#: apps/issues/templates/issues/issues_embed.html:405
+#: apps/issues/templates/issues/issues_embed.html:496
+#: apps/issues/templates/issues/milestones/milestone_confirm_delete.html:35
+#: apps/issues/templates/issues/workspace_issue_list.html:215
+#: apps/issues/templates/issues/workspace_issue_list.html:268
+#: apps/projects/templates/projects/includes/epic_child_row_embed.html:130
+#: apps/projects/templates/projects/includes/epic_row_embed.html:113
+#: apps/projects/templates/projects/includes/orphan_work_item_row.html:134
+#: apps/projects/templates/projects/includes/project_detail_header.html:47
+#: apps/projects/templates/projects/project_detail.html:22
+#: apps/projects/templates/projects/project_epics_embed.html:198
+#: apps/projects/templates/projects/project_epics_embed.html:283
+#: apps/projects/templates/projects/project_list.html:107
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:65
+#: apps/sprints/templates/sprints/sprint_confirm_delete.html:25
+#: apps/sprints/templates/sprints/sprint_list.html:103
+#: apps/sprints/templates/sprints/sprint_list.html:195
+#: templates/includes/delete_confirm_modal.html:5
+msgid "Delete"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/cascade_status_content.html:11
+#, python-format
+msgid "Update %(count)s descendant item to %(status)s"
+msgid_plural "Update %(count)s descendant items to %(status)s"
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/issues/templates/issues/includes/cascade_status_content.html:18
+msgid "Items that are already in a completed state will be skipped."
+msgstr ""
+
+#: apps/issues/templates/issues/includes/cascade_status_content.html:28
+#, python-format
+msgid "+ %(count)s more item"
+msgid_plural "+ %(count)s more items"
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/issues/templates/issues/includes/cascade_status_content.html:55
+#, python-format
+msgid "Mark %(parent)s as %(status)s"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/cascade_status_content.html:60
+msgid "All items under this parent are now completed."
+msgstr ""
+
+#: apps/issues/templates/issues/includes/cascade_status_content.html:73
+msgid "Skip"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/cascade_status_content.html:77
+#: templates/includes/filters_modal.html:186
+msgid "Apply"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/comments_list.html:18
+msgid "Add a comment..."
+msgstr ""
+
+#: apps/issues/templates/issues/includes/comments_list.html:23
+msgid "Post Comment"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/comments_list.html:50
+msgid "Anonymous"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/comments_list.html:54
+#: apps/utils/templates/utils/includes/history_list.html:15
+msgid "ago"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/comments_list.html:75
+msgid "Delete this comment?"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/comments_list.html:80
+#: apps/utils/templatetags/history_tags.py:49
+msgid "Yes"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/comments_list.html:83
+#: apps/utils/templatetags/history_tags.py:49
+msgid "No"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/comments_list.html:101
+#: apps/issues/templates/issues/includes/epic_detail_header_edit.html:29
+#: apps/issues/templates/issues/includes/epic_detail_header_edit.html:34
+#: apps/issues/templates/issues/includes/issue_detail_header_edit.html:29
+#: apps/issues/templates/issues/includes/issue_detail_header_edit.html:34
+#: apps/issues/templates/issues/includes/issue_row_edit.html:81
+#: apps/issues/templates/issues/includes/issue_row_edit_embed.html:86
+#: apps/issues/templates/issues/includes/milestone_detail_header_edit.html:29
+#: apps/issues/templates/issues/includes/milestone_detail_header_edit.html:34
+#: apps/issues/templates/issues/includes/milestone_row_edit.html:57
+#: apps/issues/templates/issues/includes/subtask_row_edit.html:40
+#: apps/projects/templates/projects/includes/epic_children_row_edit_embed.html:60
+#: apps/projects/templates/projects/includes/epic_row_edit_embed.html:48
+#: apps/projects/templates/projects/includes/orphan_work_item_row_edit.html:58
+#: apps/projects/templates/projects/includes/project_detail_header_edit.html:28
+#: apps/projects/templates/projects/includes/project_detail_header_edit.html:33
+#: apps/projects/templates/projects/includes/project_row_edit.html:50
+#: apps/sprints/templates/sprints/includes/sprint_detail_header_edit.html:29
+#: apps/sprints/templates/sprints/includes/sprint_detail_header_edit.html:34
+#: apps/sprints/templates/sprints/includes/sprint_row_edit.html:72
+#: apps/users/templates/accounts/includes/profile_form.html:19
+#: apps/workspaces/templates/workspaces/manage_workspace.html:18
+#: templates/includes/dashboard_issue_row_edit.html:64
+msgid "Save"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/comments_list.html:115
+msgid "No comments yet. Be the first to comment!"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/delete_confirm_content.html:3
+#: apps/issues/templates/issues/issue_confirm_delete.html:13
+#: apps/issues/templates/issues/milestones/delete_confirm_content.html:3
+#: apps/issues/templates/issues/milestones/milestone_confirm_delete.html:13
+#, python-format
+msgid "Are you sure you want to delete <strong>%(key)s</strong> - %(title)s?"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/embed_bulk_add_to_sprint_modal.html:7
+msgid "Select a sprint for the selected issues:"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/embed_bulk_add_to_sprint_modal.html:25
+#: apps/projects/templates/projects/includes/bulk_lead_modal.html:50
+#: apps/users/templates/socialaccount/login.html:17
+#: apps/users/templates/socialaccount/login_redirect.html:9
+#: templates/includes/bulk_person_modal.html:34
+msgid "Continue"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/embed_bulk_add_to_sprint_modal.html:28
+#: apps/sprints/templates/sprints/includes/add_to_sprint_modal.html:43
+msgid "No active or planning sprints available."
+msgstr ""
+
+#: apps/issues/templates/issues/includes/embed_bulk_add_to_sprint_modal.html:30
+#: apps/sprints/templates/sprints/includes/add_issues_modal_content.html:73
+#: apps/sprints/templates/sprints/includes/add_to_sprint_modal.html:45
+#: apps/sprints/templates/sprints/includes/add_to_sprint_modal.html:52
+msgid "Close"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/embed_bulk_add_to_sprint_modal.html:36
+msgid "Add selected issues to:"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/embed_bulk_add_to_sprint_modal.html:40
+#: apps/projects/templates/projects/includes/bulk_lead_modal.html:84
+#: templates/includes/bulk_person_modal.html:43
+msgid "Back"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/embed_bulk_assignee_modal.html:2
+#: apps/issues/templates/issues/includes/workspace_bulk_assignee_modal.html:2
+#: apps/issues/templates/issues/issues_embed.html:368
+#: apps/issues/templates/issues/workspace_issue_list.html:198
+#: apps/projects/templates/projects/includes/epic_bulk_assignee_modal.html:2
+#: apps/projects/templates/projects/project_epics_embed.html:181
+msgid "Set Assignee"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/embed_bulk_assignee_modal.html:3
+#: apps/issues/templates/issues/includes/workspace_bulk_assignee_modal.html:3
+msgid "Select an assignee for the selected issues:"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/embed_bulk_assignee_modal.html:5
+#: apps/issues/templates/issues/includes/workspace_bulk_assignee_modal.html:5
+msgid "Assign selected issues to:"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/embed_bulk_delete_modal.html:2
+#: apps/issues/templates/issues/includes/workspace_bulk_delete_modal.html:2
+msgid "Delete Issues"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/embed_bulk_remove_from_sprint_modal.html:4
+msgid "Remove Issues from Sprint"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/embed_bulk_remove_from_sprint_modal.html:6
+msgid "Are you sure you want to remove the selected issues from this sprint?"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/embed_bulk_remove_from_sprint_modal.html:18
+#: apps/users/templates/socialaccount/connections.html:39
+msgid "Remove"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/embed_paginator_htmx.html:46
+#: templates/includes/paginator_htmx.html:48
+#, python-format
+msgid "%(count)s item"
+msgid_plural "%(count)s items"
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/issues/templates/issues/includes/epic_detail_header.html:12
+#: apps/issues/templates/issues/includes/issue_detail_header.html:12
+#: apps/issues/templates/issues/includes/milestone_detail_header.html:12
+#: apps/projects/templates/projects/includes/project_detail_header.html:11
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:12
+msgid "Click to edit"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/epic_detail_header.html:19
+#: apps/issues/templates/issues/includes/milestone_detail_header.html:19
+#: apps/projects/templates/projects/includes/project_detail_header.html:18
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:19
+msgid "Progress:"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/epic_detail_header.html:29
+#: apps/issues/templates/issues/includes/milestone_detail_header.html:29
+#: apps/projects/templates/projects/includes/project_detail_header.html:28
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:44
+msgid "Collapse details"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/epic_detail_header.html:29
+#: apps/issues/templates/issues/includes/milestone_detail_header.html:29
+#: apps/projects/templates/projects/includes/project_detail_header.html:28
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:44
+msgid "Expand details"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/epic_detail_header.html:39
+#: apps/issues/templates/issues/includes/issue_detail_header.html:25
+#: apps/issues/templates/issues/includes/issue_row.html:111
+#: apps/issues/templates/issues/includes/issue_row.html:112
+#: apps/issues/templates/issues/includes/issue_row_embed.html:123
+#: apps/issues/templates/issues/includes/issue_row_embed.html:124
+#: apps/issues/templates/issues/includes/milestone_detail_header.html:39
+#: apps/issues/templates/issues/issues_embed.html:486
+#: apps/issues/templates/issues/issues_embed.html:487
+#: apps/issues/templates/issues/workspace_issue_list.html:258
+#: apps/issues/templates/issues/workspace_issue_list.html:259
+#: apps/projects/templates/projects/includes/epic_child_row_embed.html:82
+#: apps/projects/templates/projects/includes/epic_child_row_embed.html:83
+#: apps/projects/templates/projects/includes/epic_row_embed.html:103
+#: apps/projects/templates/projects/includes/epic_row_embed.html:104
+#: apps/projects/templates/projects/includes/orphan_work_item_row.html:88
+#: apps/projects/templates/projects/includes/orphan_work_item_row.html:89
+#: apps/projects/templates/projects/includes/project_detail_header.html:38
+#: apps/projects/templates/projects/project_epics_embed.html:273
+#: apps/projects/templates/projects/project_epics_embed.html:274
+msgid "Clone"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/epic_detail_header.html:128
+#: apps/issues/templates/issues/includes/issue_detail_header.html:186
+#: apps/issues/templates/issues/includes/issue_quick_view.html:17
+#: apps/issues/templates/issues/includes/milestone_detail_header.html:66
+#: apps/issues/templates/issues/milestones/milestone_quick_view.html:23
+#: apps/projects/templates/projects/includes/project_detail_header.html:65
+msgid "No description"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/epic_detail_header_edit.html:19
+msgid "Epic title"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/epic_detail_header_edit.html:107
+#: apps/issues/templates/issues/includes/issue_detail_header_edit.html:135
+#: apps/issues/templates/issues/includes/milestone_detail_header_edit.html:52
+#: apps/projects/templates/projects/includes/project_detail_header_edit.html:51
+msgid "Add a description..."
+msgstr ""
+
+#: apps/issues/templates/issues/includes/epic_form_modal.html:3
+#: apps/issues/templates/issues/milestones/epic_form.html:9
+#, python-format
+msgid "Creating epic for milestone <strong>%(key)s</strong> - %(title)s"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/epic_form_modal.html:16
+#: apps/issues/templates/issues/milestones/epic_form.html:16
+#: apps/projects/templates/projects/includes/epic_form_modal.html:19
+msgid "Create Epic"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_convert_modal.html:2
+msgid "Convert Type"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_convert_modal_content.html:9
+#, python-format
+msgid "Convert <strong>%(key)s</strong> from <strong>%(type)s</strong> to:"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_convert_modal_content.html:59
+msgid "Severity will be lost when converting from Bug."
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_convert_modal_content.html:64
+msgid "Comments, subtasks, and history will be preserved."
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_convert_modal_content.html:75
+#: apps/issues/templates/issues/includes/issue_detail_header.html:34
+#: apps/issues/templates/issues/includes/issue_row.html:122
+#: apps/issues/templates/issues/includes/issue_row_embed.html:134
+#: apps/projects/templates/projects/includes/epic_child_row_embed.html:93
+#: apps/projects/templates/projects/includes/orphan_work_item_row.html:98
+msgid "Convert"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_create_form_modal.html:4
+#, python-format
+msgid ""
+"Creating %(issue_type_label)s under <strong>%(key)s</strong> - %(title)s"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_create_form_modal.html:8
+#, python-format
+msgid ""
+"Creating %(issue_type_label)s for milestone <strong>%(key)s</strong> - "
+"%(title)s"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_create_form_modal.html:22
+#: apps/issues/templates/issues/includes/workspace_issue_create_form_modal.html:16
+#: apps/issues/templates/issues/issue_form.html:27
+#: apps/projects/templates/projects/includes/project_issue_create_form_modal.html:19
+msgid "Create"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_detail_header.html:43
+#: apps/issues/templates/issues/includes/issue_promote_modal.html:2
+#: apps/issues/templates/issues/includes/issue_promote_modal_content.html:94
+#: apps/issues/templates/issues/includes/issue_row.html:131
+#: apps/issues/templates/issues/includes/issue_row_embed.html:143
+#: apps/projects/templates/projects/includes/epic_child_row_embed.html:102
+#: apps/projects/templates/projects/includes/orphan_work_item_row.html:107
+msgid "Promote to Epic"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_detail_header.html:153
+msgid "Remove from sprint"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_detail_header_edit.html:19
+msgid "Issue title"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_edit_modal.html:2
+msgid "Edit Issue"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_form_modal.html:13
+#: apps/issues/templates/issues/issue_form.html:25
+#: apps/issues/templates/issues/milestones/milestone_form.html:20
+#: apps/issues/templates/issues/milestones/milestone_form_modal.html:13
+#: apps/projects/templates/projects/project_form.html:20
+#: apps/sprints/templates/sprints/sprint_form.html:29
+msgid "Save Changes"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_move_modal.html:2
+msgid "Move Issue"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_move_modal_content.html:2
+msgid "Select new parent for"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_move_modal_content.html:8
+#: apps/issues/templates/issues/issues_embed.html:80
+#: apps/issues/views/mixins.py:375 apps/projects/views/crud.py:176
+#: templates/includes/filters_modal.html:139
+msgid "None"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_move_modal_content.html:17
+msgid "No milestone"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_move_modal_content.html:44
+msgid "No valid parents available."
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_move_modal_content.html:61
+msgid "Move"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_promote_modal_content.html:8
+#, python-format
+msgid ""
+"Promote <strong>%(key)s</strong> from <strong>%(type)s</strong> to "
+"<strong>Epic</strong>."
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_promote_modal_content.html:40
+#, python-format
+msgid "%(count)s subtask will be converted to a Story under the new Epic."
+msgid_plural ""
+"%(count)s subtasks will be converted to Stories under the new Epic."
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/issues/templates/issues/includes/issue_promote_modal_content.html:58
+msgid "Estimated points will be lost."
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_promote_modal_content.html:67
+msgid "Sprint assignment will be removed."
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_promote_modal_content.html:76
+msgid "Severity will be lost."
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_promote_modal_content.html:83
+msgid "Comments and history will be preserved."
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_quick_view.html:149
+#: apps/issues/templates/issues/milestones/milestone_quick_view.html:72
+msgid "View Full Page"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_row.html:87
+#: apps/issues/templates/issues/includes/issue_row_embed.html:99
+#: apps/issues/templates/issues/issues_embed.html:454
+#: apps/issues/templates/issues/issues_embed.html:510
+#: apps/issues/templates/issues/workspace_issue_list.html:243
+#: apps/projects/templates/projects/includes/epic_child_row_embed.html:58
+#: apps/projects/templates/projects/includes/epic_row_embed.html:79
+#: apps/projects/templates/projects/includes/orphan_work_item_row.html:64
+#: apps/projects/templates/projects/project_epics_embed.html:241
+msgid "Actions"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_row.html:97
+#: apps/issues/templates/issues/includes/issue_row_embed.html:109
+#: apps/issues/templates/issues/issues_embed.html:472
+#: apps/projects/templates/projects/includes/epic_child_row_embed.html:68
+#: apps/projects/templates/projects/includes/epic_row_embed.html:89
+#: apps/projects/templates/projects/includes/orphan_work_item_row.html:74
+#: apps/projects/templates/projects/project_epics_embed.html:259
+msgid "Quick View"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_row.html:111
+#: apps/issues/templates/issues/includes/issue_row_embed.html:123
+#: apps/projects/templates/projects/includes/epic_child_row_embed.html:82
+#: apps/projects/templates/projects/includes/orphan_work_item_row.html:88
+msgid "Clone Issue"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_row.html:111
+#: apps/issues/templates/issues/includes/issue_row_embed.html:123
+#: apps/projects/templates/projects/includes/epic_child_row_embed.html:82
+#: apps/projects/templates/projects/includes/orphan_work_item_row.html:88
+msgid "Are you sure you want to clone this issue?"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_row.html:140
+#: apps/issues/templates/issues/includes/issue_row_embed.html:165
+#: apps/projects/templates/projects/includes/epic_child_row_embed.html:111
+#: apps/projects/templates/projects/includes/orphan_work_item_row.html:116
+msgid "Move to..."
+msgstr ""
+
+#: apps/issues/templates/issues/includes/issue_row_embed.html:154
+#: apps/issues/templates/issues/issues_embed.html:381
+msgid "Remove from Sprint"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/milestone_detail_header_edit.html:19
+msgid "Milestone title"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/new_epic_modal.html:2
+#: apps/issues/templates/issues/issues_embed.html:194
+#: apps/issues/templates/issues/milestones/epic_form.html:7
+#: apps/projects/templates/projects/includes/new_epic_modal.html:2
+msgid "New Epic"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/new_issue_modal.html:2
+#: apps/issues/templates/issues/includes/workspace_new_issue_modal.html:2
+#: apps/projects/templates/projects/includes/new_issue_modal.html:2
+msgid "New Issue"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/progress_bar.html:4
+#, python-format
+msgid ""
+"Done: %(done)s/%(total)s, In Progress: %(in_progress)s/%(total)s, To Do: "
+"%(todo)s/%(total)s"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/progress_bar.html:15
+#, python-format
+msgid "%(pct)s%% done"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/progress_bar.html:16
+#, python-format
+msgid "%(pct)s%% in progress"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/progress_bar.html:17
+#, python-format
+msgid "%(pct)s%% to do"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/subtask_row.html:47
+msgid "Delete this subtask?"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/subtasks_list.html:14
+msgid "Add a subtask..."
+msgstr ""
+
+#: apps/issues/templates/issues/includes/subtasks_list.html:18
+msgid "Add"
+msgstr ""
+
+#: apps/issues/templates/issues/includes/subtasks_list.html:25
+#: apps/issues/views/subtasks.py:62
+#, python-format
+msgid "Maximum number of subtasks reached (%(max)s)."
+msgstr ""
+
+#: apps/issues/templates/issues/includes/subtasks_list.html:39
+msgid "No subtasks yet."
+msgstr ""
+
+#: apps/issues/templates/issues/includes/workspace_issue_create_form_modal.html:3
+#, python-format
+msgid "Creating %(issue_type_label)s in %(workspace_name)s"
+msgstr ""
+
+#: apps/issues/templates/issues/issue_confirm_delete.html:16
+#, python-format
+msgid "This will also delete %(count)s child issue."
+msgid_plural "This will also delete %(count)s child issues."
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/issues/templates/issues/issue_confirm_delete.html:21
+#, python-format
+msgid "This will also delete %(count)s subtask."
+msgid_plural "This will also delete %(count)s subtasks."
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/issues/templates/issues/issue_detail.html:26
+#: apps/issues/templates/issues/issue_detail.html:142
+msgid "Comments"
+msgstr ""
+
+#: apps/issues/templates/issues/issue_detail.html:30
+#: apps/issues/templates/issues/issue_detail.html:146
+#: apps/issues/templates/issues/milestones/milestone_detail.html:18
+#: apps/projects/templates/projects/project_detail.html:43
+#: apps/sprints/templates/sprints/sprint_detail.html:22
+msgid "History"
+msgstr ""
+
+#: apps/issues/templates/issues/issue_form.html:11
+#: apps/issues/templates/issues/issues_embed.html:145
+#: apps/issues/templates/issues/issues_embed.html:203
+#: apps/issues/templates/issues/issues_embed.html:266
+#: apps/issues/templates/issues/workspace_issue_list.html:105
+#: apps/projects/templates/projects/project_epics_embed.html:69
+msgid "New"
+msgstr ""
+
+#: apps/issues/templates/issues/issue_form.html:16
+#, python-format
+msgid ""
+"Creating %(issue_type_label|lower)s for project <strong>%(key)s</strong> - "
+"%(name)s"
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:24
+#: apps/issues/templates/issues/workspace_issue_list.html:26
+msgid "Search issues..."
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:30
+#: apps/issues/templates/issues/workspace_issue_list.html:32
+#: apps/projects/templates/projects/project_epics_embed.html:29
+#: apps/projects/templates/projects/project_list.html:27
+#: apps/sprints/templates/sprints/sprint_list.html:24
+#: templates/includes/filters_modal.html:107
+msgid "Filters"
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:55
+#: apps/issues/templates/issues/workspace_issue_list.html:57
+#: apps/projects/templates/projects/project_epics_embed.html:51
+#: apps/projects/templates/projects/project_list.html:49
+#: apps/sprints/templates/sprints/sprint_list.html:45
+msgid "Clear filters"
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:69
+msgid "Group:"
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:71
+#: apps/issues/views/mixins.py:371 apps/projects/views/crud.py:172
+msgid "Group by"
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:98
+#: apps/issues/templates/issues/workspace_issue_list.html:73
+msgid "Sort:"
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:100
+#: apps/issues/templates/issues/workspace_issue_list.html:75
+msgid "Sort by"
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:109
+#: apps/issues/templates/issues/workspace_issue_list.html:84
+msgid "Default"
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:136
+msgid "Add Issues"
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:156
+#: apps/issues/templates/issues/issues_embed.html:233
+#: apps/issues/templates/issues/issues_embed.html:585
+#: apps/issues/templates/issues/workspace_issue_list.html:116
+#: apps/projects/templates/projects/includes/epic_children_embed.html:22
+#: apps/projects/templates/projects/project_epics_embed.html:99
+msgid "New Story"
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:166
+#: apps/issues/templates/issues/issues_embed.html:243
+#: apps/issues/templates/issues/issues_embed.html:595
+#: apps/issues/templates/issues/workspace_issue_list.html:126
+#: apps/projects/templates/projects/includes/epic_children_embed.html:31
+#: apps/projects/templates/projects/project_epics_embed.html:109
+msgid "New Bug"
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:176
+#: apps/issues/templates/issues/issues_embed.html:253
+#: apps/issues/templates/issues/issues_embed.html:605
+#: apps/issues/templates/issues/workspace_issue_list.html:136
+#: apps/projects/templates/projects/includes/epic_children_embed.html:40
+#: apps/projects/templates/projects/project_epics_embed.html:119
+msgid "New Chore"
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:315
+#: apps/issues/templates/issues/workspace_issue_list.html:145
+#: apps/projects/templates/projects/project_epics_embed.html:128
+#: apps/projects/templates/projects/project_list.html:66
+#: apps/sprints/templates/sprints/sprint_list.html:62
+msgid "selected"
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:319
+#: apps/issues/templates/issues/workspace_issue_list.html:149
+#: apps/projects/templates/projects/project_epics_embed.html:132
+#: apps/projects/templates/projects/project_list.html:70
+#: apps/sprints/templates/sprints/sprint_list.html:66
+msgid "Set Status"
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:343
+#: apps/issues/templates/issues/workspace_issue_list.html:173
+#: apps/projects/templates/projects/project_epics_embed.html:156
+msgid "Set Priority"
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:486
+#: apps/issues/templates/issues/workspace_issue_list.html:258
+#: apps/projects/templates/projects/includes/epic_row_embed.html:103
+msgid "Clone Epic"
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:486
+#: apps/issues/templates/issues/workspace_issue_list.html:258
+#: apps/projects/templates/projects/includes/epic_row_embed.html:103
+msgid "Are you sure you want to clone this epic?"
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:566
+msgid "No issues for now."
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:575
+#: apps/issues/templates/issues/issues_embed.html:616
+#: apps/issues/templates/issues/workspace_issue_list.html:311
+msgid "Create New Issue for this Epic"
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:693
+#: apps/issues/templates/issues/workspace_issue_list.html:384
+#: apps/sprints/templates/sprints/includes/add_issues_modal_content.html:66
+msgid "No issues found matching your search."
+msgstr ""
+
+#: apps/issues/templates/issues/issues_embed.html:695
+#: apps/issues/templates/issues/workspace_issue_list.html:386
+msgid "No issues yet."
+msgstr ""
+
+#: apps/issues/templates/issues/milestones/delete_confirm_content.html:13
+#: apps/projects/templates/projects/includes/delete_confirm_content.html:14
+#: apps/projects/templates/projects/project_confirm_delete.html:22
+msgid "The following will be permanently deleted:"
+msgstr ""
+
+#: apps/issues/templates/issues/milestones/delete_confirm_content.html:15
+#: apps/projects/templates/projects/includes/delete_confirm_content.html:20
+#: apps/projects/templates/projects/project_confirm_delete.html:28
+#, python-format
+msgid "%(count)s epic"
+msgid_plural "%(count)s epics"
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/issues/templates/issues/milestones/delete_confirm_content.html:17
+#: apps/projects/templates/projects/includes/delete_confirm_content.html:23
+#: apps/projects/templates/projects/project_confirm_delete.html:31
+#, python-format
+msgid "%(count)s work item"
+msgid_plural "%(count)s work items"
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/issues/templates/issues/milestones/delete_confirm_content.html:30
+#: apps/issues/templates/issues/milestones/milestone_confirm_delete.html:7
+msgid "Delete Milestone"
+msgstr ""
+
+#: apps/issues/templates/issues/milestones/milestone_confirm_delete.html:16
+#, python-format
+msgid "This will also delete %(count)s epic and all its child issues."
+msgid_plural ""
+"This will also delete %(count)s epics and all their child issues."
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/issues/templates/issues/milestones/milestone_confirm_delete.html:21
+#, python-format
+msgid "%(count)s work item will be permanently deleted."
+msgid_plural "%(count)s work items will be permanently deleted."
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/issues/templates/issues/milestones/milestone_confirm_delete.html:26
+#, python-format
+msgid "%(count)s subtask will be permanently deleted."
+msgid_plural "%(count)s subtasks will be permanently deleted."
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/issues/templates/issues/milestones/milestone_detail.html:14
+#: apps/projects/templates/projects/project_detail.html:39
+msgid "Issue Hierarchy"
+msgstr ""
+
+#: apps/issues/templates/issues/milestones/milestone_form.html:9
+msgid "Edit Milestone"
+msgstr ""
+
+#: apps/issues/templates/issues/milestones/milestone_form.html:11
+#: apps/issues/views/milestones.py:253
+#: apps/projects/templates/projects/includes/new_milestone_modal.html:2
+msgid "New Milestone"
+msgstr ""
+
+#: apps/issues/templates/issues/milestones/milestone_form.html:22
+#: apps/projects/templates/projects/includes/milestone_form_modal.html:16
+msgid "Create Milestone"
+msgstr ""
+
+#: apps/issues/views/bulk.py:372
+#, python-format
+msgid "%(count)d issue(s) deleted successfully."
+msgstr ""
+
+#: apps/issues/views/bulk.py:385 apps/projects/views/bulk.py:213
+#: apps/sprints/views/bulk.py:124
+msgid "Invalid status value."
+msgstr ""
+
+#: apps/issues/views/bulk.py:406
+#, python-format
+msgid "%(count)d issue(s) updated to %(status)s."
+msgstr ""
+
+#: apps/issues/views/bulk.py:423
+msgid "Invalid priority value."
+msgstr ""
+
+#: apps/issues/views/bulk.py:446
+#, python-format
+msgid "%(count)d issue(s) updated to %(priority)s."
+msgstr ""
+
+#: apps/issues/views/bulk.py:471
+#, python-format
+msgid "%(count)d issue(s) removed from sprint."
+msgstr ""
+
+#: apps/issues/views/bulk.py:482
+msgid "No sprint selected."
+msgstr ""
+
+#: apps/issues/views/bulk.py:496
+msgid "Invalid sprint."
+msgstr ""
+
+#: apps/issues/views/bulk.py:521
+#, python-format
+msgid "%(count)d issue(s) added to %(sprint)s."
+msgstr ""
+
+#: apps/issues/views/bulk.py:552
+#, python-format
+msgid "%(count)d issue(s) assigned to %(assignee)s."
+msgstr ""
+
+#: apps/issues/views/bulk.py:557
+#, python-format
+msgid "%(count)d issue(s) unassigned."
+msgstr ""
+
+#: apps/issues/views/comments.py:69 apps/issues/views/comments.py:99
+msgid "Comment cannot be empty"
+msgstr ""
+
+#: apps/issues/views/comments.py:95
+msgid "You can only edit your own comments."
+msgstr ""
+
+#: apps/issues/views/comments.py:118
+msgid "You can only delete your own comments."
+msgstr ""
+
+#: apps/issues/views/crud.py:223 apps/issues/views/crud.py:381
+#: apps/issues/views/crud.py:1003 apps/issues/views/milestones.py:615
+#: apps/projects/views/crud.py:1096
+#, python-format
+msgid "%(type)s created successfully."
+msgstr ""
+
+#: apps/issues/views/crud.py:294
+msgid "Children"
+msgstr ""
+
+#: apps/issues/views/crud.py:321
+#, python-format
+msgid "New %s"
+msgstr ""
+
+#: apps/issues/views/crud.py:423 apps/issues/views/milestones.py:292
+#, python-format
+msgid "Edit [%(key)s] %(title)s"
+msgstr ""
+
+#: apps/issues/views/crud.py:454
+#, python-format
+msgid "%(type)s updated successfully."
+msgstr ""
+
+#: apps/issues/views/crud.py:486 apps/issues/views/milestones.py:355
+#, python-format
+msgid "Delete [%(key)s] %(title)s"
+msgstr ""
+
+#: apps/issues/views/crud.py:528
+#, python-format
+msgid "%(type)s deleted successfully."
+msgstr ""
+
+#: apps/issues/views/crud.py:561 apps/issues/views/milestones.py:407
+#, python-format
+msgid "%(title)s (Copy)"
+msgstr ""
+
+#: apps/issues/views/crud.py:589
+#, python-format
+msgid "%(type)s cloned successfully."
+msgstr ""
+
+#: apps/issues/views/crud.py:614 apps/issues/views/crud.py:645
+msgid "Epics cannot be converted to another type."
+msgstr ""
+
+#: apps/issues/views/crud.py:662
+#, python-format
+msgid "%(key)s converted from %(old)s to %(new)s."
+msgstr ""
+
+#: apps/issues/views/crud.py:776
+#, python-format
+msgid "%(key)s promoted from %(old)s to Epic."
+msgstr ""
+
+#: apps/issues/views/milestones.py:262 apps/projects/views/crud.py:1188
+msgid "Milestone created successfully."
+msgstr ""
+
+#: apps/issues/views/milestones.py:303
+msgid "Milestone updated successfully."
+msgstr ""
+
+#: apps/issues/views/milestones.py:392
+msgid "Milestone deleted successfully."
+msgstr ""
+
+#: apps/issues/views/milestones.py:415
+msgid "Milestone cloned successfully."
+msgstr ""
+
+#: apps/issues/views/milestones.py:491 apps/projects/views/crud.py:968
+msgid "Epic created successfully."
+msgstr ""
+
+#: apps/issues/views/mixins.py:54
+msgid "Title A-Z"
+msgstr ""
+
+#: apps/issues/views/mixins.py:55
+msgid "Title Z-A"
+msgstr ""
+
+#: apps/issues/views/mixins.py:56
+msgid "Priority High-Low"
+msgstr ""
+
+#: apps/issues/views/mixins.py:57
+msgid "Priority Low-High"
+msgstr ""
+
+#: apps/issues/views/mixins.py:58
+msgid "Points High-Low"
+msgstr ""
+
+#: apps/issues/views/mixins.py:59
+msgid "Points Low-High"
+msgstr ""
+
+#: apps/issues/views/mixins.py:64
+msgid "Backlog (not in sprint)"
+msgstr ""
+
+#: apps/issues/views/mixins.py:327 apps/issues/views/mixins.py:349
+#: apps/issues/views/mixins.py:362 apps/projects/views/crud.py:168
+#: apps/projects/views/crud.py:697 apps/projects/views/crud.py:705
+#: apps/sprints/views/mixins.py:101 templates/includes/filters_modal.html:136
+#: templates/includes/filters_modal.html:162
+msgid "All"
+msgstr ""
+
+#: apps/issues/views/tree.py:106
+msgid "This issue can only be a child of an Epic."
+msgstr ""
+
+#: apps/issues/views/tree.py:118
+#, python-format
+msgid "%(issue)s moved under %(parent)s."
+msgstr ""
+
+#: apps/issues/views/tree.py:128
+#, python-format
+msgid "%(issue)s moved to root level."
+msgstr ""
+
+#: apps/issues/views/tree.py:132
+#, python-format
+msgid "%(issue)s is already at root level."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:14
+msgid "A project management tool."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:14
+msgid "Simple"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:14
+msgid "Open Source"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:17
+msgid "Made with"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:17
+msgid "and"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:19
+#: apps/landing_pages/templates/landing_pages/landing_page.html:127
+#: apps/users/templates/account/signup.html:5
+#: apps/users/templates/account/signup.html:19
+#: apps/users/templates/account/signup.html:39
+#: apps/users/templates/socialaccount/signup.html:6
+#: apps/users/templates/socialaccount/signup.html:9
+#: apps/users/templates/socialaccount/signup.html:21
+#: templates/includes/top_nav.html:72
+msgid "Sign Up"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:20
+#: apps/users/templates/account/login.html:5
+#: apps/users/templates/account/login.html:18
+#: apps/users/templates/account/login.html:26
+#: apps/users/templates/socialaccount/login_redirect.html:5
+#: templates/includes/top_nav.html:75
+msgid "Sign In"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:32
+msgid "Ship software. Simple and faster."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:33
+msgid "A better workflow"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:34
+msgid "Matorral gives your team a clear, flexible way to plan and deliver."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:41
+msgid "Hierarchical issues."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:43
+msgid ""
+"Organize work as stories, bugs and chores. Put them in epics and milestones, "
+"and use subtasks if needed."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:50
+msgid "Sprint planning."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:52
+msgid "Plan iterations with automatic sprint creation and cadence tracking."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:59
+msgid "Projects made simple."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:61
+msgid ""
+"Plan your work into projects. Keep your team focused on what matters most."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:68
+msgid "Workspace collaboration."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:70
+msgid ""
+"Invite teammates, manage memberships, and collaborate across projects in "
+"isolated workspaces built for your organization."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:77
+msgid "Matorral app screenshot"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:89
+msgid "Features"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:96
+msgid "Hierarchical Issues"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:97
+msgid "Organize epics, stories, and tasks in a flexible tree structure."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:105
+#: apps/workspaces/models.py:74
+msgid "Workspaces"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:106
+msgid "Collaborate with your team in dedicated workspaces."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:114
+#: apps/sprints/models.py:118
+#: apps/sprints/templates/sprints/sprint_list.html:15
+#: apps/sprints/views/crud.py:59 templates/includes/top_nav_app.html:11
+msgid "Sprints"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:115
+msgid "Plan and track sprints with automatic cadence."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:125
+msgid "Ready to get started?"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:126
+msgid "Join thousands of teams using Matorral to ship better software."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:3
+#: apps/landing_pages/templates/landing_pages/privacy.html:8
+#: apps/landing_pages/templates/landing_pages/terms.html:62
+#: templates/includes/footer.html:8
+msgid "Privacy Policy"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:9
+#: apps/landing_pages/templates/landing_pages/terms.html:9
+msgid "Last updated:"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:9
+#: apps/landing_pages/templates/landing_pages/terms.html:9
+msgid "February 2026"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:11
+msgid "1. Information We Collect"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:13
+#, python-format
+msgid ""
+"When you use %(name)s, we may collect the following types of information:"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:19
+msgid "Account Information:"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:20
+msgid "Name, email address, and password when you create an account."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:23
+msgid "Profile Information:"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:24
+msgid "Profile picture, timezone, and language preferences."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:27
+msgid "Usage Data:"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:28
+msgid ""
+"Information about how you interact with the service, including pages visited "
+"and features used."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:31
+msgid "Device Information:"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:32
+msgid "Browser type, operating system, and IP address."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:36
+msgid "2. How We Use Your Information"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:37
+msgid "We use the information we collect to:"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:39
+msgid "Provide, maintain, and improve the service"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:40
+msgid "Create and manage your account"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:41
+msgid "Send you important service-related communications"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:42
+msgid "Respond to your requests and support inquiries"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:43
+msgid "Protect against fraud and abuse"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:44
+msgid "Comply with legal obligations"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:47
+msgid "3. Data Sharing"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:49
+msgid "We do not sell your personal information. We may share your data with:"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:55
+msgid "Service Providers:"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:56
+msgid ""
+"Third-party services that help us operate the platform (e.g., hosting, "
+"analytics)."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:59
+msgid "Workspace Members:"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:60
+msgid ""
+"Other members of your organization may see your profile information and "
+"activity within shared workspaces."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:63
+msgid "Legal Requirements:"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:64
+msgid ""
+"When required by law or to protect our rights and the safety of our users."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:68
+msgid "4. Data Security"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:70
+msgid ""
+"We implement appropriate technical and organizational measures to protect "
+"your personal data against unauthorized access, alteration, disclosure, or "
+"destruction. However, no method of transmission over the internet is "
+"completely secure."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:77
+msgid "5. Data Retention"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:79
+msgid ""
+"We retain your personal data for as long as your account is active or as "
+"needed to provide you with the service. We may retain certain information as "
+"required by law or for legitimate business purposes after account deletion."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:86
+msgid "6. Your Rights"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:87
+msgid "Depending on your location, you may have the right to:"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:89
+msgid "Access the personal data we hold about you"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:90
+msgid "Request correction of inaccurate data"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:91
+msgid "Request deletion of your data"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:92
+msgid "Object to or restrict the processing of your data"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:93
+msgid "Request a copy of your data in a portable format"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:95
+msgid ""
+"To exercise any of these rights, please contact us through the platform."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:97
+msgid "7. Cookies"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:99
+msgid ""
+"We use cookies and similar technologies to maintain your session, remember "
+"your preferences (such as theme and language), and improve the service. You "
+"can control cookie settings through your browser preferences."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:106
+msgid "8. Children's Privacy"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:108
+msgid ""
+"The service is not intended for children under the age of 16. We do not "
+"knowingly collect personal information from children. If we become aware "
+"that we have collected data from a child, we will take steps to delete it "
+"promptly."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:115
+msgid "9. Changes to This Policy"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:117
+msgid ""
+"We may update this Privacy Policy from time to time. We will notify you of "
+"significant changes by posting the updated policy on this page. Your "
+"continued use of the service after changes are posted constitutes acceptance "
+"of the updated policy."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:124
+msgid "10. Contact"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/privacy.html:126
+#, python-format
+msgid ""
+"If you have any questions about this Privacy Policy, please contact us "
+"through the %(name)s platform."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:3
+#: apps/landing_pages/templates/landing_pages/terms.html:8
+#: templates/includes/footer.html:7
+msgid "Terms of Service"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:11
+msgid "1. Acceptance of Terms"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:13
+#, python-format
+msgid ""
+"By accessing or using %(name)s, you agree to be bound by these Terms of "
+"Service. If you do not agree to these terms, please do not use the service."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:19
+msgid "2. Description of Service"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:21
+#, python-format
+msgid ""
+"%(name)s is a web-based project management and collaboration platform. We "
+"reserve the right to modify, suspend, or discontinue any part of the service "
+"at any time with reasonable notice."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:27
+msgid "3. User Accounts"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:29
+msgid ""
+"You are responsible for maintaining the confidentiality of your account "
+"credentials and for all activities that occur under your account. You agree "
+"to provide accurate and complete information when creating your account and "
+"to keep this information up to date."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:36
+msgid "4. Acceptable Use"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:37
+msgid "You agree not to:"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:39
+msgid ""
+"Use the service for any unlawful purpose or in violation of any applicable "
+"laws"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:40
+msgid ""
+"Attempt to gain unauthorized access to any part of the service or its "
+"related systems"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:41
+msgid "Interfere with or disrupt the integrity or performance of the service"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:42
+msgid "Upload or transmit viruses, malware, or any other malicious code"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:43
+msgid "Harass, abuse, or harm other users of the service"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:44
+msgid "Use the service to send unsolicited communications (spam)"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:47
+msgid "5. Intellectual Property"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:49
+#, python-format
+msgid ""
+"The service, including its original content, features, and functionality, is "
+"owned by %(name)s and is protected by intellectual property laws. You retain "
+"ownership of any content you submit to the service."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:56
+msgid "6. User Data and Privacy"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:58
+#, python-format
+msgid ""
+"Your use of the service is also governed by our Privacy Policy. By using "
+"%(name)s, you consent to the collection and use of your data as described in "
+"our"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:65
+msgid "7. Payment and Billing"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:67
+msgid ""
+"Certain features of the service may require payment. You agree to pay all "
+"fees associated with your use of paid features. All fees are non-refundable "
+"unless otherwise stated. We reserve the right to change our pricing with "
+"reasonable notice."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:74
+msgid "8. Termination"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:76
+msgid ""
+"We may terminate or suspend your account at any time for violation of these "
+"terms. You may terminate your account at any time by contacting us. Upon "
+"termination, your right to use the service will immediately cease."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:83
+msgid "9. Disclaimers and Limitation of Liability"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:85
+msgid ""
+"The service is provided \"as is\" and \"as available\" without warranties of "
+"any kind. We do not guarantee that the service will be uninterrupted, "
+"secure, or error-free. To the fullest extent permitted by law, we shall not "
+"be liable for any indirect, incidental, special, consequential, or punitive "
+"damages arising from your use of the service."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:93
+msgid "10. Changes to Terms"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:95
+msgid ""
+"We reserve the right to modify these terms at any time. We will notify users "
+"of significant changes by posting the updated terms on this page. Your "
+"continued use of the service after changes are posted constitutes acceptance "
+"of the modified terms."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:102
+msgid "11. Governing Law"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:104
+msgid ""
+"These terms shall be governed by and construed in accordance with applicable "
+"laws, without regard to conflict of law principles."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:110
+msgid "12. Contact"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/terms.html:112
+#, python-format
+msgid ""
+"If you have any questions about these Terms of Service, please contact us "
+"through the %(name)s platform."
+msgstr ""
+
+#: apps/projects/admin.py:39
+msgid "Status & Assignment"
+msgstr ""
+
+#: apps/projects/admin.py:45
+msgid "Timestamps"
+msgstr ""
+
+#: apps/projects/admin.py:71
+msgid "Mark selected projects as Active"
+msgstr ""
+
+#: apps/projects/admin.py:74
+#, python-format
+msgid "%(count)d project(s) marked as active."
+msgstr ""
+
+#: apps/projects/admin.py:76
+msgid "Mark selected projects as Completed"
+msgstr ""
+
+#: apps/projects/admin.py:79
+#, python-format
+msgid "%(count)d project(s) marked as completed."
+msgstr ""
+
+#: apps/projects/admin.py:81
+msgid "Mark selected projects as Archived"
+msgstr ""
+
+#: apps/projects/admin.py:84
+#, python-format
+msgid "%(count)d project(s) marked as archived."
+msgstr ""
+
+#: apps/projects/admin.py:86
+msgid "Mark selected projects as Draft"
+msgstr ""
+
+#: apps/projects/admin.py:89
+#, python-format
+msgid "%(count)d project(s) marked as draft."
+msgstr ""
+
+#: apps/projects/admin.py:91
+msgid "Reset created_by to None (mark as system-created)"
+msgstr ""
+
+#: apps/projects/admin.py:96
+#, python-format
+msgid "%(count)d project(s) had created_by reset."
+msgstr ""
+
+#: apps/projects/admin.py:99
+msgid "Set created_by from lead"
+msgstr ""
+
+#: apps/projects/admin.py:104
+#, python-format
+msgid "%(count)d project(s) had created_by set from lead."
+msgstr ""
+
+#: apps/projects/forms.py:21 apps/projects/views/bulk.py:78
+msgid "No projects selected."
+msgstr ""
+
+#: apps/projects/forms.py:93
+msgid "Key must contain only letters (A-Z)."
+msgstr ""
+
+#: apps/projects/forms.py:96
+msgid "Key must be at most 6 characters."
+msgstr ""
+
+#: apps/projects/forms.py:104
+msgid "A project with this key already exists in this workspace."
+msgstr ""
+
+#: apps/projects/forms.py:119 apps/sprints/forms.py:154
+msgid "Name is required."
+msgstr ""
+
+#: apps/projects/models.py:19 apps/sprints/models.py:20
+msgid "Active"
+msgstr ""
+
+#: apps/projects/models.py:20 apps/sprints/models.py:21
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:169
+msgid "Completed"
+msgstr ""
+
+#: apps/projects/models.py:64 apps/sprints/models.py:45
+#: apps/workspaces/models.py:41 apps/workspaces/models.py:73
+#: templates/includes/top_nav_app.html:19
+msgid "Workspace"
+msgstr ""
+
+#: apps/projects/models.py:68
+#: apps/projects/templates/projects/project_list.html:149
+#: apps/projects/templates/projects/project_list.html:182
+#: apps/sprints/models.py:56 apps/workspaces/forms.py:106
+#: apps/workspaces/models.py:62
+#: apps/workspaces/templates/workspaces/list_workspaces.html:18
+msgid "Name"
+msgstr ""
+
+#: apps/projects/models.py:74
+msgid ""
+"A short unique identifier for the project (e.g., PRJ, DEMO). Auto-generated "
+"if not provided."
+msgstr ""
+
+#: apps/projects/models.py:86
+#: apps/projects/templates/projects/includes/project_detail_header.html:71
+#: apps/projects/templates/projects/includes/project_detail_header_edit.html:72
+#: apps/projects/templates/projects/project_list.html:151
+#: apps/projects/templates/projects/project_list.html:184
+#: apps/projects/views/crud.py:39 apps/projects/views/crud.py:164
+msgid "Lead"
+msgstr ""
+
+#: apps/projects/models.py:115
+#: apps/projects/templates/projects/project_list.html:17
+#: apps/projects/views/crud.py:184 templates/includes/top_nav_app.html:10
+msgid "Projects"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/bulk_delete_modal.html:4
+#: apps/projects/templates/projects/includes/bulk_delete_modal.html:23
+msgid "Delete Projects"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/bulk_delete_modal.html:6
+msgid ""
+"Are you sure you want to delete the selected projects? This action cannot be "
+"undone."
+msgstr ""
+
+#: apps/projects/templates/projects/includes/bulk_delete_modal.html:11
+msgid "project(s) will be deleted"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/bulk_lead_modal.html:4
+#: apps/projects/templates/projects/project_list.html:95
+msgid "Set Lead"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/bulk_lead_modal.html:10
+msgid ""
+"Select an organization member to assign as lead for the selected projects."
+msgstr ""
+
+#: apps/projects/templates/projects/includes/bulk_lead_modal.html:14
+#: apps/projects/templates/projects/includes/bulk_lead_modal.html:69
+msgid "project(s) will be updated"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/bulk_lead_modal.html:19
+#: templates/includes/bulk_person_modal.html:13
+#: templates/includes/user_combobox.html:73
+msgid "Assign to me"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/bulk_lead_modal.html:26
+#: apps/projects/views/bulk.py:116 apps/projects/views/bulk.py:186
+#: apps/projects/views/crud.py:106 apps/projects/views/crud.py:131
+#: apps/projects/views/crud.py:149
+msgid "No lead"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/bulk_lead_modal.html:27
+msgid "No lead (remove current)"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/bulk_lead_modal.html:61
+msgid "Are you sure you want to set the lead for the selected projects?"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/bulk_lead_modal.html:66
+msgid "New lead"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/bulk_lead_modal.html:81
+msgid "Confirm"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/delete_confirm_content.html:3
+#: apps/projects/templates/projects/project_confirm_delete.html:11
+#, python-format
+msgid ""
+"Are you sure you want to delete <strong>%(name)s</strong>? This action "
+"cannot be undone."
+msgstr ""
+
+#: apps/projects/templates/projects/includes/delete_confirm_content.html:17
+#: apps/projects/templates/projects/project_confirm_delete.html:25
+#, python-format
+msgid "%(count)s milestone"
+msgid_plural "%(count)s milestones"
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/projects/templates/projects/includes/delete_confirm_content.html:36
+#: apps/projects/templates/projects/project_confirm_delete.html:7
+#: apps/projects/templates/projects/project_confirm_delete.html:42
+msgid "Delete Project"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/epic_bulk_assignee_modal.html:3
+msgid "Select an assignee for the selected epics:"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/epic_bulk_assignee_modal.html:5
+msgid "Assign selected epics to:"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/epic_bulk_delete_modal.html:2
+msgid "Delete Epics"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/epic_children_embed.html:13
+msgid "Add work item to this Epic"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/epic_form_modal.html:3
+#, python-format
+msgid "Creating epic for project <strong>%(key)s</strong> - %(name)s"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/epic_form_modal.html:5
+#, python-format
+msgid "Milestone: <strong>%(ms_key)s</strong> - %(ms_title)s"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/milestone_form_modal.html:3
+#, python-format
+msgid "Creating milestone for project <strong>%(key)s</strong> - %(name)s"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/project_detail_header_edit.html:18
+msgid "Project name"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/project_issue_create_form_modal.html:3
+#, python-format
+msgid ""
+"Creating %(issue_type_label)s for project <strong>%(key)s</strong> - %(name)s"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/project_issue_create_form_modal.html:5
+#, python-format
+msgid "Epic: <strong>%(epic_key)s</strong> - %(epic_title)s"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/project_row.html:39
+msgid "Demo"
+msgstr ""
+
+#: apps/projects/templates/projects/project_detail.html:13
+msgid "This is a demo project"
+msgstr ""
+
+#: apps/projects/templates/projects/project_detail.html:14
+msgid ""
+"Explore it to see how projects, milestones, epics, and sprints work "
+"together. When you're ready, feel free to delete it and create your own."
+msgstr ""
+
+#: apps/projects/templates/projects/project_detail.html:62
+msgid "Unassigned Work Items"
+msgstr ""
+
+#: apps/projects/templates/projects/project_epics_embed.html:23
+msgid "Search epics..."
+msgstr ""
+
+#: apps/projects/templates/projects/project_epics_embed.html:273
+msgid "Clone Milestone"
+msgstr ""
+
+#: apps/projects/templates/projects/project_epics_embed.html:273
+msgid "Are you sure you want to clone this milestone?"
+msgstr ""
+
+#: apps/projects/templates/projects/project_epics_embed.html:320
+msgid "No epics for this milestone."
+msgstr ""
+
+#: apps/projects/templates/projects/project_epics_embed.html:328
+msgid "Create New Epic"
+msgstr ""
+
+#: apps/projects/templates/projects/project_epics_embed.html:328
+msgid "for this Milestone"
+msgstr ""
+
+#: apps/projects/templates/projects/project_epics_embed.html:347
+msgid "No epics found matching your search."
+msgstr ""
+
+#: apps/projects/templates/projects/project_epics_embed.html:349
+msgid "No epics yet."
+msgstr ""
+
+#: apps/projects/templates/projects/project_form.html:9
+msgid "Edit Project"
+msgstr ""
+
+#: apps/projects/templates/projects/project_form.html:11
+#: apps/projects/templates/projects/project_list.html:118
+#: apps/projects/views/crud.py:250
+msgid "New Project"
+msgstr ""
+
+#: apps/projects/templates/projects/project_form.html:22
+msgid "Create Project"
+msgstr ""
+
+#: apps/projects/templates/projects/project_list.html:21
+msgid "Search projects..."
+msgstr ""
+
+#: apps/projects/templates/projects/project_list.html:200
+msgid "No projects found matching your search."
+msgstr ""
+
+#: apps/projects/templates/projects/project_list.html:202
+msgid "No projects yet. Create your first project to get started."
+msgstr ""
+
+#: apps/projects/views/bulk.py:200
+#, python-format
+msgid "%(count)d project(s) deleted successfully."
+msgstr ""
+
+#: apps/projects/views/bulk.py:234
+#, python-format
+msgid "%(count)d project(s) updated to %(status)s."
+msgstr ""
+
+#: apps/projects/views/bulk.py:271
+#, python-format
+msgid "%(count)d project(s) assigned to %(lead)s."
+msgstr ""
+
+#: apps/projects/views/bulk.py:276
+#, python-format
+msgid "%(count)d project(s) lead removed."
+msgstr ""
+
+#: apps/projects/views/crud.py:258
+msgid "Project created successfully."
+msgstr ""
+
+#: apps/projects/views/crud.py:275 apps/sprints/views/crud.py:182
+#, python-format
+msgid "Edit %s"
+msgstr ""
+
+#: apps/projects/views/crud.py:282
+msgid "Project updated successfully."
+msgstr ""
+
+#: apps/projects/views/crud.py:307 apps/sprints/views/crud.py:206
+#, python-format
+msgid "Delete %s"
+msgstr ""
+
+#: apps/projects/views/crud.py:334
+msgid "Project deleted successfully."
+msgstr ""
+
+#: apps/projects/views/crud.py:345
+#, python-format
+msgid "%(name)s (Copy)"
+msgstr ""
+
+#: apps/projects/views/crud.py:351
+msgid "Project cloned successfully."
+msgstr ""
+
+#: apps/sprints/admin.py:33
+msgid "Set created_by from owner"
+msgstr ""
+
+#: apps/sprints/admin.py:38
+#, python-format
+msgid "%(count)d sprint(s) had created_by set from owner."
+msgstr ""
+
+#: apps/sprints/forms.py:107
+msgid "Please select at least one issue."
+msgstr ""
+
+#: apps/sprints/forms.py:131
+msgid "Please select a sprint."
+msgstr ""
+
+#: apps/sprints/models.py:54
+msgid "Auto-generated unique identifier (e.g., SPRINT-1)."
+msgstr ""
+
+#: apps/sprints/models.py:57
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:108
+#: apps/sprints/templates/sprints/includes/sprint_detail_header_edit.html:48
+msgid "Goal"
+msgstr ""
+
+#: apps/sprints/models.py:57
+msgid "The sprint goal or objective."
+msgstr ""
+
+#: apps/sprints/models.py:65
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:123
+#: apps/sprints/templates/sprints/includes/sprint_detail_header_edit.html:73
+msgid "Start Date"
+msgstr ""
+
+#: apps/sprints/models.py:66
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:127
+#: apps/sprints/templates/sprints/includes/sprint_detail_header_edit.html:84
+msgid "End Date"
+msgstr ""
+
+#: apps/sprints/models.py:86
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:143
+#: apps/sprints/templates/sprints/includes/sprint_detail_header_edit.html:103
+msgid "Capacity"
+msgstr ""
+
+#: apps/sprints/models.py:89
+msgid "Planned capacity in story points."
+msgstr ""
+
+#: apps/sprints/models.py:92
+msgid "Committed Points"
+msgstr ""
+
+#: apps/sprints/models.py:94
+msgid "Total points committed at sprint start."
+msgstr ""
+
+#: apps/sprints/models.py:97
+msgid "Completed Points"
+msgstr ""
+
+#: apps/sprints/models.py:99
+msgid "Total points completed."
+msgstr ""
+
+#: apps/sprints/models.py:135
+msgid "End date must be after start date."
+msgstr ""
+
+#: apps/sprints/models.py:139
+msgid "Sprint duration must be at least 1 week."
+msgstr ""
+
+#: apps/sprints/models.py:141
+msgid "Sprint duration cannot exceed 8 weeks."
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/add_issues_modal.html:6
+#: apps/sprints/templates/sprints/includes/add_issues_modal_content.html:2
+msgid "Add Issues to Sprint"
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/add_issues_modal_content.html:11
+msgid "Search for issues without a sprint..."
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/add_issues_modal_content.html:59
+msgid "Add Selected"
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/add_issues_modal_content.html:68
+msgid "No unassigned issues available in this workspace."
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/add_to_sprint_modal.html:5
+#, python-format
+msgid "Add <strong>%(key)s</strong> - %(title)s to a sprint:"
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/add_to_sprint_modal.html:12
+#, python-format
+msgid ""
+"This issue is already assigned to <strong>%(sprint)s</strong>. Selecting a "
+"different sprint will move it."
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/add_to_sprint_modal.html:50
+#: apps/sprints/views/actions.py:245 apps/sprints/views/actions.py:288
+msgid "Issue not found."
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/delete_confirm_content.html:3
+#: apps/sprints/templates/sprints/sprint_confirm_delete.html:13
+#, python-format
+msgid "Are you sure you want to delete <strong>%(key)s</strong> - %(name)s?"
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/delete_confirm_content.html:14
+#, python-format
+msgid "%(count)s issue will be unassigned from this sprint but not deleted."
+msgid_plural ""
+"%(count)s issues will be unassigned from this sprint but not deleted."
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/sprints/templates/sprints/includes/delete_confirm_content.html:23
+#: apps/sprints/templates/sprints/sprint_confirm_delete.html:7
+msgid "Delete Sprint"
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:32
+msgid "Start Sprint"
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:38
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:74
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:82
+msgid "Complete Sprint"
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:55
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:99
+msgid "Archive"
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:76
+msgid ""
+"Are you sure you want to complete this sprint? Incomplete issues will be "
+"moved to the next planning sprint if available."
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:91
+msgid "Archive Sprint"
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:93
+msgid "Are you sure you want to archive this sprint?"
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:112
+msgid "No goal set"
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:119
+msgid "Duration"
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:120
+#, python-format
+msgid "%(weeks)s week"
+msgid_plural "%(weeks)s weeks"
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:139
+#: apps/sprints/templates/sprints/includes/sprint_detail_header_edit.html:99
+msgid "Total Points"
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:145
+#: apps/utils/templatetags/history_tags.py:33
+msgid "points"
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:164
+msgid "Committed"
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:166
+msgid "points at sprint start"
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:171
+msgid "points done"
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:174
+msgid "Velocity"
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/sprint_detail_header.html:176
+msgid "of committed"
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/sprint_detail_header_edit.html:19
+msgid "Sprint name"
+msgstr ""
+
+#: apps/sprints/templates/sprints/includes/sprint_detail_header_edit.html:52
+msgid "Add a sprint goal..."
+msgstr ""
+
+#: apps/sprints/templates/sprints/sprint_confirm_delete.html:16
+#, python-format
+msgid ""
+"This sprint has %(count)s assigned issue. The issue will be unassigned from "
+"the sprint but not deleted."
+msgid_plural ""
+"This sprint has %(count)s assigned issues. The issues will be unassigned "
+"from the sprint but not deleted."
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/sprints/templates/sprints/sprint_form.html:9
+msgid "Edit Sprint"
+msgstr ""
+
+#: apps/sprints/templates/sprints/sprint_form.html:11
+#: apps/sprints/templates/sprints/sprint_list.html:114
+#: apps/sprints/views/crud.py:138
+msgid "New Sprint"
+msgstr ""
+
+#: apps/sprints/templates/sprints/sprint_form.html:31
+msgid "Create Sprint"
+msgstr ""
+
+#: apps/sprints/templates/sprints/sprint_list.html:18
+msgid "Search sprints..."
+msgstr ""
+
+#: apps/sprints/templates/sprints/sprint_list.html:91
+#: apps/sprints/templates/sprints/sprint_list.html:202
+msgid "Set Owner"
+msgstr ""
+
+#: apps/sprints/templates/sprints/sprint_list.html:138
+msgid "Dates"
+msgstr ""
+
+#: apps/sprints/templates/sprints/sprint_list.html:155
+msgid "No sprints found matching your filters."
+msgstr ""
+
+#: apps/sprints/templates/sprints/sprint_list.html:158
+msgid "Showing only Planning and Active sprints by default."
+msgstr ""
+
+#: apps/sprints/templates/sprints/sprint_list.html:167
+msgid "Show all sprints"
+msgstr ""
+
+#: apps/sprints/templates/sprints/sprint_list.html:172
+msgid "No sprints yet. Create your first sprint to get started."
+msgstr ""
+
+#: apps/sprints/templates/sprints/sprint_list.html:181
+msgid "Delete Sprints"
+msgstr ""
+
+#: apps/sprints/templates/sprints/sprint_list.html:183
+msgid ""
+"Are you sure you want to delete the selected sprints? This action cannot be "
+"undone."
+msgstr ""
+
+#: apps/sprints/templates/sprints/sprint_list.html:203
+msgid "Select an owner for the selected sprints:"
+msgstr ""
+
+#: apps/sprints/templates/sprints/sprint_list.html:205
+msgid "Assign selected sprints to:"
+msgstr ""
+
+#: apps/sprints/views/actions.py:22
+msgid "Only sprints in planning status can be started."
+msgstr ""
+
+#: apps/sprints/views/actions.py:24 apps/sprints/views/actions.py:35
+msgid "Another sprint is already active in this workspace."
+msgstr ""
+
+#: apps/sprints/views/actions.py:33
+msgid "Sprint started successfully."
+msgstr ""
+
+#: apps/sprints/views/actions.py:47
+msgid "Only active sprints can be completed."
+msgstr ""
+
+#: apps/sprints/views/actions.py:73
+#, python-format
+msgid "Sprint completed. %(count)d incomplete issue(s) moved to %(sprint)s."
+msgstr ""
+
+#: apps/sprints/views/actions.py:77
+msgid "Sprint completed successfully."
+msgstr ""
+
+#: apps/sprints/views/actions.py:91
+msgid "Active sprints cannot be archived. Complete the sprint first."
+msgstr ""
+
+#: apps/sprints/views/actions.py:97
+msgid "Sprint archived successfully."
+msgstr ""
+
+#: apps/sprints/views/actions.py:157
+#, python-format
+msgid "%(count)d issue(s) added to sprint."
+msgstr ""
+
+#: apps/sprints/views/actions.py:160
+msgid "No issues were added."
+msgstr ""
+
+#: apps/sprints/views/actions.py:196
+msgid "Issue removed from sprint."
+msgstr ""
+
+#: apps/sprints/views/actions.py:198
+msgid "Issue not found in this sprint."
+msgstr ""
+
+#: apps/sprints/views/actions.py:300
+#, python-format
+msgid "Issue %(issue)s added to %(sprint)s."
+msgstr ""
+
+#: apps/sprints/views/bulk.py:59
+msgid "No sprints selected."
+msgstr ""
+
+#: apps/sprints/views/bulk.py:112
+#, python-format
+msgid "%(count)d sprint(s) deleted successfully."
+msgstr ""
+
+#: apps/sprints/views/bulk.py:139
+msgid ""
+"Only one sprint can be active at a time. Please select a single sprint to "
+"activate."
+msgstr ""
+
+#: apps/sprints/views/bulk.py:149
+#, python-format
+msgid "Sprint '%(name)s' must be in Planning status to be started."
+msgstr ""
+
+#: apps/sprints/views/bulk.py:154
+#, python-format
+msgid ""
+"Cannot activate sprint '%(name)s'. Another sprint is already active in this "
+"workspace."
+msgstr ""
+
+#: apps/sprints/views/bulk.py:164
+#, python-format
+msgid "Sprint '%(name)s' is now active."
+msgstr ""
+
+#: apps/sprints/views/bulk.py:179
+#, python-format
+msgid "%(count)d sprint(s) updated to %(status)s."
+msgstr ""
+
+#: apps/sprints/views/bulk.py:210
+#, python-format
+msgid "%(count)d sprint(s) assigned to %(owner)s."
+msgstr ""
+
+#: apps/sprints/views/bulk.py:215
+#, python-format
+msgid "%(count)d sprint(s) unassigned."
+msgstr ""
+
+#: apps/sprints/views/crud.py:161
+msgid "Sprint created successfully."
+msgstr ""
+
+#: apps/sprints/views/crud.py:187
+msgid "Sprint updated successfully."
+msgstr ""
+
+#: apps/sprints/views/crud.py:223
+msgid "Sprint deleted successfully."
+msgstr ""
+
+#: apps/users/adapters.py:11
+msgid "Coldn't create your account."
+msgstr ""
+
+#: apps/users/forms.py:17
+#: apps/workspaces/templates/workspaces/includes/pending_invitations.html:9
+#: apps/workspaces/templates/workspaces/includes/workspace_invitations.html:24
+#: apps/workspaces/templates/workspaces/workspace_membership_details.html:16
+msgid "Email"
+msgstr ""
+
+#: apps/users/forms.py:18
+msgid "Time Zone"
+msgstr ""
+
+#: apps/users/forms.py:27
+msgid "Not Set"
+msgstr ""
+
+#: apps/users/forms.py:42 apps/workspaces/forms.py:30
+msgid "Terms and Conditions"
+msgstr ""
+
+#: apps/users/forms.py:44 apps/workspaces/forms.py:32
+#, python-brace-format
+msgid "I agree to the {terms_link}"
+msgstr ""
+
+#: apps/users/models.py:35
+msgid "User has completed or dismissed onboarding checklist"
+msgstr ""
+
+#: apps/users/models.py:39
+msgid "Tracks onboarding progress: {demo_explored: bool, ...}"
+msgstr ""
+
+#: apps/users/templates/account/account_inactive.html:4
+#: apps/users/templates/account/account_inactive.html:7
+msgid "Account Inactive"
+msgstr ""
+
+#: apps/users/templates/account/account_inactive.html:8
+msgid "This account is inactive."
+msgstr ""
+
+#: apps/users/templates/account/connected_accounts.html:5
+#: apps/users/templates/accounts/includes/social/social_accounts.html:3
+#: apps/users/templates/socialaccount/connections.html:6
+#: apps/users/templates/socialaccount/connections.html:15
+#: apps/users/views.py:102 templates/includes/top_nav.html:43
+#: templates/includes/top_nav_app.html:43
+msgid "Connected Accounts"
+msgstr ""
+
+#: apps/users/templates/account/email.html:4
+msgid "Email Addresses"
+msgstr ""
+
+#: apps/users/templates/account/email/account_already_exists_message.txt:4
+#, python-format
+msgid ""
+"You are receiving this email because you or someone else tried to signup for "
+"an\n"
+"account using email address:\n"
+"\n"
+"%(email)s\n"
+"\n"
+"However, an account using that email address already exists. In case you "
+"have\n"
+"forgotten about this, please use the password forgotten procedure to "
+"recover\n"
+"your account:\n"
+"\n"
+"%(password_reset_url)s"
+msgstr ""
+
+#: apps/users/templates/account/email/account_already_exists_subject.txt:1
+msgid "Account Already Exists"
+msgstr ""
+
+#: apps/users/templates/account/email/base_message.txt:1
+#, python-format
+msgid "Hello from %(site_name)s!"
+msgstr ""
+
+#: apps/users/templates/account/email/base_message.txt:5
+#, python-format
+msgid ""
+"Thank you for using %(site_name)s!\n"
+"%(site_domain)s"
+msgstr ""
+
+#: apps/users/templates/account/email/base_notification.txt:5
+msgid ""
+"You are receiving this mail because the following change was made to your "
+"account:"
+msgstr ""
+
+#: apps/users/templates/account/email/base_notification.txt:10
+#, python-format
+msgid ""
+"If you do not recognize this change then please take proper security "
+"precautions immediately. The change to your account originates from:\n"
+"\n"
+"- IP address: %(ip)s\n"
+"- Browser: %(user_agent)s\n"
+"- Date: %(timestamp)s"
+msgstr ""
+
+#: apps/users/templates/account/email/email_changed_message.txt:4
+#, python-format
+msgid "Your email has been changed from %(from_email)s to %(to_email)s."
+msgstr ""
+
+#: apps/users/templates/account/email/email_changed_subject.txt:1
+msgid "Email Changed"
+msgstr ""
+
+#: apps/users/templates/account/email/email_confirm_message.txt:4
+msgid "Your email has been confirmed."
+msgstr ""
+
+#: apps/users/templates/account/email/email_confirm_subject.txt:1
+msgid "Email Confirmation"
+msgstr ""
+
+#: apps/users/templates/account/email/email_confirmation_message.html:3
+msgid "Verify your email address to activate your Matorral account."
+msgstr ""
+
+#: apps/users/templates/account/email/email_confirmation_message.html:4
+msgid "Confirm your email"
+msgstr ""
+
+#: apps/users/templates/account/email/email_confirmation_message.html:9
+msgid ""
+"Your sign-in code for Matorral is listed below. Please enter it in your open "
+"browser window."
+msgstr ""
+
+#: apps/users/templates/account/email/email_confirmation_message.html:21
+msgid ""
+"Thank you for signing up for Matorral. Please click the button below to "
+"verify your email address and activate your account."
+msgstr ""
+
+#: apps/users/templates/account/email/email_confirmation_message.html:34
+msgid "Verify Email Address"
+msgstr ""
+
+#: apps/users/templates/account/email/email_confirmation_signup_message.html:7
+msgid "Welcome to Matorral!"
+msgstr ""
+
+#: apps/users/templates/account/email/email_confirmation_subject.txt:1
+msgid "Confirm your Matorral Project email address"
+msgstr ""
+
+#: apps/users/templates/account/email/email_deleted_message.txt:4
+#, python-format
+msgid "Email address %(deleted_email)s has been removed from your account."
+msgstr ""
+
+#: apps/users/templates/account/email/email_deleted_subject.txt:1
+msgid "Email Removed"
+msgstr ""
+
+#: apps/users/templates/account/email/login_code_message.txt:4
+msgid ""
+"Your sign-in code is listed below. Please enter it in your open browser "
+"window."
+msgstr ""
+
+#: apps/users/templates/account/email/login_code_message.txt:8
+#: apps/users/templates/account/email/unknown_account_message.txt:6
+msgid "This mail can be safely ignored if you did not initiate this action."
+msgstr ""
+
+#: apps/users/templates/account/email/login_code_subject.txt:1
+msgid "Sign-In Code"
+msgstr ""
+
+#: apps/users/templates/account/email/password_changed_message.txt:4
+msgid "Your password has been changed."
+msgstr ""
+
+#: apps/users/templates/account/email/password_changed_subject.txt:1
+msgid "Password Changed"
+msgstr ""
+
+#: apps/users/templates/account/email/password_reset_key_message.html:3
+msgid "Reset your Matorral password."
+msgstr ""
+
+#: apps/users/templates/account/email/password_reset_key_message.html:4
+msgid "Reset your password"
+msgstr ""
+
+#: apps/users/templates/account/email/password_reset_key_message.html:7
+#, python-format
+msgid "Click the button below to reset your %(site_name)s password."
+msgstr ""
+
+#: apps/users/templates/account/email/password_reset_key_message.html:12
+msgid ""
+"If you didn't request a password reset, you can safely ignore this email. "
+"Your password will remain unchanged."
+msgstr ""
+
+#: apps/users/templates/account/email/password_reset_key_message.html:16
+#: apps/users/templates/account/email/password_reset_key_subject.txt:3
+#: apps/users/templates/account/password_reset_done.html:4
+#: apps/users/templates/account/password_reset_from_key.html:4
+#: apps/users/templates/account/password_reset_from_key_done.html:3
+msgid "Reset Password"
+msgstr ""
+
+#: apps/users/templates/account/email/password_reset_key_message.html:24
+msgid "Having trouble? Copy and paste this link into your browser:"
+msgstr ""
+
+#: apps/users/templates/account/email/password_reset_key_message.txt:1
+#, python-format
+msgid ""
+"Hello, Please click the link below to reset your %(site_name)s password. "
+"%(password_reset_url)s If you did not try to reset your password you can "
+"safely ignore this email."
+msgstr ""
+
+#: apps/users/templates/account/email/password_reset_key_message.txt:9
+#, python-format
+msgid "Thanks! The %(site_name)s team"
+msgstr ""
+
+#: apps/users/templates/account/email/password_set_message.txt:4
+msgid "Your password has been set."
+msgstr ""
+
+#: apps/users/templates/account/email/password_set_subject.txt:1
+msgid "Password Set"
+msgstr ""
+
+#: apps/users/templates/account/email/unknown_account_message.txt:4
+#, python-format
+msgid ""
+"You are receiving this email because you, or someone else, tried to access "
+"an account with email %(email)s. However, we do not have any record of such "
+"an account in our database."
+msgstr ""
+
+#: apps/users/templates/account/email/unknown_account_message.txt:8
+msgid "If it was you, you can sign up for an account using the link below."
+msgstr ""
+
+#: apps/users/templates/account/email/unknown_account_subject.txt:1
+msgid "Unknown Account"
+msgstr ""
+
+#: apps/users/templates/account/email_confirm.html:4
+msgid "Confirm Email"
+msgstr ""
+
+#: apps/users/templates/account/logout.html:4
+#: apps/users/templates/account/logout.html:16
+msgid "Sign Out"
+msgstr ""
+
+#: apps/users/templates/account/logout.html:8
+msgid "Are you sure you want to sign out?"
+msgstr ""
+
+#: apps/users/templates/account/logout.html:21
+msgid "Home"
+msgstr ""
+
+#: apps/users/templates/account/messages/cannot_delete_primary_email.txt:1
+#, python-format
+msgid "You cannot remove your primary email address (%(email)s)."
+msgstr ""
+
+#: apps/users/templates/account/messages/email_confirmation_failed.txt:1
+#, python-format
+msgid ""
+"Unable to confirm %(email)s because it is already confirmed by a different "
+"account."
+msgstr ""
+
+#: apps/users/templates/account/messages/email_confirmation_sent.txt:1
+#, python-format
+msgid "Confirmation email sent to %(email)s."
+msgstr ""
+
+#: apps/users/templates/account/messages/email_confirmed.txt:1
+#, python-format
+msgid "You have confirmed %(email)s."
+msgstr ""
+
+#: apps/users/templates/account/messages/email_deleted.txt:1
+#, python-format
+msgid "Removed email address %(email)s."
+msgstr ""
+
+#: apps/users/templates/account/messages/logged_in.txt:1
+#, python-format
+msgid "Successfully signed in as %(name)s."
+msgstr ""
+
+#: apps/users/templates/account/messages/logged_out.txt:1
+msgid "You have signed out."
+msgstr ""
+
+#: apps/users/templates/account/messages/login_code_sent.txt:1
+#, python-format
+msgid "A sign-in code has been sent to %(recipient)s."
+msgstr ""
+
+#: apps/users/templates/account/messages/password_changed.txt:1
+msgid "Password successfully changed."
+msgstr ""
+
+#: apps/users/templates/account/messages/password_set.txt:1
+msgid "Password successfully set."
+msgstr ""
+
+#: apps/users/templates/account/messages/primary_email_set.txt:1
+msgid "Primary email address set."
+msgstr ""
+
+#: apps/users/templates/account/messages/unverified_primary_email.txt:1
+msgid "Your primary email address must be verified."
+msgstr ""
+
+#: apps/users/templates/account/password_change.html:5
+#: apps/users/templates/account/password_change.html:12
+#: apps/users/templates/account/password_change.html:21
+#: templates/includes/top_nav.html:50 templates/includes/top_nav_app.html:51
+msgid "Change Password"
+msgstr ""
+
+#: apps/users/templates/account/password_change.html:24
+msgid "Forgot password instead?"
+msgstr ""
+
+#: apps/users/templates/account/password_reset.html:5
+msgid "Reset Your Password"
+msgstr ""
+
+#: apps/users/templates/account/password_reset.html:9
+#: apps/users/templates/account/password_reset_done.html:6
+msgid "Password Reset"
+msgstr ""
+
+#: apps/users/templates/account/password_reset.html:18
+msgid "Send me a Password Reset link by email"
+msgstr ""
+
+#: apps/users/templates/account/password_reset_done.html:11
+msgid "We've sent you an e-mail."
+msgstr ""
+
+#: apps/users/templates/account/password_set.html:6
+msgid "Set Password"
+msgstr ""
+
+#: apps/users/templates/account/signup.html:43
+msgid "Already have account?"
+msgstr ""
+
+#: apps/users/templates/account/signup.html:45
+msgid "Sign in."
+msgstr ""
+
+#: apps/users/templates/account/signup_closed.html:4
+#: apps/users/templates/account/signup_closed.html:7
+msgid "Sign Up Closed"
+msgstr ""
+
+#: apps/users/templates/account/signup_closed.html:8
+msgid "We are sorry, but the registration is closed at the moment."
+msgstr ""
+
+#: apps/users/templates/account/snippets/already_logged_in.html:6
+msgid "Note"
+msgstr ""
+
+#: apps/users/templates/account/snippets/already_logged_in.html:7
+#, python-format
+msgid "You are already logged in as %(user_display)s."
+msgstr ""
+
+#: apps/users/templates/account/snippets/warn_no_email.html:4
+msgid "Warning:"
+msgstr ""
+
+#: apps/users/templates/account/snippets/warn_no_email.html:5
+msgid ""
+"You currently do not have any email address set up. You should really add an "
+"email address so you can receive notifications, reset your password, etc."
+msgstr ""
+
+#: apps/users/templates/account/verification_sent.html:3
+msgid "Verify Email"
+msgstr ""
+
+#: apps/users/templates/account/verified_email_required.html:3
+msgid "Verify Your Email Address"
+msgstr ""
+
+#: apps/users/templates/accounts/includes/profile_form.html:5
+msgid "Profile Details"
+msgstr ""
+
+#: apps/users/templates/accounts/includes/profile_form.html:10
+msgid "Manage email addresses"
+msgstr ""
+
+#: apps/users/templates/accounts/includes/profile_form.html:29
+msgid "Modify Avatar"
+msgstr ""
+
+#: apps/users/templates/accounts/includes/social/login_with_social_button.html:7
+msgid "Logo"
+msgstr ""
+
+#: apps/users/templates/accounts/includes/social/login_with_social_button.html:8
+msgid "Connect using your"
+msgstr ""
+
+#: apps/users/templates/accounts/includes/social/login_with_social_button.html:8
+msgid " account"
+msgstr ""
+
+#: apps/users/templates/accounts/includes/social/social_accounts.html:29
+msgid "You haven't linked any social accounts yet. Create one below."
+msgstr ""
+
+#: apps/users/templates/accounts/includes/social/social_buttons.html:6
+msgid "or"
+msgstr ""
+
+#: apps/users/templates/socialaccount/authentication_error.html:3
+msgid "Authentication Error"
+msgstr ""
+
+#: apps/users/templates/socialaccount/authentication_error.html:11
+msgid "Social Network Login Failure"
+msgstr ""
+
+#: apps/users/templates/socialaccount/authentication_error.html:12
+msgid ""
+"An error occurred while attempting to login via your social network account."
+msgstr ""
+
+#: apps/users/templates/socialaccount/connections.html:14
+msgid "← Return to Profile"
+msgstr ""
+
+#: apps/users/templates/socialaccount/connections.html:18
+msgid ""
+"You can sign in to your account using any of the following third party "
+"accounts:"
+msgstr ""
+
+#: apps/users/templates/socialaccount/connections.html:44
+msgid ""
+"You currently have no social network accounts connected to this account."
+msgstr ""
+
+#: apps/users/templates/socialaccount/connections.html:53
+msgid "Connect Github Account"
+msgstr ""
+
+#: apps/users/templates/socialaccount/email/account_connected_message.txt:4
+#, python-format
+msgid ""
+"A third-party account from %(provider)s has been connected to your account."
+msgstr ""
+
+#: apps/users/templates/socialaccount/email/account_connected_subject.txt:1
+msgid "Third-Party Account Connected"
+msgstr ""
+
+#: apps/users/templates/socialaccount/email/account_disconnected_message.txt:4
+#, python-format
+msgid ""
+"A third-party account from %(provider)s has been disconnected from your "
+"account."
+msgstr ""
+
+#: apps/users/templates/socialaccount/email/account_disconnected_subject.txt:1
+msgid "Third-Party Account Disconnected"
+msgstr ""
+
+#: apps/users/templates/socialaccount/login.html:6
+#, python-format
+msgid "Connect %(provider)s"
+msgstr ""
+
+#: apps/users/templates/socialaccount/login.html:8
+#, python-format
+msgid "You are about to connect a new third party account from %(provider)s."
+msgstr ""
+
+#: apps/users/templates/socialaccount/login.html:10
+#, python-format
+msgid "Sign In Via %(provider)s"
+msgstr ""
+
+#: apps/users/templates/socialaccount/login.html:12
+#, python-format
+msgid "You are about to sign in using a third party account from %(provider)s."
+msgstr ""
+
+#: apps/users/templates/socialaccount/login_cancelled.html:3
+#: apps/users/templates/socialaccount/login_cancelled.html:5
+msgid "Login Cancelled"
+msgstr ""
+
+#: apps/users/templates/socialaccount/login_cancelled.html:8
+#, python-format
+msgid ""
+"You decided to cancel logging in to our site using one of your existing "
+"accounts. If this was a mistake, please proceed to <a href=\"%(login_url)s\" "
+"class=\"mt-link\">sign in</a>."
+msgstr ""
+
+#: apps/users/templates/socialaccount/messages/account_connected.txt:1
+msgid "The third-party account has been connected."
+msgstr ""
+
+#: apps/users/templates/socialaccount/messages/account_connected_other.txt:1
+msgid "The third-party account is already connected to a different account."
+msgstr ""
+
+#: apps/users/templates/socialaccount/messages/account_disconnected.txt:1
+msgid "The third-party account has been disconnected."
+msgstr ""
+
+#: apps/users/templates/socialaccount/signup.html:11
+#, python-format
+msgid ""
+"You are about to use your %(provider_name)s account to login to "
+"%(site_name)s. As a final step, please complete the following form:"
+msgstr ""
+
+#: apps/users/templates/socialaccount/snippets/login.html:7
+msgid "Or"
+msgstr ""
+
+#: apps/users/validators.py:19
+#, python-brace-format
+msgid "Please upload a valid image file! Supported types are {types}"
+msgstr ""
+
+#: apps/users/validators.py:26
+#, python-brace-format
+msgid "Maximum file size allowed is 5 MB. Provided file is {size} MB."
+msgstr ""
+
+#: apps/users/views.py:62
+msgid "Your profile was successfully saved."
+msgstr ""
+
+#: apps/users/views.py:73 templates/includes/top_nav.html:37
+#: templates/includes/top_nav_app.html:37
+msgid "Profile"
+msgstr ""
+
+#: apps/users/views.py:88
+msgid "Your avatar was successfully uploaded."
+msgstr ""
+
+#: apps/utils/filters.py:104
+#, python-format
+msgid "Status (%(count)d)"
+msgstr ""
+
+#: apps/utils/templates/utils/includes/history_list.html:12
+msgid "System"
+msgstr ""
+
+#: apps/utils/templates/utils/includes/history_list.html:20
+msgid "No history recorded yet."
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:18
+msgid "name"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:19
+msgid "key"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:20
+msgid "description"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:21
+msgid "status"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:22
+msgid "lead"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:23
+msgid "goal"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:24
+msgid "start date"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:25
+msgid "end date"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:26
+msgid "owner"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:27
+msgid "capacity"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:28
+msgid "title"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:29
+msgid "due date"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:30
+msgid "priority"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:31
+msgid "milestone"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:32
+msgid "assignee"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:34
+msgid "sprint"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:35
+msgid "severity"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:47
+msgid "empty"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:58
+#, python-format
+msgid "edited %(field)s"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:61
+#, python-format
+msgid "set %(field)s to %(value)s"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:86
+#, python-format
+msgid "created this %(model)s"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:87
+msgid "created this item"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:92
+#, python-format
+msgid "deleted this %(model)s"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:93
+msgid "deleted this item"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:99
+#: apps/utils/templatetags/history_tags.py:109
+#: apps/utils/templatetags/history_tags.py:135
+msgid "made changes"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:117
+#, python-format
+msgid "%(first)s and %(second)s"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:127
+#, python-format
+msgid "%(rest)s, and %(last)s"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:132
+#, python-format
+msgid "viewed this %(model)s"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:133
+msgid "viewed this item"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:165
+msgid "Created"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:167
+msgid "Updated"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:169
+msgid "Deleted"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:171
+msgid "Accessed"
+msgstr ""
+
+#: apps/utils/templatetags/history_tags.py:173
+msgid "Changed"
+msgstr ""
+
+#: apps/workspaces/forms.py:18 apps/workspaces/forms.py:20
+msgid "Workspace Name (Optional)"
+msgstr ""
+
+#: apps/workspaces/forms.py:60
+msgid ""
+"That invitation could not be found. Please double check your invitation link "
+"or sign in to continue."
+msgstr ""
+
+#: apps/workspaces/forms.py:68
+msgid ""
+"It looks like that invitation link has expired. Please request a new "
+"invitation or sign in to continue."
+msgstr ""
+
+#: apps/workspaces/forms.py:76
+msgid ""
+"You must sign up with the email address that the invitation was sent to."
+msgstr ""
+
+#: apps/workspaces/forms.py:99 apps/workspaces/models.py:63
+msgid "Slug"
+msgstr ""
+
+#: apps/workspaces/forms.py:100
+msgid "A unique ID for your workspace. No spaces are allowed!"
+msgstr ""
+
+#: apps/workspaces/forms.py:107
+msgid "Your workspace name."
+msgstr ""
+
+#: apps/workspaces/forms.py:138
+msgid ""
+"There is already a pending invitation for {}. You can resend it by clicking "
+"\"Resend Invitation\"."
+msgstr ""
+
+#: apps/workspaces/forms.py:142
+#, python-brace-format
+msgid "{email} is already a member of this workspace."
+msgstr ""
+
+#: apps/workspaces/helpers.py:14
+msgid "My Workspace"
+msgstr ""
+
+#: apps/workspaces/invitations.py:20
+msgid "You're invited to {}!"
+msgstr ""
+
+#: apps/workspaces/limits.py:54
+#, python-format
+msgid "This workspace has reached its limit of %(limit)d members."
+msgstr ""
+
+#: apps/workspaces/limits.py:64
+#, python-format
+msgid "This workspace has reached its limit of %(limit)d invitations per week."
+msgstr ""
+
+#: apps/workspaces/limits.py:74
+#, python-format
+msgid "This workspace has reached its limit of %(limit)d work items."
+msgstr ""
+
+#: apps/workspaces/models.py:158
+msgid "Activate this flag for these workspaces."
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/accept_invite.html:9
+msgid "Accept Invitation?"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/accept_invite.html:11
+#, python-format
+msgid "You've been invited to join %(workspace_name)s by %(by)s."
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/accept_invite.html:19
+msgid "You must verify the email address before you can accept the invitation."
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/accept_invite.html:24
+#, python-format
+msgid "Verify %(email)s"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/accept_invite.html:36
+#, python-format
+msgid ""
+"This invitation was sent to %(invite_email)s but you're logged in as "
+"%(user_email)s. What would you like to do?"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/accept_invite.html:43
+#, python-format
+msgid "Add '%(email)s' to your account"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/accept_invite.html:48
+#: templates/includes/top_nav.html:65 templates/includes/top_nav_app.html:73
+msgid "Sign out"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/accept_invite.html:52
+msgid "The email address must be verified before accepting the invitation."
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/accept_invite.html:60
+msgid "Ignore and go to the home page instead."
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/accept_invite.html:68
+msgid "Log in to Accept"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/accept_invite.html:72
+msgid "Create Account to Accept"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/accept_invite.html:79
+msgid ""
+"Sorry, it looks like that invitation has already been accepted or expired."
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/accept_invite.html:82
+msgid ""
+"If you think this is a mistake, ask your workspace administrator to invite "
+"you again!"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/create_workspace.html:7
+#: apps/workspaces/templates/workspaces/create_workspace.html:12
+#: apps/workspaces/views.py:257
+msgid "Create Workspace"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/email/invitation.html:3
+#, python-format
+msgid ""
+"You've been invited by %(invited_by)s to join %(workspace_name)s on "
+"%(project_name)s! Click the link below to accept the invitation."
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/email/invitation.html:8
+msgid "Accept Invitation"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/email/invitation.txt:2
+#, python-format
+msgid ""
+"You've been invited by %(invited_by)s to join %(workspace_name)s on "
+"%(project_name)s! Click the link below to accept the invitation. Accept "
+"invitation:"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/includes/delete_workspace_modal.html:5
+msgid "Really delete workspace?"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/includes/delete_workspace_modal.html:7
+#, python-format
+msgid ""
+"This will permanently delete the <em><strong>%(workspace_name)s</strong></"
+"em> workspace and all associated data. <strong>This action cannot be undone."
+"</strong>"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/includes/delete_workspace_modal.html:14
+msgid ""
+"This is your only workspace. You must either create a new workspace first, "
+"or delete your account along with this workspace."
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/includes/delete_workspace_modal.html:18
+msgid "Create a new workspace first"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/includes/delete_workspace_modal.html:22
+msgid "Delete workspace and my account"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/includes/delete_workspace_modal.html:32
+msgid "I understand, permanently delete this workspace"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/includes/invitation_row.html:10
+msgid "Resend Invitation"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/includes/invitation_row.html:14
+msgid "Cancel Invitation"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/includes/invite_modal.html:6
+msgid "Invite a Member"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/includes/invite_modal.html:16
+#: apps/workspaces/templates/workspaces/includes/workspace_invitations.html:12
+msgid "Send Invitation"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/includes/pending_invitations.html:4
+#: apps/workspaces/templates/workspaces/includes/workspace_invitations.html:19
+msgid "Pending Invitations"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/includes/pending_invitations.html:10
+#: apps/workspaces/templates/workspaces/includes/workspace_invitations.html:25
+msgid "Invited"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/includes/pending_invitations.html:11
+#: apps/workspaces/templates/workspaces/includes/workspace_invitations.html:26
+#: apps/workspaces/templates/workspaces/manage_workspace_members.html:32
+msgid "Role"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/includes/pending_invitations.html:24
+#: apps/workspaces/templates/workspaces/includes/workspace_invitations.html:39
+msgid "Any pending invitations will show up here until accepted."
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/includes/remove_member_modal.html:5
+msgid "Leave workspace?"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/includes/remove_member_modal.html:5
+msgid "Remove workspace member?"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/includes/remove_member_modal.html:20
+msgid "I understand, leave workspace"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/includes/remove_member_modal.html:20
+msgid "I understand, remove workspace member"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/includes/workspace_invitations.html:6
+msgid "Invite Workspace Members"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/list_workspaces.html:8
+#: apps/workspaces/views.py:60 templates/includes/workspace_nav_items.html:32
+msgid "My Workspaces"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/list_workspaces.html:10
+msgid "New Workspace"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/list_workspaces.html:27
+msgid "View Workspace"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/list_workspaces.html:33
+#: templates/includes/workspace_nav_items.html:9
+msgid "Settings"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/list_workspaces.html:44
+msgid "No Workspaces Yet!"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/list_workspaces.html:45
+msgid "You don't have any workspaces yet."
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/manage_workspace.html:11
+msgid "Workspace Details"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/manage_workspace.html:26
+msgid "Danger Zone"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/manage_workspace.html:28
+msgid "Delete Workspace"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/manage_workspace_members.html:20
+msgid "Workspace Members"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/manage_workspace_members.html:23
+msgid "Invite Members"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/manage_workspace_members.html:31
+msgid "Member"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/workspace_membership_details.html:20
+msgid "Date Joined"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/workspace_membership_details.html:28
+msgid "Update Role"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/workspace_membership_details.html:31
+msgid "You are not allowed to modify your own role."
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/workspace_membership_details.html:36
+msgid "Leave Workspace"
+msgstr ""
+
+#: apps/workspaces/templates/workspaces/workspace_membership_details.html:38
+msgid "Remove from Workspace"
+msgstr ""
+
+#: apps/workspaces/views.py:74
+#, python-brace-format
+msgid ""
+"It looks like you're already a member of the {workspace} workspace. You've "
+"been redirected."
+msgstr ""
+
+#: apps/workspaces/views.py:82
+msgid "Please log in again to accept your invitation."
+msgstr ""
+
+#: apps/workspaces/views.py:86 apps/workspaces/views.py:124
+msgid "Sorry, it looks like that invitation link has expired."
+msgstr ""
+
+#: apps/workspaces/views.py:93
+msgid "You successfully joined {}"
+msgstr ""
+
+#: apps/workspaces/views.py:159
+msgid "Workspace details saved!"
+msgstr ""
+
+#: apps/workspaces/views.py:164
+msgid "Sorry you don't have permission to do that."
+msgstr ""
+
+#: apps/workspaces/views.py:178
+#, python-brace-format
+msgid "My Workspace | {workspace}"
+msgstr ""
+
+#: apps/workspaces/views.py:199
+#, python-brace-format
+msgid "Members | {workspace}"
+msgstr ""
+
+#: apps/workspaces/views.py:219
+msgid ""
+"You cannot delete your only workspace. Create a new workspace first, or "
+"delete your workspace and account together."
+msgstr ""
+
+#: apps/workspaces/views.py:229
+msgid "Your workspace and account have been permanently deleted."
+msgstr ""
+
+#: apps/workspaces/views.py:235
+#, python-brace-format
+msgid "The \"{workspace}\" workspace was successfully deleted"
+msgstr ""
+
+#: apps/workspaces/views.py:248
+#, python-brace-format
+msgid "Workspace \"{name}\" created!"
+msgstr ""
+
+#: apps/workspaces/views.py:322
+msgid "Sorry, you don't have permission to access that page."
+msgstr ""
+
+#: apps/workspaces/views.py:327
+msgid "You don't have permission to edit workspace members."
+msgstr ""
+
+#: apps/workspaces/views.py:329
+msgid "You aren't allowed to change your own role."
+msgstr ""
+
+#: apps/workspaces/views.py:337
+#, python-brace-format
+msgid "Role for {member} updated."
+msgstr ""
+
+#: apps/workspaces/views.py:363
+msgid "You don't have permission to remove others from that workspace."
+msgstr ""
+
+#: apps/workspaces/views.py:370
+msgid ""
+"You cannot remove the only administrator from a workspace. Make another "
+"workspace member an administrator and try again."
+msgstr ""
+
+#: apps/workspaces/views.py:378
+#, python-brace-format
+msgid "{member} was removed from {workspace}."
+msgstr ""
+
+#: matorral/settings/settings.py:256
+msgid "English"
+msgstr ""
+
+#: matorral/settings/settings.py:404
+msgid "The project management tool that doesn't get in your way."
+msgstr ""
+
+#: templates/errors/400.html:3
+msgid "Bad Request"
+msgstr ""
+
+#: templates/errors/400.html:5
+msgid "This request failed the definition of done."
+msgstr ""
+
+#: templates/errors/400.html:7
+msgid ""
+"Something about your request didn't meet our acceptance criteria. Review "
+"your input and try again. If it keeps failing, open a support ticket — we "
+"treat every bug as a blocker."
+msgstr ""
+
+#: templates/errors/403.html:3
+msgid "Forbidden"
+msgstr ""
+
+#: templates/errors/403.html:5
+msgid "You're not assigned to this task."
+msgstr ""
+
+#: templates/errors/403.html:7
+msgid ""
+"This area is restricted to workspace members with the right permissions. If "
+"you think this is a mistake, ask your workspace admin — they control the "
+"access board."
+msgstr ""
+
+#: templates/errors/404.html:3
+msgid "Not Found"
+msgstr ""
+
+#: templates/errors/404.html:5
+msgid "Looks like this task got moved to the icebox."
+msgstr ""
+
+#: templates/errors/404.html:7
+msgid ""
+"We couldn't find what you were looking for. It may have been archived, "
+"deleted, or never groomed into existence."
+msgstr ""
+
+#: templates/errors/429.html:3
+msgid "Too Many Requests"
+msgstr ""
+
+#: templates/errors/429.html:5
+msgid "Even sprints need a retrospective break."
+msgstr ""
+
+#: templates/errors/429.html:7
+msgid ""
+"You're sending too many requests at once. Step away from the keyboard, "
+"breathe, and try again in a few minutes."
+msgstr ""
+
+#: templates/errors/500.html:3
+msgid "Server Error"
+msgstr ""
+
+#: templates/errors/500.html:5
+msgid "We've got a critical blocker on our end."
+msgstr ""
+
+#: templates/errors/500.html:7
+msgid ""
+"Something went wrong on our side. Our engineers have been paged and this is "
+"now P0. Sit tight and try again shortly."
+msgstr ""
+
+#: templates/includes/bulk_person_modal.html:52
+msgid "Assign"
+msgstr ""
+
+#: templates/includes/cascade_status_modal.html:5
+msgid "Update Related Items"
+msgstr ""
+
+#: templates/includes/filters_modal.html:111
+msgid "Clear All"
+msgstr ""
+
+#: templates/includes/footer.html:6
+msgid "Company"
+msgstr ""
+
+#: templates/includes/footer.html:9
+msgid "License"
+msgstr ""
+
+#: templates/includes/footer.html:12
+msgid "Support"
+msgstr ""
+
+#: templates/includes/footer.html:13
+msgid "Report an issue"
+msgstr ""
+
+#: templates/includes/footer.html:16
+msgid "Connect"
+msgstr ""
+
+#: templates/includes/footer.html:17
+msgid "GitHub"
+msgstr ""
+
+#: templates/includes/footer.html:23
+msgid "Copyright"
+msgstr ""
+
+#: templates/includes/top_nav.html:58 templates/includes/top_nav_app.html:59
+msgid "Django Admin"
+msgstr ""
+
+#: templates/includes/top_nav_app.html:67
+msgid "Report an Issue"
+msgstr ""
+
+#: templates/includes/user_combobox.html:85
+msgid "Search..."
+msgstr ""
+
+#: templates/includes/workspace_nav_items.html:18
+msgid "Members"
+msgstr ""

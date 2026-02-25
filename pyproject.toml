@@ -86,7 +86,7 @@ django-celery-beat = { git = "https://github.com/celery/django-celery-beat", rev
 py-modules = []
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "matorral.settings"
+DJANGO_SETTINGS_MODULE = "matorral.settings.settings"
 pythonpath = ["."]
 testpaths = ["apps"]
 
@@ -130,4 +130,4 @@ known_third_party = [
     "watchfiles",
     "whitenoise",
 ]
-sections = ["FUTURE", "STDLIB", "DJANGO", "FIRSTPARTY", "LOCALFOLDER", "THIRDPARTY"]  # codespell:ignore
+sections = ["FUTURE", "STDLIB", "DJANGO", "FIRSTPARTY", "THIRDPARTY", "LOCALFOLDER"]  # codespell:ignore

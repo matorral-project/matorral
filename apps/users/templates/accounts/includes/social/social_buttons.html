@@ -1,0 +1,16 @@
+{% load i18n %}
+{% load social_tags %}
+{% load waffle_tags %}
+{% social_apps as socialapps %}
+{% if socialapps %}
+<p class="text-center text-gray-500 my-2">{% translate "or" %}</p>
+{% endif %}
+{% for provider in socialapps %}
+  {% if provider.provider_id == "github" %}
+    {% flag "social_login" %}
+    {% include 'accounts/includes/social/login_with_social_button.html' with app=app %}
+    {% endflag %}
+  {% else %}
+    {% include 'accounts/includes/social/login_with_social_button.html' with app=app %}
+  {% endif %}
+{% endfor %}

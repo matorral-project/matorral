@@ -1,0 +1,4 @@
+{% extends "account/email/base_notification.txt" %}
+{% load i18n %}
+
+{% block notification_message %}{% blocktranslate %}A third-party account from {{ provider }} has been connected to your account.{% endblocktranslate %}{% endblock %}

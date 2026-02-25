@@ -4,7 +4,7 @@ from django.urls import reverse
 from apps.issues.factories import BugFactory, ChoreFactory, EpicFactory, MilestoneFactory, StoryFactory
 from apps.issues.models import BaseIssue, BugSeverity, Epic, IssuePriority, IssueStatus, Milestone
 from apps.projects.factories import ProjectFactory
-from apps.users.factories import CustomUserFactory
+from apps.users.factories import UserFactory
 from apps.workspaces.factories import MembershipFactory, WorkspaceFactory
 from apps.workspaces.roles import ROLE_ADMIN
 
@@ -16,7 +16,7 @@ class IssueViewTestBase(TestCase):
     def setUpTestData(cls):
         cls.workspace = WorkspaceFactory()
         cls.project = ProjectFactory(workspace=cls.workspace)
-        cls.user = CustomUserFactory()
+        cls.user = UserFactory()
         MembershipFactory(workspace=cls.workspace, user=cls.user, role=ROLE_ADMIN)
 
     def setUp(self):
@@ -616,7 +616,7 @@ class MilestoneViewTestBase(TestCase):
     def setUpTestData(cls):
         cls.workspace = WorkspaceFactory()
         cls.project = ProjectFactory(workspace=cls.workspace)
-        cls.user = CustomUserFactory()
+        cls.user = UserFactory()
         MembershipFactory(workspace=cls.workspace, user=cls.user, role=ROLE_ADMIN)
 
     def setUp(self):

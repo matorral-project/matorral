@@ -1,0 +1,32 @@
+{% load i18n %}
+{% load static %}
+<h2 class="mt-subtitle">{% translate "Connected Accounts" %}</h2>
+{% for base_account in social_accounts %}
+  {% with base_account.get_provider_account as account %}
+    <div class="mb-3">
+      {% if base_account.provider == 'google'%}
+        <span class="mt-icon">
+          <img src="{% static 'images/socialauth/google-logo.svg' %}" />
+        </span>
+        <span>{{ base_account.extra_data.email }}</span>
+      {% elif base_account.provider == 'twitter' %}
+        <span class="mt-icon">
+          <img src="{% static 'images/socialauth/twitter-logo.svg' %}" />
+        </span>
+        <a href="{{ account.get_profile_url }}" target="_blank">@{{ account.get_screen_name }}</a>
+      {% elif base_account.provider == 'github' %}
+        <span class="mt-icon">
+          <img src="{% static 'images/socialauth/github-logo.svg' %}" />
+        </span>
+        <a href="{{ account.get_profile_url }}" target="_blank">@{{ account.account.extra_data.login }}</a>
+      {% else %}
+        <span>{{ account.get_brand.name }}</span>
+        <span>{{ account }}</span>
+      {% endif %}
+    </div>
+  {% endwith %}
+{% empty %}
+  <p class="mb-3">{% translate "You haven't linked any social accounts yet. Create one below." %}</p>
+{% endfor %}
+<a class="mt-button-secondary" href="{% url 'socialaccount_connections' %}">Manage Accounts</a>
+{% if not user.has_usable_password %}<a class="mx-2 mt-button-secondary" href="{% url 'account_set_password' %}">Add a Password</a>{% endif %}

@@ -1,6 +1,6 @@
 FROM node:22-bookworm
 
-RUN npm install -g npm@11.5
+RUN npm install -g npm@11.10.1
 
 RUN mkdir /code && chown node:node /code
 WORKDIR /code

@@ -1,4 +1,4 @@
-{% load i18n form_tags %}
+{% load i18n issues_tags %}
 <p class="text-sm text-gray-500 mb-4">
   {% blocktranslate with key=project.key name=project.name %}Creating milestone for project <strong>{{ key }}</strong> - {{ name }}{% endblocktranslate %}
 </p>

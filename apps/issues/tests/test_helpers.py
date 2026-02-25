@@ -5,7 +5,7 @@ from apps.issues.helpers import build_grouped_issues, calculate_progress
 from apps.issues.models import BaseIssue, Epic, IssuePriority, IssueStatus
 from apps.projects.factories import ProjectFactory
 from apps.sprints.factories import SprintFactory
-from apps.users.factories import CustomUserFactory
+from apps.users.factories import UserFactory
 
 
 class BuildGroupedIssuesQueryCountTest(TestCase):
@@ -17,8 +17,8 @@ class BuildGroupedIssuesQueryCountTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.project = ProjectFactory()
-        cls.user1 = CustomUserFactory(first_name="Alice", last_name="Smith")
-        cls.user2 = CustomUserFactory(first_name="Bob", last_name="Jones")
+        cls.user1 = UserFactory(first_name="Alice", last_name="Smith")
+        cls.user2 = UserFactory(first_name="Bob", last_name="Jones")
 
         # Create 2 epics with 5 stories each (10 issues under epics)
         cls.epic1 = EpicFactory(project=cls.project, title="Epic 1")

@@ -8,13 +8,13 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.utils.models import BaseModel
 
-from . import roles as workspace_roles
-from .context import EmptyWorkspaceContextException, get_current_workspace
-from .managers import WorkspaceQuerySet
-
 from waffle import get_setting
 from waffle.models import CACHE_EMPTY, AbstractUserFlag
 from waffle.utils import get_cache, keyfmt
+
+from . import roles as workspace_roles
+from .context import EmptyWorkspaceContextException, get_current_workspace
+from .managers import WorkspaceQuerySet
 
 
 class WorkspaceScopedManager(models.Manager):

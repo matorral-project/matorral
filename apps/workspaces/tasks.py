@@ -13,12 +13,12 @@ logger = logging.getLogger(__name__)
 def create_demo_project_task(workspace_id: int, user_id: int):
     """Create demo project data for a newly created workspace."""
     Workspace = apps.get_model("workspaces", "Workspace")
-    CustomUser = apps.get_model("users", "CustomUser")
+    User = apps.get_model("users", "User")
 
     try:
         workspace = Workspace.objects.get(pk=workspace_id)
-        user = CustomUser.objects.get(pk=user_id)
-    except (Workspace.DoesNotExist, CustomUser.DoesNotExist):
+        user = User.objects.get(pk=user_id)
+    except (Workspace.DoesNotExist, User.DoesNotExist):
         logger.warning(
             "Workspace %s or user %s not found for demo project creation",
             workspace_id,
@@ -40,14 +40,14 @@ def reset_demo_workspace_data():
     Runs daily to keep the demo environment fresh for new visitors.
     DB cascades handle deletion of milestones, epics, stories, bugs, chores, issues, and subtasks.
     """
-    CustomUser = apps.get_model("users", "CustomUser")
+    User = apps.get_model("users", "User")
     Workspace = apps.get_model("workspaces", "Workspace")
     Project = apps.get_model("projects", "Project")
     Sprint = apps.get_model("sprints", "Sprint")
 
     try:
-        user = CustomUser.objects.get(email=DEMO_USER_EMAIL)
-    except CustomUser.DoesNotExist:
+        user = User.objects.get(email=DEMO_USER_EMAIL)
+    except User.DoesNotExist:
         logger.warning("Demo user '%s' not found, skipping workspace reset", DEMO_USER_EMAIL)
         return
 

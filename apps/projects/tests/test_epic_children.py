@@ -4,7 +4,7 @@ from django.urls import reverse
 from apps.issues.factories import BugFactory, ChoreFactory, EpicFactory, MilestoneFactory, StoryFactory
 from apps.issues.helpers import annotate_epic_child_counts, get_orphan_work_items
 from apps.projects.factories import ProjectFactory
-from apps.users.factories import CustomUserFactory
+from apps.users.factories import UserFactory
 from apps.workspaces.factories import MembershipFactory, WorkspaceFactory
 from apps.workspaces.roles import ROLE_MEMBER
 
@@ -94,7 +94,7 @@ class ProjectEpicChildrenViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.workspace = WorkspaceFactory()
-        cls.user = CustomUserFactory()
+        cls.user = UserFactory()
         MembershipFactory(workspace=cls.workspace, user=cls.user, role=ROLE_MEMBER)
         cls.project = ProjectFactory(workspace=cls.workspace)
         cls.epic = EpicFactory(project=cls.project, title="Test Epic")
@@ -133,7 +133,7 @@ class EpicChildInlineEditTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.workspace = WorkspaceFactory()
-        cls.user = CustomUserFactory()
+        cls.user = UserFactory()
         MembershipFactory(workspace=cls.workspace, user=cls.user, role=ROLE_MEMBER)
         cls.project = ProjectFactory(workspace=cls.workspace)
         cls.epic = EpicFactory(project=cls.project, title="Test Epic")
@@ -280,7 +280,7 @@ class ProjectOrphanIssuesEmbedTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.workspace = WorkspaceFactory()
-        cls.user = CustomUserFactory()
+        cls.user = UserFactory()
         MembershipFactory(workspace=cls.workspace, user=cls.user, role=ROLE_MEMBER)
         cls.project = ProjectFactory(workspace=cls.workspace)
         cls.milestone = MilestoneFactory(project=cls.project, title="M1")
@@ -343,7 +343,7 @@ class ProjectEpicsEmbedChildCountTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.workspace = WorkspaceFactory()
-        cls.user = CustomUserFactory()
+        cls.user = UserFactory()
         MembershipFactory(workspace=cls.workspace, user=cls.user, role=ROLE_MEMBER)
         cls.project = ProjectFactory(workspace=cls.workspace)
         cls.milestone = MilestoneFactory(project=cls.project, title="M1")

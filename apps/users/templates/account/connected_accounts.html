@@ -1,0 +1,15 @@
+{% extends "apps/base.html" %}
+{% load i18n %}
+{% load static %}
+{% block page_title %}
+  {% translate "Connected Accounts" %}
+{% endblock %}
+{% block app_content_content %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <section class="app-card">
+    {% include 'accounts/includes/social/social_accounts.html' %}
+  </section>
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}

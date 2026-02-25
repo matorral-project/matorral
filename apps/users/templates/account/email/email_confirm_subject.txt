@@ -1,0 +1,1 @@
+{% load i18n %}{% autoescape off %}{% blocktranslate %}Email Confirmation{% endblocktranslate %}{% endautoescape %}

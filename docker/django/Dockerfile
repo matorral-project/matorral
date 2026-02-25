@@ -14,7 +14,7 @@ ENV UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=never \
     UV_PROJECT_ENVIRONMENT=/code/.venv
 
-COPY --from=ghcr.io/astral-sh/uv:0.9.17 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.10.6 /uv /uvx /bin/
 
 # Install Git (needed for git-based dependencies like django-celery-beat)
 RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
@@ -81,7 +81,7 @@ COPY --from=build-node /code/static /code/static
 RUN sed -i '1c\#!/usr/bin/env python3' /code/manage.py
 
 # collectstatic must run at build time so assets are baked into the image
-RUN DEBUG=False python /code/manage.py collectstatic --noinput --settings=matorral.settings_production
+RUN DEBUG=False python /code/manage.py collectstatic --noinput --settings=matorral.settings.production
 RUN chown django:django -R static_root
 
 USER django

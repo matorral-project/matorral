@@ -6,7 +6,7 @@ from apps.issues.models import Bug, Story
 from apps.projects.factories import ProjectFactory
 from apps.projects.models import ProjectStatus
 from apps.sprints.factories import SprintFactory
-from apps.users.factories import CustomUserFactory
+from apps.users.factories import UserFactory
 from apps.utils.audit import bulk_create_audit_logs
 
 from auditlog.models import LogEntry
@@ -15,7 +15,7 @@ from auditlog.models import LogEntry
 class BulkCreateAuditLogsTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.user = CustomUserFactory()
+        cls.user = UserFactory()
         cls.project = ProjectFactory()
 
     def test_creates_log_entry_for_each_changed_object(self):

@@ -8,7 +8,7 @@ from apps.projects.factories import ProjectFactory
 from apps.projects.models import Project
 from apps.sprints.factories import SprintFactory
 from apps.sprints.models import Sprint
-from apps.users.factories import CustomUserFactory
+from apps.users.factories import UserFactory
 from apps.workspaces.factories import MembershipFactory, WorkspaceFactory
 from apps.workspaces.roles import ROLE_ADMIN
 
@@ -59,7 +59,7 @@ class MilestoneCascadeDeleteTest(TestCase):
     def setUp(self):
         self.workspace = WorkspaceFactory()
         self.project = ProjectFactory(workspace=self.workspace)
-        self.user = CustomUserFactory()
+        self.user = UserFactory()
         MembershipFactory(workspace=self.workspace, user=self.user, role=ROLE_ADMIN)
         self.client = Client()
         self.client.force_login(self.user)
@@ -132,7 +132,7 @@ class IssueDeleteCascadeTest(TestCase):
     def setUp(self):
         self.workspace = WorkspaceFactory()
         self.project = ProjectFactory(workspace=self.workspace)
-        self.user = CustomUserFactory()
+        self.user = UserFactory()
         MembershipFactory(workspace=self.workspace, user=self.user, role=ROLE_ADMIN)
         self.client = Client()
         self.client.force_login(self.user)
@@ -185,7 +185,7 @@ class ProjectDeleteCascadeTest(TestCase):
     def setUp(self):
         self.workspace = WorkspaceFactory()
         self.project = ProjectFactory(workspace=self.workspace)
-        self.user = CustomUserFactory()
+        self.user = UserFactory()
         MembershipFactory(workspace=self.workspace, user=self.user, role=ROLE_ADMIN)
         self.client = Client()
         self.client.force_login(self.user)
@@ -231,7 +231,7 @@ class SprintDeleteTest(TestCase):
     def setUp(self):
         self.workspace = WorkspaceFactory()
         self.project = ProjectFactory(workspace=self.workspace)
-        self.user = CustomUserFactory()
+        self.user = UserFactory()
         MembershipFactory(workspace=self.workspace, user=self.user, role=ROLE_ADMIN)
         self.client = Client()
         self.client.force_login(self.user)

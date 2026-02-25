@@ -1,7 +1,7 @@
 from django.http import Http404
 from django.test import TestCase
 
-from apps.users.factories import CustomUserFactory
+from apps.users.factories import UserFactory
 from apps.utils.tests.utils import call_view_with_middleware
 from apps.workspaces.factories import MembershipFactory as WorkspaceMembershipFactory
 from apps.workspaces.factories import WorkspaceFactory
@@ -30,9 +30,9 @@ class WorkspaceTestMixin:
         """Create standard workspace fixtures."""
         cls.workspace = WorkspaceFactory()
 
-        cls.admin = CustomUserFactory()
-        cls.member = CustomUserFactory()
-        cls.outsider = CustomUserFactory()
+        cls.admin = UserFactory()
+        cls.member = UserFactory()
+        cls.outsider = UserFactory()
 
         cls.admin_membership = WorkspaceMembershipFactory(
             workspace=cls.workspace, user=cls.admin, role=WORKSPACE_ROLE_ADMIN

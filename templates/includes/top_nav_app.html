@@ -4,7 +4,7 @@
   <div class="navbar-start">
     <a href="{% url 'landing_pages:home' %}" class="btn btn-ghost text-lg font-semibold text-primary-content hover:text-black">
       {{ site.name }}
-      <span class="badge badge-neutral badge-xs">Beta</span>
+      <span class="badge badge-neutral badge-xs">{{ env_badge }}</span>
     </a>
     {% if default_workspace %}
     <a href="{% url 'projects:project_list' workspace_slug=default_workspace.slug %}" class="btn btn-ghost bg-primary/10 text-primary-content">{% translate "Projects" %}</a>

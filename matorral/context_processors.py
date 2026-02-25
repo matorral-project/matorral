@@ -7,7 +7,14 @@ def get_root(is_secure: bool = settings.USE_HTTPS_IN_ABSOLUTE_URLS) -> str:
     return f"{protocol}://{Site.objects.get_current().domain}"
 
 
+_ENV_BADGE_LABELS = {
+    "local": "local",
+    "production": "beta",
+}
+
+
 def base_context(request):
+    environment = getattr(settings, "ENVIRONMENT", "local")
     return {
         "site": Site.objects.get_current(request),
         "server_url": get_root(),
@@ -15,6 +22,7 @@ def base_context(request):
         "site_description": getattr(settings, "SITE_DESCRIPTION", ""),
         "site_keywords": getattr(settings, "SITE_KEYWORDS", ""),
         "is_debug": settings.DEBUG,
+        "env_badge": _ENV_BADGE_LABELS.get(environment, "demo"),
     }
 
 

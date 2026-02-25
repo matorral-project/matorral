@@ -9,7 +9,7 @@ from apps.issues.models import IssueStatus
 from apps.projects.factories import ProjectFactory
 from apps.sprints.factories import SprintFactory
 from apps.sprints.models import Sprint, SprintStatus
-from apps.users.factories import CustomUserFactory
+from apps.users.factories import UserFactory
 from apps.workspaces.factories import MembershipFactory, WorkspaceFactory
 from apps.workspaces.roles import ROLE_ADMIN
 
@@ -21,8 +21,8 @@ class SprintViewTestBase(TestCase):
     def setUpTestData(cls):
         cls.workspace = WorkspaceFactory()
         cls.project = ProjectFactory(workspace=cls.workspace)
-        cls.user = CustomUserFactory()
-        cls.other_user = CustomUserFactory()
+        cls.user = UserFactory()
+        cls.other_user = UserFactory()
         MembershipFactory(workspace=cls.workspace, user=cls.user, role=ROLE_ADMIN)
 
         # Create a second workspace for isolation tests

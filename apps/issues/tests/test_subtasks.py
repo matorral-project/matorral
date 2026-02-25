@@ -6,7 +6,7 @@ from apps.issues.factories import BugFactory, ChoreFactory, StoryFactory, Subtas
 from apps.issues.models import Subtask, SubtaskStatus
 from apps.issues.views.subtasks import MAX_SUBTASKS_PER_PARENT
 from apps.projects.factories import ProjectFactory
-from apps.users.factories import CustomUserFactory
+from apps.users.factories import UserFactory
 from apps.workspaces.factories import MembershipFactory, WorkspaceFactory
 from apps.workspaces.roles import ROLE_ADMIN
 
@@ -18,7 +18,7 @@ class SubtaskTestBase(TestCase):
     def setUpTestData(cls):
         cls.workspace = WorkspaceFactory()
         cls.project = ProjectFactory(workspace=cls.workspace)
-        cls.user = CustomUserFactory()
+        cls.user = UserFactory()
         MembershipFactory(workspace=cls.workspace, user=cls.user, role=ROLE_ADMIN)
 
     def setUp(self):

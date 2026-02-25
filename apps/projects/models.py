@@ -6,7 +6,6 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from apps.projects.managers import ProjectQuerySet
-from apps.users.models import CustomUser
 from apps.utils.models import BaseModel
 from apps.workspaces.models import Workspace
 
@@ -83,7 +82,7 @@ class Project(BaseModel):
         db_index=True,
     )
     lead = models.ForeignKey(
-        CustomUser,
+        User,
         verbose_name=_("Lead"),
         on_delete=models.SET_NULL,
         null=True,

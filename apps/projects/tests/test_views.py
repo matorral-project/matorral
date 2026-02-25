@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from apps.projects.factories import ProjectFactory
 from apps.projects.models import Project, ProjectStatus
-from apps.users.factories import CustomUserFactory
+from apps.users.factories import UserFactory
 from apps.workspaces.factories import MembershipFactory, WorkspaceFactory
 from apps.workspaces.roles import ROLE_MEMBER
 
@@ -15,7 +15,7 @@ class ProjectViewTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.workspace = WorkspaceFactory()
-        cls.user = CustomUserFactory()
+        cls.user = UserFactory()
         MembershipFactory(workspace=cls.workspace, user=cls.user, role=ROLE_MEMBER)
 
     def setUp(self):
@@ -154,7 +154,7 @@ class ProjectListViewTest(ProjectViewTestCase):
         self.assertNotContains(response, "Draft Project")
 
     def test_list_view_lead_filter(self):
-        other_user = CustomUserFactory()
+        other_user = UserFactory()
         MembershipFactory(workspace=self.workspace, user=other_user, role=ROLE_MEMBER)
         ProjectFactory(workspace=self.workspace, name="My Lead Project", lead=self.user)
         ProjectFactory(workspace=self.workspace, name="Other Lead Project", lead=other_user)

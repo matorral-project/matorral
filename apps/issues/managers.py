@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from apps.issues.models import BaseIssue, IssueStatus, Milestone
     from apps.projects.models import Project
     from apps.sprints.models import Sprint
-    from apps.users.models import CustomUser
+    from apps.users.models import User
     from apps.workspaces.models import Workspace
 
 
@@ -111,7 +111,7 @@ class IssueQuerySet(MP_NodeQuerySet, PolymorphicQuerySet):
             return self
         return self.filter(models.Q(title__icontains=query) | models.Q(key__icontains=query))
 
-    def with_assignee(self, user: CustomUser) -> IssueQuerySet:
+    def with_assignee(self, user: User) -> IssueQuerySet:
         """Filter to issues assigned to a user."""
         return self.filter(assignee=user)
 

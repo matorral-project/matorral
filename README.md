@@ -27,9 +27,9 @@ just init
 This copies `.env.example` to `.env`, builds the containers, runs migrations, and seeds the database. Then:
 
 ```bash
-just start        # start with logs
-just start-bg     # start in background
-just logs         # tail logs (useful after start-bg)
+just start              # start with logs
+just start-detached     # start in background
+just logs               # tail logs (useful after start-bg)
 ```
 
 Open http://localhost:8000. Create an admin account:
@@ -72,26 +72,11 @@ just npm-build
 just e2e
 ```
 
-Pull requests are welcome. Please run `just ruff` and `just test` before submitting.
+Pull requests are welcome. Please run `just test` and configure `pre-commit` before committing and pushing changes.
 
 ## Deployment
 
 Matorral is configured to deploy to [Fly.io](https://fly.io) via the `fly.toml` at the root of the repo.
-
-### Manual deploy
-
-```bash
-flyctl deploy
-```
-
-### Continuous deployment (GitHub Actions)
-
-The `deploy.yml` workflow deploys automatically on every push to `main`. It requires a `FLY_API_TOKEN` secret to be set in your GitHub repository:
-
-1. Generate a token: `flyctl auth token`
-2. Add it to your repo: **Settings → Secrets and variables → Actions → New repository secret**
-   - Name: `FLY_API_TOKEN`
-   - Value: the token from step 1
 
 ## Tech stack
 

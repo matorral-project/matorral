@@ -6,7 +6,7 @@ from apps.issues.factories import BugFactory, EpicFactory, StoryFactory, Subtask
 from apps.issues.models import Bug, BugSeverity, Chore, Story, Subtask
 from apps.issues.services import IssueConversionError, convert_issue_type
 from apps.projects.factories import ProjectFactory
-from apps.users.factories import CustomUserFactory
+from apps.users.factories import UserFactory
 from apps.workspaces.factories import MembershipFactory, WorkspaceFactory
 from apps.workspaces.roles import ROLE_ADMIN
 
@@ -174,7 +174,7 @@ class IssueConvertTypeViewTest(TestCase):
     def setUpTestData(cls):
         cls.workspace = WorkspaceFactory()
         cls.project = ProjectFactory(workspace=cls.workspace)
-        cls.user = CustomUserFactory()
+        cls.user = UserFactory()
         MembershipFactory(workspace=cls.workspace, user=cls.user, role=ROLE_ADMIN)
 
     def setUp(self):

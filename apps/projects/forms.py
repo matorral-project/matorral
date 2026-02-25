@@ -4,8 +4,8 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 
+from apps.issues.widgets import UserComboboxWidget
 from apps.projects.models import Project, ProjectStatus
-from apps.ui.widgets import UserComboboxWidget
 from apps.workspaces.models import Workspace
 
 User = get_user_model()

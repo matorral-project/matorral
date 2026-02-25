@@ -7,7 +7,7 @@ from apps.issues.models import Epic, IssueStatus, Story, Subtask, SubtaskStatus
 from apps.issues.services import PromotionError, promote_to_epic
 from apps.projects.factories import ProjectFactory
 from apps.sprints.factories import SprintFactory
-from apps.users.factories import CustomUserFactory
+from apps.users.factories import UserFactory
 from apps.workspaces.factories import MembershipFactory, WorkspaceFactory
 from apps.workspaces.roles import ROLE_ADMIN
 
@@ -272,7 +272,7 @@ class IssuePromoteToEpicViewTest(TestCase):
     def setUpTestData(cls):
         cls.workspace = WorkspaceFactory()
         cls.project = ProjectFactory(workspace=cls.workspace)
-        cls.user = CustomUserFactory()
+        cls.user = UserFactory()
         MembershipFactory(workspace=cls.workspace, user=cls.user, role=ROLE_ADMIN)
 
     def setUp(self):
@@ -451,7 +451,7 @@ class IssuePromoteToEpicViewTest(TestCase):
     def test_non_team_member_denied_access(self):
         """Non-workspace member cannot access the promote view."""
         story = StoryFactory(project=self.project)
-        other_user = CustomUserFactory()
+        other_user = UserFactory()
         self.client.force_login(other_user)
 
         response = self.client.get(self._get_promote_url(story))

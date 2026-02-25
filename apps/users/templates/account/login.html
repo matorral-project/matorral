@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+{% load issues_tags %}
+{% block page_title %}{% translate "Sign In" %}{% endblock %}
+{% block top_nav %}{% endblock %}
+{% block body %}
+  <div class="flex justify-center my-8 ">
+    <div class="w-96 px-4 py-4">
+      <div>
+        <div class="text-center">
+          <h1 class="text-3xl font-bold text-base-content">
+            Matorral
+            <span class="badge badge-primary badge-sm align-middle">{{ env_badge }}</span>
+          </h1>
+        </div>
+        <h2 class="mt-6 text-center text-2xl font-bold text-base-content">
+          {% translate "Sign In" %}
+        </h2>
+        <form class="mt-6 space-y-6" method="post">
+          {% csrf_token %}
+          {{ form.non_field_errors }}
+          {% render_field form.login %}
+          {% render_field form.password %}
+          <div>
+            <input class="btn btn-primary btn-block" type="submit" value="{% translate "Sign In" %}">
+          </div>
+        </form>
+        {% include 'accounts/includes/social/social_buttons.html' %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

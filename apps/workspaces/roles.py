@@ -1,4 +1,4 @@
-from apps.users.models import CustomUser
+from apps.users.models import User
 
 ROLE_ADMIN = "admin"
 ROLE_MEMBER = "member"
@@ -9,13 +9,13 @@ ROLE_CHOICES = (
 )
 
 
-def is_member(user: CustomUser, workspace) -> bool:
+def is_member(user: User, workspace) -> bool:
     if not workspace:
         return False
     return workspace.members.filter(id=user.id).exists()
 
 
-def is_admin(user: CustomUser, workspace) -> bool:
+def is_admin(user: User, workspace) -> bool:
     if not workspace:
         return False
 
