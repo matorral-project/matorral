@@ -1,0 +1,52 @@
+{% load allauth %}
+{{ attrs.errors }}
+<div class="form-control w-full mb-4">
+  {% if attrs.type == "textarea" %}
+    <label class="label" for="{{ attrs.id }}">
+      <span class="label-text font-medium">{% slot label %}{% endslot %}</span>
+    </label>
+    <textarea
+      {% if attrs.required %}required{% endif %}
+      {% if attrs.rows %}rows="{{ attrs.rows }}"{% endif %}
+      {% if attrs.disabled %}disabled{% endif %}
+      {% if attrs.readonly %}readonly{% endif %}
+      {% if attrs.name %}name="{{ attrs.name }}"{% endif %}
+      {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+      {% if attrs.placeholder %}placeholder="{{ attrs.placeholder }}"{% endif %}
+      class="textarea textarea-bordered w-full">{% slot value %}{% endslot %}</textarea>
+  {% elif attrs.type == "checkbox" or attrs.type == "radio" %}
+    <label class="label cursor-pointer justify-start gap-3" for="{{ attrs.id }}">
+      <input
+        {% if attrs.required %}required{% endif %}
+        {% if attrs.disabled %}disabled{% endif %}
+        {% if attrs.readonly %}readonly{% endif %}
+        {% if attrs.checked %}checked{% endif %}
+        {% if attrs.name %}name="{{ attrs.name }}"{% endif %}
+        {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+        {% if attrs.value is not None %}value="{{ attrs.value }}"{% endif %}
+        type="{{ attrs.type }}"
+        class="{% if attrs.type == 'checkbox' %}checkbox checkbox-primary{% else %}radio radio-primary{% endif %}">
+      <span class="label-text">{% slot label %}{% endslot %}</span>
+    </label>
+  {% else %}
+    <label class="label" for="{{ attrs.id }}">
+      <span class="label-text font-medium">{% slot label %}{% endslot %}</span>
+    </label>
+    <input
+      {% if attrs.required %}required{% endif %}
+      {% if attrs.disabled %}disabled{% endif %}
+      {% if attrs.readonly %}readonly{% endif %}
+      {% if attrs.name %}name="{{ attrs.name }}"{% endif %}
+      {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+      {% if attrs.placeholder %}placeholder="{{ attrs.placeholder }}"{% endif %}
+      {% if attrs.autocomplete %}autocomplete="{{ attrs.autocomplete }}"{% endif %}
+      {% if attrs.value is not None %}value="{{ attrs.value }}"{% endif %}
+      type="{{ attrs.type }}"
+      class="input input-bordered w-full">
+  {% endif %}
+  {% if slots.help_text %}
+    <label class="label">
+      <span class="label-text-alt text-base-content/60">{% slot help_text %}{% endslot %}</span>
+    </label>
+  {% endif %}
+</div>

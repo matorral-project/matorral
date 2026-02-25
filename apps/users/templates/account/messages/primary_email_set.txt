@@ -1,0 +1,1 @@
+{% load i18n %}{% blocktranslate %}Primary email address set.{% endblocktranslate %}

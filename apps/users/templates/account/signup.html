@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+{% load issues_tags %}
+{% block page_title %}{% translate "Sign Up" %}{% endblock %}
+{% block page_head %}{% endblock %}
+{% block top_nav %}{% endblock %}
+{% block body %}
+  <div class="flex justify-center my-8 ">
+    <div class="w-96 px-4 py-4">
+      <div>
+        <div class="text-center">
+          <h1 class="text-3xl font-bold text-base-content">
+            Matorral
+            <span class="badge badge-primary badge-sm align-middle">{{ env_badge }}</span>
+          </h1>
+        </div>
+        <h2 class="mt-6 text-center text-2xl font-bold text-base-content">
+          {% translate "Sign Up" %}
+        </h2>
+        <form class="mt-6 space-y-6" method="post">
+          {% csrf_token %}
+          {{ form.non_field_errors }}
+          {% render_field form.email %}
+          {% render_field form.password1 %}
+          {% if form.password2 %}
+            {% render_field form.password2 %}
+          {% endif %}
+          {% if invitation %}
+            <input type="hidden" name="invitation_id" value="{{ invitation.id }}">
+            {{ form.invitation_id.errors }}
+          {% else %}
+            {% render_field form.workspace_name %}
+          {% endif %}
+          {% render_field form.terms_agreement %}
+          <div class="relative overflow-hidden">
+            {% render_field form.phone_number_x %}
+          </div>
+          <input class="btn btn-primary btn-block" type="submit" value="{% translate "Sign Up" %}">
+        </form>
+        {% include 'accounts/includes/social/social_buttons.html' %}
+        <div class="text-sm mt-4">
+          {% translate "Already have account?" %}
+          <a href="{% url 'account_login' %}" class="font-medium mt-link">
+            {% translate "Sign in." %}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

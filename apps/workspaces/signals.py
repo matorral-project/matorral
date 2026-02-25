@@ -1,10 +1,10 @@
 from django.dispatch import receiver
 
+from allauth.account.signals import user_signed_up
+
 from .helpers import create_default_workspace_for_user, get_open_invitations_for_user
 from .invitations import get_invitation_id_from_request, process_invitation
 from .models import Invitation
-
-from allauth.account.signals import user_signed_up
 
 
 @receiver(user_signed_up)

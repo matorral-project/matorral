@@ -1,7 +1,7 @@
 {% extends "apps/base.html" %}
 {% load i18n %}
 {% load static %}
-{% block app %}
+{% block app_content_content %}
 <div id="page-content" hx-target="#page-content"
      hx-get="{% url 'dashboard:home' workspace.slug %}"
      hx-trigger="dashboard-updated from:body"

@@ -1,0 +1,17 @@
+{% extends "apps/base.html" %}
+
+{% block page_title %}
+  {% block head_title %}{% endblock %}
+{% endblock %}
+
+{% block sidebar-nav %}
+  {% with 'profile' as active_tab %}
+    {{ block.super }}
+  {% endwith %}
+{% endblock %}
+
+{% block app_content_content %}
+  <section class="app-card">
+    {% block main_content %}{% endblock %}
+  </section>
+{% endblock %}

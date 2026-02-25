@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from apps.issues.factories import EpicFactory, StoryFactory
 from apps.projects.factories import ProjectFactory
-from apps.users.factories import CustomUserFactory
+from apps.users.factories import UserFactory
 from apps.workspaces.factories import MembershipFactory, WorkspaceFactory
 from apps.workspaces.roles import ROLE_ADMIN, ROLE_MEMBER
 
@@ -18,7 +18,7 @@ class IssueCommentsTestBase(TestCase):
     def setUpTestData(cls):
         cls.workspace = WorkspaceFactory()
         cls.project = ProjectFactory(workspace=cls.workspace)
-        cls.user = CustomUserFactory()
+        cls.user = UserFactory()
         MembershipFactory(workspace=cls.workspace, user=cls.user, role=ROLE_ADMIN)
 
     def setUp(self):
@@ -191,7 +191,7 @@ class IssueCommentEditViewTest(IssueCommentsTestBase):
 
     def test_non_owner_gets_403(self):
         """Non-owner cannot edit another user's comment."""
-        other_user = CustomUserFactory()
+        other_user = UserFactory()
         MembershipFactory(workspace=self.workspace, user=other_user, role=ROLE_MEMBER)
         story = StoryFactory(project=self.project)
         comment = self._create_comment(story, user=other_user, text="Their comment")
@@ -264,7 +264,7 @@ class IssueCommentDeleteViewTest(IssueCommentsTestBase):
 
     def test_non_owner_gets_403(self):
         """Non-owner cannot delete another user's comment."""
-        other_user = CustomUserFactory()
+        other_user = UserFactory()
         MembershipFactory(workspace=self.workspace, user=other_user, role=ROLE_MEMBER)
         story = StoryFactory(project=self.project)
         comment = self._create_comment(story, user=other_user, text="Their comment")

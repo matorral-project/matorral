@@ -6,7 +6,7 @@ from apps.issues.factories import BugFactory, ChoreFactory, EpicFactory, Milesto
 from apps.issues.models import BaseIssue, Bug, Epic, IssueStatus, Milestone, Story
 from apps.projects.factories import ProjectFactory
 from apps.sprints.factories import SprintFactory
-from apps.users.factories import CustomUserFactory
+from apps.users.factories import UserFactory
 from apps.workspaces.factories import WorkspaceFactory
 
 
@@ -219,7 +219,7 @@ class IssueQuerySetAssigneeFilterTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.project = ProjectFactory()
-        cls.user = CustomUserFactory()
+        cls.user = UserFactory()
         cls.epic = EpicFactory(project=cls.project)
         cls.assigned_story = StoryFactory(project=cls.project, parent=cls.epic, assignee=cls.user)
         cls.unassigned_story = StoryFactory(project=cls.project, parent=cls.epic, assignee=None)

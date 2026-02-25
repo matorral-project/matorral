@@ -3,7 +3,7 @@ from django.urls import reverse
 
 from apps.issues.factories import EpicFactory
 from apps.projects.factories import ProjectFactory
-from apps.users.factories import CustomUserFactory
+from apps.users.factories import UserFactory
 from apps.workspaces.factories import MembershipFactory, WorkspaceFactory
 from apps.workspaces.roles import ROLE_ADMIN, ROLE_MEMBER
 
@@ -16,9 +16,9 @@ class IssuePermissionsTest(TestCase):
         cls.workspace = WorkspaceFactory()
         cls.project = ProjectFactory(workspace=cls.workspace)
 
-        cls.admin = CustomUserFactory()
-        cls.member = CustomUserFactory()
-        cls.outsider = CustomUserFactory()
+        cls.admin = UserFactory()
+        cls.member = UserFactory()
+        cls.outsider = UserFactory()
 
         MembershipFactory(workspace=cls.workspace, user=cls.admin, role=ROLE_ADMIN)
         MembershipFactory(workspace=cls.workspace, user=cls.member, role=ROLE_MEMBER)
@@ -76,7 +76,7 @@ class WorkspaceIsolationTest(TestCase):
         cls.project1 = ProjectFactory(workspace=cls.workspace)
         cls.project2 = ProjectFactory(workspace=cls.workspace)
 
-        cls.user = CustomUserFactory()
+        cls.user = UserFactory()
         MembershipFactory(workspace=cls.workspace, user=cls.user, role=ROLE_ADMIN)
 
         cls.epic1 = EpicFactory(project=cls.project1)

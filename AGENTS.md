@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Matorral is a Django-based project management tool with workspace-scoped multi-tenancy. Issues are organized hierarchically: Workspace → Project → Milestone → Epic (tree root) → Story (child) → Subtask/Bug.
 
-- **Django settings module**: `matorral.settings`
+- **Django settings module**: `matorral.settings.settings`
 - **Python**: 3.14+ (managed via `uv`)
 - **Frontend**: Vite + TypeScript + Tailwind CSS v4 + DaisyUI v5 + Alpine.js + HTMX
 
@@ -15,11 +15,11 @@ Matorral is a Django-based project management tool with workspace-scoped multi-t
 Requires Docker Compose. `just` is the task runner.
 
 ```bash
-just init          # First-time setup: copy .env, build containers, migrate, seed DB
-just start         # Start all containers with logs
-just start-bg      # Start in background
-just stop          # Stop containers
-just restart       # Stop + start
+just init               # First-time setup: copy .env, build containers, migrate, seed DB
+just start              # Start all containers with logs
+just start-detached     # Start in background
+just stop               # Stop containers
+just restart            # Stop + start
 ```
 
 Any change to `pyproject.toml` requires `just requirements` to rebuild containers.
@@ -29,16 +29,13 @@ Any change to `pyproject.toml` requires `just requirements` to rebuild container
 ```bash
 # Django management
 just migrate                        # Run migrations
-just migrations                     # Create migrations (for new apps: just manage ARGS='makemigrations <app_name>')
+just make-migrations                # Create migrations (for new apps: just manage ARGS='makemigrations <app_name>')
 just manage ARGS='<command>'        # Arbitrary manage.py command
 just shell                          # Django shell
 just dbshell                        # PostgreSQL shell
 
 # Testing
 just test [module]                  # e.g., just test apps.issues.tests.test_views
-
-# Code quality
-just ruff                           # Format + lint (auto-fixes)
 
 # Frontend
 just npm-build                      # Build frontend assets in container

@@ -1,0 +1,15 @@
+{% load allauth %}
+{% comment %} djlint:off {% endcomment %}
+{% if attrs.href %}<a href="{{ attrs.href }}"
+  {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+  class="btn {% if 'primary' in attrs.tags %}btn-primary{% elif 'danger' in attrs.tags or 'delete' in attrs.tags %}btn-error{% elif 'secondary' in attrs.tags %}btn-ghost{% else %}btn-outline{% endif %}">
+  {% slot %}{% endslot %}
+</a>{% else %}<button
+  {% if attrs.form %}form="{{ attrs.form }}"{% endif %}
+  {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+  {% if attrs.name %}name="{{ attrs.name }}"{% endif %}
+  {% if attrs.value %}value="{{ attrs.value }}"{% endif %}
+  {% if attrs.type %}type="{{ attrs.type }}"{% endif %}
+  class="btn {% if 'primary' in attrs.tags %}btn-primary{% elif 'danger' in attrs.tags or 'delete' in attrs.tags %}btn-error{% elif 'secondary' in attrs.tags %}btn-ghost{% else %}btn-outline{% endif %}">
+  {% slot %}{% endslot %}
+</button>{% endif %}

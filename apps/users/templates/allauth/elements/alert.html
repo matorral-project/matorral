@@ -1,0 +1,4 @@
+{% load allauth %}
+<div class="alert {% if 'warning' in attrs.tags %}alert-warning{% elif 'error' in attrs.tags or 'danger' in attrs.tags %}alert-error{% elif 'success' in attrs.tags %}alert-success{% else %}alert-info{% endif %} mb-4">
+  <span>{% slot message %}{% endslot %}</span>
+</div>

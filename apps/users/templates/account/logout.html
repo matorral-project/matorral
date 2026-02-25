@@ -1,0 +1,27 @@
+{% extends "apps/base.html" %}
+{% load static %}
+{% load i18n %}
+{% block page_title %}{% translate "Sign Out" %}{% endblock %}
+{% block app_content_content %}
+<section class="app-card">
+  <h1 class="mt-title">Sign out</h1>
+  <p class="mt-subtitle">{% translate 'Are you sure you want to sign out?' %}</p>
+  <form method="post" action="{% url 'account_logout' %}">
+    {% csrf_token %}
+    {% if redirect_field_value %}
+    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+    {% endif %}
+    <div class="field is-grouped">
+      <div class="control">
+        <input class="mt-button-primary" type="submit" value="{% translate 'Sign Out' %}">
+        <a class="mt-button-secondary" href="{% url 'landing_pages:home' %}">
+          <span class="mt-icon">
+            <i class="fa fa-home"></i>
+          </span>
+          <span>{% translate "Home" %}</span>
+        </a>
+      </div>
+    </div>
+  </form>
+</section>
+{% endblock %}

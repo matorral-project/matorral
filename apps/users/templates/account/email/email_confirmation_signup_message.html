@@ -1,0 +1,8 @@
+{% extends 'account/email/email_confirmation_message.html' %}
+{% load i18n %}
+{% block message_body_start %}
+<p style="margin-bottom: 16px;">
+  <span style="font-size: 18px;">👋</span>
+</p>
+<p style="font-weight: 600; color: #1a1a1a; margin-bottom: 8px;">{% translate "Welcome to Matorral!" %}</p>
+{% endblock %}

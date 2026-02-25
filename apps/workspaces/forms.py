@@ -5,11 +5,11 @@ from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
+from allauth.account.forms import SignupForm
+
 from .helpers import create_default_workspace_for_user, get_next_unique_workspace_slug, get_open_invitations_for_user
 from .limits import LimitExceededError, check_invitation_limit, check_member_limit
 from .models import Invitation, Membership, Workspace
-
-from allauth.account.forms import SignupForm
 
 
 class WorkspaceSignupForm(SignupForm):

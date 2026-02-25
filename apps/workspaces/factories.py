@@ -1,4 +1,4 @@
-from apps.users.factories import CustomUserFactory
+from apps.users.factories import UserFactory
 from apps.workspaces.models import Invitation, Membership, Workspace
 from apps.workspaces.roles import ROLE_ADMIN, ROLE_MEMBER
 
@@ -23,7 +23,7 @@ class MembershipFactory(factory.django.DjangoModelFactory):
         model = Membership
 
     workspace = factory.SubFactory(WorkspaceFactory)
-    user = factory.SubFactory(CustomUserFactory)
+    user = factory.SubFactory(UserFactory)
     role = ROLE_MEMBER
 
 
@@ -50,5 +50,5 @@ class InvitationFactory(factory.django.DjangoModelFactory):
     workspace = factory.SubFactory(WorkspaceFactory)
     email = factory.LazyAttribute(lambda obj: f"invited-{obj.workspace.slug}@example.com")
     role = ROLE_MEMBER
-    invited_by = factory.SubFactory(CustomUserFactory)
+    invited_by = factory.SubFactory(UserFactory)
     is_accepted = False

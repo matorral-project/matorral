@@ -1,0 +1,23 @@
+{% extends "account/base.html" %}
+
+{% load i18n %}
+{% load issues_tags %}
+
+{% block page_title %}{% translate "Sign Up" %}{% endblock %}
+
+{% block main_content %}
+    <h1 class="mt-title">{% translate "Sign Up" %}</h1>
+
+<p>{% blocktranslate trimmed with provider_name=account.get_provider.name site_name=site.name %}You are about to use your {{provider_name}} account to login to
+{{site_name}}. As a final step, please complete the following form:{% endblocktranslate %}</p>
+
+<form class="signup" id="signup_form" method="post" action="{% url 'socialaccount_signup' %}">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  {% render_form_fields form %}
+  {% if redirect_field_value %}
+  <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+  {% endif %}
+  <button class="mt-button-primary" type="submit">{% translate "Sign Up" %} &raquo;</button>
+</form>
+{% endblock %}

@@ -1,7 +1,7 @@
 {% extends "apps/base.html" %}
 {% load static %}
 {% load i18n %}
-{% load form_tags %}
+{% load issues_tags %}
 {% load django_vite %}
 {% block page_head %}
   <style>
@@ -12,7 +12,7 @@
     }
   </style>
 {% endblock %}
-{% block app %}
+{% block app_content_content %}
 <div id="page-content" hx-target="#page-content">
   {% partialdef page-content inline %}
   <section class="app-card">

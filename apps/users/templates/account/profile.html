@@ -1,0 +1,11 @@
+{% extends "apps/base.html" %}
+{% load static %}
+{% block app_content_content %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <section class="app-card mt-form-page">
+    {% include 'accounts/includes/profile_form.html' %}
+  </section>
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}

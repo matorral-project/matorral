@@ -1,0 +1,19 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+
+{% block main_content %}
+{% if process == "connect" %}
+<h1 class="mt-title">{% blocktranslate trimmed with provider.name as provider %}Connect {{ provider }}{% endblocktranslate %}</h1>
+
+<p>{% blocktranslate trimmed with provider.name as provider %}You are about to connect a new third party account from {{ provider }}.{% endblocktranslate %}</p>
+{% else %}
+<h1>{% blocktranslate trimmed with provider.name as provider %}Sign In Via {{ provider }}{% endblocktranslate %}</h1>
+
+<p>{% blocktranslate trimmed with provider.name as provider %}You are about to sign in using a third party account from {{ provider }}.{% endblocktranslate %}</p>
+{% endif %}
+
+<form method="post" class="mt-2">
+  {% csrf_token %}
+  <button class="mt-button-primary" type="submit">{% translate "Continue" %}</button>
+</form>
+{% endblock %}

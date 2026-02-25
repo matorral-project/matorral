@@ -1,26 +1,26 @@
 from django.utils.translation import gettext as _
 
-from apps.users.models import CustomUser
+from apps.users.models import User
+
+from allauth.account.models import EmailAddress
 
 from .models import Invitation, Membership, Workspace
 from .roles import ROLE_ADMIN
 from .slugs import get_next_unique_workspace_slug
 from .tasks import create_demo_project_task
 
-from allauth.account.models import EmailAddress
 
-
-def get_default_workspace_name_for_user(user: CustomUser) -> str:
+def get_default_workspace_name_for_user(user: User) -> str:
     return (user.get_display_name().split("@")[0] or _("My Workspace")).title()
 
 
-def get_default_workspace_for_user(user: CustomUser) -> Workspace | None:
+def get_default_workspace_for_user(user: User) -> Workspace | None:
     if user.workspaces.exists():
         return user.workspaces.first()
     return None
 
 
-def create_default_workspace_for_user(user: CustomUser, workspace_name: str | None = None):
+def create_default_workspace_for_user(user: User, workspace_name: str | None = None):
     workspace_name = workspace_name or get_default_workspace_name_for_user(user)
     slug = get_next_unique_workspace_slug(workspace_name)
     if not slug:
@@ -33,7 +33,7 @@ def create_default_workspace_for_user(user: CustomUser, workspace_name: str | No
     return workspace
 
 
-def get_open_invitations_for_user(user: CustomUser) -> list[dict]:
+def get_open_invitations_for_user(user: User) -> list[dict]:
     user_emails = list(EmailAddress.objects.filter(user=user).order_by("-primary"))
     if not user_emails:
         return []

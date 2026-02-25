@@ -1,0 +1,10 @@
+{% load i18n %}
+{% load socialaccount %}
+{% load static %}
+<form method="post" class="mt-2" action="{% provider_login_url provider %}">
+  {% csrf_token %}
+  <button class="btn btn-primary btn-outline btn-block flex justify-center my-2" type="submit">
+    <img class="socialicon mr-2" src="{% static provider.logo_path %}" alt="{{ provider.name }} {% translate 'Logo' %}">
+    {% translate "Connect using your" %} {{ provider.name }}{% translate " account" %}
+  </button>
+</form>

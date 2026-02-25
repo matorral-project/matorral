@@ -15,8 +15,8 @@ from apps.issues.models import (
     Subtask,
     SubtaskStatus,
 )
+from apps.issues.widgets import UserComboboxWidget
 from apps.projects.models import Project
-from apps.ui.widgets import UserComboboxWidget
 from apps.workspaces.models import Workspace
 
 User = get_user_model()

@@ -1,0 +1,14 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+{% block page_title %}{% translate "Login Cancelled" %}{% endblock %}
+{% block main_content %}
+  <h1 class="mt-title">{% translate "Login Cancelled" %}</h1>
+  {% url 'account_login' as login_url %}
+  <p>
+    {% blocktranslate trimmed %}
+      You decided to cancel logging in to our site using one of your existing
+      accounts. If this was a mistake, please proceed to
+      <a href="{{ login_url }}" class="mt-link">sign in</a>.
+    {% endblocktranslate %}
+  </p>
+{% endblock %}
