@@ -29,6 +29,6 @@
     "htmx-ext-ws": "^2.0.4",
     "htmx.org": "^2.0.8",
     "js-cookie": "^3.0.5",
-    "tailwindcss": "^4.1.17"
+    "tailwindcss": "^4.2.1"
   }
 }
