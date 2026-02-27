@@ -47,10 +47,12 @@ def _render_field(context, form_field, **attrs):
     if widget_type == "usercombobox":
         ctx.update(_combobox_context(form_field, context.get("request")))
 
-    tmpl = select_template([
-        f"utils/forms/field_{widget_type}.html",
-        "utils/forms/field_default.html",
-    ])
+    tmpl = select_template(
+        [
+            f"utils/forms/field_{widget_type}.html",
+            "utils/forms/field_default.html",
+        ]
+    )
     return mark_safe(tmpl.render(ctx))
 
 

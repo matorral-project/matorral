@@ -42,6 +42,10 @@ bash-temp:
 createsuperuser:
     docker compose run --rm django python manage.py createsuperuser
 
+# Promote an existing user to staff and superuser by email (e.g. `just make-superuser user@example.com`)
+make-superuser email:
+    docker compose run --rm django python manage.py make_superuser {{email}}
+
 # Generate new Django database migrations
 make-migrations:
     docker compose run --rm django python manage.py makemigrations
