@@ -1,6 +1,9 @@
 # Matorral
 
-[![codecov](https://codecov.io/gh/matorral-project/matorral/branch/main/graph/badge.svg)](https://codecov.io/gh/matorral-project/matorral)
+[![Codecov](https://codecov.io/gh/matorral-project/matorral/branch/main/graph/badge.svg)](https://codecov.io/gh/matorral-project/matorral)
+
+[![Django Packages](https://img.shields.io/badge/PyPI-matorral-tags.svg)](https://djangopackages.org/packages/p/matorral/)
+
 
 Matorral is a simple and fast open-source project management tool built with Django, HTMX, and Tailwind CSS.
 It supports workspaces, projects, milestones, epics, stories, and sprints.
