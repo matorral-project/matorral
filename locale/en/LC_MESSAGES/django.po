@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-25 04:07+0000\n"
+"POT-Creation-Date: 2026-02-26 16:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1900,6 +1900,7 @@ msgid "Simple"
 msgstr ""
 
 #: apps/landing_pages/templates/landing_pages/landing_page.html:14
+#: templates/includes/footer.html:16
 msgid "Open Source"
 msgstr ""
 
@@ -1912,7 +1913,6 @@ msgid "and"
 msgstr ""
 
 #: apps/landing_pages/templates/landing_pages/landing_page.html:19
-#: apps/landing_pages/templates/landing_pages/landing_page.html:127
 #: apps/users/templates/account/signup.html:5
 #: apps/users/templates/account/signup.html:19
 #: apps/users/templates/account/signup.html:39
@@ -1933,11 +1933,11 @@ msgid "Sign In"
 msgstr ""
 
 #: apps/landing_pages/templates/landing_pages/landing_page.html:32
-msgid "Ship software. Simple and faster."
+msgid "Ship software. Faster."
 msgstr ""
 
 #: apps/landing_pages/templates/landing_pages/landing_page.html:33
-msgid "A better workflow"
+msgid "Project Management made simple."
 msgstr ""
 
 #: apps/landing_pages/templates/landing_pages/landing_page.html:34
@@ -1985,25 +1985,28 @@ msgstr ""
 msgid "Matorral app screenshot"
 msgstr ""
 
-#: apps/landing_pages/templates/landing_pages/landing_page.html:89
+#: apps/landing_pages/templates/landing_pages/landing_page.html:88
 msgid "Features"
 msgstr ""
 
 #: apps/landing_pages/templates/landing_pages/landing_page.html:96
-msgid "Hierarchical Issues"
+msgid "User Stories, Bugs, Chores."
 msgstr ""
 
 #: apps/landing_pages/templates/landing_pages/landing_page.html:97
-msgid "Organize epics, stories, and tasks in a flexible tree structure."
+msgid "With optional subtasks, epics and milestones."
 msgstr ""
 
 #: apps/landing_pages/templates/landing_pages/landing_page.html:105
-#: apps/workspaces/models.py:74
-msgid "Workspaces"
+#: apps/projects/models.py:115
+#: apps/projects/templates/projects/project_list.html:17
+#: apps/projects/views/crud.py:184 templates/includes/top_nav_app.html:10
+msgid "Projects"
 msgstr ""
 
 #: apps/landing_pages/templates/landing_pages/landing_page.html:106
-msgid "Collaborate with your team in dedicated workspaces."
+msgid ""
+"Projects made simple and interactive. See and edit everything in one page."
 msgstr ""
 
 #: apps/landing_pages/templates/landing_pages/landing_page.html:114
@@ -2017,12 +2020,39 @@ msgstr ""
 msgid "Plan and track sprints with automatic cadence."
 msgstr ""
 
-#: apps/landing_pages/templates/landing_pages/landing_page.html:125
+#: apps/landing_pages/templates/landing_pages/landing_page.html:128
+#: apps/workspaces/models.py:74
+msgid "Workspaces"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:129
+msgid ""
+"Separate work for different teams. Keep each team focused on what matters "
+"most."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:137
+msgid "Inline edit all the things!"
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:138
+msgid "Edit everything in place, no round trips, no extra clicks."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:146
+msgid "Lists views made easy."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:147
+msgid "Customize them as you need with filters, grouping, search and sorting."
+msgstr ""
+
+#: apps/landing_pages/templates/landing_pages/landing_page.html:157
 msgid "Ready to get started?"
 msgstr ""
 
-#: apps/landing_pages/templates/landing_pages/landing_page.html:126
-msgid "Join thousands of teams using Matorral to ship better software."
+#: apps/landing_pages/templates/landing_pages/landing_page.html:158
+msgid "Sign Up for Free"
 msgstr ""
 
 #: apps/landing_pages/templates/landing_pages/privacy.html:3
@@ -2546,12 +2576,6 @@ msgstr ""
 #: apps/projects/templates/projects/project_list.html:184
 #: apps/projects/views/crud.py:39 apps/projects/views/crud.py:164
 msgid "Lead"
-msgstr ""
-
-#: apps/projects/models.py:115
-#: apps/projects/templates/projects/project_list.html:17
-#: apps/projects/views/crud.py:184 templates/includes/top_nav_app.html:10
-msgid "Projects"
 msgstr ""
 
 #: apps/projects/templates/projects/includes/bulk_delete_modal.html:4
@@ -4345,11 +4369,11 @@ msgstr ""
 msgid "{member} was removed from {workspace}."
 msgstr ""
 
-#: matorral/settings/settings.py:256
+#: matorral/settings.py:269 matorral/settings/settings.py:256
 msgid "English"
 msgstr ""
 
-#: matorral/settings/settings.py:404
+#: matorral/settings.py:417 matorral/settings/settings.py:404
 msgid "The project management tool that doesn't get in your way."
 msgstr ""
 
@@ -4453,15 +4477,15 @@ msgstr ""
 msgid "Report an issue"
 msgstr ""
 
-#: templates/includes/footer.html:16
-msgid "Connect"
-msgstr ""
-
 #: templates/includes/footer.html:17
-msgid "GitHub"
+msgid "Source Code"
 msgstr ""
 
-#: templates/includes/footer.html:23
+#: templates/includes/footer.html:18
+msgid "Forum"
+msgstr ""
+
+#: templates/includes/footer.html:24
 msgid "Copyright"
 msgstr ""
 
