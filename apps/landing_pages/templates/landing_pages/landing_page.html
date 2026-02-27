@@ -10,7 +10,7 @@
           Matorral
           <span class="badge badge-primary badge-sm align-middle">{{ env_badge }}</span>
         </h1>
-        <p class="py-6 text-lg text-center">
+        <p class="py-6 text-base text-center">
           {% translate "A project management tool." %} <span class="font-bold text-emerald-600">{% translate "Simple" %}</span>. <span class="font-bold text-gray-900">{% translate "Open Source" %}</span>.
         </p>
         <p class="pb-6 text-lg text-center">
@@ -29,8 +29,8 @@
       <div class="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-2">
         <div class="lg:pt-4 lg:pr-8">
           <div class="lg:max-w-lg">
-            <h2 class="text-base/7 font-semibold text-primary">{% translate "Ship software. Simple and faster." %}</h2>
-            <p class="mt-2 text-4xl font-semibold tracking-tight text-pretty text-gray-900 sm:text-5xl">{% translate "A better workflow" %}</p>
+            <h2 class="text-base/7 font-semibold text-primary">{% translate "Ship software. Faster." %}</h2>
+            <p class="mt-2 text-4xl font-semibold tracking-tight text-pretty text-gray-900 sm:text-3xl">{% translate "Project Management made simple." %}</p>
             <p class="mt-6 text-lg/8 text-gray-700">{% translate "Matorral gives your team a clear, flexible way to plan and deliver." %}</p>
             <dl class="mt-10 max-w-xl space-y-8 text-base/7 text-gray-600 lg:max-w-none">
               <div class="relative pl-9">
@@ -77,7 +77,7 @@
           alt="{% translate 'Matorral app screenshot' %}"
           width="2432"
           height="1442"
-          class="w-3xl max-w-none rounded-xl shadow-xl ring-1 ring-gray-400/10 sm:w-228 md:-ml-4 lg:-ml-0"
+          class="w-3xl max-w-none rounded-xl shadow-xl ring-1 ring-gray-400/10 sm:w-228 md:-ml-4 lg:-ml-0 mt-15"
         />
       </div>
     </div>
@@ -85,16 +85,16 @@
 
   {# Features Section #}
   <section class="py-16 px-4">
+    <h2 class="text-3xl font-bold text-center mb-12">{% translate "Features" %}</h2>
     <div class="max-w-6xl mx-auto">
-      <h2 class="text-3xl font-bold text-center mb-12">{% translate "Features" %}</h2>
       <div class="grid md:grid-cols-3 gap-8">
         <div class="card bg-base-100 shadow-lg">
           <div class="card-body items-center text-center">
             <div class="text-4xl text-primary mb-4">
               <i class="fa-solid fa-layer-group"></i>
             </div>
-            <h3 class="card-title">{% translate "Hierarchical Issues" %}</h3>
-            <p>{% translate "Organize epics, stories, and tasks in a flexible tree structure." %}</p>
+            <h3 class="card-title">{% translate "User Stories, Bugs, Chores." %}</h3>
+            <p>{% translate "With optional subtasks, epics and milestones." %}</p>
           </div>
         </div>
         <div class="card bg-base-100 shadow-lg">
@@ -102,8 +102,8 @@
             <div class="text-4xl text-primary mb-4">
               <i class="fa-solid fa-users"></i>
             </div>
-            <h3 class="card-title">{% translate "Workspaces" %}</h3>
-            <p>{% translate "Collaborate with your team in dedicated workspaces." %}</p>
+            <h3 class="card-title">{% translate "Projects" %}</h3>
+            <p>{% translate "Projects made simple and interactive. See and edit everything in one page." %}</p>
           </div>
         </div>
         <div class="card bg-base-100 shadow-lg">
@@ -113,6 +113,38 @@
             </div>
             <h3 class="card-title">{% translate "Sprints" %}</h3>
             <p>{% translate "Plan and track sprints with automatic cadence." %}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto mt-8">
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body items-center text-center">
+            <div class="text-4xl text-primary mb-4">
+              <i class="fa-solid fa-users"></i>
+            </div>
+            <h3 class="card-title">{% translate "Workspaces" %}</h3>
+            <p>{% translate "Separate work for different teams. Keep each team focused on what matters most." %}</p>
+          </div>
+        </div>
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body items-center text-center">
+            <div class="text-4xl text-primary mb-4">
+              <i class="fa-solid fa-bolt"></i>
+            </div>
+            <h3 class="card-title">{% translate "Inline edit all the things!" %}</h3>
+            <p>{% translate "Edit everything in place, no round trips, no extra clicks." %}</p>
+          </div>
+        </div>
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body items-center text-center">
+            <div class="text-4xl text-primary mb-4">
+              <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <h3 class="card-title">{% translate "Lists views made easy." %}</h3>
+            <p>{% translate "Customize them as you need with filters, grouping, search and sorting." %}</p>
           </div>
         </div>
       </div>
