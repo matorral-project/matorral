@@ -42,6 +42,10 @@ bash-temp:
 createsuperuser:
     docker compose run --rm django python manage.py createsuperuser
 
+# Promote an existing user to staff and superuser by email (e.g. `just make-superuser user@example.com`)
+make-superuser email:
+    docker compose run --rm django python manage.py make_superuser {{email}}
+
 # Generate new Django database migrations
 make-migrations:
     docker compose run --rm django python manage.py makemigrations
@@ -67,6 +71,19 @@ dbshell:
 # Execute the Django test suite. Pass args to run specific tests (e.g. `just test apps.module.tests`)
 test *args:
     docker compose run --rm django python manage.py test {{args}}
+
+# Run tests under coverage
+test-cov *args:
+    docker compose run --rm django uv run coverage run -m pytest apps/ -v --tb=short {{args}}
+
+# Generate coverage json + terminal report
+cov-report:
+    docker compose run --rm django sh -c "uv run coverage json && uv run coverage report"
+
+# Run tests under coverage and generate reports
+cov *args:
+    just test-cov {{args}}
+    just cov-report
 
 # Bootstrap the project: set up environment, start containers, and apply migrations
 init: setup-env start-detached make-migrations migrate

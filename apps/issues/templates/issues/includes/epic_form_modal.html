@@ -1,4 +1,4 @@
-{% load i18n issues_tags %}
+{% load i18n forms_tags %}
 <p class="text-sm text-gray-500 mb-4">
   {% blocktranslate with key=milestone.key title=milestone.title %}Creating epic for milestone <strong>{{ key }}</strong> - {{ title }}{% endblocktranslate %}
 </p>

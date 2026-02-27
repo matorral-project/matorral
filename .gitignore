@@ -26,5 +26,8 @@ node_modules/
 
 .playwright-browsers/
 
+.coverage
+coverage.*
+
 .claude/settings.local.json
 openapitools.json
