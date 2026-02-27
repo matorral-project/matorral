@@ -18,33 +18,51 @@ class ResetDemoWorkspaceDataTest(WorkspaceTestMixin, TestCase):
         cls.admin.save(update_fields=["email"])
         create_demo_project(cls.workspace, cls.admin)
 
-    def test_deletes_all_projects(self):
-        self.assertGreater(Project.objects.filter(workspace=self.workspace).count(), 0)
+    def test_recreates_projects_with_new_ids(self):
+        old_ids = set(Project.objects.filter(workspace=self.workspace).values_list("id", flat=True))
+        self.assertGreater(len(old_ids), 0)
         reset_demo_workspace_data()
-        self.assertEqual(Project.objects.filter(workspace=self.workspace).count(), 0)
+        new_ids = set(Project.objects.filter(workspace=self.workspace).values_list("id", flat=True))
+        self.assertGreater(len(new_ids), 0)
+        self.assertTrue(old_ids.isdisjoint(new_ids), "Projects should be recreated with new IDs after reset")
 
-    def test_deletes_all_sprints(self):
-        self.assertGreater(Sprint.objects.filter(workspace=self.workspace).count(), 0)
+    def test_recreates_sprints_with_new_ids(self):
+        old_ids = set(Sprint.objects.filter(workspace=self.workspace).values_list("id", flat=True))
+        self.assertGreater(len(old_ids), 0)
         reset_demo_workspace_data()
-        self.assertEqual(Sprint.objects.filter(workspace=self.workspace).count(), 0)
+        new_ids = set(Sprint.objects.filter(workspace=self.workspace).values_list("id", flat=True))
+        self.assertGreater(len(new_ids), 0)
+        self.assertTrue(old_ids.isdisjoint(new_ids), "Sprints should be recreated with new IDs after reset")
 
-    def test_cascades_milestones(self):
-        project = Project.objects.filter(workspace=self.workspace).first()
-        self.assertGreater(Milestone.objects.filter(project=project).count(), 0)
+    def test_recreates_milestones_with_new_ids(self):
+        old_project = Project.objects.filter(workspace=self.workspace).first()
+        old_ids = set(Milestone.objects.filter(project=old_project).values_list("id", flat=True))
+        self.assertGreater(len(old_ids), 0)
         reset_demo_workspace_data()
-        self.assertEqual(Milestone.objects.filter(project=project).count(), 0)
+        new_project = Project.objects.filter(workspace=self.workspace).first()
+        new_ids = set(Milestone.objects.filter(project=new_project).values_list("id", flat=True))
+        self.assertGreater(len(new_ids), 0)
+        self.assertTrue(old_ids.isdisjoint(new_ids), "Milestones should be recreated with new IDs after reset")
 
-    def test_cascades_epics(self):
-        project = Project.objects.filter(workspace=self.workspace).first()
-        self.assertGreater(Epic.objects.filter(project=project).count(), 0)
+    def test_recreates_epics_with_new_ids(self):
+        old_project = Project.objects.filter(workspace=self.workspace).first()
+        old_ids = set(Epic.objects.filter(project=old_project).values_list("id", flat=True))
+        self.assertGreater(len(old_ids), 0)
         reset_demo_workspace_data()
-        self.assertEqual(Epic.objects.filter(project=project).count(), 0)
+        new_project = Project.objects.filter(workspace=self.workspace).first()
+        new_ids = set(Epic.objects.filter(project=new_project).values_list("id", flat=True))
+        self.assertGreater(len(new_ids), 0)
+        self.assertTrue(old_ids.isdisjoint(new_ids), "Epics should be recreated with new IDs after reset")
 
-    def test_cascades_stories(self):
-        project = Project.objects.filter(workspace=self.workspace).first()
-        self.assertGreater(Story.objects.filter(project=project).count(), 0)
+    def test_recreates_stories_with_new_ids(self):
+        old_project = Project.objects.filter(workspace=self.workspace).first()
+        old_ids = set(Story.objects.filter(project=old_project).values_list("id", flat=True))
+        self.assertGreater(len(old_ids), 0)
         reset_demo_workspace_data()
-        self.assertEqual(Story.objects.filter(project=project).count(), 0)
+        new_project = Project.objects.filter(workspace=self.workspace).first()
+        new_ids = set(Story.objects.filter(project=new_project).values_list("id", flat=True))
+        self.assertGreater(len(new_ids), 0)
+        self.assertTrue(old_ids.isdisjoint(new_ids), "Stories should be recreated with new IDs after reset")
 
     def test_resets_password(self):
         self.admin.set_password("changed-by-visitor")

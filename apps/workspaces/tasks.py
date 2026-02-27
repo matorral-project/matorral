@@ -61,6 +61,7 @@ def reset_demo_workspace_data():
         logger.warning("No workspaces found for demo user '%s', skipping reset", DEMO_USER_EMAIL)
         return
 
+    # there should be just one, but just in case there are multiple
     for workspace in workspaces.iterator():
         sprint_count, _ = Sprint.objects.filter(workspace=workspace).delete()
         project_count, _ = Project.objects.filter(workspace=workspace).delete()
@@ -70,3 +71,6 @@ def reset_demo_workspace_data():
             sprint_count,
             project_count,
         )
+
+        # then recreate the demo project
+        create_demo_project(workspace, user)
