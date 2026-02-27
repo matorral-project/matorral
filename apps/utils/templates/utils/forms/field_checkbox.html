@@ -1,0 +1,10 @@
+<div class="w-full mt-2" {% include "django/forms/attrs.html" %}>
+  <div>
+    <label class="font-bold cursor-pointer flex items-center gap-2">
+      {{ form_field }}
+      {{ form_field.label }}
+    </label>
+  </div>
+  <small class="mt-text-muted">{{ form_field.help_text|safe }}</small>
+  {{ form_field.errors }}
+</div>

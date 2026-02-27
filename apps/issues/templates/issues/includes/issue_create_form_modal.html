@@ -1,4 +1,4 @@
-{% load i18n issues_tags %}
+{% load i18n forms_tags %}
 {% if parent %}
 <p class="text-sm text-gray-500 mb-4">
   {% blocktranslate with key=parent.key title=parent.title %}Creating {{ issue_type_label }} under <strong>{{ key }}</strong> - {{ title }}{% endblocktranslate %}
