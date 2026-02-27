@@ -10,7 +10,7 @@
   {% endwith %}
 {% endblock %}
 {% block app_content_content %}
-  <div class="app-card">
+  <div class="app-card mt-form-page">
     <p class="mt-text-right"><a href="{% url 'users:user_profile' %}">{% translate '← Return to Profile' %}</a></p>
     <h1 class="mt-title">{% translate "Connected Accounts" %}</h1>
     {% if form.accounts %}
@@ -48,7 +48,7 @@
       {% if provider.id == "github" %}
         <form method="post" class="mt-2" action="{% provider_login_url provider process='connect' %}">
           {% csrf_token %}
-          <button class="btn btn-primary btn-outline flex justify-center my-2 w-1/4" type="submit">
+          <button class="btn btn-primary btn-outline flex justify-center my-2 whitespace-nowrap" type="submit">
             <img class="socialicon mr-2" src="{% static provider.logo_path %}" alt="GitHub Logo">
             {% translate "Connect Github Account" %}
           </button>

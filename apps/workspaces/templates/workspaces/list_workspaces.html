@@ -3,7 +3,7 @@
 {% block app_content_content %}
 <div id="page-content" hx-target="#page-content">
   {% partialdef page-content inline %}
-  <div class="app-card">
+  <div class="app-card mt-form-page">
     <div class="flex justify-between items-center mb-4">
       <h3 class="mt-subtitle mb-0">{% translate "My Workspaces" %}</h3>
       <a href="{% url 'workspaces:create_workspace' %}" class="btn btn-primary btn-sm">

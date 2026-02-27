@@ -15,7 +15,7 @@
 {% block app_content_content %}
 <div id="page-content" hx-target="#page-content">
   {% partialdef page-content inline %}
-  <section class="app-card">
+  <section class="app-card mt-form-page">
     <div class="flex justify-between items-center mb-4">
       <h3 class="mt-subtitle mb-0">{% translate "Workspace Members" %}</h3>
       {% if request.workspace_membership.is_admin %}
@@ -49,7 +49,7 @@
       </table>
     </div>
   </section>
-  <div id="pending-invitations">
+  <div id="pending-invitations" class="mt-form-page">
     {% include 'workspaces/includes/pending_invitations.html' %}
   </div>
   {% if request.workspace_membership.is_admin %}
