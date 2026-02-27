@@ -4,6 +4,12 @@
 
 [![Django Packages](https://img.shields.io/badge/PyPI-matorral-tags.svg)](https://djangopackages.org/packages/p/matorral/)
 
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
+[![Python 3.14](https://img.shields.io/badge/python-3.14-blue.svg)](https://www.python.org/downloads/release/python-3140/)
+
+[![Django 6.0](https://img.shields.io/badge/django-6.0-green.svg)](https://docs.djangoproject.com/en/6.0/)
+
 
 Matorral is a simple and fast open-source project management tool built with Django, HTMX, and Tailwind CSS.
 It supports workspaces, projects, milestones, epics, stories, and sprints.
