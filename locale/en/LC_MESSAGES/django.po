@@ -4166,7 +4166,7 @@ msgstr ""
 
 #: apps/workspaces/templates/workspaces/includes/invite_modal.html:16
 #: apps/workspaces/templates/workspaces/includes/workspace_invitations.html:12
-msgid "Send Invitation"
+msgid "Send Invite"
 msgstr ""
 
 #: apps/workspaces/templates/workspaces/includes/pending_invitations.html:4
