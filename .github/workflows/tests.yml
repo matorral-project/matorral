@@ -66,5 +66,15 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
-      - name: Run tests
-        run: uv run pytest apps/ -v --tb=short
+      - name: Run tests with coverage
+        run: uv run coverage run -m pytest apps/ -v --tb=short
+
+      - name: Generate coverage report
+        run: uv run coverage xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.xml
+          fail_ci_if_error: true

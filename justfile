@@ -68,6 +68,19 @@ dbshell:
 test *args:
     docker compose run --rm django python manage.py test {{args}}
 
+# Run tests under coverage
+test-cov *args:
+    docker compose run --rm django uv run coverage run -m pytest apps/ -v --tb=short {{args}}
+
+# Generate coverage json + terminal report
+cov-report:
+    docker compose run --rm django sh -c "uv run coverage json && uv run coverage report"
+
+# Run tests under coverage and generate reports
+cov *args:
+    just test-cov {{args}}
+    just cov-report
+
 # Bootstrap the project: set up environment, start containers, and apply migrations
 init: setup-env start-detached make-migrations migrate
 

@@ -1,5 +1,7 @@
 # Matorral
 
+[![codecov](https://codecov.io/gh/matorral-project/matorral/branch/main/graph/badge.svg)](https://codecov.io/gh/matorral-project/matorral)
+
 Matorral is a simple and fast open-source project management tool built with Django, HTMX, and Tailwind CSS.
 It supports workspaces, projects, milestones, epics, stories, and sprints.
 
@@ -61,9 +63,27 @@ just test
 
 # Run a specific test
 just test apps.issues.tests.test_views
+
+# Run tests with coverage and print report
+just cov
+
+# Run tests with coverage only
+just test-cov
+
+# Print coverage report from last run
+just cov-report
 ```
 
 Pull requests are welcome. Please run `just test` and configure `pre-commit` before committing and pushing changes.
+
+## Coverage
+
+Test coverage is tracked via [Codecov](https://codecov.io/gh/matorral-project/matorral). Coverage reports are uploaded automatically on every push to `main` and on pull requests.
+
+To set up Codecov for your own fork:
+1. Log in at [codecov.io](https://codecov.io) and link your GitHub repository.
+2. Copy the `CODECOV_TOKEN` from your Codecov project settings.
+3. Add it as a secret named `CODECOV_TOKEN` in your GitHub repository settings under **Settings → Secrets and variables → Actions**.
 
 ## Tech stack
 
