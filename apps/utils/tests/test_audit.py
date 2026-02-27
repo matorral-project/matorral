@@ -7,7 +7,7 @@ from apps.projects.factories import ProjectFactory
 from apps.projects.models import ProjectStatus
 from apps.sprints.factories import SprintFactory
 from apps.users.factories import UserFactory
-from apps.utils.audit import bulk_create_audit_logs
+from apps.utils.audit import bulk_create_audit_logs, bulk_create_delete_audit_logs
 
 from auditlog.models import LogEntry
 
@@ -100,3 +100,53 @@ class BulkCreateAuditLogsTest(TestCase):
         entry = LogEntry.objects.first()
         self.assertIsNone(entry.actor)
         self.assertEqual(entry.changes, {"status": ["Draft", "Active"]})
+
+
+class BulkCreateDeleteAuditLogsTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory()
+        cls.project = ProjectFactory()
+
+    def test_creates_delete_entry_for_each_object(self):
+        p1 = ProjectFactory()
+        p2 = ProjectFactory()
+        LogEntry.objects.all().delete()
+
+        bulk_create_delete_audit_logs([p1, p2], actor=self.user)
+
+        entries = LogEntry.objects.all()
+        self.assertEqual(entries.count(), 2)
+        for entry in entries:
+            self.assertEqual(entry.action, LogEntry.Action.DELETE)
+            self.assertEqual(entry.changes, {})
+            self.assertEqual(entry.actor, self.user)
+
+    def test_empty_objects_list_creates_nothing(self):
+        LogEntry.objects.all().delete()
+
+        bulk_create_delete_audit_logs([])
+
+        self.assertEqual(LogEntry.objects.count(), 0)
+
+    def test_polymorphic_models_get_correct_content_type(self):
+        story = StoryFactory(project=self.project)
+        bug = BugFactory(project=self.project)
+        LogEntry.objects.all().delete()
+
+        bulk_create_delete_audit_logs([story, bug], actor=self.user)
+
+        story_ct = ContentType.objects.get_for_model(Story)
+        bug_ct = ContentType.objects.get_for_model(Bug)
+        self.assertEqual(LogEntry.objects.get(object_id=story.pk).content_type, story_ct)
+        self.assertEqual(LogEntry.objects.get(object_id=bug.pk).content_type, bug_ct)
+
+    def test_works_without_actor(self):
+        p = ProjectFactory()
+        LogEntry.objects.all().delete()
+
+        bulk_create_delete_audit_logs([p])
+
+        entry = LogEntry.objects.first()
+        self.assertIsNone(entry.actor)
+        self.assertEqual(entry.action, LogEntry.Action.DELETE)
