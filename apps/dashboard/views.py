@@ -1,5 +1,6 @@
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import render
+from django.urls import reverse
 
 from apps.dashboard.helpers import get_onboarding_status, get_user_dashboard_data
 from apps.workspaces.decorators import login_and_workspace_membership_required
@@ -14,7 +15,7 @@ def workspace_home(request, workspace_slug):
     # Only fetch dashboard data if onboarding is complete/dismissed
     dashboard_data = {} if onboarding["should_show"] else get_user_dashboard_data(request.user, workspace)
 
-    template = "dashboard/home.html#page-content" if request.htmx else "dashboard/home.html"
+    template = "dashboard/home.html#dashboard-content" if request.htmx else "dashboard/home.html"
 
     return render(
         request,
@@ -37,7 +38,7 @@ def dismiss_onboarding(request, workspace_slug):
         request.user.save(update_fields=["onboarding_completed"])
 
         response = HttpResponse(status=204)
-        response["HX-Trigger"] = "onboarding-dismissed"
+        response["HX-Redirect"] = reverse("dashboard:home", kwargs={"workspace_slug": workspace_slug})
         return response
 
     return HttpResponseNotAllowed(["POST"])
