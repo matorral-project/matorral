@@ -1,4 +1,5 @@
 {# Improved email template base with Matorral branding #}
+{% load i18n %}
 <!doctype html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
   <head>
@@ -43,20 +44,20 @@
       }
     </style>
   </head>
-  <body style="background-color: #f5f5f5;">
+  <body style="background-color: #f5f1e8;">
     {# Preheader for email clients #}
     <div style="display: none; font-size: 1px; color: #fefefe; line-height: 1px; max-height: 0; max-width: 0; opacity: 0; overflow: hidden;">
       {% block preheader %}{% endblock %}
     </div>
 
     {# Header with logo #}
-    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #1a1a1a;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #344e41;">
       <tr>
         <td align="center" style="padding: 20px;">
           <table border="0" cellpadding="0" cellspacing="0" width="600" style="max-width: 600px;">
             <tr>
               <td align="left" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-                <span style="font-size: 24px; font-weight: 700; color: #22c55e; letter-spacing: -0.5px;">Matorral</span>
+                <span style="font-size: 24px; font-weight: 700; color: #a3b18a; letter-spacing: -0.5px;">Matorral</span>
               </td>
             </tr>
           </table>
@@ -76,11 +77,11 @@
                     <tr>
                       <td align='left' style='font-size:0px;padding:0 10px 20px;word-break:break-word;'>
                         {# Email title #}
-                        <h1 style="margin: 0 0 16px 0; color: #1a1a1a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 24px; font-weight: 600; line-height: 1.3;">
+                        <h1 style="margin: 0 0 16px 0; color: #344e41; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 24px; font-weight: 600; line-height: 1.3;">
                           {% block email_title %}{% endblock %}
                         </h1>
                         {# Message body #}
-                        <div style='color:#4b5563;font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;font-size:16px;line-height:1.6;text-align:left;'>
+                        <div style='color:#344e41;font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;font-size:16px;line-height:1.6;text-align:left;'>
                           {% block message_body %}
                           {% endblock %}
                         </div>
@@ -102,8 +103,8 @@
         <td align="center" style="padding: 0 20px 40px;">
           <table border="0" cellpadding="0" cellspacing="0">
             <tr>
-              <td align="center" bgcolor="#22c55e" role="presentation" style="background-color:#22c55e;border:none;border-radius:6px;cursor:auto;padding:0;" valign="middle">
-                <a href="{% block cta_link %}{% endblock %}" style="background:#22c55e;color:#ffffff;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;font-size:16px;font-weight:600;line-height:100%;margin:0;padding:14px 28px;text-decoration:none;text-transform:none;display:inline-block;border-radius:6px;" target="_blank">
+              <td align="center" bgcolor="#588157" role="presentation" style="background-color:#588157;border:none;border-radius:6px;cursor:auto;padding:0;" valign="middle">
+                <a href="{% block cta_link %}{% endblock %}" style="background:#588157;color:#f5f1e8;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;font-size:16px;font-weight:600;line-height:100%;margin:0;padding:14px 28px;text-decoration:none;text-transform:none;display:inline-block;border-radius:6px;" target="_blank">
                   {% block cta_text %}{% endblock %}
                 </a>
               </td>
@@ -119,15 +120,17 @@
     {% endblock %}
 
     {# Footer #}
-    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f5f5f5;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f5f1e8;">
       <tr>
         <td align="center" style="padding: 30px 20px;">
           <table border="0" cellpadding="0" cellspacing="0" width="600" style="max-width: 600px;">
             <tr>
-              <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; color: #6b7280; line-height: 1.5;">
+              <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; color: #a3b18a; line-height: 1.5;">
                 {% block footer %}
-                <p style="margin: 0 0 8px 0;">This email was sent to you because you created an account on Matorral.</p>
-                <p style="margin: 0;">If you didn't request this, you can safely ignore this email.</p>
+                  <p style="margin: 0 0 8px 0;">
+                   {% translate "This email was sent to you because you created an account on" %} <a target="_blank" href="https://{{ site_domain }}" style="color: #3f5c0c;">{{ site_name }}.</a>
+                  </p>
+                  <p style="margin: 0;">If you didn't request this, you can safely ignore this email.</p>
                 {% endblock %}
               </td>
             </tr>
