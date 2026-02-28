@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-27 20:22+0000\n"
+"POT-Creation-Date: 2026-02-27 20:41+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -676,8 +676,8 @@ msgstr ""
 #: apps/issues/templates/issues/workspace_issue_list.html:22
 #: apps/issues/views/crud.py:114 apps/issues/views/crud.py:288
 #: apps/sprints/templates/sprints/sprint_detail.html:18
-#: templates/includes/sidebar_app.html:62
-#: templates/includes/sidebar_app.html:64
+#: templates/includes/sidebar_app.html:63
+#: templates/includes/sidebar_app.html:65
 #: templates/includes/top_nav_app.html:12
 msgid "Issues"
 msgstr ""
@@ -2003,8 +2003,8 @@ msgstr ""
 #: apps/landing_pages/templates/landing_pages/landing_page.html:105
 #: apps/projects/models.py:115
 #: apps/projects/templates/projects/project_list.html:18
-#: apps/projects/views/crud.py:184 templates/includes/sidebar_app.html:40
-#: templates/includes/sidebar_app.html:42
+#: apps/projects/views/crud.py:184 templates/includes/sidebar_app.html:41
+#: templates/includes/sidebar_app.html:43
 #: templates/includes/top_nav_app.html:10
 msgid "Projects"
 msgstr ""
@@ -2017,8 +2017,8 @@ msgstr ""
 #: apps/landing_pages/templates/landing_pages/landing_page.html:114
 #: apps/sprints/models.py:118
 #: apps/sprints/templates/sprints/sprint_list.html:15
-#: apps/sprints/views/crud.py:59 templates/includes/sidebar_app.html:51
-#: templates/includes/sidebar_app.html:53
+#: apps/sprints/views/crud.py:59 templates/includes/sidebar_app.html:52
+#: templates/includes/sidebar_app.html:54
 #: templates/includes/top_nav_app.html:11
 msgid "Sprints"
 msgstr ""
@@ -3523,8 +3523,8 @@ msgid "Are you sure you want to sign out?"
 msgstr ""
 
 #: apps/users/templates/account/logout.html:21
-#: templates/includes/sidebar_app.html:29
-#: templates/includes/sidebar_app.html:31
+#: templates/includes/sidebar_app.html:30
+#: templates/includes/sidebar_app.html:32
 msgid "Home"
 msgstr ""
 
@@ -4228,8 +4228,8 @@ msgid "Invite Workspace Members"
 msgstr ""
 
 #: apps/workspaces/templates/workspaces/list_workspaces.html:8
-#: apps/workspaces/views.py:62 templates/includes/sidebar_app.html:104
-#: templates/includes/sidebar_app.html:106
+#: apps/workspaces/views.py:62 templates/includes/sidebar_app.html:105
+#: templates/includes/sidebar_app.html:107
 #: templates/includes/workspace_nav_items.html:32
 msgid "My Workspaces"
 msgstr ""
@@ -4243,8 +4243,8 @@ msgid "View Workspace"
 msgstr ""
 
 #: apps/workspaces/templates/workspaces/list_workspaces.html:33
-#: templates/includes/sidebar_app.html:80
-#: templates/includes/sidebar_app.html:82
+#: templates/includes/sidebar_app.html:81
+#: templates/includes/sidebar_app.html:83
 #: templates/includes/workspace_nav_items.html:9
 msgid "Settings"
 msgstr ""
@@ -4510,8 +4510,12 @@ msgstr ""
 msgid "Copyright"
 msgstr ""
 
-#: templates/includes/sidebar_app.html:91
-#: templates/includes/sidebar_app.html:93
+#: templates/includes/sidebar_app.html:16
+msgid "Toggle sidebar"
+msgstr ""
+
+#: templates/includes/sidebar_app.html:92
+#: templates/includes/sidebar_app.html:94
 #: templates/includes/workspace_nav_items.html:18
 msgid "Members"
 msgstr ""

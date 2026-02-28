@@ -1,0 +1,27 @@
+export default function issueList() {
+  return {
+    selectedCount: 0,
+    showBulkDeleteModal: false,
+    showBulkAssigneeModal: false,
+    showEditModal: false,
+    showActionModal: false,
+    showMoveModal: false,
+    showAddToSprintModal: false,
+    showConvertModal: false,
+    showPromoteModal: false,
+    showDeleteModal: false,
+    showCascadeModal: false,
+    showNewIssueModal: false,
+    showQuickViewModal: false,
+    newIssueModalTitle: '',
+    actionModalType: '',
+    actionModalTitle: '',
+    actionModalMessage: '',
+    actionModalConfirmText: '',
+    actionModalUrl: '',
+    assigneeConfirmStep: false,
+    selectedAssigneeName: '',
+    selectedAssigneeValue: '',
+    showFiltersModal: false,
+  };
+}

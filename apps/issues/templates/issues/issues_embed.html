@@ -2,7 +2,7 @@
 <div id="issues-embed">
   {% partialdef embed-content inline %}
   <section class="relative"
-           x-data="{ selectedCount: 0, showBulkDeleteModal: false, showBulkRemoveFromSprintModal: false, showBulkAddToSprintModal: false, showBulkAssigneeModal: false, showEditModal: false, showActionModal: false, showMoveModal: false, showAddToSprintModal: false, showConvertModal: false, showPromoteModal: false, showDeleteModal: false, showAddIssuesModal: false, showNewEpicModal: false, showNewIssueModal: false, showNewMilestoneModal: false, showQuickViewModal: false, newIssueModalTitle: '', actionModalType: '', actionModalTitle: '', actionModalMessage: '', actionModalConfirmText: '', actionModalUrl: '', assigneeConfirmStep: false, selectedAssigneeName: '', selectedAssigneeValue: '', sprintConfirmStep: false, selectedSprintName: '', selectedSprintValue: '', showFiltersModal: false }"
+           x-data="issuesEmbed()"
            @htmx:after-swap="selectedCount = document.querySelectorAll('#issues-embed [name=issues]:checked').length"
            @show-cascade-modal.document="showEditModal = false"
            @issue-created.window="showNewIssueModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#issues-embed', swap: 'innerHTML'})"

@@ -12,7 +12,8 @@
     </a>
     <!-- Desktop collapse toggle (hidden on mobile — mobile uses the navbar hamburger) -->
     <label for="sidebar-drawer"
-           class="hidden lg:flex btn btn-ghost btn-square text-primary-content shrink-0">
+           class="hidden lg:flex btn btn-ghost btn-square text-primary-content shrink-0 tooltip tooltip-right"
+           data-tip="{% translate 'Toggle sidebar' %}">
       <i class="fa fa-chevron-left is-drawer-open:rotate-0 is-drawer-close:rotate-180 transition-transform duration-300"></i>
     </label>
   </div>
@@ -25,8 +26,8 @@
          hx-get="{% url 'dashboard:home' workspace_slug=default_workspace.slug %}"
          hx-push-url="true"
          hx-target="#page-content"
-         class="is-drawer-close:tooltip is-drawer-close:tooltip-right text-primary-content hover:bg-primary-content/10"
-         data-tip="{% translate 'Home' %}">
+         class="text-primary-content hover:bg-primary-content/10"
+         title="{% translate 'Home' %}">
         <i class="fa fa-home w-5 text-center shrink-0"></i>
         <span class="is-drawer-close:hidden truncate">{% translate "Home" %}</span>
       </a>
@@ -36,8 +37,8 @@
          hx-get="{% url 'projects:project_list' workspace_slug=default_workspace.slug %}"
          hx-push-url="true"
          hx-target="#page-content"
-         class="is-drawer-close:tooltip is-drawer-close:tooltip-right text-primary-content hover:bg-primary-content/10"
-         data-tip="{% translate 'Projects' %}">
+         class="text-primary-content hover:bg-primary-content/10"
+         title="{% translate 'Projects' %}">
         <i class="fa fa-folder w-5 text-center shrink-0"></i>
         <span class="is-drawer-close:hidden truncate">{% translate "Projects" %}</span>
       </a>
@@ -47,8 +48,8 @@
          hx-get="{% url 'sprints:sprint_list' workspace_slug=default_workspace.slug %}"
          hx-push-url="true"
          hx-target="#page-content"
-         class="is-drawer-close:tooltip is-drawer-close:tooltip-right text-primary-content hover:bg-primary-content/10"
-         data-tip="{% translate 'Sprints' %}">
+         class="text-primary-content hover:bg-primary-content/10"
+         title="{% translate 'Sprints' %}">
         <i class="fa fa-circle-play w-5 text-center shrink-0"></i>
         <span class="is-drawer-close:hidden truncate">{% translate "Sprints" %}</span>
       </a>
@@ -58,8 +59,8 @@
          hx-get="{% url 'workspace_issue_list' workspace_slug=default_workspace.slug %}"
          hx-push-url="true"
          hx-target="#page-content"
-         class="is-drawer-close:tooltip is-drawer-close:tooltip-right text-primary-content hover:bg-primary-content/10"
-         data-tip="{% translate 'Issues' %}">
+         class="text-primary-content hover:bg-primary-content/10"
+         title="{% translate 'Issues' %}">
         <i class="fa fa-circle-exclamation w-5 text-center shrink-0"></i>
         <span class="is-drawer-close:hidden truncate">{% translate "Issues" %}</span>
       </a>
@@ -76,8 +77,8 @@
          hx-get="{% url 'workspaces:manage_workspace' default_workspace.slug %}"
          hx-push-url="true"
          hx-target="#page-content"
-         class="is-drawer-close:tooltip is-drawer-close:tooltip-right text-primary-content hover:bg-primary-content/10"
-         data-tip="{% translate 'Settings' %}">
+         class="text-primary-content hover:bg-primary-content/10"
+         title="{% translate 'Settings' %}">
         <i class="fa fa-gear w-5 text-center shrink-0"></i>
         <span class="is-drawer-close:hidden truncate">{% translate "Settings" %}</span>
       </a>
@@ -87,8 +88,8 @@
          hx-get="{% url 'workspaces:manage_workspace_members' default_workspace.slug %}"
          hx-push-url="true"
          hx-target="#page-content"
-         class="is-drawer-close:tooltip is-drawer-close:tooltip-right text-primary-content hover:bg-primary-content/10"
-         data-tip="{% translate 'Members' %}">
+         class="text-primary-content hover:bg-primary-content/10"
+         title="{% translate 'Members' %}">
         <i class="fa fa-users w-5 text-center shrink-0"></i>
         <span class="is-drawer-close:hidden truncate">{% translate "Members" %}</span>
       </a>
@@ -100,8 +101,8 @@
          hx-get="{% url 'workspaces:manage_workspaces' %}"
          hx-push-url="true"
          hx-target="#page-content"
-         class="is-drawer-close:tooltip is-drawer-close:tooltip-right text-primary-content hover:bg-primary-content/10"
-         data-tip="{% translate 'My Workspaces' %}">
+         class="text-primary-content hover:bg-primary-content/10"
+         title="{% translate 'My Workspaces' %}">
         <i class="fa fa-building w-5 text-center shrink-0"></i>
         <span class="is-drawer-close:hidden truncate">{% translate "My Workspaces" %}</span>
       </a>
@@ -115,8 +116,7 @@
   <div class="border-t border-primary-content/20 py-1">
     <div class="dropdown dropdown-top w-full">
       <div tabindex="0" role="button"
-           class="flex items-center gap-2 px-4 py-2 rounded-lg w-full cursor-pointer text-sm text-primary-content hover:bg-primary-content/10 is-drawer-close:tooltip is-drawer-close:tooltip-right"
-           data-tip="{{ user.get_display_name }}"
+           class="flex items-center gap-2 px-4 py-2 rounded-lg w-full cursor-pointer text-sm text-primary-content hover:bg-primary-content/10"
            title="{{ user.get_display_name }}">
         <i class="fa fa-user w-5 text-center shrink-0"></i>
         <span class="is-drawer-close:hidden truncate">{{ user.get_display_name }}</span>
