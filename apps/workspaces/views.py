@@ -11,6 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 from django.views.generic import DetailView
 
+from apps.dashboard.helpers import get_onboarding_status
 from apps.users.models import User
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
@@ -45,6 +46,7 @@ class WorkspaceDetailView(LoginAndWorkspaceRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context["page_title"] = self.object.name
         context["active_tab"] = "workspaces"
+        context["onboarding"] = get_onboarding_status(self.request.user, self.object)
         return context
 
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-27 16:40+0000\n"
+"POT-Creation-Date: 2026-02-27 17:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -4105,7 +4105,7 @@ msgstr ""
 
 #: apps/workspaces/templates/workspaces/create_workspace.html:7
 #: apps/workspaces/templates/workspaces/create_workspace.html:12
-#: apps/workspaces/views.py:257
+#: apps/workspaces/views.py:259
 msgid "Create Workspace"
 msgstr ""
 
@@ -4217,7 +4217,7 @@ msgid "Invite Workspace Members"
 msgstr ""
 
 #: apps/workspaces/templates/workspaces/list_workspaces.html:8
-#: apps/workspaces/views.py:60 templates/includes/sidebar_app.html:92
+#: apps/workspaces/views.py:62 templates/includes/sidebar_app.html:92
 #: templates/includes/sidebar_app.html:94
 #: templates/includes/workspace_nav_items.html:32
 msgid "My Workspaces"
@@ -4290,91 +4290,91 @@ msgstr ""
 msgid "Remove from Workspace"
 msgstr ""
 
-#: apps/workspaces/views.py:74
+#: apps/workspaces/views.py:76
 #, python-brace-format
 msgid ""
 "It looks like you're already a member of the {workspace} workspace. You've "
 "been redirected."
 msgstr ""
 
-#: apps/workspaces/views.py:82
+#: apps/workspaces/views.py:84
 msgid "Please log in again to accept your invitation."
 msgstr ""
 
-#: apps/workspaces/views.py:86 apps/workspaces/views.py:124
+#: apps/workspaces/views.py:88 apps/workspaces/views.py:126
 msgid "Sorry, it looks like that invitation link has expired."
 msgstr ""
 
-#: apps/workspaces/views.py:93
+#: apps/workspaces/views.py:95
 msgid "You successfully joined {}"
 msgstr ""
 
-#: apps/workspaces/views.py:159
+#: apps/workspaces/views.py:161
 msgid "Workspace details saved!"
 msgstr ""
 
-#: apps/workspaces/views.py:164
+#: apps/workspaces/views.py:166
 msgid "Sorry you don't have permission to do that."
 msgstr ""
 
-#: apps/workspaces/views.py:178
+#: apps/workspaces/views.py:180
 #, python-brace-format
 msgid "My Workspace | {workspace}"
 msgstr ""
 
-#: apps/workspaces/views.py:199
+#: apps/workspaces/views.py:201
 #, python-brace-format
 msgid "Members | {workspace}"
 msgstr ""
 
-#: apps/workspaces/views.py:219
+#: apps/workspaces/views.py:221
 msgid ""
 "You cannot delete your only workspace. Create a new workspace first, or "
 "delete your workspace and account together."
 msgstr ""
 
-#: apps/workspaces/views.py:229
+#: apps/workspaces/views.py:231
 msgid "Your workspace and account have been permanently deleted."
 msgstr ""
 
-#: apps/workspaces/views.py:235
+#: apps/workspaces/views.py:237
 #, python-brace-format
 msgid "The \"{workspace}\" workspace was successfully deleted"
 msgstr ""
 
-#: apps/workspaces/views.py:248
+#: apps/workspaces/views.py:250
 #, python-brace-format
 msgid "Workspace \"{name}\" created!"
 msgstr ""
 
-#: apps/workspaces/views.py:322
+#: apps/workspaces/views.py:324
 msgid "Sorry, you don't have permission to access that page."
 msgstr ""
 
-#: apps/workspaces/views.py:327
+#: apps/workspaces/views.py:329
 msgid "You don't have permission to edit workspace members."
 msgstr ""
 
-#: apps/workspaces/views.py:329
+#: apps/workspaces/views.py:331
 msgid "You aren't allowed to change your own role."
 msgstr ""
 
-#: apps/workspaces/views.py:337
+#: apps/workspaces/views.py:339
 #, python-brace-format
 msgid "Role for {member} updated."
 msgstr ""
 
-#: apps/workspaces/views.py:363
+#: apps/workspaces/views.py:365
 msgid "You don't have permission to remove others from that workspace."
 msgstr ""
 
-#: apps/workspaces/views.py:370
+#: apps/workspaces/views.py:372
 msgid ""
 "You cannot remove the only administrator from a workspace. Make another "
 "workspace member an administrator and try again."
 msgstr ""
 
-#: apps/workspaces/views.py:378
+#: apps/workspaces/views.py:380
 #, python-brace-format
 msgid "{member} was removed from {workspace}."
 msgstr ""

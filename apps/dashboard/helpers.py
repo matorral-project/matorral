@@ -89,10 +89,10 @@ def get_onboarding_status(user, workspace):
             else reverse("projects:project_list", kwargs={"workspace_slug": workspace.slug})
         )
         project_list_url = reverse("projects:project_list", kwargs={"workspace_slug": workspace.slug})
-        settings_url = reverse("workspaces:manage_workspace", kwargs={"workspace_slug": workspace.slug})
+        members_url = reverse("workspaces:manage_workspace_members", kwargs={"workspace_slug": workspace.slug})
         sprint_list_url = reverse("sprints:sprint_list", kwargs={"workspace_slug": workspace.slug})
     else:
-        demo_url = project_list_url = settings_url = sprint_list_url = None
+        demo_url = project_list_url = members_url = sprint_list_url = None
 
     steps = [
         {
@@ -120,7 +120,7 @@ def get_onboarding_status(user, workspace):
             "icon": "fa-user-plus",
             "completed": (Invitation.objects.filter(workspace=workspace).exists() if workspace else False),
             "optional": True,
-            "url": settings_url,
+            "url": members_url,
         },
         {
             "key": "create_sprint",
