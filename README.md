@@ -49,10 +49,11 @@ An example demo instance is available at **[matorral.matagus.dev](https://matorr
 ```bash
 git clone https://github.com/matorral-project/matorral.git
 cd matorral
+cp .env.example .env   # review and set required variables (e.g. SECRET_KEY)
 just init
 ```
 
-This copies `.env.example` to `.env`, builds the containers, runs migrations, and seeds the database. Then:
+This starts the containers and runs migrations. Then:
 
 ```bash
 just start              # start with logs
@@ -74,7 +75,7 @@ just stop
 
 ## Configuration
 
-Copy `.env.example` to `.env` and adjust the values as needed. Key settings:
+Adjust `.env` values as needed. Key settings:
 
 | Variable | Description |
 |---|---|
