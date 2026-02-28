@@ -31,3 +31,5 @@ coverage.*
 
 .claude/settings.local.json
 openapitools.json
+
+scripts/
