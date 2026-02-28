@@ -2,10 +2,6 @@
 default:
     @just --list
 
-# Initialize local environment variables from .env.example
-setup-env:
-    [ ! -f ./.env ] && cp ./.env.example ./.env || echo ".env file already exists."
-
 # Start all Docker containers in the foreground
 start:
     echo "Starting the docker containers"
@@ -17,6 +13,9 @@ stop:
 
 # Restart all Docker containers
 restart: stop start
+
+# Restart all Docker containers in detached mode (background)
+restart-detached: stop start-detached
 
 # Start all Docker containers in detached mode (background)
 start-detached:
@@ -85,8 +84,8 @@ cov *args:
     just test-cov {{args}}
     just cov-report
 
-# Bootstrap the project: set up environment, start containers, and apply migrations
-init: setup-env start-detached make-migrations migrate
+# Bootstrap the project: start containers and apply migrations
+init: start-detached make-migrations migrate
 
 # Rebuild Docker images and restart containers in the background
 requirements: build stop start-detached

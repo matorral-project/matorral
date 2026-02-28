@@ -234,13 +234,6 @@ AUTHENTICATION_BACKENDS = (
 
 SOCIALACCOUNT_PROVIDERS = {
     "github": {
-        "APPS": [
-            {
-                "client_id": env("GITHUB_CLIENT_ID", default=""),
-                "secret": env("GITHUB_SECRET_ID", default=""),
-                "key": "",
-            },
-        ],
         "SCOPE": [
             "user",
         ],

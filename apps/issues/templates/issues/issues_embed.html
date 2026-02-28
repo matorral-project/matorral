@@ -2,20 +2,23 @@
 <div id="issues-embed">
   {% partialdef embed-content inline %}
   <section class="relative"
-           x-data="{ selectedCount: 0, showBulkDeleteModal: false, showBulkRemoveFromSprintModal: false, showBulkAddToSprintModal: false, showBulkAssigneeModal: false, showEditModal: false, showActionModal: false, showMoveModal: false, showAddToSprintModal: false, showConvertModal: false, showPromoteModal: false, showDeleteModal: false, showAddIssuesModal: false, showNewEpicModal: false, showNewIssueModal: false, showNewMilestoneModal: false, showQuickViewModal: false, newIssueModalTitle: '', actionModalType: '', actionModalTitle: '', actionModalMessage: '', actionModalConfirmText: '', actionModalUrl: '', assigneeConfirmStep: false, selectedAssigneeName: '', selectedAssigneeValue: '', sprintConfirmStep: false, selectedSprintName: '', selectedSprintValue: '', showFiltersModal: false }"
+           x-data="issuesEmbed()"
            @htmx:after-swap="selectedCount = document.querySelectorAll('#issues-embed [name=issues]:checked').length"
            @show-cascade-modal.document="showEditModal = false"
            @issue-created.window="showNewIssueModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#issues-embed', swap: 'innerHTML'})"
            @epic-created.window="showNewEpicModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#issues-embed', swap: 'innerHTML'})"
            @milestone-created.window="showNewMilestoneModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#issues-embed', swap: 'innerHTML'})"
            @filters-apply="
-             document.getElementById('embed-filters-status').value = $event.detail.status || '';
-             document.getElementById('embed-filters-type').value = $event.detail.type || '';
-             document.getElementById('embed-filters-priority').value = $event.detail.priority || '';
-             document.getElementById('embed-filters-assignee').value = $event.detail.assignee || '';
-             document.getElementById('embed-filters-sprint').value = $event.detail.sprint || '';
-             document.getElementById('embed-filters-sort-by').value = $event.detail.sort_by || '';
-             $nextTick(() => document.getElementById('embed-filters-trigger').click());
+             htmx.ajax('GET', '{{ embed_url }}?' + new URLSearchParams({
+               status: $event.detail.status || '',
+               type: $event.detail.type || '',
+               priority: $event.detail.priority || '',
+               assignee: $event.detail.assignee || '',
+               sprint: $event.detail.sprint || '',
+               sort_by: $event.detail.sort_by || '',
+               group_by: '{{ group_by|default:"" }}',
+               search: '{{ search_query|default:"" }}'
+             }).toString(), {target: '#issues-embed', swap: 'innerHTML'})
            ">
     <div class="flex justify-between items-center pb-4 sticky top-0 z-10 bg-base-100">
       <div class="flex items-center gap-4">
@@ -32,22 +35,6 @@
             {% if active_filter_count %}
             <span class="badge badge-sm">{{ active_filter_count }}</span>
             {% endif %}
-          </button>
-          <input type="hidden" id="embed-filters-status" value="{{ status_filter|default:"" }}">
-          <input type="hidden" id="embed-filters-type" value="{{ type_filter|default:"" }}">
-          <input type="hidden" id="embed-filters-priority" value="{{ priority_filter|default:"" }}">
-          <input type="hidden" id="embed-filters-assignee" value="{{ assignee_filter|default:"" }}">
-          <input type="hidden" id="embed-filters-sprint" value="{{ sprint_filter|default:"" }}">
-          <input type="hidden" id="embed-filters-group-by" value="{{ group_by|default:"" }}">
-          <input type="hidden" id="embed-filters-sort-by" value="{{ sort_by|default:"" }}">
-          <button type="button"
-                  id="embed-filters-trigger"
-                  class="hidden"
-                  hx-get="{{ embed_url }}"
-                  hx-vals='js:{"status": document.getElementById("embed-filters-status").value, "type": document.getElementById("embed-filters-type").value, "priority": document.getElementById("embed-filters-priority").value, "assignee": document.getElementById("embed-filters-assignee").value, "sprint": document.getElementById("embed-filters-sprint").value, "group_by": document.getElementById("embed-filters-group-by").value, "sort_by": document.getElementById("embed-filters-sort-by").value, "search": "{{ search_query|default:"" }}"}'
-                  hx-target="#issues-embed"
-                  hx-swap="innerHTML"
-                  hx-indicator="#embed-list-loading">
           </button>
           {% if active_filter_count %}
           <button type="button"
@@ -76,7 +63,7 @@
               <li>
                 <button type="button"
                         {% if not group_by %}class="active"{% endif %}
-                        @click="document.getElementById('embed-filters-group-by').value = ''; $nextTick(() => document.getElementById('embed-filters-trigger').click()); document.activeElement.blur()">
+                        @click="htmx.ajax('GET', '{{ embed_url }}?' + new URLSearchParams({status: '{{ status_filter|default:"" }}', type: '{{ type_filter|default:"" }}', priority: '{{ priority_filter|default:"" }}', assignee: '{{ assignee_filter|default:"" }}', sprint: '{{ sprint_filter|default:"" }}', sort_by: '{{ sort_by|default:"" }}', group_by: '', search: '{{ search_query|default:"" }}'}).toString(), {target: '#issues-embed', swap: 'innerHTML'}); document.activeElement.blur()">
                   {% translate "None" %}
                 </button>
               </li>
@@ -84,7 +71,7 @@
               <li>
                 <button type="button"
                         {% if group_by == group_value %}class="active"{% endif %}
-                        @click="document.getElementById('embed-filters-group-by').value = '{{ group_value }}'; $nextTick(() => document.getElementById('embed-filters-trigger').click()); document.activeElement.blur()">
+                        @click="htmx.ajax('GET', '{{ embed_url }}?' + new URLSearchParams({status: '{{ status_filter|default:"" }}', type: '{{ type_filter|default:"" }}', priority: '{{ priority_filter|default:"" }}', assignee: '{{ assignee_filter|default:"" }}', sprint: '{{ sprint_filter|default:"" }}', sort_by: '{{ sort_by|default:"" }}', group_by: '{{ group_value }}', search: '{{ search_query|default:"" }}'}).toString(), {target: '#issues-embed', swap: 'innerHTML'}); document.activeElement.blur()">
                   {{ group_label }}
                 </button>
               </li>
@@ -105,7 +92,7 @@
               <li>
                 <button type="button"
                         {% if not sort_by %}class="active"{% endif %}
-                        @click="document.getElementById('embed-filters-sort-by').value = ''; $nextTick(() => document.getElementById('embed-filters-trigger').click()); document.activeElement.blur()">
+                        @click="htmx.ajax('GET', '{{ embed_url }}?' + new URLSearchParams({status: '{{ status_filter|default:"" }}', type: '{{ type_filter|default:"" }}', priority: '{{ priority_filter|default:"" }}', assignee: '{{ assignee_filter|default:"" }}', sprint: '{{ sprint_filter|default:"" }}', sort_by: '', group_by: '{{ group_by|default:"" }}', search: '{{ search_query|default:"" }}'}).toString(), {target: '#issues-embed', swap: 'innerHTML'}); document.activeElement.blur()">
                   {% translate "Default" %}
                 </button>
               </li>
@@ -113,7 +100,7 @@
               <li>
                 <button type="button"
                         {% if sort_by == sort_value %}class="active"{% endif %}
-                        @click="document.getElementById('embed-filters-sort-by').value = '{{ sort_value }}'; $nextTick(() => document.getElementById('embed-filters-trigger').click()); document.activeElement.blur()">
+                        @click="htmx.ajax('GET', '{{ embed_url }}?' + new URLSearchParams({status: '{{ status_filter|default:"" }}', type: '{{ type_filter|default:"" }}', priority: '{{ priority_filter|default:"" }}', assignee: '{{ assignee_filter|default:"" }}', sprint: '{{ sprint_filter|default:"" }}', sort_by: '{{ sort_value }}', group_by: '{{ group_by|default:"" }}', search: '{{ search_query|default:"" }}'}).toString(), {target: '#issues-embed', swap: 'innerHTML'}); document.activeElement.blur()">
                   {{ sort_label }}
                 </button>
               </li>
@@ -734,7 +721,7 @@
     {% with embed_modal_content_id=embed_modal_prefix|add:"quick-view-modal-content" %}{% include "includes/quick_view_modal.html" %}{% endwith %}
     <div class="hidden"
          hx-get="{{ embed_url }}"
-         hx-vals='js:{"status": document.getElementById("embed-filters-status").value, "type": document.getElementById("embed-filters-type").value, "priority": document.getElementById("embed-filters-priority").value, "assignee": document.getElementById("embed-filters-assignee").value, "sprint": document.getElementById("embed-filters-sprint").value, "group_by": document.getElementById("embed-filters-group-by").value, "sort_by": document.getElementById("embed-filters-sort-by").value, "search": "{{ search_query|default:"" }}"}'
+         hx-vals='{"status": "{{ status_filter|default:"" }}", "type": "{{ type_filter|default:"" }}", "priority": "{{ priority_filter|default:"" }}", "assignee": "{{ assignee_filter|default:"" }}", "sprint": "{{ sprint_filter|default:"" }}", "group_by": "{{ group_by|default:"" }}", "sort_by": "{{ sort_by|default:"" }}", "search": "{{ search_query|default:"" }}"}'
          hx-target="#issues-embed"
          hx-swap="innerHTML"
          hx-trigger="issueChanged from:body">

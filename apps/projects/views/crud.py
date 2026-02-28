@@ -245,6 +245,16 @@ class ProjectCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Projec
 
     template_name = "projects/project_form.html"
 
+    def is_modal(self):
+        return self.request.GET.get("modal") == "1"
+
+    def get_template_names(self):
+        if self.is_modal():
+            return ["projects/includes/project_form_modal.html"]
+        if self.request.htmx:
+            return [f"{self.template_name}#page-content"]
+        return [self.template_name]
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["page_title"] = _("New Project")
@@ -256,6 +266,23 @@ class ProjectCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Projec
         self.object.created_by = self.request.user
         self.object.save()
         messages.success(self.request, _("Project created successfully."))
+
+        if self.is_modal():
+            list_url = reverse("projects:project_list", kwargs={"workspace_slug": self.workspace.slug})
+            messages_html = render_to_string(
+                "includes/messages.html",
+                {"messages": messages.get_messages(self.request)},
+                request=self.request,
+            )
+            messages_div = (
+                f'<div id="messages" class="toast toast-end toast-bottom z-50" hx-swap-oob="true">{messages_html}</div>'
+            )
+            script = (
+                "<script>window.dispatchEvent(new CustomEvent('project-created', "
+                "{ detail: { listUrl: '" + list_url + "' } }));</script>"
+            )
+            return HttpResponse(messages_div + script)
+
         return redirect(self.object.get_absolute_url())
 
 

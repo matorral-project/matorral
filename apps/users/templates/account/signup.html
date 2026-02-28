@@ -18,6 +18,12 @@
         <h2 class="mt-6 text-center text-2xl font-bold text-base-content">
           {% translate "Sign Up" %}
         </h2>
+        <div class="text-sm text-center mt-2">
+          {% translate "Already have account?" %}
+          <a href="{% url 'account_login' %}" class="font-medium mt-link">
+            {% translate "Sign in." %}
+          </a>
+        </div>
         <form class="mt-6 space-y-6" method="post">
           {% csrf_token %}
           {{ form.non_field_errors }}
@@ -39,12 +45,6 @@
           <input class="btn btn-primary btn-block" type="submit" value="{% translate "Sign Up" %}">
         </form>
         {% include 'accounts/includes/social/social_buttons.html' %}
-        <div class="text-sm mt-4">
-          {% translate "Already have account?" %}
-          <a href="{% url 'account_login' %}" class="font-medium mt-link">
-            {% translate "Sign in." %}
-          </a>
-        </div>
       </div>
     </div>
   </div>

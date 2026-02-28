@@ -2,11 +2,12 @@
 {% load i18n %}
 {% load static %}
 {% block app_content_content %}
-<div id="page-content" hx-target="#page-content"
+{% partialdef page-content inline %}
+<div id="dashboard-content" hx-target="#dashboard-content"
      hx-get="{% url 'dashboard:home' workspace.slug %}"
      hx-trigger="dashboard-updated from:body"
      hx-swap="innerHTML">
-  {% partialdef page-content inline %}
+  {% partialdef dashboard-content inline %}
   {% if onboarding.should_show %}
   <section class="app-card mt-4">
     {% include "dashboard/includes/onboarding_checklist.html" %}
@@ -151,6 +152,7 @@
 
   {% endif %}{# end onboarding check #}
 
-  {% endpartialdef page-content %}
+  {% endpartialdef dashboard-content %}
 </div>
+{% endpartialdef page-content %}
 {% endblock %}

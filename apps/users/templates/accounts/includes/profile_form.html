@@ -22,7 +22,11 @@
   </div>
   <div id="profile-picture" class="mt-column-one-quarter">
     <div class="mt-text-centered">
-      <img class="avatar" src="{{ user.avatar_url }}">
+      <div class="avatar">
+        <div class="ring-primary ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
+          <img src="{{ user.avatar_url }}" />
+        </div>
+      </div>
       <div id='profile-upload-holder'>
         <label for="profile-upload" >
           <a id="profile-upload-label" class="mt-button-light">

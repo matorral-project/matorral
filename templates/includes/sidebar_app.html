@@ -1,0 +1,163 @@
+{% load i18n %}
+{% load waffle_tags %}
+<div class="flex min-h-full flex-col bg-primary text-primary-content
+            is-drawer-close:w-14 is-drawer-open:w-64 transition-[width] duration-300 overflow-hidden">
+
+  <!-- Header: Logo/branding + desktop toggle button -->
+  <div class="flex items-center px-2 py-3 min-h-16 gap-2">
+    <a href="{% url 'landing_pages:home' %}"
+       class="is-drawer-close:hidden flex-1 text-2xl font-bold truncate text-secondary pl-4">
+      {{ site.name }}
+      {% if env_badge %}<span class="badge badge-neutral badge-xs ml-1">{{ env_badge }}</span>{% endif %}
+    </a>
+    <!-- Desktop collapse toggle (hidden on mobile — mobile uses the navbar hamburger) -->
+    <label for="sidebar-drawer"
+           class="hidden lg:flex btn btn-ghost btn-square text-primary-content shrink-0 tooltip tooltip-right"
+           data-tip="{% translate 'Toggle sidebar' %}">
+      <i class="fa fa-chevron-left is-drawer-open:rotate-0 is-drawer-close:rotate-180 transition-transform duration-300"></i>
+    </label>
+  </div>
+
+  <!-- Main navigation -->
+  <ul class="menu flex-1 px-2 gap-1 overflow-y-auto overflow-x-hidden w-full">
+    {% if default_workspace %}
+    <li>
+      <a href="{% url 'dashboard:home' workspace_slug=default_workspace.slug %}"
+         hx-get="{% url 'dashboard:home' workspace_slug=default_workspace.slug %}"
+         hx-push-url="true"
+         hx-target="#page-content"
+         class="text-primary-content hover:bg-primary-content/10"
+         title="{% translate 'Home' %}">
+        <i class="fa fa-home w-5 text-center shrink-0"></i>
+        <span class="is-drawer-close:hidden truncate">{% translate "Home" %}</span>
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'projects:project_list' workspace_slug=default_workspace.slug %}"
+         hx-get="{% url 'projects:project_list' workspace_slug=default_workspace.slug %}"
+         hx-push-url="true"
+         hx-target="#page-content"
+         class="text-primary-content hover:bg-primary-content/10"
+         title="{% translate 'Projects' %}">
+        <i class="fa fa-folder w-5 text-center shrink-0"></i>
+        <span class="is-drawer-close:hidden truncate">{% translate "Projects" %}</span>
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'sprints:sprint_list' workspace_slug=default_workspace.slug %}"
+         hx-get="{% url 'sprints:sprint_list' workspace_slug=default_workspace.slug %}"
+         hx-push-url="true"
+         hx-target="#page-content"
+         class="text-primary-content hover:bg-primary-content/10"
+         title="{% translate 'Sprints' %}">
+        <i class="fa fa-circle-play w-5 text-center shrink-0"></i>
+        <span class="is-drawer-close:hidden truncate">{% translate "Sprints" %}</span>
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'workspace_issue_list' workspace_slug=default_workspace.slug %}"
+         hx-get="{% url 'workspace_issue_list' workspace_slug=default_workspace.slug %}"
+         hx-push-url="true"
+         hx-target="#page-content"
+         class="text-primary-content hover:bg-primary-content/10"
+         title="{% translate 'Issues' %}">
+        <i class="fa fa-circle-exclamation w-5 text-center shrink-0"></i>
+        <span class="is-drawer-close:hidden truncate">{% translate "Issues" %}</span>
+      </a>
+    </li>
+
+    <!-- Workspace section -->
+    <li class="is-drawer-close:hidden menu-title mt-2">
+      <span class="text-primary-content/60 text-xs uppercase tracking-wider">
+        {{ default_workspace.name }}
+      </span>
+    </li>
+    <li>
+      <a href="{% url 'workspaces:manage_workspace' default_workspace.slug %}"
+         hx-get="{% url 'workspaces:manage_workspace' default_workspace.slug %}"
+         hx-push-url="true"
+         hx-target="#page-content"
+         class="text-primary-content hover:bg-primary-content/10"
+         title="{% translate 'Settings' %}">
+        <i class="fa fa-gear w-5 text-center shrink-0"></i>
+        <span class="is-drawer-close:hidden truncate">{% translate "Settings" %}</span>
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'workspaces:manage_workspace_members' default_workspace.slug %}"
+         hx-get="{% url 'workspaces:manage_workspace_members' default_workspace.slug %}"
+         hx-push-url="true"
+         hx-target="#page-content"
+         class="text-primary-content hover:bg-primary-content/10"
+         title="{% translate 'Members' %}">
+        <i class="fa fa-users w-5 text-center shrink-0"></i>
+        <span class="is-drawer-close:hidden truncate">{% translate "Members" %}</span>
+      </a>
+    </li>
+    {% endif %}
+    {% if user.is_authenticated %}
+    <li>
+      <a href="{% url 'workspaces:manage_workspaces' %}"
+         hx-get="{% url 'workspaces:manage_workspaces' %}"
+         hx-push-url="true"
+         hx-target="#page-content"
+         class="text-primary-content hover:bg-primary-content/10"
+         title="{% translate 'My Workspaces' %}">
+        <i class="fa fa-building w-5 text-center shrink-0"></i>
+        <span class="is-drawer-close:hidden truncate">{% translate "My Workspaces" %}</span>
+      </a>
+    </li>
+
+    {% endif %}
+  </ul>
+
+  <!-- User section at bottom -->
+  {% if user.is_authenticated %}
+  <div class="border-t border-primary-content/20 py-1">
+    <div class="dropdown dropdown-top w-full">
+      <div tabindex="0" role="button"
+           class="flex items-center gap-2 px-4 py-2 rounded-lg w-full cursor-pointer text-sm text-primary-content hover:bg-primary-content/10"
+           title="{{ user.get_display_name }}">
+        <i class="fa fa-user w-5 text-center shrink-0"></i>
+        <span class="is-drawer-close:hidden truncate">{{ user.get_display_name }}</span>
+      </div>
+      <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-50 w-52 p-2 shadow-md text-base-content mb-2">
+        <li>
+          <a href="{% url 'users:user_profile' %}">
+            <i class="fa fa-user h-4 w-4"></i>{% translate "Profile" %}
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'users:connected_accounts' %}">
+            <i class="fa fa-link h-4 w-4"></i>{% translate "Connected Accounts" %}
+          </a>
+        </li>
+        {% if user.has_usable_password %}
+        <li>
+          <a href="{% url 'account_change_password' %}">
+            <i class="fa fa-unlock-alt h-4 w-4"></i>{% translate "Change Password" %}
+          </a>
+        </li>
+        {% endif %}
+        {% if user.is_superuser %}
+        <li>
+          <a href="{% url 'admin:index' %}" target="_blank" rel="noopener noreferrer">
+            <i class="fa fa-cogs h-4 w-4"></i>{% translate "Django Admin" %}
+          </a>
+        </li>
+        {% endif %}
+        <li>
+          <a href="https://github.com/matorral-project/matorral/issues" target="_blank" rel="noopener noreferrer">
+            <i class="fa fa-bug h-4 w-4"></i>{% translate "Report an Issue" %}
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'account_logout' %}">
+            <i class="fa fa-sign-out h-4 w-4"></i>{% translate "Sign out" %}
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  {% endif %}
+</div>

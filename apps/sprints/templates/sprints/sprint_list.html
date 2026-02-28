@@ -4,11 +4,15 @@
 <div id="page-content" hx-target="#page-content">
   {% partialdef page-content inline %}
   <section class="app-card relative"
-           x-data="{ selectedCount: 0, showBulkDeleteModal: false, showBulkOwnerModal: false, ownerConfirmStep: false, selectedOwnerName: '', selectedOwnerValue: '', showFiltersModal: false }"
+           x-data="sprintList()"
            @filters-apply.window="
-             document.getElementById('sprint-filters-status').value = $event.detail.status || '';
-             document.getElementById('sprint-filters-owner').value = $event.detail.owner || '';
-             $nextTick(() => document.getElementById('sprint-filters-trigger').click());
+             let u = '{% url 'sprints:sprint_list' workspace.slug %}?' + new URLSearchParams({
+               status: $event.detail.status || '',
+               owner: $event.detail.owner || '',
+               search: '{{ search_query|default:"" }}'
+             }).toString();
+             window.history.pushState(null, '', u);
+             htmx.ajax('GET', u, {target: '#page-content', swap: 'innerHTML'})
            ">
     <div class="flex justify-between items-center pb-4 sticky top-0 z-10 bg-base-100">
       <div class="flex items-center gap-4">
@@ -26,18 +30,6 @@
             {% if active_filter_count %}
             <span class="badge badge-sm">{{ active_filter_count }}</span>
             {% endif %}
-          </button>
-          <input type="hidden" id="sprint-filters-status" value="{{ status_filter|default:"" }}">
-          <input type="hidden" id="sprint-filters-owner" value="{{ owner_filter|default:"" }}">
-          <button type="button"
-                  id="sprint-filters-trigger"
-                  class="hidden"
-                  hx-get="{% url 'sprints:sprint_list' workspace.slug %}"
-                  hx-vals='js:{"status": document.getElementById("sprint-filters-status").value, "owner": document.getElementById("sprint-filters-owner").value, "search": "{{ search_query|default:"" }}"}'
-                  hx-target="#page-content"
-                  hx-swap="innerHTML"
-                  hx-indicator="#list-loading"
-                  hx-push-url="true">
           </button>
           {% if active_filter_count %}
           <button type="button"

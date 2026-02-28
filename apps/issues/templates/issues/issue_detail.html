@@ -94,6 +94,7 @@
                 <a href="{{ child.get_absolute_url }}"
                    hx-get="{{ child.get_absolute_url }}"
                    hx-push-url="true"
+                   hx-target="#page-content"
                    class="font-mono font-semibold">
                   {{ child.key }}
                 </a>
@@ -102,7 +103,8 @@
               <td>
                 <a href="{{ child.get_absolute_url }}"
                    hx-get="{{ child.get_absolute_url }}"
-                   hx-push-url="true">
+                   hx-push-url="true"
+                   hx-target="#page-content">
                   {{ child.title }}
                 </a>
               </td>

@@ -6,43 +6,43 @@
 @plugin "@tailwindcss/typography";
 @plugin "daisyui";
 
-/* Custom light theme - green, black and gray palette */
+/* Custom light theme - nature-inspired earthy greens palette */
 @plugin "daisyui/theme" {
   name: "light";
   default: true;
   color-scheme: light;
 
-  /* Base surfaces - neutral grays */
-  --color-base-100: oklch(0.99 0.002 264);     /* #fafbfc - main background */
-  --color-base-200: oklch(0.96 0.004 264);      /* #f0f2f5 - elevated surfaces */
-  --color-base-300: oklch(0.92 0.006 264);      /* #e1e4e8 - borders, dividers */
-  --color-base-content: oklch(0.27 0.015 264);  /* #24292f - primary text */
+  /* Base surfaces - warm white → cream → Dust Grey progression */
+  --color-base-100: oklch(0.99 0.002 84);        /* warm white - main background */
+  --color-base-200: oklch(0.97 0.006 84);        /* warm cream tinted with Dust Grey - elevated surfaces */
+  --color-base-300: oklch(0.877 0.009 84);       /* #dad7cd - Dust Grey - borders, dividers */
+  --color-base-content: oklch(0.329 0.056 159);  /* #344e41 - Pine Teal - primary text */
 
-  /* Primary - forest green */
-  --color-primary: oklch(0.45 0.15 150);         /* green */
-  --color-primary-content: oklch(0.99 0.002 264); /* white text on primary */
+  /* Primary - Fern (#588157) */
+  --color-primary: oklch(0.518 0.088 142);        /* #588157 - Fern */
+  --color-primary-content: oklch(0.97 0.006 84);  /* warm cream text on primary */
 
-  /* Secondary - cool slate gray */
-  --color-secondary: oklch(0.45 0.03 264);        /* gray-600 equivalent */
-  --color-secondary-content: oklch(0.99 0.002 264);
+  /* Secondary - Dry Sage (#a3b18a) */
+  --color-secondary: oklch(0.723 0.062 127);      /* #a3b18a - Dry Sage */
+  --color-secondary-content: oklch(0.329 0.056 159); /* Pine Teal text on sage */
 
-  /* Accent - lighter green */
-  --color-accent: oklch(0.55 0.12 150);           /* light green */
-  --color-accent-content: oklch(0.99 0.002 264);
+  /* Accent - Hunter Green (#3a5a40) */
+  --color-accent: oklch(0.375 0.071 151);         /* #3a5a40 - Hunter Green */
+  --color-accent-content: oklch(0.97 0.006 84);   /* warm cream text on hunter green */
 
-  /* Neutral - dark charcoal/black */
-  --color-neutral: oklch(0.20 0.015 264);         /* near black */
-  --color-neutral-content: oklch(0.96 0.004 264);
+  /* Neutral - Pine Teal (#344e41) */
+  --color-neutral: oklch(0.329 0.056 159);        /* #344e41 - Pine Teal */
+  --color-neutral-content: oklch(0.877 0.009 84); /* Dust Grey text on neutral */
 
-  /* Info - green */
-  --color-info: oklch(0.55 0.14 150);
-  --color-info-content: oklch(0.99 0.002 264);
+  /* Info - Dry Sage (#a3b18a) */
+  --color-info: oklch(0.723 0.062 127);           /* #a3b18a - Dry Sage */
+  --color-info-content: oklch(0.329 0.056 159);   /* Pine Teal text on info */
 
-  /* Success - green */
-  --color-success: oklch(0.50 0.14 150);
-  --color-success-content: oklch(0.99 0.002 264);
+  /* Success - Hunter Green (#3a5a40) — darker/settled, distinct from in-progress Fern */
+  --color-success: oklch(0.375 0.071 151);        /* #3a5a40 - Hunter Green */
+  --color-success-content: oklch(0.97 0.006 84);  /* warm cream text on success */
 
-  /* Warning - amber */
+  /* Warning - amber (kept for semantic meaning) */
   --color-warning: oklch(0.75 0.15 75);
   --color-warning-content: oklch(0.25 0.02 75);
 

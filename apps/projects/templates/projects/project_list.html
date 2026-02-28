@@ -4,13 +4,18 @@
 <div id="page-content" hx-target="#page-content">
   {% partialdef page-content inline %}
   <section class="app-card relative"
-           x-data="{ selectedCount: 0, showBulkDeleteModal: false, showBulkLeadModal: false, showCascadeModal: false, leadConfirmStep: false, selectedLeadName: '', selectedLeadValue: '', showFiltersModal: false }"
+           x-data="projectList()"
            @htmx:after-swap="selectedCount = document.querySelectorAll('[name=projects]:checked').length"
+           @project-created.window="showNewProjectModal = false; htmx.ajax('GET', $event.detail.listUrl, {target: '#list-content', swap: 'innerHTML'})"
            @filters-apply.window="
-             document.getElementById('filters-status').value = $event.detail.status || '';
-             document.getElementById('filters-lead').value = $event.detail.lead || '';
-             document.getElementById('filters-group-by').value = $event.detail.group_by || '';
-             $nextTick(() => document.getElementById('filters-trigger').click());
+             let u = '{% url 'projects:project_list' workspace.slug %}?' + new URLSearchParams({
+               status: $event.detail.status || '',
+               lead: $event.detail.lead || '',
+               group_by: $event.detail.group_by || '',
+               search: '{{ search_query|default:"" }}'
+             }).toString();
+             window.history.pushState(null, '', u);
+             htmx.ajax('GET', u, {target: '#page-content', swap: 'innerHTML'})
            ">
     <div class="flex justify-between items-center pb-4 sticky top-0 z-10 bg-base-100">
       <div class="flex items-center gap-4">
@@ -29,19 +34,6 @@
             {% if active_filter_count %}
             <span class="badge badge-sm">{{ active_filter_count }}</span>
             {% endif %}
-          </button>
-          <input type="hidden" id="filters-status" value="{{ status_filter|default:"" }}">
-          <input type="hidden" id="filters-lead" value="{{ lead_filter|default:"" }}">
-          <input type="hidden" id="filters-group-by" value="{{ group_by|default:"" }}">
-          <button type="button"
-                  id="filters-trigger"
-                  class="hidden"
-                  hx-get="{% url 'projects:project_list' workspace.slug %}"
-                  hx-vals='js:{"status": document.getElementById("filters-status").value, "lead": document.getElementById("filters-lead").value, "group_by": document.getElementById("filters-group-by").value, "search": "{{ search_query|default:"" }}"}'
-                  hx-target="#page-content"
-                  hx-swap="innerHTML"
-                  hx-indicator="#list-loading"
-                  hx-push-url="true">
           </button>
           {% if active_filter_count %}
           <button type="button"
@@ -110,13 +102,15 @@
             </ul>
           </div>
         </div>
-        <a class="mt-button-primary"
-           href="{% url 'projects:project_create' workspace.slug %}"
-           hx-get="{% url 'projects:project_create' workspace.slug %}"
-           hx-push-url="true">
+        <button type="button"
+                class="mt-button-primary"
+                hx-get="{% url 'projects:project_create' workspace.slug %}?modal=1"
+                hx-target="#new-project-modal-content"
+                hx-swap="innerHTML"
+                @click="showNewProjectModal = true">
           <span class="mt-icon"><i class="fa fa-plus"></i></span>
           <span>{% translate "New Project" %}</span>
-        </a>
+        </button>
       </div>
     </div>
     {% include "includes/loading_indicator.html" with indicator_id="list-loading" %}
@@ -209,6 +203,7 @@
     {% include "projects/includes/bulk_lead_modal.html" %}
     {% include "includes/filters_modal.html" %}
     {% include "includes/cascade_status_modal.html" %}
+    {% include "projects/includes/new_project_modal.html" %}
   </section>
   <div id="messages" class="toast toast-end toast-bottom z-50" hx-swap-oob="true">
     {% include "includes/messages.html" %}

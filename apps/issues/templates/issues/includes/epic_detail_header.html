@@ -82,6 +82,7 @@
         <a href="{{ milestone.get_absolute_url }}"
            hx-get="{{ milestone.get_absolute_url }}"
            hx-push-url="true"
+           hx-target="#page-content"
            class="text-sm link link-primary no-edit">
           {{ milestone.key }} - {{ milestone.title }}
         </a>
@@ -94,6 +95,7 @@
       <a href="{{ project.get_absolute_url }}"
          hx-get="{{ project.get_absolute_url }}"
          hx-push-url="true"
+         hx-target="#page-content"
          class="text-sm link link-primary">
         {{ project.key }} - {{ project.name }}
       </a>

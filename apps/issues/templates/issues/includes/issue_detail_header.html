@@ -116,6 +116,7 @@
         <a href="{{ parent.get_absolute_url }}"
            hx-get="{{ parent.get_absolute_url }}"
            hx-push-url="true"
+           hx-target="#page-content"
            class="text-sm link link-primary no-edit">
           {% include "issues/includes/issue_type_badge.html" with issue=parent %}
           {{ parent.key }} - {{ parent.title }}
@@ -129,6 +130,7 @@
       <a href="{{ project.get_absolute_url }}"
          hx-get="{{ project.get_absolute_url }}"
          hx-push-url="true"
+         hx-target="#page-content"
          class="text-sm link link-primary">
         {{ project.key }} - {{ project.name }}
       </a>
@@ -140,6 +142,7 @@
         <a href="{{ issue.sprint.get_absolute_url }}"
            hx-get="{{ issue.sprint.get_absolute_url }}"
            hx-push-url="true"
+           hx-target="#page-content"
            class="text-sm link link-primary">
           {{ issue.sprint.key }} - {{ issue.sprint.name }}
         </a>

@@ -17,6 +17,12 @@
         <h2 class="mt-6 text-center text-2xl font-bold text-base-content">
           {% translate "Sign In" %}
         </h2>
+        <div class="text-sm text-center mt-2">
+          {% translate "Don't have an account?" %}
+          <a href="{% url 'account_signup' %}" class="font-medium mt-link">
+            {% translate "Sign up." %}
+          </a>
+        </div>
         <form class="mt-6 space-y-6" method="post">
           {% csrf_token %}
           {{ form.non_field_errors }}

@@ -2,18 +2,20 @@
 <div id="epics-embed">
   {% partialdef embed-content inline %}
   <section class="relative"
-           x-data="{ selectedCount: 0, showBulkDeleteModal: false, showBulkAssigneeModal: false, showEditModal: false, showActionModal: false, showNewMilestoneModal: false, showNewEpicModal: false, showNewIssueModal: false, showQuickViewModal: false, newIssueModalTitle: '', showDeleteModal: false, showConvertModal: false, showPromoteModal: false, showMoveModal: false, showAddToSprintModal: false, actionModalType: '', actionModalTitle: '', actionModalMessage: '', actionModalConfirmText: '', actionModalUrl: '', assigneeConfirmStep: false, selectedAssigneeName: '', selectedAssigneeValue: '', showFiltersModal: false, expandedEpics: {} }"
+           x-data="epicsEmbed()"
            @htmx:after-swap="selectedCount = document.querySelectorAll('#epics-embed [name=epics]:checked').length"
            @show-cascade-modal.document="showEditModal = false"
            @issue-created.window="showNewIssueModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#epics-embed', swap: 'innerHTML'})"
            @epic-created.window="showNewEpicModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#epics-embed', swap: 'innerHTML'})"
            @milestone-created.window="showNewMilestoneModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#epics-embed', swap: 'innerHTML'})"
            @filters-apply="
-             document.getElementById('epics-filters-status').value = $event.detail.status || '';
-             document.getElementById('epics-filters-priority').value = $event.detail.priority || '';
-             document.getElementById('epics-filters-assignee').value = $event.detail.assignee || '';
-             document.getElementById('epics-filters-milestone').value = $event.detail.milestone || '';
-             $nextTick(() => document.getElementById('epics-filters-trigger').click());
+             htmx.ajax('GET', '{{ embed_url }}?' + new URLSearchParams({
+               status: $event.detail.status || '',
+               priority: $event.detail.priority || '',
+               assignee: $event.detail.assignee || '',
+               milestone: $event.detail.milestone || '',
+               search: '{{ search_query|default:"" }}'
+             }).toString(), {target: '#epics-embed', swap: 'innerHTML'})
            ">
     <div class="flex justify-between items-center pb-4 sticky top-0 z-10 bg-base-100">
       <div class="flex items-center gap-4">
@@ -31,19 +33,6 @@
             {% if active_filter_count %}
             <span class="badge badge-sm">{{ active_filter_count }}</span>
             {% endif %}
-          </button>
-          <input type="hidden" id="epics-filters-status" value="{{ status_filter|default:"" }}">
-          <input type="hidden" id="epics-filters-priority" value="{{ priority_filter|default:"" }}">
-          <input type="hidden" id="epics-filters-assignee" value="{{ assignee_filter|default:"" }}">
-          <input type="hidden" id="epics-filters-milestone" value="{{ milestone_filter|default:"" }}">
-          <button type="button"
-                  id="epics-filters-trigger"
-                  class="hidden"
-                  hx-get="{{ embed_url }}"
-                  hx-vals='js:{"status": document.getElementById("epics-filters-status").value, "priority": document.getElementById("epics-filters-priority").value, "assignee": document.getElementById("epics-filters-assignee").value, "milestone": document.getElementById("epics-filters-milestone").value, "search": "{{ search_query|default:"" }}"}'
-                  hx-target="#epics-embed"
-                  hx-swap="innerHTML"
-                  hx-indicator="#epics-list-loading">
           </button>
           {% if active_filter_count %}
           <button type="button"
@@ -381,7 +370,7 @@
     {# Hidden trigger to reload epics list when an issue is changed (convert, promote, etc.) #}
     <div class="hidden"
          hx-get="{{ embed_url }}"
-         hx-vals='js:{"status": document.getElementById("epics-filters-status").value, "priority": document.getElementById("epics-filters-priority").value, "assignee": document.getElementById("epics-filters-assignee").value, "milestone": document.getElementById("epics-filters-milestone").value, "search": "{{ search_query|default:"" }}"}'
+         hx-vals='{"status": "{{ status_filter|default:"" }}", "priority": "{{ priority_filter|default:"" }}", "assignee": "{{ assignee_filter|default:"" }}", "milestone": "{{ milestone_filter|default:"" }}", "search": "{{ search_query|default:"" }}"}'
          hx-target="#epics-embed"
          hx-swap="innerHTML"
          hx-trigger="issueChanged from:body">

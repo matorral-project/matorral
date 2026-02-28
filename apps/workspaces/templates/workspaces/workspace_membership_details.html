@@ -7,7 +7,11 @@
   <div class="mt-columns">
     <div id="profile-picture" class="mt-column-one-quarter">
       <div>
-        <img class="avatar" src="{{ membership.user.avatar_url }}">
+        <div class="avatar">
+          <div class="ring-primary ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
+            <img src="{{ membership.user.avatar_url }}" />
+          </div>
+        </div>
         <div class="mt-text-centered">{{ membership.user.get_display_name }}</div>
       </div>
     </div>
