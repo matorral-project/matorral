@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-26 16:16+0000\n"
+"POT-Creation-Date: 2026-02-27 16:40+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -676,6 +676,8 @@ msgstr ""
 #: apps/issues/templates/issues/workspace_issue_list.html:22
 #: apps/issues/views/crud.py:114 apps/issues/views/crud.py:288
 #: apps/sprints/templates/sprints/sprint_detail.html:18
+#: templates/includes/sidebar_app.html:50
+#: templates/includes/sidebar_app.html:52
 #: templates/includes/top_nav_app.html:12
 msgid "Issues"
 msgstr ""
@@ -1096,7 +1098,7 @@ msgid "Are you sure you want to remove the selected issues from this sprint?"
 msgstr ""
 
 #: apps/issues/templates/issues/includes/embed_bulk_remove_from_sprint_modal.html:18
-#: apps/users/templates/socialaccount/connections.html:39
+#: apps/users/templates/socialaccount/connections.html:38
 msgid "Remove"
 msgstr ""
 
@@ -2000,7 +2002,9 @@ msgstr ""
 #: apps/landing_pages/templates/landing_pages/landing_page.html:105
 #: apps/projects/models.py:115
 #: apps/projects/templates/projects/project_list.html:17
-#: apps/projects/views/crud.py:184 templates/includes/top_nav_app.html:10
+#: apps/projects/views/crud.py:184 templates/includes/sidebar_app.html:34
+#: templates/includes/sidebar_app.html:36
+#: templates/includes/top_nav_app.html:10
 msgid "Projects"
 msgstr ""
 
@@ -2012,7 +2016,9 @@ msgstr ""
 #: apps/landing_pages/templates/landing_pages/landing_page.html:114
 #: apps/sprints/models.py:118
 #: apps/sprints/templates/sprints/sprint_list.html:15
-#: apps/sprints/views/crud.py:59 templates/includes/top_nav_app.html:11
+#: apps/sprints/views/crud.py:59 templates/includes/sidebar_app.html:42
+#: templates/includes/sidebar_app.html:44
+#: templates/includes/top_nav_app.html:11
 msgid "Sprints"
 msgstr ""
 
@@ -3241,7 +3247,7 @@ msgstr ""
 #: apps/users/forms.py:17
 #: apps/workspaces/templates/workspaces/includes/pending_invitations.html:9
 #: apps/workspaces/templates/workspaces/includes/workspace_invitations.html:24
-#: apps/workspaces/templates/workspaces/workspace_membership_details.html:16
+#: apps/workspaces/templates/workspaces/workspace_membership_details.html:20
 msgid "Email"
 msgstr ""
 
@@ -3282,9 +3288,9 @@ msgstr ""
 #: apps/users/templates/account/connected_accounts.html:5
 #: apps/users/templates/accounts/includes/social/social_accounts.html:3
 #: apps/users/templates/socialaccount/connections.html:6
-#: apps/users/templates/socialaccount/connections.html:15
-#: apps/users/views.py:102 templates/includes/top_nav.html:43
-#: templates/includes/top_nav_app.html:43
+#: apps/users/templates/socialaccount/connections.html:14
+#: apps/users/views.py:102 templates/includes/sidebar_app.html:120
+#: templates/includes/top_nav.html:43 templates/includes/top_nav_app.html:43
 msgid "Connected Accounts"
 msgstr ""
 
@@ -3506,6 +3512,8 @@ msgid "Are you sure you want to sign out?"
 msgstr ""
 
 #: apps/users/templates/account/logout.html:21
+#: templates/includes/sidebar_app.html:26
+#: templates/includes/sidebar_app.html:28
 msgid "Home"
 msgstr ""
 
@@ -3569,7 +3577,8 @@ msgstr ""
 #: apps/users/templates/account/password_change.html:5
 #: apps/users/templates/account/password_change.html:12
 #: apps/users/templates/account/password_change.html:21
-#: templates/includes/top_nav.html:50 templates/includes/top_nav_app.html:51
+#: templates/includes/sidebar_app.html:126 templates/includes/top_nav.html:50
+#: templates/includes/top_nav_app.html:51
 msgid "Change Password"
 msgstr ""
 
@@ -3650,7 +3659,7 @@ msgstr ""
 msgid "Manage email addresses"
 msgstr ""
 
-#: apps/users/templates/accounts/includes/profile_form.html:29
+#: apps/users/templates/accounts/includes/profile_form.html:33
 msgid "Modify Avatar"
 msgstr ""
 
@@ -3687,22 +3696,18 @@ msgid ""
 "An error occurred while attempting to login via your social network account."
 msgstr ""
 
-#: apps/users/templates/socialaccount/connections.html:14
-msgid "← Return to Profile"
-msgstr ""
-
-#: apps/users/templates/socialaccount/connections.html:18
+#: apps/users/templates/socialaccount/connections.html:17
 msgid ""
 "You can sign in to your account using any of the following third party "
 "accounts:"
 msgstr ""
 
-#: apps/users/templates/socialaccount/connections.html:44
+#: apps/users/templates/socialaccount/connections.html:43
 msgid ""
 "You currently have no social network accounts connected to this account."
 msgstr ""
 
-#: apps/users/templates/socialaccount/connections.html:53
+#: apps/users/templates/socialaccount/connections.html:52
 msgid "Connect Github Account"
 msgstr ""
 
@@ -3797,8 +3802,8 @@ msgstr ""
 msgid "Your profile was successfully saved."
 msgstr ""
 
-#: apps/users/views.py:73 templates/includes/top_nav.html:37
-#: templates/includes/top_nav_app.html:37
+#: apps/users/views.py:73 templates/includes/sidebar_app.html:115
+#: templates/includes/top_nav.html:37 templates/includes/top_nav_app.html:37
 msgid "Profile"
 msgstr ""
 
@@ -4066,7 +4071,8 @@ msgid "Add '%(email)s' to your account"
 msgstr ""
 
 #: apps/workspaces/templates/workspaces/accept_invite.html:48
-#: templates/includes/top_nav.html:65 templates/includes/top_nav_app.html:73
+#: templates/includes/sidebar_app.html:144 templates/includes/top_nav.html:65
+#: templates/includes/top_nav_app.html:73
 msgid "Sign out"
 msgstr ""
 
@@ -4211,7 +4217,9 @@ msgid "Invite Workspace Members"
 msgstr ""
 
 #: apps/workspaces/templates/workspaces/list_workspaces.html:8
-#: apps/workspaces/views.py:60 templates/includes/workspace_nav_items.html:32
+#: apps/workspaces/views.py:60 templates/includes/sidebar_app.html:92
+#: templates/includes/sidebar_app.html:94
+#: templates/includes/workspace_nav_items.html:32
 msgid "My Workspaces"
 msgstr ""
 
@@ -4224,6 +4232,8 @@ msgid "View Workspace"
 msgstr ""
 
 #: apps/workspaces/templates/workspaces/list_workspaces.html:33
+#: templates/includes/sidebar_app.html:68
+#: templates/includes/sidebar_app.html:70
 #: templates/includes/workspace_nav_items.html:9
 msgid "Settings"
 msgstr ""
@@ -4260,23 +4270,23 @@ msgstr ""
 msgid "Member"
 msgstr ""
 
-#: apps/workspaces/templates/workspaces/workspace_membership_details.html:20
+#: apps/workspaces/templates/workspaces/workspace_membership_details.html:24
 msgid "Date Joined"
 msgstr ""
 
-#: apps/workspaces/templates/workspaces/workspace_membership_details.html:28
+#: apps/workspaces/templates/workspaces/workspace_membership_details.html:32
 msgid "Update Role"
 msgstr ""
 
-#: apps/workspaces/templates/workspaces/workspace_membership_details.html:31
+#: apps/workspaces/templates/workspaces/workspace_membership_details.html:35
 msgid "You are not allowed to modify your own role."
 msgstr ""
 
-#: apps/workspaces/templates/workspaces/workspace_membership_details.html:36
+#: apps/workspaces/templates/workspaces/workspace_membership_details.html:40
 msgid "Leave Workspace"
 msgstr ""
 
-#: apps/workspaces/templates/workspaces/workspace_membership_details.html:38
+#: apps/workspaces/templates/workspaces/workspace_membership_details.html:42
 msgid "Remove from Workspace"
 msgstr ""
 
@@ -4489,18 +4499,22 @@ msgstr ""
 msgid "Copyright"
 msgstr ""
 
-#: templates/includes/top_nav.html:58 templates/includes/top_nav_app.html:59
+#: templates/includes/sidebar_app.html:79
+#: templates/includes/sidebar_app.html:81
+#: templates/includes/workspace_nav_items.html:18
+msgid "Members"
+msgstr ""
+
+#: templates/includes/sidebar_app.html:133 templates/includes/top_nav.html:58
+#: templates/includes/top_nav_app.html:59
 msgid "Django Admin"
 msgstr ""
 
+#: templates/includes/sidebar_app.html:139
 #: templates/includes/top_nav_app.html:67
 msgid "Report an Issue"
 msgstr ""
 
 #: templates/includes/user_combobox.html:85
 msgid "Search..."
-msgstr ""
-
-#: templates/includes/workspace_nav_items.html:18
-msgid "Members"
 msgstr ""

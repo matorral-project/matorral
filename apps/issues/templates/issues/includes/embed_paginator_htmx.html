@@ -3,7 +3,7 @@
   <div hx-target="#issues-list" hx-indicator="#embed-list-loading">
     <div class="flex flex-col items-center gap-2">
       <div class="join mt-4">
-        <a class="join-item btn btn-xs"
+        <button class="join-item btn btn-square btn-sm"
           {% if page_obj.has_previous %}
             hx-get="{{ embed_url }}"
             hx-vals='{"page": "{{ page_obj.previous_page_number }}", "search": "{{ search_query|default:"" }}", "status": "{{ status_filter|default:"" }}", "assignee": "{{ assignee_filter|default:"" }}", "group_by": "{{ group_by|default:"" }}"}'
@@ -15,9 +15,9 @@
           <svg class="w-2.5 h-2.5 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 1 1 5l4 4"/>
           </svg>
-        </a>
+        </button>
       {% for num in elided_page_range %}
-        <a class="join-item btn btn-xs {% if num == page_obj.number %}btn-active{% endif %}"
+        <button class="join-item btn btn-square btn-sm {% if num == page_obj.number %}btn-active{% endif %}"
           {% if num != page_obj.number and num != page_obj.paginator.ELLIPSIS %}
             hx-get="{{ embed_url }}"
             hx-vals='{"page": "{{ num }}", "search": "{{ search_query|default:"" }}", "status": "{{ status_filter|default:"" }}", "assignee": "{{ assignee_filter|default:"" }}", "group_by": "{{ group_by|default:"" }}"}'
@@ -26,9 +26,9 @@
           {% endif %}
           >
           {{ num }}
-        </a>
+        </button>
       {% endfor %}
-        <a class="join-item btn btn-xs"
+        <button class="join-item btn btn-square btn-sm"
           {% if page_obj.has_next %}
             hx-get="{{ embed_url }}"
             hx-vals='{"page": "{{ page_obj.next_page_number }}", "search": "{{ search_query|default:"" }}", "status": "{{ status_filter|default:"" }}", "assignee": "{{ assignee_filter|default:"" }}", "group_by": "{{ group_by|default:"" }}"}'
@@ -40,7 +40,7 @@
           <svg class="w-2.5 h-2.5 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
           </svg>
-        </a>
+        </button>
       </div>
       <p class="text-xs text-base-content/60">
         {% blocktranslate trimmed count count=page_obj.paginator.count %}

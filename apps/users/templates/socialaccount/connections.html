@@ -11,8 +11,7 @@
 {% endblock %}
 {% block app_content_content %}
   <div class="app-card mt-form-page">
-    <p class="mt-text-right"><a href="{% url 'users:user_profile' %}">{% translate '← Return to Profile' %}</a></p>
-    <h1 class="mt-title">{% translate "Connected Accounts" %}</h1>
+<h1 class="mt-title">{% translate "Connected Accounts" %}</h1>
     {% if form.accounts %}
       <p>
         {% blocktranslate trimmed %}

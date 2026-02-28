@@ -1,11 +1,29 @@
 {% extends "base.html" %}
-{% block top_nav %}{% include 'includes/top_nav_app.html' %}{% endblock %}
+{% block top_nav %}{% endblock %}
 {% block body %}
-  {% block notifications %}
-  {% endblock %}
-  <main class="flex-1 overflow-y-auto p-0">
-    {% block app_content_content %}
-    {% endblock %}
-  </main>
+<div class="drawer lg:drawer-open">
+  <input id="sidebar-drawer" type="checkbox" class="drawer-toggle" />
+
+  <div class="drawer-content flex flex-col min-h-screen">
+    <!-- Mobile-only top bar with toggle (hidden on lg+) -->
+    <div class="navbar bg-primary text-primary-content sticky top-0 z-10 lg:hidden">
+      <label for="sidebar-drawer" aria-label="open sidebar" class="btn btn-square btn-ghost text-primary-content">
+        <i class="fa fa-bars"></i>
+      </label>
+      <a href="{% url 'landing_pages:home' %}" class="text-lg font-semibold text-primary-content">{{ site.name }}</a>
+    </div>
+
+    {% block notifications %}{% endblock %}
+
+    <main class="flex-1 overflow-y-auto p-0" id="page-content">
+      {% block app_content_content %}{% endblock %}
+    </main>
+  </div>
+
+  <div class="drawer-side is-drawer-close:overflow-visible z-40">
+    <label for="sidebar-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+    {% include "includes/sidebar_app.html" %}
+  </div>
+</div>
 {% endblock %}
 {% block footer %}{% endblock %}
