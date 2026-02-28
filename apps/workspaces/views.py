@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
-from django.http import Http404, HttpResponse, HttpResponseForbidden, HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseForbidden, HttpResponseNotAllowed, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.functional import cached_property
@@ -11,7 +11,6 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 from django.views.generic import DetailView
 
-from apps.dashboard.helpers import get_onboarding_status
 from apps.users.models import User
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
@@ -20,6 +19,7 @@ from allauth.account.views import SignupView
 
 from .decorators import login_and_workspace_membership_required, workspace_admin_required
 from .forms import InvitationForm, MembershipForm, WorkspaceChangeForm
+from .helpers import get_onboarding_status, get_user_dashboard_data
 from .invitations import clear_invite_from_session, process_invitation, send_invitation
 from .limits import LimitExceededError, check_invitation_limit, check_member_limit
 from .models import Invitation, Membership, Workspace
@@ -48,6 +48,44 @@ class WorkspaceDetailView(LoginAndWorkspaceRequiredMixin, DetailView):
         context["active_tab"] = "workspaces"
         context["onboarding"] = get_onboarding_status(self.request.user, self.object)
         return context
+
+
+@login_and_workspace_membership_required
+def workspace_home(request, workspace_slug):
+    workspace = request.workspace
+    onboarding = get_onboarding_status(request.user, workspace)
+    dashboard_data = {} if onboarding["should_show"] else get_user_dashboard_data(request.user, workspace)
+
+    if request.htmx:
+        if request.htmx.target == "dashboard-content":
+            template = "workspaces/home.html#dashboard-content"
+        else:
+            template = "workspaces/home.html#page-content"
+    else:
+        template = "workspaces/home.html"
+
+    return render(
+        request,
+        template,
+        context={
+            "workspace": workspace,
+            "active_tab": "home",
+            "page_title": workspace.name,
+            "onboarding": onboarding,
+            **dashboard_data,
+        },
+    )
+
+
+@login_and_workspace_membership_required
+def dismiss_onboarding(request, workspace_slug):
+    if request.method == "POST":
+        request.user.onboarding_completed = True
+        request.user.save(update_fields=["onboarding_completed"])
+        response = HttpResponse(status=204)
+        response["HX-Redirect"] = reverse("workspaces:home", kwargs={"workspace_slug": workspace_slug})
+        return response
+    return HttpResponseNotAllowed(["POST"])
 
 
 @login_required

@@ -22,8 +22,8 @@
   <ul class="menu flex-1 px-2 gap-1 overflow-y-auto overflow-x-hidden w-full">
     {% if default_workspace %}
     <li>
-      <a href="{% url 'dashboard:home' workspace_slug=default_workspace.slug %}"
-         hx-get="{% url 'dashboard:home' workspace_slug=default_workspace.slug %}"
+      <a href="{% url 'workspaces:home' workspace_slug=default_workspace.slug %}"
+         hx-get="{% url 'workspaces:home' workspace_slug=default_workspace.slug %}"
          hx-push-url="true"
          hx-target="#page-content"
          class="text-primary-content hover:bg-primary-content/10"

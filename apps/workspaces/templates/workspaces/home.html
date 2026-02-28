@@ -4,13 +4,13 @@
 {% block app_content_content %}
 {% partialdef page-content inline %}
 <div id="dashboard-content" hx-target="#dashboard-content"
-     hx-get="{% url 'dashboard:home' workspace.slug %}"
+     hx-get="{% url 'workspaces:home' workspace.slug %}"
      hx-trigger="dashboard-updated from:body"
      hx-swap="innerHTML">
   {% partialdef dashboard-content inline %}
   {% if onboarding.should_show %}
   <section class="app-card mt-4">
-    {% include "dashboard/includes/onboarding_checklist.html" %}
+    {% include "workspaces/includes/onboarding_checklist.html" %}
   </section>
   {% else %}
   <section class="app-card">
@@ -89,7 +89,7 @@
         <span class="badge badge-warning badge-sm">{{ in_progress_issues|length }}</span>
       </h2>
     </div>
-    {% include "dashboard/includes/dashboard_issue_table.html" with issues=in_progress_issues %}
+    {% include "workspaces/includes/dashboard_issue_table.html" with issues=in_progress_issues %}
   </section>
   {% endif %}
 
@@ -102,7 +102,7 @@
         <span class="badge badge-secondary badge-sm">{{ in_review_issues|length }}</span>
       </h2>
     </div>
-    {% include "dashboard/includes/dashboard_issue_table.html" with issues=in_review_issues %}
+    {% include "workspaces/includes/dashboard_issue_table.html" with issues=in_review_issues %}
   </section>
   {% endif %}
 
@@ -115,7 +115,7 @@
         <span class="badge badge-info badge-sm">{{ ready_issues|length }}</span>
       </h2>
     </div>
-    {% include "dashboard/includes/dashboard_issue_table.html" with issues=ready_issues %}
+    {% include "workspaces/includes/dashboard_issue_table.html" with issues=ready_issues %}
   </section>
   {% endif %}
 
@@ -128,25 +128,54 @@
         <span class="badge badge-error badge-sm">{{ blocked_issues|length }}</span>
       </h2>
     </div>
-    {% include "dashboard/includes/dashboard_issue_table.html" with issues=blocked_issues %}
+    {% include "workspaces/includes/dashboard_issue_table.html" with issues=blocked_issues %}
   </section>
   {% endif %}
 
   {% if not in_progress_issues and not in_review_issues and not ready_issues and not blocked_issues %}
   <section class="app-card mt-4">
+    {% if active_sprint %}
     <div class="text-center py-8">
       <i class="fa fa-inbox text-4xl text-base-content/30 mb-4"></i>
       <p class="text-base-content/70">
-        {% if active_sprint %}
-          {% translate "You have no issues assigned in the current sprint." %}
-        {% else %}
-          {% translate "You have no active issues assigned." %}
-        {% endif %}
+        {% translate "You have no issues assigned in the current sprint." %}
       </p>
       <p class="text-sm text-base-content/50 mt-2">
         {% translate "Issues assigned to you will appear here." %}
       </p>
     </div>
+    {% else %}
+    <div class="text-center py-12">
+      <i class="fa fa-rocket text-5xl text-base-content/20 mb-4"></i>
+      <h2 class="text-xl font-semibold text-base-content/60 mb-2">{% translate "Nothing here yet!" %}</h2>
+      <p class="text-base-content/50 mb-8 max-w-sm mx-auto">
+        {% translate "Issues assigned to you will show up here. Here are a few things you can do to get started:" %}
+      </p>
+      <div class="flex flex-wrap justify-center gap-3">
+        <a href="{% url 'projects:project_list' workspace.slug %}"
+           hx-get="{% url 'projects:project_list' workspace.slug %}"
+           hx-push-url="true"
+           class="btn btn-sm btn-outline">
+          <i class="fa fa-folder-plus"></i>
+          {% translate "Create a project" %}
+        </a>
+        <a href="{% url 'sprints:sprint_list' workspace.slug %}"
+           hx-get="{% url 'sprints:sprint_list' workspace.slug %}"
+           hx-push-url="true"
+           class="btn btn-sm btn-outline">
+          <i class="fa fa-bolt"></i>
+          {% translate "Start a sprint" %}
+        </a>
+        <a href="{% url 'workspaces:manage_workspace_members' workspace.slug %}"
+           hx-get="{% url 'workspaces:manage_workspace_members' workspace.slug %}"
+           hx-push-url="true"
+           class="btn btn-sm btn-outline">
+          <i class="fa fa-user-plus"></i>
+          {% translate "Invite teammates" %}
+        </a>
+      </div>
+    </div>
+    {% endif %}
   </section>
   {% endif %}
 

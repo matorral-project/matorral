@@ -1124,7 +1124,7 @@ class IssueRowInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
             display_template = "issues/includes/issue_row_embed.html"
             edit_template = "issues/includes/issue_row_edit_embed.html"
         elif context["is_dashboard"]:
-            display_template = "dashboard/includes/dashboard_issue_row.html"
+            display_template = "workspaces/includes/dashboard_issue_row.html"
             edit_template = "includes/dashboard_issue_row_edit.html"
         else:
             display_template = "issues/includes/issue_row.html"
@@ -1170,7 +1170,7 @@ class IssueRowInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
             display_template = "issues/includes/issue_row_embed.html"
             edit_template = "issues/includes/issue_row_edit_embed.html"
         elif context["is_dashboard"]:
-            display_template = "dashboard/includes/dashboard_issue_row.html"
+            display_template = "workspaces/includes/dashboard_issue_row.html"
             edit_template = "includes/dashboard_issue_row_edit.html"
         else:
             display_template = "issues/includes/issue_row.html"

@@ -21,7 +21,6 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 from django.views.i18n import JavaScriptCatalog
 
-from apps.dashboard.urls import workspace_urlpatterns as web_workspace_urls
 from apps.issues.urls import milestones_urlpatterns as milestones_project_urls
 from apps.issues.urls import project_urlpatterns as issues_project_urls
 from apps.issues.urls import workspace_urlpatterns as issues_workspace_urls
@@ -45,7 +44,6 @@ urlpatterns = [
     # fixed paths like "create/" are matched before the catch-all <workspace_slug>/ pattern.
     path("w/", include(workspaces_standalone_urls)),
     # Workspace-scoped URLs
-    path("w/<slug:workspace_slug>/", include(web_workspace_urls)),
     path("w/<slug:workspace_slug>/p/", include(projects_project_urls)),
     path("w/<slug:workspace_slug>/p/<str:project_key>/issues/", include(issues_project_urls)),
     path(
