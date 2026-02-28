@@ -22,6 +22,9 @@
     {% if default_workspace %}
     <li>
       <a href="{% url 'dashboard:home' workspace_slug=default_workspace.slug %}"
+         hx-get="{% url 'dashboard:home' workspace_slug=default_workspace.slug %}"
+         hx-push-url="true"
+         hx-target="#page-content"
          class="is-drawer-close:tooltip is-drawer-close:tooltip-right text-primary-content hover:bg-primary-content/10"
          data-tip="{% translate 'Home' %}">
         <i class="fa fa-home w-5 text-center shrink-0"></i>
@@ -30,6 +33,9 @@
     </li>
     <li>
       <a href="{% url 'projects:project_list' workspace_slug=default_workspace.slug %}"
+         hx-get="{% url 'projects:project_list' workspace_slug=default_workspace.slug %}"
+         hx-push-url="true"
+         hx-target="#page-content"
          class="is-drawer-close:tooltip is-drawer-close:tooltip-right text-primary-content hover:bg-primary-content/10"
          data-tip="{% translate 'Projects' %}">
         <i class="fa fa-folder w-5 text-center shrink-0"></i>
@@ -38,6 +44,9 @@
     </li>
     <li>
       <a href="{% url 'sprints:sprint_list' workspace_slug=default_workspace.slug %}"
+         hx-get="{% url 'sprints:sprint_list' workspace_slug=default_workspace.slug %}"
+         hx-push-url="true"
+         hx-target="#page-content"
          class="is-drawer-close:tooltip is-drawer-close:tooltip-right text-primary-content hover:bg-primary-content/10"
          data-tip="{% translate 'Sprints' %}">
         <i class="fa fa-circle-play w-5 text-center shrink-0"></i>
@@ -46,6 +55,9 @@
     </li>
     <li>
       <a href="{% url 'workspace_issue_list' workspace_slug=default_workspace.slug %}"
+         hx-get="{% url 'workspace_issue_list' workspace_slug=default_workspace.slug %}"
+         hx-push-url="true"
+         hx-target="#page-content"
          class="is-drawer-close:tooltip is-drawer-close:tooltip-right text-primary-content hover:bg-primary-content/10"
          data-tip="{% translate 'Issues' %}">
         <i class="fa fa-circle-exclamation w-5 text-center shrink-0"></i>

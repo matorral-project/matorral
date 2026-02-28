@@ -15,7 +15,13 @@ def workspace_home(request, workspace_slug):
     # Only fetch dashboard data if onboarding is complete/dismissed
     dashboard_data = {} if onboarding["should_show"] else get_user_dashboard_data(request.user, workspace)
 
-    template = "dashboard/home.html#dashboard-content" if request.htmx else "dashboard/home.html"
+    if request.htmx:
+        if request.htmx.target == "dashboard-content":
+            template = "dashboard/home.html#dashboard-content"
+        else:
+            template = "dashboard/home.html#page-content"
+    else:
+        template = "dashboard/home.html"
 
     return render(
         request,

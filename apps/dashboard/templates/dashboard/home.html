@@ -2,6 +2,7 @@
 {% load i18n %}
 {% load static %}
 {% block app_content_content %}
+{% partialdef page-content inline %}
 <div id="dashboard-content" hx-target="#dashboard-content"
      hx-get="{% url 'dashboard:home' workspace.slug %}"
      hx-trigger="dashboard-updated from:body"
@@ -153,4 +154,5 @@
 
   {% endpartialdef dashboard-content %}
 </div>
+{% endpartialdef page-content %}
 {% endblock %}

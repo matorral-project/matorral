@@ -15,7 +15,7 @@
 
     {% block notifications %}{% endblock %}
 
-    <main class="flex-1 overflow-y-auto p-0" id="page-content">
+    <main class="flex-1 overflow-y-auto p-0" id="page-content" hx-target="#page-content">
       {% block app_content_content %}{% endblock %}
     </main>
   </div>
