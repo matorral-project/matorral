@@ -41,8 +41,10 @@ urlpatterns = [
     # redirect Django admin login to main login page
     path("admin/login/", RedirectView.as_view(pattern_name="account_login")),
     path("admin/", admin.site.urls),
-    # Workspace-scoped URLs - must come before generic workspaces_standalone_urls
-    # so dashboard home is matched before workspace detail view
+    # Standalone workspace URLs (list, create, invitations) must come first so
+    # fixed paths like "create/" are matched before the catch-all <workspace_slug>/ pattern.
+    path("w/", include(workspaces_standalone_urls)),
+    # Workspace-scoped URLs
     path("w/<slug:workspace_slug>/", include(web_workspace_urls)),
     path("w/<slug:workspace_slug>/p/", include(projects_project_urls)),
     path("w/<slug:workspace_slug>/p/<str:project_key>/issues/", include(issues_project_urls)),
@@ -52,8 +54,6 @@ urlpatterns = [
     ),
     path("w/<slug:workspace_slug>/issues/", include(issues_workspace_urls)),
     path("w/<slug:workspace_slug>/sprints/", include((sprints_urls, "sprints"))),
-    # Workspace standalone URLs (list, create, invitations)
-    path("w/", include(workspaces_standalone_urls)),
     path("i18n/", include("django.conf.urls.i18n")),
     path("jsi18n/", JavaScriptCatalog.as_view(), name="javascript-catalog"),
     # Custom password change view with HTMX support (before allauth)

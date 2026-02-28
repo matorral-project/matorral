@@ -60,6 +60,7 @@ def manage_workspaces(request):
         {
             "workspaces": workspaces,
             "page_title": _("My Workspaces"),
+            "create_workspace_form": WorkspaceChangeForm(),
         },
     )
 
@@ -248,7 +249,18 @@ def create_workspace(request):
             workspace = form.save()
             Membership.objects.create(workspace=workspace, user=request.user, role=ROLE_ADMIN)
             messages.success(request, _('Workspace "{name}" created!').format(name=workspace.name))
-            return HttpResponseRedirect(reverse("workspaces:manage_workspaces"))
+            redirect_url = reverse("workspaces:manage_workspaces")
+            if request.headers.get("HX-Request"):
+                response = HttpResponse()
+                response["HX-Redirect"] = redirect_url
+                return response
+            return HttpResponseRedirect(redirect_url)
+        if request.headers.get("HX-Request"):
+            return render(
+                request,
+                "workspaces/includes/create_workspace_form_fields.html",
+                {"create_workspace_form": form},
+            )
     else:
         form = WorkspaceChangeForm()
     return render(
