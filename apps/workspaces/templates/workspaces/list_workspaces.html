@@ -6,9 +6,9 @@
   <div class="app-card mt-form-page">
     <div class="flex justify-between items-center mb-4">
       <h3 class="mt-subtitle mb-0">{% translate "My Workspaces" %}</h3>
-      <a href="{% url 'workspaces:create_workspace' %}" class="btn btn-primary btn-sm">
+      <label for="create-workspace-modal-toggle" class="btn btn-primary btn-sm modal-button">
         <i class="fa fa-plus mr-1"></i> {% translate "New Workspace" %}
-      </a>
+      </label>
     </div>
     {% if workspaces %}
       <div class="table-responsive">
@@ -47,6 +47,7 @@
       </div>
     {% endif %}
   </div>
+  {% include 'workspaces/includes/create_workspace_modal.html' %}
   {% endpartialdef page-content %}
 </div>
 {% endblock %}

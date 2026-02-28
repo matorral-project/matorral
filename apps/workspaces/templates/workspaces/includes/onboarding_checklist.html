@@ -9,7 +9,7 @@
       </p>
     </div>
     <button
-      hx-post="{% url 'dashboard:dismiss_onboarding' workspace.slug %}"
+      hx-post="{% url 'workspaces:dismiss_onboarding' workspace.slug %}"
       hx-swap="none"
       class="btn btn-ghost btn-sm"
       title="{% translate 'Dismiss' %}">
@@ -91,7 +91,7 @@
   {# Bottom dismiss action #}
   <div class="flex justify-center pt-4">
     <button
-      hx-post="{% url 'dashboard:dismiss_onboarding' workspace.slug %}"
+      hx-post="{% url 'workspaces:dismiss_onboarding' workspace.slug %}"
       hx-swap="none"
       class="btn btn-ghost btn-sm">
       {% translate "Skip for now" %}

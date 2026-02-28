@@ -1,0 +1,19 @@
+{% load i18n %}
+{% load forms_tags %}
+<input type="checkbox" id="create-workspace-modal-toggle" class="modal-toggle" />
+<div class="modal">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg">{% translate "Create Workspace" %}</h3>
+    <form hx-post="{% url 'workspaces:create_workspace' %}"
+          hx-target="#create-workspace-form-inner">
+      {% csrf_token %}
+      <div id="create-workspace-form-inner">
+        {% render_form_fields create_workspace_form %}
+      </div>
+      <div class="modal-action">
+        <label for="create-workspace-modal-toggle" class="btn">{% translate "Cancel" %}</label>
+        <input class="mt-button-primary" type="submit" value="{% translate 'Create Workspace' %}">
+      </div>
+    </form>
+  </div>
+</div>

@@ -8,8 +8,13 @@ app_name = "workspaces"
 _workspace_patterns = [
     path(
         "<slug:workspace_slug>/",
-        views.WorkspaceDetailView.as_view(),
-        name="workspace_detail",
+        views.workspace_home,
+        name="home",
+    ),
+    path(
+        "<slug:workspace_slug>/dismiss-onboarding/",
+        views.dismiss_onboarding,
+        name="dismiss_onboarding",
     ),
     path(
         "<slug:workspace_slug>/settings/",

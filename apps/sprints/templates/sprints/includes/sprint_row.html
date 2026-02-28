@@ -34,16 +34,10 @@
       </a>
     </div>
   </td>
-  <td class="editable cursor-pointer"
-      hx-get="{% url 'sprints:sprint_inline_edit' workspace.slug sprint.key %}"
-      hx-target="closest tr"
-      hx-swap="outerHTML">
+  <td>
     {% include "sprints/includes/sprint_status_badge.html" with status=sprint.status status_display=sprint.get_status_display %}
   </td>
-  <td class="editable cursor-pointer"
-      hx-get="{% url 'sprints:sprint_inline_edit' workspace.slug sprint.key %}"
-      hx-target="closest tr"
-      hx-swap="outerHTML">
+  <td>
     {% if sprint.start_date and sprint.end_date %}
     <span class="whitespace-nowrap">{{ sprint.start_date|date:"N j" }} – {{ sprint.end_date|date:"N j" }}</span>
     {% elif sprint.start_date %}
@@ -54,18 +48,8 @@
     -
     {% endif %}
   </td>
-  <td class="editable cursor-pointer"
-      hx-get="{% url 'sprints:sprint_inline_edit' workspace.slug sprint.key %}"
-      hx-target="closest tr"
-      hx-swap="outerHTML">
-    {{ sprint.owner.get_display_name|default:"-" }}
-  </td>
-  <td class="editable cursor-pointer"
-      hx-get="{% url 'sprints:sprint_inline_edit' workspace.slug sprint.key %}"
-      hx-target="closest tr"
-      hx-swap="outerHTML">
-    {% if sprint.capacity %}{{ sprint.progress_total_weight|default:0 }} / {{ sprint.capacity }}{% else %}-{% endif %}
-  </td>
+  <td>{{ sprint.owner.get_display_name|default:"-" }}</td>
+  <td>{% if sprint.capacity %}{{ sprint.progress_total_weight|default:0 }} / {{ sprint.capacity }}{% else %}-{% endif %}</td>
   <td>
     {% include "issues/includes/progress_bar.html" with progress=sprint.progress compact=True %}
   </td>

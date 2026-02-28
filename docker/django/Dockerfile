@@ -78,7 +78,7 @@ COPY --chown=django:django . /code
 COPY --from=build-node /code/static /code/static
 
 # uv shebang in manage.py won't work without the uv binary — swap it for plain python3
-RUN sed -i '1c\#!/usr/bin/env python3' /code/manage.py
+RUN sed -i '1i#!/usr/bin/env python3' /code/manage.py
 
 # collectstatic must run at build time so assets are baked into the image
 RUN DEBUG=False python /code/manage.py collectstatic --noinput --settings=matorral.settings.production

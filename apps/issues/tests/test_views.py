@@ -1501,7 +1501,7 @@ class IssueRowInlineEditViewTest(IssueViewTestBase):
         response = self.client.get(self._get_inline_edit_url(story) + "?dashboard=1&cancel=1")
 
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, "dashboard/includes/dashboard_issue_row.html")
+        self.assertTemplateUsed(response, "workspaces/includes/dashboard_issue_row.html")
 
     def test_dashboard_post_returns_dashboard_display_template_on_success(self):
         """POST with dashboard=1 returns dashboard display template after successful update."""
@@ -1517,7 +1517,7 @@ class IssueRowInlineEditViewTest(IssueViewTestBase):
         )
 
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, "dashboard/includes/dashboard_issue_row.html")
+        self.assertTemplateUsed(response, "workspaces/includes/dashboard_issue_row.html")
         story.refresh_from_db()
         self.assertEqual("Updated Title", story.title)
 
@@ -1579,7 +1579,7 @@ class IssueRowInlineEditViewTest(IssueViewTestBase):
         )
 
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, "dashboard/includes/dashboard_issue_row.html")
+        self.assertTemplateUsed(response, "workspaces/includes/dashboard_issue_row.html")
 
 
 class EpicDetailInlineEditViewTest(IssueViewTestBase):

@@ -77,7 +77,7 @@ class Workspace(BaseModel):
         return self.name
 
     def get_absolute_url(self):
-        return reverse("workspaces:workspace_detail", kwargs={"workspace_slug": self.slug})
+        return reverse("workspaces:home", kwargs={"workspace_slug": self.slug})
 
     @property
     def sorted_memberships(self):

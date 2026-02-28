@@ -50,20 +50,12 @@
     </div>
   </td>
   {% if group_by != "status" %}
-  <td class="editable cursor-pointer"
-      hx-get="{% url 'projects:project_inline_edit' workspace.slug project.key %}{% if group_by %}?show_status={% if group_by == 'status' %}0{% else %}1{% endif %}&amp;show_lead={% if group_by == 'lead' %}0{% else %}1{% endif %}{% endif %}"
-      hx-target="closest tr"
-      hx-swap="outerHTML">
+  <td>
     {% include "projects/includes/project_status_badge.html" with status=project.status status_display=project.get_status_display %}
   </td>
   {% endif %}
   {% if group_by != "lead" %}
-  <td class="editable cursor-pointer"
-      hx-get="{% url 'projects:project_inline_edit' workspace.slug project.key %}{% if group_by %}?show_status={% if group_by == 'status' %}0{% else %}1{% endif %}&amp;show_lead={% if group_by == 'lead' %}0{% else %}1{% endif %}{% endif %}"
-      hx-target="closest tr"
-      hx-swap="outerHTML">
-    {{ project.lead.get_display_name|default:"-" }}
-  </td>
+  <td>{{ project.lead.get_display_name|default:"-" }}</td>
   {% endif %}
   <td>
     {% if project.progress %}

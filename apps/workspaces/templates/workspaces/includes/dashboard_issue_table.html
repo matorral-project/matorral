@@ -13,7 +13,7 @@
     </thead>
     <tbody>
       {% for issue in issues %}
-        {% include "dashboard/includes/dashboard_issue_row.html" with issue=issue %}
+        {% include "workspaces/includes/dashboard_issue_row.html" with issue=issue %}
       {% empty %}
       <tr>
         <td colspan="6" class="text-center text-base-content/50">
