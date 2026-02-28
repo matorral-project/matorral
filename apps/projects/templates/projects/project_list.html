@@ -4,8 +4,9 @@
 <div id="page-content" hx-target="#page-content">
   {% partialdef page-content inline %}
   <section class="app-card relative"
-           x-data="{ selectedCount: 0, showBulkDeleteModal: false, showBulkLeadModal: false, showCascadeModal: false, leadConfirmStep: false, selectedLeadName: '', selectedLeadValue: '', showFiltersModal: false }"
+           x-data="{ selectedCount: 0, showBulkDeleteModal: false, showBulkLeadModal: false, showCascadeModal: false, leadConfirmStep: false, selectedLeadName: '', selectedLeadValue: '', showFiltersModal: false, showNewProjectModal: false }"
            @htmx:after-swap="selectedCount = document.querySelectorAll('[name=projects]:checked').length"
+           @project-created.window="showNewProjectModal = false; htmx.ajax('GET', $event.detail.listUrl, {target: '#list-content', swap: 'innerHTML'})"
            @filters-apply.window="
              document.getElementById('filters-status').value = $event.detail.status || '';
              document.getElementById('filters-lead').value = $event.detail.lead || '';
@@ -110,13 +111,15 @@
             </ul>
           </div>
         </div>
-        <a class="mt-button-primary"
-           href="{% url 'projects:project_create' workspace.slug %}"
-           hx-get="{% url 'projects:project_create' workspace.slug %}"
-           hx-push-url="true">
+        <button type="button"
+                class="mt-button-primary"
+                hx-get="{% url 'projects:project_create' workspace.slug %}?modal=1"
+                hx-target="#new-project-modal-content"
+                hx-swap="innerHTML"
+                @click="showNewProjectModal = true">
           <span class="mt-icon"><i class="fa fa-plus"></i></span>
           <span>{% translate "New Project" %}</span>
-        </a>
+        </button>
       </div>
     </div>
     {% include "includes/loading_indicator.html" with indicator_id="list-loading" %}
@@ -209,6 +212,7 @@
     {% include "projects/includes/bulk_lead_modal.html" %}
     {% include "includes/filters_modal.html" %}
     {% include "includes/cascade_status_modal.html" %}
+    {% include "projects/includes/new_project_modal.html" %}
   </section>
   <div id="messages" class="toast toast-end toast-bottom z-50" hx-swap-oob="true">
     {% include "includes/messages.html" %}

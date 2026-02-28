@@ -1,0 +1,16 @@
+{% load i18n forms_tags %}
+<form method="post"
+      hx-post="{{ request.get_full_path }}"
+      hx-target="#new-project-modal-content"
+      hx-swap="innerHTML">
+  {% csrf_token %}
+  {% render_form_fields form %}
+  <div class="modal-action mt-4">
+    <button type="button" class="btn btn-ghost" @click="showNewProjectModal = false">
+      {% translate "Cancel" %}
+    </button>
+    <button type="submit" class="btn btn-primary">
+      {% translate "Create Project" %}
+    </button>
+  </div>
+</form>
