@@ -1,15 +1,18 @@
 {% load i18n %}
 {# Display mode for issue detail header - click on editable areas triggers edit mode #}
 <div id="issue-header"
-     class="issue-detail-header"
-     x-data
-     @click="if ($event.target.closest('.no-edit') === null && !$event.target.closest('a') && !$event.target.closest('button') && !$event.target.closest('.dropdown')) { htmx.ajax('GET', '{% url 'issues:issue_detail_inline_edit' workspace.slug project.key issue.key %}', { target: '#issue-header', swap: 'outerHTML' }) }">
+     class="issue-detail-header">
   <div class="flex justify-between items-start mb-4">
-    <div class="cursor-pointer group flex-1">
+    <div class="group flex-1">
       <div class="flex items-center gap-2 mb-1">
         {% include "issues/includes/issue_type_badge.html" with issue=issue %}
         <span class="font-mono text-sm text-gray-500">{{ issue.key }}</span>
-        <span class="invisible group-hover:visible text-xs text-primary">[{% translate "Click to edit" %}]</span>
+        <a href="#"
+           class="invisible group-hover:visible text-xs link link-primary"
+           hx-get="{% url 'issues:issue_detail_inline_edit' workspace.slug project.key issue.key %}"
+           hx-target="#issue-header"
+           hx-swap="outerHTML"
+           @click.prevent>[{% translate "Edit" %}]</a>
       </div>
       <h1 class="mt-title">{{ issue.title }}</h1>
     </div>
@@ -63,7 +66,7 @@
   </div>
 
   {# Issue fields - 4-column layout #}
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 cursor-pointer">
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
     <div>
       <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Priority" %}</h3>
       {% if issue.priority %}
@@ -110,7 +113,7 @@
 
   {# Second row: Parent, Project, Sprint, Creator (read-only links) #}
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-    <div class="cursor-pointer">
+    <div>
       <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Parent" %}</h3>
       {% if parent %}
         <a href="{{ parent.get_absolute_url }}"
@@ -181,7 +184,7 @@
     </div>
   </div>
 
-  <div class="mb-4 cursor-pointer">
+  <div class="mb-4">
     <h3 class="font-semibold mb-2">{% translate "Description" %}</h3>
     {% if issue.description %}
     <p class="text-sm text-gray-600 whitespace-pre-wrap [&_a]:text-primary [&_a]:underline">{{ issue.description|urlize }}</p>

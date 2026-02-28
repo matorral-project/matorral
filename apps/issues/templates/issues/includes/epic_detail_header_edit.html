@@ -23,25 +23,6 @@
       <span class="text-error text-xs">{{ form.title.errors.0 }}</span>
       {% endif %}
     </div>
-    <div class="flex items-center gap-2 ml-4">
-      <button type="button"
-              class="btn btn-success tooltip"
-              data-tip="{% translate 'Save' %}"
-              hx-post="{% url 'issues:epic_detail_inline_edit' workspace.slug project.key issue.key %}"
-              hx-include="#epic-header"
-              hx-target="#epic-header"
-              hx-swap="outerHTML">
-        <i class="fa fa-check"></i> {% translate "Save" %}
-      </button>
-      <button type="button"
-              class="btn btn-ghost tooltip"
-              data-tip="{% translate 'Cancel' %}"
-              hx-get="{% url 'issues:epic_detail_inline_edit' workspace.slug project.key issue.key %}?cancel=1"
-              hx-target="#epic-header"
-              hx-swap="outerHTML">
-        <i class="fa fa-times"></i> {% translate "Cancel" %}
-      </button>
-    </div>
   </div>
 
   {# Epic-specific 4-column layout: Priority, Assignee, Milestone, Project (read-only) #}
@@ -108,5 +89,23 @@
     {% if form.description.errors %}
     <span class="text-error text-xs">{{ form.description.errors.0 }}</span>
     {% endif %}
+  </div>
+
+  <div class="flex gap-2">
+    <button type="button"
+            class="btn btn-success"
+            hx-post="{% url 'issues:epic_detail_inline_edit' workspace.slug project.key issue.key %}"
+            hx-include="#epic-header"
+            hx-target="#epic-header"
+            hx-swap="outerHTML">
+      <i class="fa fa-check"></i> {% translate "Save" %}
+    </button>
+    <button type="button"
+            class="btn btn-ghost"
+            hx-get="{% url 'issues:epic_detail_inline_edit' workspace.slug project.key issue.key %}?cancel=1"
+            hx-target="#epic-header"
+            hx-swap="outerHTML">
+      <i class="fa fa-times"></i> {% translate "Cancel" %}
+    </button>
   </div>
 </div>

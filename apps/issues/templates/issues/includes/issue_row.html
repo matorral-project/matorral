@@ -49,18 +49,12 @@
     </div>
   </td>
   {% if group_by != "status" %}
-  <td class="editable cursor-pointer"
-      hx-get="{% url 'issues:issue_inline_edit' workspace.slug issue.project.key issue.key %}{% if group_by %}?show_status={% if group_by == 'status' %}0{% else %}1{% endif %}&amp;show_priority={% if group_by == 'priority' %}0{% else %}1{% endif %}&amp;show_assignee={% if group_by == 'assignee' %}0{% else %}1{% endif %}{% endif %}"
-      hx-target="closest tr"
-      hx-swap="outerHTML">
+  <td>
     {% include "issues/includes/issue_status_badge.html" with status=issue.status status_display=issue.get_status_display %}
   </td>
   {% endif %}
   {% if group_by != "priority" %}
-  <td class="editable cursor-pointer"
-      hx-get="{% url 'issues:issue_inline_edit' workspace.slug issue.project.key issue.key %}{% if group_by %}?show_status={% if group_by == 'status' %}0{% else %}1{% endif %}&amp;show_priority={% if group_by == 'priority' %}0{% else %}1{% endif %}&amp;show_assignee={% if group_by == 'assignee' %}0{% else %}1{% endif %}{% endif %}"
-      hx-target="closest tr"
-      hx-swap="outerHTML">
+  <td>
     {% if issue.priority %}
       {% include "issues/includes/issue_priority_badge.html" with priority=issue.priority priority_display=issue.get_priority_display %}
     {% else %}
@@ -69,19 +63,9 @@
   </td>
   {% endif %}
   {% if group_by != "assignee" %}
-  <td class="editable cursor-pointer"
-      hx-get="{% url 'issues:issue_inline_edit' workspace.slug issue.project.key issue.key %}{% if group_by %}?show_status={% if group_by == 'status' %}0{% else %}1{% endif %}&amp;show_priority={% if group_by == 'priority' %}0{% else %}1{% endif %}&amp;show_assignee={% if group_by == 'assignee' %}0{% else %}1{% endif %}{% endif %}"
-      hx-target="closest tr"
-      hx-swap="outerHTML">
-    {{ issue.assignee.get_display_name|default:"-" }}
-  </td>
+  <td>{{ issue.assignee.get_display_name|default:"-" }}</td>
   {% endif %}
-  <td class="editable cursor-pointer"
-      hx-get="{% url 'issues:issue_inline_edit' workspace.slug issue.project.key issue.key %}{% if group_by %}?show_status={% if group_by == 'status' %}0{% else %}1{% endif %}&amp;show_priority={% if group_by == 'priority' %}0{% else %}1{% endif %}&amp;show_assignee={% if group_by == 'assignee' %}0{% else %}1{% endif %}{% endif %}"
-      hx-target="closest tr"
-      hx-swap="outerHTML">
-    {{ issue.estimated_points|default:"-" }}
-  </td>
+  <td>{{ issue.estimated_points|default:"-" }}</td>
   <td>
     <div class="dropdown dropdown-end dropdown-left">
       <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square tooltip tooltip-left" data-tip="{% translate "Actions" %}">

@@ -2,14 +2,18 @@
 {# Display mode for milestone detail header - click on editable areas triggers edit mode #}
 <div id="milestone-header"
      class="milestone-detail-header"
-     x-data="{ expanded: localStorage.getItem('milestone_{{ milestone.pk }}_expanded') !== 'false' }"
-     @click="if ($event.target.closest('.no-edit') === null && !$event.target.closest('a') && !$event.target.closest('button') && !$event.target.closest('.dropdown')) { htmx.ajax('GET', '{% url 'milestones:milestone_detail_inline_edit' workspace.slug milestone.project.key milestone.key %}', { target: '#milestone-header', swap: 'outerHTML' }) }">
+     x-data="{ expanded: localStorage.getItem('milestone_{{ milestone.pk }}_expanded') !== 'false' }">
   <div class="flex justify-between items-center mb-4">
-    <div class="cursor-pointer group flex-1">
+    <div class="group flex-1">
       <div class="flex items-center gap-2 mb-1">
         <span class="badge badge-outline">{% translate "Milestone" %}</span>
         <span class="font-mono text-sm text-gray-500">{{ milestone.key }}</span>
-        <span class="invisible group-hover:visible text-xs text-primary">[{% translate "Click to edit" %}]</span>
+        <a href="#"
+           class="invisible group-hover:visible text-xs link link-primary"
+           hx-get="{% url 'milestones:milestone_detail_inline_edit' workspace.slug milestone.project.key milestone.key %}"
+           hx-target="#milestone-header"
+           hx-swap="outerHTML"
+           @click.prevent>[{% translate "Edit" %}]</a>
       </div>
       <h1 class="mt-title">{{ milestone.title }}</h1>
     </div>
@@ -58,7 +62,7 @@
     </div>
   </div>
 
-  <div class="mb-4 cursor-pointer" x-show="expanded">
+  <div class="mb-4" x-show="expanded">
     <h3 class="font-semibold mb-2">{% translate "Description" %}</h3>
     {% if milestone.description %}
     <p class="text-sm text-gray-600 whitespace-pre-wrap [&_a]:text-primary [&_a]:underline">{{ milestone.description|urlize }}</p>
@@ -67,7 +71,7 @@
     {% endif %}
   </div>
 
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 cursor-pointer" x-show="expanded">
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4" x-show="expanded">
     <div>
       <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Priority" %}</h3>
       {% if milestone.priority %}

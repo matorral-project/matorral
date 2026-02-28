@@ -22,25 +22,6 @@
       <span class="text-error text-xs">{{ form.name.errors.0 }}</span>
       {% endif %}
     </div>
-    <div class="flex items-center gap-2 ml-4">
-      <button type="button"
-              class="btn btn-success tooltip"
-              data-tip="{% translate 'Save' %}"
-              hx-post="{% url 'projects:project_detail_inline_edit' workspace.slug project.key %}"
-              hx-include="#project-header"
-              hx-target="#project-header"
-              hx-swap="outerHTML">
-        <i class="fa fa-check"></i> {% translate "Save" %}
-      </button>
-      <button type="button"
-              class="btn btn-ghost tooltip"
-              data-tip="{% translate 'Cancel' %}"
-              hx-get="{% url 'projects:project_detail_inline_edit' workspace.slug project.key %}?cancel=1"
-              hx-target="#project-header"
-              hx-swap="outerHTML">
-        <i class="fa fa-times"></i> {% translate "Cancel" %}
-      </button>
-    </div>
   </div>
 
   <div class="mb-4">
@@ -72,5 +53,23 @@
       <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Lead" %}</h3>
       {% include "includes/user_combobox.html" with combobox_name="lead" combobox_members=workspace_members combobox_selected_id=project.lead_id|default:"" combobox_selected_name=project.lead.get_display_name|default:"" combobox_size="sm" %}
     </div>
+  </div>
+
+  <div class="flex gap-2">
+    <button type="button"
+            class="btn btn-success"
+            hx-post="{% url 'projects:project_detail_inline_edit' workspace.slug project.key %}"
+            hx-include="#project-header"
+            hx-target="#project-header"
+            hx-swap="outerHTML">
+      <i class="fa fa-check"></i> {% translate "Save" %}
+    </button>
+    <button type="button"
+            class="btn btn-ghost"
+            hx-get="{% url 'projects:project_detail_inline_edit' workspace.slug project.key %}?cancel=1"
+            hx-target="#project-header"
+            hx-swap="outerHTML">
+      <i class="fa fa-times"></i> {% translate "Cancel" %}
+    </button>
   </div>
 </div>
