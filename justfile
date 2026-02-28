@@ -14,6 +14,9 @@ stop:
 # Restart all Docker containers
 restart: stop start
 
+# Restart all Docker containers in detached mode (background)
+restart-detached: stop start-detached
+
 # Start all Docker containers in detached mode (background)
 start-detached:
     docker compose up -d
