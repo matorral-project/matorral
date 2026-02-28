@@ -33,3 +33,4 @@ coverage.*
 openapitools.json
 
 scripts/
+fly.toml
