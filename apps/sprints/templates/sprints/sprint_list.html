@@ -4,7 +4,7 @@
 <div id="page-content" hx-target="#page-content">
   {% partialdef page-content inline %}
   <section class="app-card relative"
-           x-data="{ selectedCount: 0, showBulkDeleteModal: false, showBulkOwnerModal: false, ownerConfirmStep: false, selectedOwnerName: '', selectedOwnerValue: '', showFiltersModal: false }"
+           x-data="sprintList()"
            @filters-apply.window="
              document.getElementById('sprint-filters-status').value = $event.detail.status || '';
              document.getElementById('sprint-filters-owner').value = $event.detail.owner || '';

@@ -2,7 +2,7 @@
 <div id="epics-embed">
   {% partialdef embed-content inline %}
   <section class="relative"
-           x-data="{ selectedCount: 0, showBulkDeleteModal: false, showBulkAssigneeModal: false, showEditModal: false, showActionModal: false, showNewMilestoneModal: false, showNewEpicModal: false, showNewIssueModal: false, showQuickViewModal: false, newIssueModalTitle: '', showDeleteModal: false, showConvertModal: false, showPromoteModal: false, showMoveModal: false, showAddToSprintModal: false, actionModalType: '', actionModalTitle: '', actionModalMessage: '', actionModalConfirmText: '', actionModalUrl: '', assigneeConfirmStep: false, selectedAssigneeName: '', selectedAssigneeValue: '', showFiltersModal: false, expandedEpics: {} }"
+           x-data="epicsEmbed()"
            @htmx:after-swap="selectedCount = document.querySelectorAll('#epics-embed [name=epics]:checked').length"
            @show-cascade-modal.document="showEditModal = false"
            @issue-created.window="showNewIssueModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#epics-embed', swap: 'innerHTML'})"

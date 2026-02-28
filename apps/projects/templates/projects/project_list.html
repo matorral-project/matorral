@@ -4,7 +4,7 @@
 <div id="page-content" hx-target="#page-content">
   {% partialdef page-content inline %}
   <section class="app-card relative"
-           x-data="{ selectedCount: 0, showBulkDeleteModal: false, showBulkLeadModal: false, showCascadeModal: false, leadConfirmStep: false, selectedLeadName: '', selectedLeadValue: '', showFiltersModal: false, showNewProjectModal: false }"
+           x-data="projectList()"
            @htmx:after-swap="selectedCount = document.querySelectorAll('[name=projects]:checked').length"
            @project-created.window="showNewProjectModal = false; htmx.ajax('GET', $event.detail.listUrl, {target: '#list-content', swap: 'innerHTML'})"
            @filters-apply.window="
