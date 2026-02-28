@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-27 17:02+0000\n"
+"POT-Creation-Date: 2026-02-27 18:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -236,19 +236,19 @@ msgstr ""
 msgid "No issues found."
 msgstr ""
 
-#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:9
+#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:6
 msgid "Welcome to"
 msgstr ""
 
-#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:11
+#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:8
 msgid "Let's get you started with these quick steps:"
 msgstr ""
 
-#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:18
+#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:15
 msgid "Dismiss"
 msgstr ""
 
-#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:27
+#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:24
 #: apps/issues/templates/issues/includes/issue_quick_view.html:71
 #: apps/issues/templates/issues/milestones/milestone_quick_view.html:13
 #: apps/projects/templates/projects/project_list.html:152
@@ -257,32 +257,32 @@ msgstr ""
 msgid "Progress"
 msgstr ""
 
-#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:57
+#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:54
 #: apps/issues/models.py:29 apps/issues/models.py:528
 #: apps/issues/templates/issues/includes/subtask_row.html:36
 msgid "Done"
 msgstr ""
 
-#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:69
+#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:66
 msgid "Start"
 msgstr ""
 
-#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:80
+#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:77
 msgid "Invite more"
 msgstr ""
 
-#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:82
+#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:79
 msgid "View sprints"
 msgstr ""
 
-#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:84
+#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:81
 #: apps/issues/templates/issues/issues_embed.html:463
 #: apps/issues/templates/issues/issues_embed.html:519
 #: apps/projects/templates/projects/project_epics_embed.html:250
 msgid "View"
 msgstr ""
 
-#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:100
+#: apps/dashboard/templates/dashboard/includes/onboarding_checklist.html:97
 msgid "Skip for now"
 msgstr ""
 
@@ -1917,7 +1917,7 @@ msgstr ""
 #: apps/landing_pages/templates/landing_pages/landing_page.html:19
 #: apps/users/templates/account/signup.html:5
 #: apps/users/templates/account/signup.html:19
-#: apps/users/templates/account/signup.html:39
+#: apps/users/templates/account/signup.html:45
 #: apps/users/templates/socialaccount/signup.html:6
 #: apps/users/templates/socialaccount/signup.html:9
 #: apps/users/templates/socialaccount/signup.html:21
@@ -1928,7 +1928,7 @@ msgstr ""
 #: apps/landing_pages/templates/landing_pages/landing_page.html:20
 #: apps/users/templates/account/login.html:5
 #: apps/users/templates/account/login.html:18
-#: apps/users/templates/account/login.html:26
+#: apps/users/templates/account/login.html:32
 #: apps/users/templates/socialaccount/login_redirect.html:5
 #: templates/includes/top_nav.html:75
 msgid "Sign In"
@@ -3502,6 +3502,14 @@ msgstr ""
 msgid "Confirm Email"
 msgstr ""
 
+#: apps/users/templates/account/login.html:21
+msgid "Don't have an account?"
+msgstr ""
+
+#: apps/users/templates/account/login.html:23
+msgid "Sign up."
+msgstr ""
+
 #: apps/users/templates/account/logout.html:4
 #: apps/users/templates/account/logout.html:16
 msgid "Sign Out"
@@ -3607,11 +3615,11 @@ msgstr ""
 msgid "Set Password"
 msgstr ""
 
-#: apps/users/templates/account/signup.html:43
+#: apps/users/templates/account/signup.html:22
 msgid "Already have account?"
 msgstr ""
 
-#: apps/users/templates/account/signup.html:45
+#: apps/users/templates/account/signup.html:24
 msgid "Sign in."
 msgstr ""
 
