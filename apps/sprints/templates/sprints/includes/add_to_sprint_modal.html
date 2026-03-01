@@ -12,7 +12,9 @@
   <span>{% blocktranslate with sprint=current_sprint.name %}This issue is already assigned to <strong>{{ sprint }}</strong>. Selecting a different sprint will move it.{% endblocktranslate %}</span>
 </div>
 {% endif %}
-<form method="post" action="{% url 'sprints:issue_add_to_sprint_confirm' workspace.slug issue.key %}">
+<form hx-post="{% url 'sprints:issue_add_to_sprint_confirm' workspace.slug issue.key %}"
+      hx-target="#messages"
+      hx-swap="innerHTML">
   {% csrf_token %}
   {% if sprints %}
   <div class="form-control">
@@ -30,12 +32,7 @@
   </div>
   <div class="modal-action">
     <button type="button" class="btn btn-ghost" @click="showAddToSprintModal = false">{% translate "Cancel" %}</button>
-    <button type="submit"
-            class="btn btn-primary"
-            hx-post="{% url 'sprints:issue_add_to_sprint_confirm' workspace.slug issue.key %}"
-            hx-target="#messages"
-            hx-swap="innerHTML"
-            @click="showAddToSprintModal = false">
+    <button type="submit" class="btn btn-primary" @click="showAddToSprintModal = false">
       {% translate "Add to Sprint" %}
     </button>
   </div>

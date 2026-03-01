@@ -300,16 +300,10 @@ class IssueAddToSprintConfirmView(SprintViewMixin, LoginAndWorkspaceRequiredMixi
             _("Issue %(issue)s added to %(sprint)s.") % {"issue": issue.key, "sprint": sprint.name},
         )
 
-        # Check for custom redirect URL (e.g., staying on project/epic detail page)
-        next_url = request.POST.get("next") or request.GET.get("next")
-
         if request.htmx:
-            response = HttpResponse()
-            if next_url:
-                response["HX-Redirect"] = next_url
-            else:
-                # Refresh current page to stay on project/epic detail page
-                response["HX-Refresh"] = "true"
+            response = render(request, "includes/messages.html")
+            response["HX-Trigger"] = '{"issueChanged": true}'
             return response
 
+        next_url = request.POST.get("next") or request.GET.get("next")
         return redirect(next_url or issue.get_absolute_url())
