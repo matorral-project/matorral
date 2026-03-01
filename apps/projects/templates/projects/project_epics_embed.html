@@ -17,7 +17,7 @@
                search: '{{ search_query|default:"" }}'
              }).toString(), {target: '#epics-embed', swap: 'innerHTML'})
            ">
-    <div class="flex justify-between items-center pb-4 sticky top-0 z-10 bg-base-100">
+    <div class="flex justify-between items-center pb-4 sticky top-0 z-20 bg-base-100" :class="{'shadow-md': selectedCount > 0}">
       <div class="flex items-center gap-4">
         {# Search and filters - hidden when epics are selected or when there are no epics #}
         {% if total_epic_count %}
