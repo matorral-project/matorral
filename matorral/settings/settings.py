@@ -147,6 +147,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "matorral.context_processors.base_context",
+                "matorral.context_processors.google_analytics_id",
                 "apps.workspaces.context_processors.default_workspace",
                 "apps.workspaces.context_processors.onboarding_context",
             ],
