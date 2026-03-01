@@ -238,6 +238,7 @@ class SprintIssueListEmbedView(SprintViewMixin, IssueListContextMixin, LoginAndW
     def get_queryset(self):
         self.search_query = self.request.GET.get("search", "").strip()
         self.status_filter = self.request.GET.get("status", "").strip()
+        self.type_filter = self.request.GET.get("type", "").strip()
         self.assignee_filter = self.request.GET.get("assignee", "").strip()
         self.group_by = self.request.GET.get("group_by", "status").strip()
         # Sort by is only available when not grouping
@@ -250,7 +251,7 @@ class SprintIssueListEmbedView(SprintViewMixin, IssueListContextMixin, LoginAndW
         # Apply filters
         queryset = self.apply_issue_filters(
             queryset,
-            type_filter="",
+            type_filter=self.type_filter,
             search_query=self.search_query,
             status_filter=self.status_filter,
             assignee_filter=self.assignee_filter,
@@ -292,7 +293,7 @@ class SprintIssueListEmbedView(SprintViewMixin, IssueListContextMixin, LoginAndW
             self.get_issue_list_context(
                 search_query=self.search_query,
                 status_filter=self.status_filter,
-                type_filter="",
+                type_filter=self.type_filter,
                 assignee_filter=self.assignee_filter,
                 project_filter="",
                 group_by=self.group_by,

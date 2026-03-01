@@ -59,7 +59,7 @@
           </div>
           {# HTMX-loaded orphan issues list (work items with no parent epic) #}
           <div class="mt-6">
-            <h3 class="text-lg font-semibold mb-3">{% translate "Unassigned Work Items" %}</h3>
+            <h3 class="text-lg font-semibold mb-3">{% translate "Issues with no Epic" %}</h3>
             <div hx-get="{% url 'projects:project_orphan_issues_embed' workspace.slug project.key %}"
                  hx-trigger="load"
                  hx-target="this"

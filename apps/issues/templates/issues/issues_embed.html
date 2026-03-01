@@ -5,9 +5,8 @@
            x-data="issuesEmbed()"
            @htmx:after-swap="selectedCount = document.querySelectorAll('#issues-embed [name=issues]:checked').length"
            @show-cascade-modal.document="showEditModal = false"
-           @issue-created.window="showNewIssueModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#issues-embed', swap: 'innerHTML'})"
-           @epic-created.window="showNewEpicModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#issues-embed', swap: 'innerHTML'})"
-           @milestone-created.window="showNewMilestoneModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#issues-embed', swap: 'innerHTML'})"
+           @issue-created.window="if (!$event.detail.targetId || $event.detail.targetId === 'issues-embed') { showNewIssueModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#issues-embed', swap: 'innerHTML'}) }"
+           @epic-created.window="if (!$event.detail.targetId || $event.detail.targetId === 'issues-embed') { showNewEpicModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#issues-embed', swap: 'innerHTML'}) }"
            @filters-apply="
              htmx.ajax('GET', '{{ embed_url }}?' + new URLSearchParams({
                status: $event.detail.status || '',
@@ -193,28 +192,7 @@
           <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-44 p-2 shadow">
             <li>
               <button type="button"
-                      hx-get="{% url 'projects:project_milestone_create' workspace.slug project.key %}?modal=1"
-                      hx-target="#{{ embed_modal_prefix }}new-milestone-modal-content"
-                      hx-swap="innerHTML"
-                      @click="showNewMilestoneModal = true; document.activeElement.blur()">
-                <i class="fa fa-flag text-secondary"></i>
-                {% translate "Milestone" %}
-              </button>
-            </li>
-            <li>
-              <button type="button"
-                      hx-get="{% url 'projects:project_epic_create' workspace.slug project.key %}?modal=1"
-                      hx-target="#{{ embed_modal_prefix }}new-epic-modal-content"
-                      hx-swap="innerHTML"
-                      @click="showNewEpicModal = true; document.activeElement.blur()">
-                <i class="fa fa-layer-group text-accent"></i>
-                {% translate "Epic" %}
-              </button>
-            </li>
-            <div class="divider my-0"></div>
-            <li>
-              <button type="button"
-                      hx-get="{% url 'projects:project_issue_create_typed' workspace.slug project.key 'story' %}?modal=1"
+                      hx-get="{% url 'projects:project_issue_create_typed' workspace.slug project.key 'story' %}?modal=1&embed=orphan"
                       hx-target="#{{ embed_modal_prefix }}new-issue-modal-content"
                       hx-swap="innerHTML"
                       @click="newIssueModalTitle = '{% translate "New Story" %}'; showNewIssueModal = true; document.activeElement.blur()">
@@ -224,7 +202,7 @@
             </li>
             <li>
               <button type="button"
-                      hx-get="{% url 'projects:project_issue_create_typed' workspace.slug project.key 'bug' %}?modal=1"
+                      hx-get="{% url 'projects:project_issue_create_typed' workspace.slug project.key 'bug' %}?modal=1&embed=orphan"
                       hx-target="#{{ embed_modal_prefix }}new-issue-modal-content"
                       hx-swap="innerHTML"
                       @click="newIssueModalTitle = '{% translate "New Bug" %}'; showNewIssueModal = true; document.activeElement.blur()">
@@ -234,7 +212,7 @@
             </li>
             <li>
               <button type="button"
-                      hx-get="{% url 'projects:project_issue_create_typed' workspace.slug project.key 'chore' %}?modal=1"
+                      hx-get="{% url 'projects:project_issue_create_typed' workspace.slug project.key 'chore' %}?modal=1&embed=orphan"
                       hx-target="#{{ embed_modal_prefix }}new-issue-modal-content"
                       hx-swap="innerHTML"
                       @click="newIssueModalTitle = '{% translate "New Chore" %}'; showNewIssueModal = true; document.activeElement.blur()">
@@ -705,7 +683,6 @@
     {% include "issues/includes/embed_bulk_add_to_sprint_modal.html" %}
     {% with embed_modal_content_id=embed_modal_prefix|add:"move-modal-content" %}{% include "issues/includes/issue_move_modal.html" %}{% endwith %}
     {% elif project_orphan %}
-    {% with embed_modal_content_id=embed_modal_prefix|add:"new-milestone-modal-content" %}{% include "projects/includes/new_milestone_modal.html" %}{% endwith %}
     {% with embed_modal_content_id=embed_modal_prefix|add:"new-epic-modal-content" %}{% include "projects/includes/new_epic_modal.html" %}{% endwith %}
     {% with embed_modal_content_id=embed_modal_prefix|add:"new-issue-modal-content" %}{% include "projects/includes/new_issue_modal.html" %}{% endwith %}
     {% with embed_modal_content_id=embed_modal_prefix|add:"add-to-sprint-modal-content" %}{% include "issues/includes/add_to_sprint_modal.html" %}{% endwith %}
