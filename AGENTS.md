@@ -115,6 +115,28 @@ self.client.force_login(user)
 response = self.client.get(url)
 ```
 
+**django-htmx patterns** (v1.27.0):
+```python
+# Typed response classes — always use these, never set headers manually
+from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
+return HttpResponseClientRedirect(url)   # sets HX-Redirect (status 200, not 204)
+return HttpResponseClientRefresh()       # sets HX-Refresh: true (no args)
+
+# Safe current URL path (returns None for cross-origin, unlike urlparse)
+current_path = request.htmx.current_url_abs_path or ""
+
+# History restore: always guard partial-fragment returns
+def get_template_names(self):
+    if self.request.htmx and not self.request.htmx.history_restore_request:
+        return [f"{self.template_name}#page-content"]
+    return [self.template_name]
+
+# Vary header: add to every view that returns different content for HTMX vs full-page
+# CBVs: override dispatch() in the mixin; FBVs: call after render()
+from django.utils.cache import patch_vary_headers
+patch_vary_headers(response, ("HX-Request",))
+```
+
 **Circular imports**: Use `django.apps.apps.get_model()`. Never put imports inside functions or methods — always at file top.
 
 **Celery periodic tasks**: Scheduled tasks are defined in `SCHEDULED_TASKS` in `settings.py` and registered via a data migration (see `apps/sprints/migrations/0004_schedule_celery_tasks.py`). To add a new periodic task: add it to `SCHEDULED_TASKS`, then create a data migration in the relevant app using `apps.get_model("django_celery_beat", ...)` with `IntervalSchedule`/`CrontabSchedule` + `PeriodicTask.objects.update_or_create(...)`. Always include a reverse function that deletes the rows.

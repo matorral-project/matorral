@@ -137,7 +137,7 @@ class ProjectListView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, ListView
         return grouped
 
     def get_template_names(self):
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             target = self.request.htmx.target
             if target == "list-content":
                 return [f"{self.template_name}#list-content"]
@@ -255,7 +255,7 @@ class ProjectCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Projec
     def get_template_names(self):
         if self.is_modal():
             return ["projects/includes/project_form_modal.html"]
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return [f"{self.template_name}#page-content"]
         return [self.template_name]
 
@@ -328,7 +328,7 @@ class ProjectDeleteView(
         return Project.objects.for_workspace(self.workspace)
 
     def get_template_names(self):
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return ["projects/includes/delete_confirm_content.html"]
         return [self.template_name]
 
@@ -974,7 +974,7 @@ class ProjectEpicCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Pr
     def get_template_names(self):
         if self.is_modal():
             return ["projects/includes/epic_form_modal.html"]
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return [f"{self.template_name}#page-content"]
         return [self.template_name]
 
@@ -1089,7 +1089,7 @@ class ProjectIssueCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, P
     def get_template_names(self):
         if self.is_modal():
             return ["projects/includes/project_issue_create_form_modal.html"]
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return ["issues/issue_form.html#page-content"]
         return ["issues/issue_form.html"]
 
@@ -1204,7 +1204,7 @@ class ProjectMilestoneCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixi
     def get_template_names(self):
         if self.is_modal():
             return ["projects/includes/milestone_form_modal.html"]
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return [f"{self.template_name}#page-content"]
         return [self.template_name]
 

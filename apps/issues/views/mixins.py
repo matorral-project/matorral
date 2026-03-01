@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Case, CharField, F, IntegerField, Value, When
 from django.db.models.functions import Substr
 from django.shortcuts import get_object_or_404
+from django.utils.cache import patch_vary_headers
 from django.utils.translation import gettext_lazy as _
 
 from apps.issues.forms import get_form_class_for_type
@@ -431,8 +432,13 @@ class WorkspaceIssueViewMixin:
         super().setup(request, *args, **kwargs)
         self.workspace = get_object_or_404(Workspace.objects, slug=kwargs["workspace_slug"])
 
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        patch_vary_headers(response, ("HX-Request",))
+        return response
+
     def get_template_names(self):
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return [f"{self.template_name}#page-content"]
         return [self.template_name]
 
@@ -455,8 +461,13 @@ class IssueViewMixin:
             key=kwargs["project_key"],
         )
 
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        patch_vary_headers(response, ("HX-Request",))
+        return response
+
     def get_template_names(self):
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return [f"{self.template_name}#page-content"]
         return [self.template_name]
 

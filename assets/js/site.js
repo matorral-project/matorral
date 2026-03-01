@@ -3,6 +3,8 @@
 import './htmx';
 import './alpine';
 
+window.__cssFramework = 'tailwind';
+
 // Sidebar state: restore from localStorage, defaulting to open
 document.addEventListener('DOMContentLoaded', () => {
   const drawer = document.getElementById('sidebar-drawer');

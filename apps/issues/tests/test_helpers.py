@@ -1,11 +1,58 @@
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 
 from apps.issues.factories import BugFactory, EpicFactory, MilestoneFactory, StoryFactory
-from apps.issues.helpers import build_grouped_issues, calculate_progress
+from apps.issues.helpers import build_grouped_issues, build_htmx_delete_response, calculate_progress
 from apps.issues.models import BaseIssue, Epic, IssuePriority, IssueStatus
 from apps.projects.factories import ProjectFactory
 from apps.sprints.factories import SprintFactory
 from apps.users.factories import UserFactory
+
+from django_htmx.middleware import HtmxDetails
+
+
+class BuildHtmxDeleteResponseTest(TestCase):
+    """Tests for build_htmx_delete_response() helper."""
+
+    def _make_htmx_request(self, current_url=None):
+        """Create a request with HTMX headers set."""
+        factory = RequestFactory()
+        kwargs = {"HTTP_HX_REQUEST": "true"}
+        if current_url:
+            kwargs["HTTP_HX_CURRENT_URL"] = current_url
+        request = factory.get("/", **kwargs)
+        request.htmx = HtmxDetails(request)
+        return request
+
+    def test_returns_redirect_when_on_deleted_object_page(self):
+        """Returns HX-Redirect when the current URL matches the deleted object URL."""
+        deleted_url = "/w/my-workspace/p/PROJ/issues/STORY-1/"
+        redirect_url = "/w/my-workspace/p/PROJ/"
+        request = self._make_htmx_request(f"http://testserver{deleted_url}")
+
+        response = build_htmx_delete_response(request, deleted_url, redirect_url)
+
+        self.assertEqual(response["HX-Redirect"], redirect_url)
+        self.assertNotIn("HX-Refresh", response)
+
+    def test_returns_refresh_when_on_other_page(self):
+        """Returns HX-Refresh when the current URL does not match the deleted object URL."""
+        deleted_url = "/w/my-workspace/p/PROJ/issues/STORY-1/"
+        redirect_url = "/w/my-workspace/p/PROJ/"
+        request = self._make_htmx_request("http://testserver/w/my-workspace/issues/")
+
+        response = build_htmx_delete_response(request, deleted_url, redirect_url)
+
+        self.assertEqual(response["HX-Refresh"], "true")
+        self.assertNotIn("HX-Redirect", response)
+
+    def test_returns_refresh_when_no_current_url(self):
+        """Returns HX-Refresh when there is no HX-Current-URL header."""
+        request = self._make_htmx_request()
+
+        response = build_htmx_delete_response(request, "/some/path/", "/redirect/")
+
+        self.assertEqual(response["HX-Refresh"], "true")
+        self.assertNotIn("HX-Redirect", response)
 
 
 class BuildGroupedIssuesQueryCountTest(TestCase):

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-01 19:11+0000\n"
+"POT-Creation-Date: 2026-03-01 19:36+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -723,7 +723,7 @@ msgstr[1] ""
 #: apps/workspaces/templates/workspaces/includes/remove_member_modal.html:23
 #: templates/includes/bulk_person_modal.html:33
 #: templates/includes/dashboard_issue_row_edit.html:73
-#: templates/includes/filters_modal.html:183
+#: templates/includes/filters_modal.html:186
 msgid "Cancel"
 msgstr ""
 
@@ -790,7 +790,7 @@ msgid "Skip"
 msgstr ""
 
 #: apps/issues/templates/issues/includes/cascade_status_content.html:77
-#: templates/includes/filters_modal.html:186
+#: templates/includes/filters_modal.html:189
 msgid "Apply"
 msgstr ""
 
@@ -1148,7 +1148,7 @@ msgstr ""
 #: apps/issues/templates/issues/includes/issue_move_modal_content.html:8
 #: apps/issues/templates/issues/issues_embed.html:66
 #: apps/issues/views/mixins.py:375 apps/projects/views/crud.py:178
-#: templates/includes/filters_modal.html:139
+#: templates/includes/filters_modal.html:142
 msgid "None"
 msgstr ""
 
@@ -1411,7 +1411,7 @@ msgstr ""
 #: apps/projects/templates/projects/project_epics_embed.html:31
 #: apps/projects/templates/projects/project_list.html:32
 #: apps/sprints/templates/sprints/sprint_list.html:28
-#: templates/includes/filters_modal.html:107
+#: templates/includes/filters_modal.html:110
 msgid "Filters"
 msgstr ""
 
@@ -1793,8 +1793,8 @@ msgstr ""
 #: apps/issues/views/mixins.py:327 apps/issues/views/mixins.py:349
 #: apps/issues/views/mixins.py:362 apps/projects/views/crud.py:170
 #: apps/projects/views/crud.py:728 apps/projects/views/crud.py:736
-#: apps/sprints/views/mixins.py:101 templates/includes/filters_modal.html:136
-#: templates/includes/filters_modal.html:162
+#: apps/sprints/views/mixins.py:101 templates/includes/filters_modal.html:139
+#: templates/includes/filters_modal.html:165
 msgid "All"
 msgstr ""
 
@@ -3302,7 +3302,7 @@ msgstr ""
 #: apps/users/templates/accounts/includes/social/social_accounts.html:3
 #: apps/users/templates/socialaccount/connections.html:6
 #: apps/users/templates/socialaccount/connections.html:14
-#: apps/users/views.py:102 templates/includes/sidebar_app.html:130
+#: apps/users/views.py:102 templates/includes/sidebar_app.html:132
 msgid "Connected Accounts"
 msgstr ""
 
@@ -3631,7 +3631,7 @@ msgstr ""
 #: apps/users/templates/account/password_change.html:5
 #: apps/users/templates/account/password_change.html:12
 #: apps/users/templates/account/password_change.html:21
-#: templates/includes/sidebar_app.html:139
+#: templates/includes/sidebar_app.html:141
 msgid "Change Password"
 msgstr ""
 
@@ -3855,7 +3855,7 @@ msgstr ""
 msgid "Your profile was successfully saved."
 msgstr ""
 
-#: apps/users/views.py:73 templates/includes/sidebar_app.html:122
+#: apps/users/views.py:73 templates/includes/sidebar_app.html:124
 msgid "Profile"
 msgstr ""
 
@@ -4123,7 +4123,7 @@ msgid "Add '%(email)s' to your account"
 msgstr ""
 
 #: apps/workspaces/templates/workspaces/accept_invite.html:48
-#: templates/includes/sidebar_app.html:157
+#: templates/includes/sidebar_app.html:159
 msgid "Sign out"
 msgstr ""
 
@@ -4357,8 +4357,8 @@ msgid "Pending Invites"
 msgstr ""
 
 #: apps/workspaces/templates/workspaces/list_workspaces.html:8
-#: apps/workspaces/views.py:100 templates/includes/sidebar_app.html:97
-#: templates/includes/sidebar_app.html:99
+#: apps/workspaces/views.py:100 templates/includes/sidebar_app.html:99
+#: templates/includes/sidebar_app.html:101
 #: templates/includes/workspace_nav_items.html:32
 msgid "My Workspaces"
 msgstr ""
@@ -4372,8 +4372,8 @@ msgid "View Workspace"
 msgstr ""
 
 #: apps/workspaces/templates/workspaces/list_workspaces.html:40
-#: templates/includes/sidebar_app.html:73
 #: templates/includes/sidebar_app.html:75
+#: templates/includes/sidebar_app.html:77
 #: templates/includes/workspace_nav_items.html:9
 msgid "Settings"
 msgstr ""
@@ -4607,7 +4607,7 @@ msgstr ""
 msgid "Update Related Items"
 msgstr ""
 
-#: templates/includes/filters_modal.html:111
+#: templates/includes/filters_modal.html:114
 msgid "Clear All"
 msgstr ""
 
@@ -4643,17 +4643,17 @@ msgstr ""
 msgid "Toggle sidebar"
 msgstr ""
 
-#: templates/includes/sidebar_app.html:84
 #: templates/includes/sidebar_app.html:86
+#: templates/includes/sidebar_app.html:88
 #: templates/includes/workspace_nav_items.html:18
 msgid "Members"
 msgstr ""
 
-#: templates/includes/sidebar_app.html:146
+#: templates/includes/sidebar_app.html:148
 msgid "Django Admin"
 msgstr ""
 
-#: templates/includes/sidebar_app.html:152
+#: templates/includes/sidebar_app.html:154
 msgid "Report an Issue"
 msgstr ""
 

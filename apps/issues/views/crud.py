@@ -31,6 +31,8 @@ from apps.sprints.models import Sprint, SprintStatus
 from apps.workspaces.limits import LimitExceededError, check_work_item_limit
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
+from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
+
 from .mixins import (
     ISSUE_TYPE_CHOICES,
     WORK_ITEM_TYPE_CHOICES,
@@ -102,7 +104,7 @@ class WorkspaceIssueListView(
         return self.paginate_by
 
     def get_template_names(self):
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             target = self.request.htmx.target
             if target == "list-content":
                 return [f"{self.template_name}#list-content"]
@@ -184,7 +186,7 @@ class WorkspaceIssueCreateView(LoginAndWorkspaceRequiredMixin, WorkspaceIssueVie
     def get_template_names(self):
         if self.is_modal():
             return ["issues/includes/workspace_issue_create_form_modal.html"]
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return [f"{self.template_name}#page-content"]
         return [self.template_name]
 
@@ -266,7 +268,7 @@ class IssueDetailView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, IssueSingl
     def get_template_names(self):
         if self.is_quick_view():
             return ["issues/includes/issue_quick_view.html"]
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return [f"{self.template_name}#page-content"]
         return [self.template_name]
 
@@ -401,7 +403,7 @@ class IssueUpdateView(
     def get_template_names(self):
         if self.request.GET.get("modal") == "1":
             return ["issues/includes/issue_form_modal.html"]
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return [f"{self.template_name}#page-content"]
         return [self.template_name]
 
@@ -461,9 +463,7 @@ class IssueUpdateView(
                 cascade_response = build_cascade_retarget_response(self.request, self.object, new_status)
                 if cascade_response:
                     return cascade_response
-            response = HttpResponse()
-            response["HX-Refresh"] = "true"
-            return response
+            return HttpResponseClientRefresh()
 
         return redirect(self.object.get_absolute_url())
 
@@ -477,7 +477,7 @@ class IssueDeleteView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, IssueSingl
         return BaseIssue.objects.for_project(self.project)
 
     def get_template_names(self):
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return ["issues/includes/delete_confirm_content.html"]
         return [self.template_name]
 
@@ -591,9 +591,7 @@ class IssueCloneView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View):
 
         # For HTMX requests, return HX-Refresh to reload the page
         if request.htmx:
-            response = HttpResponse()
-            response["HX-Refresh"] = "true"
-            return response
+            return HttpResponseClientRefresh()
 
         return redirect(saved_clone.get_absolute_url())
 
@@ -668,12 +666,11 @@ class IssueConvertTypeView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View)
                 )
 
                 if request.htmx:
-                    response = HttpResponse()
                     if source in ("list", "embed"):
+                        response = HttpResponse()
                         response["HX-Trigger"] = "issueChanged"
-                    else:
-                        response["HX-Redirect"] = converted.get_absolute_url()
-                    return response
+                        return response
+                    return HttpResponseClientRedirect(converted.get_absolute_url())
 
                 return redirect(converted.get_absolute_url())
 
@@ -781,12 +778,11 @@ class IssuePromoteToEpicView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
                 )
 
                 if request.htmx:
-                    response = HttpResponse()
                     if source in ("list", "embed"):
+                        response = HttpResponse()
                         response["HX-Trigger"] = "issueChanged"
-                    else:
-                        response["HX-Redirect"] = epic.get_absolute_url()
-                    return response
+                        return response
+                    return HttpResponseClientRedirect(epic.get_absolute_url())
 
                 return redirect(epic.get_absolute_url())
 

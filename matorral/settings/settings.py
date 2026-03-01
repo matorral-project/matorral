@@ -25,6 +25,9 @@ ENVIRONMENT = env("ENVIRONMENT", default="local")
 # Wildcard is fine in dev; restrict to actual hostnames in production
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
 
+# Site domain redirect middleware
+REDIRECT_TO_SITE_DOMAIN_ENABLED = env.bool("REDIRECT_TO_SITE_DOMAIN_ENABLED", default=False)
+
 
 # --- Apps ---
 
@@ -102,6 +105,9 @@ MIDDLEWARE = [
     "hijack.middleware.HijackUserMiddleware",
     "waffle.middleware.WaffleMiddleware",
 ]
+
+if not DEBUG and REDIRECT_TO_SITE_DOMAIN_ENABLED:
+    MIDDLEWARE.insert(1, "matorral.middlewares.SiteDomainRedirectMiddleware")
 
 if ENABLE_DEBUG_TOOLBAR:
     MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")

@@ -22,7 +22,6 @@
     {% endif %}
     {% vite_asset 'assets/js/site.js' %}
     {% vite_hmr_client %}
-    <script>__cssFramework = 'tailwind';</script>
     <script src="{% url 'javascript-catalog' %}" defer></script>
     {% block page_head %}
     {% endblock %}
@@ -45,7 +44,6 @@
       {% include 'includes/footer.html' %}
     {% endblock footer %}
   {% endblock body_wrapper %}
-  {% include 'includes/messages-js.html' %}
   {% block page_js %}
   {% endblock page_js %}
 </body>

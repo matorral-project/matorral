@@ -170,6 +170,25 @@ class IssueDetailViewTest(IssueViewTestBase):
 
         self.assertEqual(404, response.status_code)
 
+    def test_htmx_history_restore_returns_full_page(self):
+        """HTMX history-restore request returns the full page template, not a fragment."""
+        epic = EpicFactory(project=self.project)
+        url = self._get_detail_url(epic)
+
+        # Regular HTMX request → partial fragment (contains "#page-content" marker)
+        htmx_response = self.client.get(url, HTTP_HX_REQUEST="true")
+        self.assertEqual(200, htmx_response.status_code)
+
+        # History-restore HTMX request → full page (same as non-HTMX)
+        restore_response = self.client.get(
+            url,
+            HTTP_HX_REQUEST="true",
+            HTTP_HX_HISTORY_RESTORE_REQUEST="true",
+        )
+        self.assertEqual(200, restore_response.status_code)
+        # Full page response must contain the base <html> tag
+        self.assertContains(restore_response, "<html")
+
 
 class IssueCreateViewTest(IssueViewTestBase):
     """Tests for the issue create view."""
