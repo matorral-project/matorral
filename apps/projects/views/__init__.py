@@ -1,4 +1,4 @@
-from .bulk import ProjectBulkDeleteView, ProjectBulkLeadView, ProjectBulkStatusView
+from .bulk import ProjectBulkDeleteView, ProjectBulkLeadView, ProjectBulkMoveView, ProjectBulkStatusView
 from .crud import (
     ProjectCloneView,
     ProjectCreateView,
@@ -11,6 +11,7 @@ from .crud import (
     ProjectIssueCreateView,
     ProjectListView,
     ProjectMilestoneCreateView,
+    ProjectMoveView,
     ProjectOrphanIssuesEmbedView,
     ProjectRowInlineEditView,
     ProjectUpdateView,
@@ -20,6 +21,7 @@ from .history import ProjectHistoryView
 __all__ = [
     "ProjectBulkDeleteView",
     "ProjectBulkLeadView",
+    "ProjectBulkMoveView",
     "ProjectBulkStatusView",
     "ProjectCloneView",
     "ProjectCreateView",
@@ -33,6 +35,7 @@ __all__ = [
     "ProjectIssueCreateView",
     "ProjectListView",
     "ProjectMilestoneCreateView",
+    "ProjectMoveView",
     "ProjectOrphanIssuesEmbedView",
     "ProjectRowInlineEditView",
     "ProjectUpdateView",

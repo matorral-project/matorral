@@ -1,0 +1,84 @@
+{% load i18n %}
+<div class="modal" :class="{ 'modal-open': showMoveModal }">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg">{% translate "Move Project to Workspace" %}</h3>
+
+    {# Step 1: Workspace selection #}
+    <div x-show="!moveProjectConfirmStep">
+      <p class="py-4">
+        {% blocktranslate trimmed %}
+          Select a workspace to move this project to.
+        {% endblocktranslate %}
+      </p>
+      <div class="max-h-60 overflow-y-auto border border-base-300 rounded-lg">
+        <ul class="menu p-2">
+          {% for ws in move_target_workspaces %}
+          <li>
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="radio" name="move-project-workspace-selection" value="{{ ws.pk }}" class="radio radio-sm"
+                     data-label="{{ ws.name }}">
+              <span>{{ ws.name }}</span>
+            </label>
+          </li>
+          {% empty %}
+          <li class="text-base-content/50 italic p-2">{% translate "No other workspaces available." %}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="modal-action">
+        <button type="button"
+                class="btn btn-primary"
+                @click="
+                  let selected = document.querySelector('[name=move-project-workspace-selection]:checked');
+                  if (!selected) return;
+                  moveProjectWorkspaceName = selected.dataset.label;
+                  moveProjectWorkspaceValue = selected.value;
+                  moveProjectConfirmStep = true;
+                ">
+          {% translate "Continue" %}
+        </button>
+        <button type="button" class="btn" @click="showMoveModal = false">
+          {% translate "Cancel" %}
+        </button>
+      </div>
+    </div>
+
+    {# Step 2: Confirmation #}
+    <div x-show="moveProjectConfirmStep" x-cloak>
+      <p class="py-4">
+        {% blocktranslate trimmed %}
+          Are you sure you want to move this project?
+        {% endblocktranslate %}
+      </p>
+      <div class="bg-base-200 rounded-lg p-4 my-2">
+        <p class="text-sm text-base-content/70">{% translate "Destination workspace" %}</p>
+        <p class="font-semibold" x-text="moveProjectWorkspaceName"></p>
+      </div>
+      <div class="alert alert-warning mt-3">
+        <i class="fa fa-triangle-exclamation"></i>
+        <p class="text-sm">
+          {% blocktranslate trimmed %}
+            All work items will be removed from their current sprints. This action cannot be undone.
+          {% endblocktranslate %}
+        </p>
+      </div>
+      <div class="modal-action">
+        <form x-ref="moveProjectForm"
+              action="{% url 'projects:project_move' workspace.slug project.key %}"
+              method="post">
+          {% csrf_token %}
+          <input type="hidden" name="workspace" :value="moveProjectWorkspaceValue">
+          <button type="submit"
+                  class="btn btn-primary"
+                  @click="showMoveModal = false; moveProjectConfirmStep = false">
+            {% translate "Confirm Move" %}
+          </button>
+        </form>
+        <button type="button" class="btn" @click="moveProjectConfirmStep = false">
+          {% translate "Back" %}
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop" @click="showMoveModal = false; moveProjectConfirmStep = false"></div>
+</div>

@@ -28,8 +28,10 @@ from apps.sprints.models import Sprint, SprintStatus
 from apps.utils.filters import build_filter_section, count_active_filters, get_status_filter_label, parse_status_filter
 from apps.workspaces.limits import LimitExceededError, check_work_item_limit
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
+from apps.workspaces.models import Workspace
 
 from ..models import Project, ProjectStatus
+from ..tasks import move_project_task
 from .mixins import ProjectFormMixin, ProjectSingleObjectMixin, ProjectViewMixin
 
 User = get_user_model()
@@ -185,6 +187,7 @@ class ProjectListView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, ListView
         context["status_choices"] = ProjectStatus.choices
         context["workspace_members"] = self.request.workspace_members
         context["search_query"] = self.search_query
+        context["move_target_workspaces"] = Workspace.objects.for_user(self.request.user).exclude(pk=self.workspace.pk)
         context["status_filter"] = self.status_filter
         context["status_filter_label"] = get_status_filter_label(self.status_filter, ProjectStatus.choices)
         context["lead_filter"] = self.lead_filter
@@ -237,6 +240,7 @@ class ProjectDetailView(
             .only("status", "estimated_points")
         )
         context["progress"] = calculate_progress(work_items)
+        context["move_target_workspaces"] = Workspace.objects.for_user(self.request.user).exclude(pk=self.workspace.pk)
         return context
 
 
@@ -1247,3 +1251,27 @@ class ProjectMilestoneCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixi
     def form_invalid(self, form):
         context = self.get_context_data(form=form)
         return render(self.request, self.get_template_names()[0], context)
+
+
+class ProjectMoveView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, View):
+    """Move a single project to another workspace (POST only)."""
+
+    http_method_names = ["post"]
+
+    def post(self, request, *args, **kwargs):
+        project = get_object_or_404(
+            Project.objects.for_workspace(self.workspace),
+            key=kwargs["key"],
+        )
+        target_workspace_pk = request.POST.get("workspace")
+        target_workspace = get_object_or_404(
+            Workspace.objects.for_user(request.user).exclude(pk=self.workspace.pk),
+            pk=target_workspace_pk,
+        )
+        move_project_task.delay(project.pk, target_workspace.pk)
+        messages.success(
+            request,
+            _("Project %(key)s is being moved to %(workspace)s.")
+            % {"key": project.key, "workspace": target_workspace.name},
+        )
+        return redirect(reverse("projects:project_list", kwargs={"workspace_slug": self.kwargs["workspace_slug"]}))

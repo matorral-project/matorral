@@ -2,7 +2,7 @@
 {# Display mode for project detail header - click on editable areas triggers edit mode #}
 <div id="project-header"
      class="project-detail-header"
-     x-data="{ expanded: localStorage.getItem('proj_{{ project.pk }}_expanded') !== 'false' }">
+     x-data="{ expanded: localStorage.getItem('proj_{{ project.pk }}_expanded') !== 'false', showMoveModal: false, moveProjectConfirmStep: false, moveProjectWorkspaceName: '', moveProjectWorkspaceValue: '' }">
   <div class="flex justify-between items-center mb-4">
     <div class="group flex-1">
       <div class="flex items-center gap-2 mb-1">
@@ -36,12 +36,20 @@
         <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square">
           <i class="fa fa-ellipsis-vertical"></i>
         </div>
-        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-32 p-2 shadow">
+        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
           <li>
             <button type="button" @click="$refs.cloneForm.submit()">
               <i class="fa fa-clone"></i> {% translate "Clone" %}
             </button>
           </li>
+          {% if move_target_workspaces %}
+          <li>
+            <button type="button"
+                    @click="moveProjectConfirmStep = false; moveProjectWorkspaceName = ''; moveProjectWorkspaceValue = ''; showMoveModal = true; document.activeElement.blur()">
+              <i class="fa fa-arrow-right-arrow-left"></i> {% translate "Move" %}
+            </button>
+          </li>
+          {% endif %}
           <li>
             <button type="button" class="text-error"
                     hx-get="{% url 'projects:project_delete' workspace.slug project.key %}"
@@ -60,6 +68,7 @@
       </form>
     </div>
   </div>
+  {% include "projects/includes/move_modal.html" %}
 
   <div class="mb-4" x-show="expanded">
     <h3 class="font-semibold mb-2">{% translate "Description" %}</h3>
