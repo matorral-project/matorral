@@ -1,5 +1,6 @@
+from django.contrib.auth.models import Permission
 from django.core.files.storage import default_storage
-from django.db.models.signals import post_delete, pre_save
+from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 
 from apps.users.models import User
@@ -7,6 +8,18 @@ from apps.users.models import User
 from allauth.account.internal.flows.manage_email import emit_email_changed
 from allauth.account.models import EmailAddress
 from allauth.account.signals import email_confirmed
+
+
+@receiver(post_save, sender=User)
+def grant_attachment_permissions(sender, instance, created, **kwargs):
+    if not created:
+        return
+    try:
+        add_perm = Permission.objects.get(codename="add_attachment")
+        delete_perm = Permission.objects.get(codename="delete_attachment")
+        instance.user_permissions.add(add_perm, delete_perm)
+    except Permission.DoesNotExist:
+        pass  # attachments app not yet migrated
 
 
 @receiver(pre_save, sender=User)

@@ -371,6 +371,27 @@ class WorkspaceBulkAssigneeForm(WorkspaceBulkActionForm):
         return cleaned_data
 
 
+class WorkspaceBulkMilestoneForm(WorkspaceBulkActionForm):
+    """Form for workspace-level bulk updating epic milestones."""
+
+    milestone = forms.ModelChoiceField(
+        queryset=Milestone.objects.none(),
+        required=False,
+        empty_label=None,
+    )
+
+    def __init__(self, *args, project: Project | None = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if project is not None:
+            self.fields["milestone"].queryset = Milestone.objects.for_project(project).for_choices()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if not cleaned_data.get("issues"):
+            raise forms.ValidationError(_("No issues selected."))
+        return cleaned_data
+
+
 # ============================================================================
 # Issue inline edit form
 # ============================================================================

@@ -14,7 +14,7 @@
              window.history.pushState(null, '', u);
              htmx.ajax('GET', u, {target: '#page-content', swap: 'innerHTML'})
            ">
-    <div class="flex justify-between items-center pb-4 sticky top-0 z-10 bg-base-100">
+    <div class="flex justify-between items-center pb-4 sticky top-0 z-20 bg-base-100" :class="{'shadow-md': selectedCount > 0}">
       <div class="flex items-center gap-4">
         <h1 class="mt-title">{% translate "Sprints" %}</h1>
         <div class="flex items-center gap-2" x-show="selectedCount === 0">

@@ -14,8 +14,9 @@ from apps.utils.audit import bulk_create_audit_logs
 from apps.utils.filters import get_status_filter_label, parse_status_filter
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
-from ..forms import BulkActionForm, BulkLeadForm
+from ..forms import BulkActionForm, BulkLeadForm, BulkMoveForm
 from ..models import Project, ProjectStatus
+from ..tasks import move_project_task
 from .crud import GROUP_BY_CHOICES, _attach_progress_to_projects
 from .mixins import ProjectViewMixin
 
@@ -275,4 +276,31 @@ class ProjectBulkLeadView(BulkActionMixin, LoginAndWorkspaceRequiredMixin, View)
                 self.request,
                 _("%(count)d project(s) lead removed.") % {"count": updated_count},
             )
+        return self.form.cleaned_data["page"]
+
+
+class ProjectBulkMoveView(BulkActionMixin, LoginAndWorkspaceRequiredMixin, View):
+    """Move multiple projects to another workspace."""
+
+    form_class = BulkMoveForm
+
+    def get_form_kwargs(self):
+        return {
+            "data": self.request.POST,
+            "queryset": self.get_queryset(),
+            "workspace": self.workspace,
+            "user": self.request.user,
+        }
+
+    def perform_action(self):
+        target_workspace = self.form.cleaned_data["workspace"]
+        selected_qs = self.get_selected_queryset()
+        count = selected_qs.count()
+        for project in selected_qs:
+            move_project_task.delay(project.pk, target_workspace.pk)
+        messages.success(
+            self.request,
+            _("%(count)d project(s) are being moved to %(workspace)s.")
+            % {"count": count, "workspace": target_workspace.name},
+        )
         return self.form.cleaned_data["page"]

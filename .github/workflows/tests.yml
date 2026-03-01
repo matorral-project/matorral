@@ -67,7 +67,7 @@ jobs:
         run: uv sync
 
       - name: Run tests with coverage
-        run: uv run coverage run -m pytest apps/ -v --tb=short
+        run: uv run coverage run manage.py test apps
 
       - name: Generate coverage report
         run: uv run coverage xml

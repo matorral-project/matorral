@@ -65,6 +65,22 @@ class BulkLeadForm(BulkActionForm):
         self.fields["projects"].required = True
 
 
+class BulkMoveForm(BulkActionForm):
+    """Form for bulk moving projects to another workspace."""
+
+    workspace = forms.ModelChoiceField(
+        queryset=Workspace.objects.none(),
+        required=True,
+        empty_label=None,
+    )
+
+    def __init__(self, *args, workspace: Workspace, queryset=None, user=None, **kwargs):
+        super().__init__(*args, queryset=queryset, **kwargs)
+        target_qs = Workspace.objects.for_user(user).exclude(pk=workspace.pk) if user else Workspace.objects.none()
+        self.fields["workspace"].queryset = target_qs
+        self.fields["projects"].required = True
+
+
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project

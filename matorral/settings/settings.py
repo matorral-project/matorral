@@ -64,6 +64,7 @@ THIRD_PARTY_APPS = [
     "django_comments_xtd",
     "django_comments",
     "auditlog",  # audit history for models
+    "attachments",
 ]
 
 PROJECT_APPS = [
@@ -355,6 +356,7 @@ CACHES = {
 CELERY_BROKER_URL = CELERY_RESULT_BACKEND = REDIS_URL
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_WORKER_MAX_MEMORY_PER_CHILD = 400_000  # 400MB in kB; only effective with prefork pool
+CELERY_TASK_ALWAYS_EAGER = "test" in sys.argv
 
 SCHEDULED_TASKS = {
     "create-next-sprints": {
@@ -445,6 +447,12 @@ COMMENTS_APP = "django_comments_xtd"
 COMMENTS_XTD_CONFIRM_EMAIL = False
 COMMENTS_XTD_MAX_THREAD_LEVEL = 2
 COMMENTS_XTD_SALT = env("COMMENTS_XTD_SALT", default="change-me-in-production")
+
+
+# --- Attachments ---
+
+DELETE_ATTACHMENTS_FROM_DISK = True
+FILE_UPLOAD_MAX_SIZE = 52_428_800  # 50 MB
 
 
 # --- Free Tier Limits ---

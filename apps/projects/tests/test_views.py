@@ -766,3 +766,68 @@ class ProjectDetailInlineEditViewTest(ProjectViewTestCase):
         self.assertTemplateUsed(response, "projects/includes/project_detail_header_edit.html")
         self.assertIn("form", response.context)
         self.assertTrue(response.context["form"].errors)
+
+
+class ProjectBulkMoveViewTest(ProjectViewTestCase):
+    """Tests for ProjectBulkMoveView functionality."""
+
+    def setUp(self):
+        super().setUp()
+        self.target_workspace = WorkspaceFactory()
+        MembershipFactory(workspace=self.target_workspace, user=self.user, role=ROLE_MEMBER)
+
+    def _get_bulk_move_url(self):
+        return reverse("projects:projects_bulk_move", kwargs={"workspace_slug": self.workspace.slug})
+
+    def test_bulk_move_moves_all_selected_projects(self):
+        project1 = ProjectFactory(workspace=self.workspace)
+        project2 = ProjectFactory(workspace=self.workspace)
+
+        self.client.post(
+            self._get_bulk_move_url(),
+            {"projects": [project1.key, project2.key], "workspace": self.target_workspace.pk, "page": 1},
+        )
+
+        project1.refresh_from_db()
+        project2.refresh_from_db()
+        self.assertEqual(self.target_workspace, project1.workspace)
+        self.assertEqual(self.target_workspace, project2.workspace)
+
+    def test_bulk_move_shows_success_message(self):
+        project = ProjectFactory(workspace=self.workspace)
+
+        response = self.client.post(
+            self._get_bulk_move_url(),
+            {"projects": [project.key], "workspace": self.target_workspace.pk, "page": 1},
+            follow=True,
+        )
+
+        self.assertContains(response, "being moved to")
+        self.assertContains(response, self.target_workspace.name)
+
+    def test_bulk_move_empty_selection_shows_warning(self):
+        response = self.client.post(
+            self._get_bulk_move_url(),
+            {"projects": [], "workspace": self.target_workspace.pk, "page": 1},
+            follow=True,
+        )
+
+        self.assertContains(response, "No projects selected")
+
+    def test_bulk_move_does_not_move_projects_from_other_workspace(self):
+        other_workspace = WorkspaceFactory()
+        other_project = ProjectFactory(workspace=other_workspace)
+
+        self.client.post(
+            self._get_bulk_move_url(),
+            {"projects": [other_project.key], "workspace": self.target_workspace.pk, "page": 1},
+            follow=True,
+        )
+
+        other_project.refresh_from_db()
+        self.assertEqual(other_workspace, other_project.workspace)
+
+    def test_bulk_move_get_not_allowed(self):
+        response = self.client.get(self._get_bulk_move_url())
+
+        self.assertEqual(405, response.status_code)

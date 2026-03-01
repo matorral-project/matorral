@@ -1,6 +1,9 @@
 from django.test import TestCase
 
+from apps.issues.factories import BugFactory, ChoreFactory, EpicFactory, StoryFactory
+from apps.projects.factories import ProjectFactory
 from apps.projects.models import Project
+from apps.sprints.factories import SprintFactory
 from apps.workspaces.factories import WorkspaceFactory
 
 
@@ -117,3 +120,109 @@ class ProjectKeyNormalizationTest(TestCase):
         project = Project.objects.create(workspace=self.workspace, name="Marketing Campaign", key="custom")
 
         self.assertEqual("CUSTOM", project.key)
+
+
+class ProjectMoveTest(TestCase):
+    """Tests for Project.move(target_workspace)."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.source_workspace = WorkspaceFactory()
+        cls.target_workspace = WorkspaceFactory()
+
+    def test_move_changes_workspace(self):
+        """Project.workspace is updated to the target workspace after move."""
+        project = ProjectFactory(workspace=self.source_workspace, key="ALPHA")
+
+        project.move(self.target_workspace)
+
+        project.refresh_from_db()
+        self.assertEqual(project.workspace, self.target_workspace)
+
+    def test_move_preserves_key_when_no_conflict(self):
+        """Key is unchanged when no project in the target workspace has that key."""
+        project = ProjectFactory(workspace=self.source_workspace, key="ALPHA")
+
+        project.move(self.target_workspace)
+
+        project.refresh_from_db()
+        self.assertEqual(project.key, "ALPHA")
+
+    def test_move_generates_new_key_on_conflict(self):
+        """When the key is already taken in the target workspace, a new unique key is generated."""
+        ProjectFactory(workspace=self.target_workspace, key="ALPHA")
+        project = ProjectFactory(workspace=self.source_workspace, key="ALPHA")
+
+        project.move(self.target_workspace)
+
+        project.refresh_from_db()
+        self.assertNotEqual(project.key, "ALPHA")
+        self.assertEqual(project.workspace, self.target_workspace)
+        # Only one project with key ALPHA should remain in the target workspace
+        self.assertEqual(Project.objects.filter(workspace=self.target_workspace, key="ALPHA").count(), 1)
+
+    def test_move_updates_issue_keys_when_project_key_changes(self):
+        """When project key changes, all issue keys are updated via SQL REPLACE."""
+        ProjectFactory(workspace=self.target_workspace, key="ALPHA")
+        project = ProjectFactory(workspace=self.source_workspace, key="ALPHA")
+        epic = EpicFactory(project=project)
+        story = StoryFactory(project=project)
+
+        old_epic_key = epic.key
+        old_story_key = story.key
+        self.assertTrue(old_epic_key.startswith("ALPHA-"))
+        self.assertTrue(old_story_key.startswith("ALPHA-"))
+
+        project.move(self.target_workspace)
+        new_key = project.key
+
+        epic.refresh_from_db()
+        story.refresh_from_db()
+        self.assertTrue(epic.key.startswith(f"{new_key}-"))
+        self.assertTrue(story.key.startswith(f"{new_key}-"))
+        self.assertFalse(epic.key.startswith("ALPHA-"))
+        self.assertFalse(story.key.startswith("ALPHA-"))
+
+    def test_move_does_not_update_issue_keys_when_key_unchanged(self):
+        """Issue keys are not modified when the project key does not change."""
+        project = ProjectFactory(workspace=self.source_workspace, key="BETA")
+        epic = EpicFactory(project=project)
+        original_key = epic.key
+
+        project.move(self.target_workspace)
+
+        epic.refresh_from_db()
+        self.assertEqual(epic.key, original_key)
+
+    def test_move_clears_sprint_from_stories(self):
+        """Stories lose their sprint assignment when the project is moved."""
+        sprint = SprintFactory(workspace=self.source_workspace)
+        project = ProjectFactory(workspace=self.source_workspace, key="GAMMA")
+        story = StoryFactory(project=project, sprint=sprint)
+
+        project.move(self.target_workspace)
+
+        story.refresh_from_db()
+        self.assertIsNone(story.sprint)
+
+    def test_move_clears_sprint_from_bugs(self):
+        """Bugs lose their sprint assignment when the project is moved."""
+        sprint = SprintFactory(workspace=self.source_workspace)
+        project = ProjectFactory(workspace=self.source_workspace, key="DELTA")
+        bug = BugFactory(project=project, sprint=sprint)
+
+        project.move(self.target_workspace)
+
+        bug.refresh_from_db()
+        self.assertIsNone(bug.sprint)
+
+    def test_move_clears_sprint_from_chores(self):
+        """Chores lose their sprint assignment when the project is moved."""
+        sprint = SprintFactory(workspace=self.source_workspace)
+        project = ProjectFactory(workspace=self.source_workspace, key="ECHO")
+        chore = ChoreFactory(project=project, sprint=sprint)
+
+        project.move(self.target_workspace)
+
+        chore.refresh_from_db()
+        self.assertIsNone(chore.sprint)

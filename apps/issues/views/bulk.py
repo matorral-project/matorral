@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import View
 
 from apps.issues.cascade import build_cascade_oob_response_bulk
-from apps.issues.forms import WorkspaceBulkActionForm, WorkspaceBulkAssigneeForm
+from apps.issues.forms import WorkspaceBulkActionForm, WorkspaceBulkAssigneeForm, WorkspaceBulkMilestoneForm
 from apps.issues.helpers import (
     build_grouped_epics_by_milestone,
     build_grouped_issues,
@@ -262,6 +262,7 @@ class WorkspaceBulkActionMixin(IssueListContextMixin, WorkspaceIssueViewMixin):
                     "key": project.key,
                 },
             )
+            context["project_milestones"] = Milestone.objects.for_project(project).for_choices()
             return render(self.request, "projects/project_epics_embed.html#embed-content", context)
 
         # For sprint embed mode, render the shared embedded template with sprint context
@@ -555,6 +556,49 @@ class WorkspaceIssueBulkAssigneeView(WorkspaceBulkActionMixin, LoginAndWorkspace
             messages.success(
                 self.request,
                 _("%(count)d issue(s) unassigned.") % {"count": updated_count},
+            )
+        return self.form.cleaned_data["page"]
+
+
+class WorkspaceIssueBulkMilestoneView(WorkspaceBulkActionMixin, LoginAndWorkspaceRequiredMixin, View):
+    """Update the milestone of multiple epics at once (workspace level)."""
+
+    form_class = WorkspaceBulkMilestoneForm
+
+    def get_form_kwargs(self):
+        project_key = self.request.POST.get("project_filter", "")
+        self._project = None
+        if project_key:
+            self._project = Project.objects.for_workspace(self.workspace).filter(key=project_key).first()
+        return {
+            "data": self.request.POST,
+            "queryset": self.get_queryset(),
+            "project": self._project,
+        }
+
+    def perform_action(self):
+        milestone = self.form.cleaned_data["milestone"]
+        selected_qs = self.get_selected_queryset()
+        selected_pks = list(selected_qs.values_list("pk", flat=True))
+
+        # milestone is Epic-only, so query Epic directly for audit log data
+        epic_qs = Epic.objects.filter(pk__in=selected_pks).select_related("polymorphic_ctype", "milestone")
+        objects = list(epic_qs)
+        old_values = {obj.pk: str(obj.milestone) if obj.milestone else None for obj in objects}
+        new_display = str(milestone) if milestone else None
+
+        updated_count = Epic.objects.filter(pk__in=selected_pks).move_to_milestone(milestone)
+        bulk_create_audit_logs(objects, "milestone", old_values, new_display, actor=self.request.user)
+
+        if milestone:
+            messages.success(
+                self.request,
+                _("%(count)d epic(s) moved to %(milestone)s.") % {"count": updated_count, "milestone": milestone.title},
+            )
+        else:
+            messages.success(
+                self.request,
+                _("%(count)d epic(s) removed from milestone.") % {"count": updated_count},
             )
         return self.form.cleaned_data["page"]
 

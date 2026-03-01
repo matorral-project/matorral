@@ -4,7 +4,7 @@
 <div class="drawer lg:drawer-open">
   <input id="sidebar-drawer" type="checkbox" class="drawer-toggle" />
 
-  <div class="drawer-content flex flex-col min-h-screen">
+  <div class="drawer-content flex flex-col h-dvh">
     <!-- Mobile-only top bar with toggle (hidden on lg+) -->
     <div class="navbar bg-primary text-primary-content sticky top-0 z-10 lg:hidden">
       <label for="sidebar-drawer" aria-label="open sidebar" class="btn btn-square btn-ghost text-primary-content">
@@ -15,7 +15,7 @@
 
     {% block notifications %}{% endblock %}
 
-    <main class="flex-1 overflow-y-auto p-0" id="page-content" hx-target="#page-content">
+    <main class="flex-1 min-h-0 overflow-y-auto p-0" id="page-content" hx-target="#page-content">
       {% block app_content_content %}{% endblock %}
     </main>
   </div>

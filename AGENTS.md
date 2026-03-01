@@ -42,21 +42,35 @@ just npm-build                      # Build frontend assets in container
 npm run dev                         # Watch mode (via Vite dev server)
 ```
 
-Outside Docker, use `uv run` prefix: `uv run pytest apps/ -v --tb=short`.
+Outside Docker, use `uv run python manage.py test apps` (requires a running PostgreSQL instance).
 
 ## Running Tests
 
-```bash
-# Via just (recommended in Docker)
-just test apps/issues/tests/test_models.py::TestIssueModel
+Tests use Django's built-in test runner (`manage.py test`). Test data uses `factory-boy`.
 
-# Via uv locally
-uv run pytest apps/ -v --tb=short
-uv run pytest apps/issues/ -v
-uv run pytest apps/issues/tests/test_models.py::TestIssueModel::test_method -v
+```bash
+# Via just (recommended, runs inside Docker)
+just test                                        # Run all tests
+just test apps.issues                            # Run all tests in an app
+just test apps.issues.tests.test_models          # Run a specific test module
+just test apps.issues.tests.test_models.MilestoneKeyAutoGenerationTest          # Run a test class
+just test apps.issues.tests.test_models.MilestoneKeyAutoGenerationTest.test_key_auto_generated_when_blank  # Single test
+
+# Via uv locally (requires a running PostgreSQL instance)
+uv run python manage.py test apps
+uv run python manage.py test apps.issues
+uv run python manage.py test apps.issues.tests.test_models.MilestoneKeyAutoGenerationTest
 ```
 
-Tests use `pytest-django` with settings in `pyproject.toml`. Test data uses `factory-boy`.
+Use dotted module paths (not file paths) when passing arguments to `just test`.
+
+Coverage reports:
+
+```bash
+just test-cov        # Run tests with coverage
+just cov-report      # Print coverage summary (after test-cov)
+just cov             # Both in one step
+```
 
 ## Architecture
 
