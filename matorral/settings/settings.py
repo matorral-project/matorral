@@ -356,6 +356,7 @@ CACHES = {
 CELERY_BROKER_URL = CELERY_RESULT_BACKEND = REDIS_URL
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_WORKER_MAX_MEMORY_PER_CHILD = 400_000  # 400MB in kB; only effective with prefork pool
+CELERY_TASK_ALWAYS_EAGER = "test" in sys.argv
 
 SCHEDULED_TASKS = {
     "create-next-sprints": {
