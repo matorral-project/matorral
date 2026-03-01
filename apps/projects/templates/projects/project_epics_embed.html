@@ -138,6 +138,12 @@
           <i class="fa fa-user mr-1"></i>
           {% translate "Set Assignee" %}
         </button>
+        <button type="button"
+                class="btn btn-sm btn-outline"
+                @click="document.getElementById('bulk-milestone-none').checked = true; milestoneConfirmStep = false; selectedMilestoneName = '{% translate "No milestone" %}'; selectedMilestoneValue = ''; showBulkMilestoneModal = true">
+          <i class="fa fa-flag mr-1"></i>
+          {% translate "Move to Milestone" %}
+        </button>
         <div class="dropdown dropdown-end">
           <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square">
             <i class="fa fa-ellipsis-vertical"></i>
@@ -314,6 +320,8 @@
     {% include "projects/includes/epic_bulk_delete_modal.html" %}
     {# Bulk assignee modal #}
     {% include "projects/includes/epic_bulk_assignee_modal.html" %}
+    {# Bulk milestone modal #}
+    {% include "projects/includes/epic_bulk_milestone_modal.html" %}
     {# Edit modal #}
     {% include "issues/includes/issue_edit_modal.html" %}
     {# Action modal (clone, delete) #}

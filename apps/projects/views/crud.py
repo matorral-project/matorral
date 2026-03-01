@@ -769,6 +769,8 @@ class ProjectEpicsEmbedView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Pr
         all_epics = [epic for group in context["grouped_epics"] for epic in group["epics"]]
         annotate_epic_child_counts(all_epics)
 
+        context["project_milestones"] = Milestone.objects.for_project(self.project).for_choices()
+
         return context
 
 

@@ -53,6 +53,11 @@ workspace_urlpatterns = [
         views.WorkspaceIssueBulkAssigneeView.as_view(),
         name="workspace_issues_bulk_assignee",
     ),
+    path(
+        "bulk-milestone/",
+        views.WorkspaceIssueBulkMilestoneView.as_view(),
+        name="workspace_issues_bulk_milestone",
+    ),
 ]
 
 # Project-scoped URL patterns - mounted at /w/<workspace_slug>/p/<project_key>/issues/
