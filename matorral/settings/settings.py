@@ -64,6 +64,7 @@ THIRD_PARTY_APPS = [
     "django_comments_xtd",
     "django_comments",
     "auditlog",  # audit history for models
+    "attachments",
 ]
 
 PROJECT_APPS = [
@@ -445,6 +446,12 @@ COMMENTS_APP = "django_comments_xtd"
 COMMENTS_XTD_CONFIRM_EMAIL = False
 COMMENTS_XTD_MAX_THREAD_LEVEL = 2
 COMMENTS_XTD_SALT = env("COMMENTS_XTD_SALT", default="change-me-in-production")
+
+
+# --- Attachments ---
+
+DELETE_ATTACHMENTS_FROM_DISK = True
+FILE_UPLOAD_MAX_SIZE = 52_428_800  # 50 MB
 
 
 # --- Free Tier Limits ---

@@ -530,6 +530,20 @@ wheels = [
 ]
 
 [[package]]
+name = "django-attachments"
+version = "1.12"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+    { name = "mock" },
+    { name = "six" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/91/aa/82eee2ae88465dbadd4fd386e7e3628bd304b773762ea587a74cf16f639f/django_attachments-1.12.tar.gz", hash = "sha256:b0c3fd21b1d8e402666e589a6fd784cfe97d00a720220d67c7f6d8d215bd2c4d", size = 37154, upload-time = "2025-04-22T12:01:36.381Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9d/27/f640631ba6327eaae3b51742e4b67de44603d9a3135c9288c395a61fa963/django_attachments-1.12-py3-none-any.whl", hash = "sha256:db4c30a528790079371c950b04876dc58862595140ec86c08e6665982004d536", size = 36136, upload-time = "2025-04-22T12:01:34.795Z" },
+]
+
+[[package]]
 name = "django-auditlog"
 version = "3.4.1"
 source = { registry = "https://pypi.org/simple" }
@@ -933,6 +947,7 @@ dependencies = [
     { name = "django" },
     { name = "django-allauth", extra = ["socialaccount"] },
     { name = "django-anymail" },
+    { name = "django-attachments" },
     { name = "django-auditlog" },
     { name = "django-browser-reload" },
     { name = "django-celery-beat" },
@@ -982,6 +997,7 @@ requires-dist = [
     { name = "django", specifier = ">=6.0.2" },
     { name = "django-allauth", extras = ["socialaccount"], specifier = ">=65.13.0" },
     { name = "django-anymail", extras = ["mailgun"] },
+    { name = "django-attachments" },
     { name = "django-auditlog", specifier = ">=3.4.1" },
     { name = "django-browser-reload" },
     { name = "django-celery-beat", git = "https://github.com/celery/django-celery-beat?rev=bd429063cbb227c00905e7693c38895e44ff8e47" },
@@ -1018,6 +1034,15 @@ dev = [
 prod = [
     { name = "gunicorn" },
     { name = "uvicorn", extras = ["standard"] },
+]
+
+[[package]]
+name = "mock"
+version = "5.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/07/8c/14c2ae915e5f9dca5a22edd68b35be94400719ccfa068a03e0fb63d0f6f6/mock-5.2.0.tar.gz", hash = "sha256:4e460e818629b4b173f32d08bf30d3af8123afbb8e04bb5707a1fd4799e503f0", size = 92796, upload-time = "2025-03-03T12:31:42.911Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bd/d9/617e6af809bf3a1d468e0d58c3997b1dc219a9a9202e650d30c2fc85d481/mock-5.2.0-py3-none-any.whl", hash = "sha256:7ba87f72ca0e915175596069dbbcc7c75af7b5e9b9bc107ad6349ede0819982f", size = 31617, upload-time = "2025-03-03T12:31:41.518Z" },
 ]
 
 [[package]]

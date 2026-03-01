@@ -13,6 +13,7 @@ dependencies = [
     "channels",
     "channels_redis",
     "django-allauth[socialaccount]>=65.13.0",
+    "django-attachments",
     "django-anymail[mailgun]",
     "django-auditlog>=3.4.1",
     "django-browser-reload",

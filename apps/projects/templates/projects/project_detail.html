@@ -1,5 +1,5 @@
 {% extends "apps/base.html" %}
-{% load i18n %}
+{% load i18n attachments_tags attachment_extras %}
 {% block app_content_content %}
 <div id="page-content" hx-target="#page-content">
   {% partialdef page-content inline %}
@@ -31,7 +31,20 @@
     {% endif %}
     {% include "projects/includes/project_detail_header.html" %}
 
-    {# Milestones and History Tabs #}
+    {# Milestones, History, and Attachments Tabs #}
+    {% get_attachments_for project as project_attachments %}
+    {% with image_atts=project_attachments|filter_images %}
+    {% if image_atts %}
+    <div class="flex gap-2 mt-4 flex-wrap">
+      {% for att in image_atts|slice:":5" %}
+      <a href="{{ att.attachment_file.url }}" target="_blank"
+         class="block w-40 h-40 overflow-hidden rounded border border-base-300 hover:opacity-80 transition-opacity">
+        <img src="{{ att.attachment_file.url }}" alt="{{ att.filename }}" class="w-full h-full object-cover">
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
     <div class="mt-6" x-data="{ activeTab: 'milestones' }">
       <div role="tablist" class="tabs tabs-lift">
         <button role="tab" class="tab" :class="{ 'tab-active': activeTab === 'milestones' }"
@@ -41,6 +54,10 @@
         <button role="tab" class="tab" :class="{ 'tab-active': activeTab === 'history' }"
                 @click="activeTab = 'history'">
           {% translate "History" %}
+        </button>
+        <button role="tab" class="tab" :class="{ 'tab-active': activeTab === 'attachments' }"
+                @click="activeTab = 'attachments'">
+          {% translate "Attachments" %}{% if project_attachments %} ({{ project_attachments|length }}){% endif %}
         </button>
         <div class="tab flex-1 cursor-default"></div>
       </div>
@@ -80,6 +97,35 @@
                hx-swap="innerHTML">
             <span class="loading loading-spinner loading-md"></span>
           </div>
+        </div>
+
+        {# Attachments tab content #}
+        <div x-show="activeTab === 'attachments'" x-cloak>
+          <div class="mb-4">{% attachment_form project %}</div>
+          {% if project_attachments %}
+          <div class="mt-4 space-y-2">
+            {% for att in project_attachments %}
+            <div class="flex items-center gap-3 py-2 border-b border-base-200">
+              {% if att|is_image %}
+                <a href="{{ att.attachment_file.url }}" target="_blank">
+                  <img src="{{ att.attachment_file.url }}" alt="{{ att.filename }}" class="w-20 h-20 object-cover rounded">
+                </a>
+              {% else %}
+                <span class="text-2xl">📎</span>
+              {% endif %}
+              <div class="flex-1 min-w-0">
+                <a href="{{ att.attachment_file.url }}" target="_blank"
+                   class="text-sm font-medium truncate hover:underline">{{ att.filename }}</a>
+                <p class="text-xs text-gray-400">{{ att.creator.get_display_name }} · {{ att.created|date:"M d, Y" }}</p>
+              </div>
+              <a href="{{ att.attachment_file.url }}" download class="btn btn-xs btn-outline">{% translate "Download" %}</a>
+              {% attachment_delete_link att %}
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="text-sm text-gray-400 py-4">{% translate "No attachments yet." %}</p>
+          {% endif %}
         </div>
       </div>
     </div>

@@ -1,0 +1,10 @@
+{% if form_url %}
+<form method="post" action="{{ form_url }}" enctype="multipart/form-data">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next }}">
+  <div class="flex items-center gap-3">
+    <input type="file" name="attachment_file" class="file-input file-input-sm file-input-bordered flex-1">
+    <button type="submit" class="btn btn-sm btn-primary">Upload</button>
+  </div>
+</form>
+{% endif %}
