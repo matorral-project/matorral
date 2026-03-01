@@ -14,7 +14,7 @@
           <p class="text-sm">{% translate "Explore it to see how projects, milestones, epics, and sprints work together. When you're ready, feel free to delete it and create your own." %}</p>
         </div>
         <div class="flex gap-2">
-          <button class="btn btn-sm btn-error btn-outline"
+          <button class="btn btn-sm btn-error"
                   hx-get="{% url 'projects:project_delete' workspace.slug project.key %}"
                   hx-target="#detail-delete-modal-content"
                   hx-swap="innerHTML"
