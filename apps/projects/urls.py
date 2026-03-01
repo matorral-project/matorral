@@ -20,6 +20,7 @@ project_urlpatterns = (
             name="projects_bulk_status",
         ),
         path("bulk-lead/", views.ProjectBulkLeadView.as_view(), name="projects_bulk_lead"),
+        path("bulk-move/", views.ProjectBulkMoveView.as_view(), name="projects_bulk_move"),
         path("<str:key>/", views.ProjectDetailView.as_view(), name="project_detail"),
         path(
             "<str:key>/epics/",
@@ -63,6 +64,7 @@ project_urlpatterns = (
         ),
         path("<str:key>/edit/", views.ProjectUpdateView.as_view(), name="project_update"),
         path("<str:key>/clone/", views.ProjectCloneView.as_view(), name="project_clone"),
+        path("<str:key>/move/", views.ProjectMoveView.as_view(), name="project_move"),
         path(
             "<str:key>/delete/",
             views.ProjectDeleteView.as_view(),

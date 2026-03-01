@@ -17,7 +17,7 @@
              window.history.pushState(null, '', u);
              htmx.ajax('GET', u, {target: '#page-content', swap: 'innerHTML'})
            ">
-    <div class="flex justify-between items-center pb-4 sticky top-0 z-10 bg-base-100">
+    <div class="flex justify-between items-center pb-4 sticky top-0 z-20 bg-base-100" :class="{'shadow-md': selectedCount > 0}">
       <div class="flex items-center gap-4">
         <h1 class="mt-title">{% translate "Projects" %}</h1>
         {# Search and filters - hidden when projects are selected #}
@@ -85,6 +85,12 @@
                   @click="document.getElementById('lead-none').checked = true; leadConfirmStep = false; selectedLeadName = ''; selectedLeadValue = ''; showBulkLeadModal = true">
             <i class="fa fa-user mr-1"></i>
             {% translate "Set Lead" %}
+          </button>
+          <button type="button"
+                  class="btn btn-sm btn-outline"
+                  @click="moveConfirmStep = false; selectedMoveWorkspaceName = ''; selectedMoveWorkspaceValue = ''; showBulkMoveModal = true; document.activeElement.blur()">
+            <i class="fa fa-arrow-right-arrow-left mr-1"></i>
+            {% translate "Move to Workspace" %}
           </button>
           <div class="dropdown dropdown-end">
             <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square">
@@ -201,6 +207,7 @@
     </div>
     {% include "projects/includes/bulk_delete_modal.html" %}
     {% include "projects/includes/bulk_lead_modal.html" %}
+    {% include "projects/includes/bulk_move_modal.html" %}
     {% include "includes/filters_modal.html" %}
     {% include "includes/cascade_status_modal.html" %}
     {% include "projects/includes/new_project_modal.html" %}

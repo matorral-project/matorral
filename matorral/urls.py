@@ -68,6 +68,7 @@ urlpatterns = [
     path("hijack/", include("hijack.urls", namespace="hijack")),
     # django-comments-xtd urls
     path("comments/", include("django_comments_xtd.urls")),
+    path("attachments/", include("attachments.urls", namespace="attachments")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.ENABLE_DEBUG_TOOLBAR:

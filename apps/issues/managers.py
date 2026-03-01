@@ -159,6 +159,10 @@ class IssueQuerySet(MP_NodeQuerySet, PolymorphicQuerySet):
         """Bulk update status for all issues in queryset. Returns count of updated rows."""
         return self.update(status=status)
 
+    def move_to_milestone(self, milestone: Milestone | None) -> int:
+        """Bulk update milestone for all epics in queryset. Returns count of updated rows."""
+        return self.update(milestone=milestone)
+
     def ordered_by_priority(self) -> IssueQuerySet:
         """Order by priority: critical > high > medium > low, then by key.
 

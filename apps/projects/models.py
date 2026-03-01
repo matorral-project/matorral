@@ -2,6 +2,7 @@ import re
 
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.db.models import F, Func, Value
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
@@ -187,3 +188,38 @@ class Project(BaseModel):
                 "key": self.key,
             },
         )
+
+    def move(self, target_workspace):
+        """
+        Move this project to a different workspace.
+
+        - If the project key conflicts in the target workspace, a new unique key is generated.
+        - All issue keys (format: {PROJECT_KEY}-{N}) are updated if the key changes.
+        - Sprint assignments are removed from all work items (sprints are workspace-scoped).
+        """
+        from apps.issues.models import BaseIssue, Bug, Chore, Story
+
+        old_key = self.key
+
+        key_taken = Project.objects.filter(workspace=target_workspace).exclude(pk=self.pk).filter(key=old_key).exists()
+
+        if key_taken:
+            original_workspace = self.workspace
+            self.workspace = target_workspace
+            new_key = self._generate_unique_key()
+            self.workspace = original_workspace
+        else:
+            new_key = old_key
+
+        if old_key != new_key:
+            BaseIssue.objects.filter(project=self).update(
+                key=Func(F("key"), Value(f"{old_key}-"), Value(f"{new_key}-"), function="REPLACE")
+            )
+
+        Story.objects.filter(project=self).update(sprint=None)
+        Bug.objects.filter(project=self).update(sprint=None)
+        Chore.objects.filter(project=self).update(sprint=None)
+
+        self.workspace = target_workspace
+        self.key = new_key
+        self.save()

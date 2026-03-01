@@ -1,0 +1,12 @@
+{% load i18n %}
+{% if form %}
+<form method="post" enctype="multipart/form-data" action="{{ form_url }}">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next }}">
+  <div class="flex items-center gap-2 text-[0.6em]">
+    <label class="shrink-0 text-gray-500 text-sm">{{ form.attachment_file.label }}:</label>
+    <input type="file" name="attachment_file" class="file-input file-input-xs file-input-bordered flex-1">
+    <button type="submit" class="btn btn-md btn-primary">{% trans "Add" %}</button>
+  </div>
+</form>
+{% endif %}

@@ -17,7 +17,7 @@
                search: '{{ search_query|default:"" }}'
              }).toString(), {target: '#epics-embed', swap: 'innerHTML'})
            ">
-    <div class="flex justify-between items-center pb-4 sticky top-0 z-10 bg-base-100">
+    <div class="flex justify-between items-center pb-4 sticky top-0 z-20 bg-base-100" :class="{'shadow-md': selectedCount > 0}">
       <div class="flex items-center gap-4">
         {# Search and filters - hidden when epics are selected or when there are no epics #}
         {% if total_epic_count %}
@@ -137,6 +137,12 @@
                 @click="document.getElementById('epics-assignee-none').checked = true; assigneeConfirmStep = false; selectedAssigneeName = '{% translate "Unassigned" %}'; selectedAssigneeValue = ''; showBulkAssigneeModal = true">
           <i class="fa fa-user mr-1"></i>
           {% translate "Set Assignee" %}
+        </button>
+        <button type="button"
+                class="btn btn-sm btn-outline"
+                @click="document.getElementById('bulk-milestone-none').checked = true; milestoneConfirmStep = false; selectedMilestoneName = '{% translate "No milestone" %}'; selectedMilestoneValue = ''; showBulkMilestoneModal = true">
+          <i class="fa fa-flag mr-1"></i>
+          {% translate "Move to Milestone" %}
         </button>
         <div class="dropdown dropdown-end">
           <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square">
@@ -314,6 +320,8 @@
     {% include "projects/includes/epic_bulk_delete_modal.html" %}
     {# Bulk assignee modal #}
     {% include "projects/includes/epic_bulk_assignee_modal.html" %}
+    {# Bulk milestone modal #}
+    {% include "projects/includes/epic_bulk_milestone_modal.html" %}
     {# Edit modal #}
     {% include "issues/includes/issue_edit_modal.html" %}
     {# Action modal (clone, delete) #}

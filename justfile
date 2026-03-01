@@ -73,7 +73,7 @@ test *args:
 
 # Run tests under coverage
 test-cov *args:
-    docker compose run --rm django uv run coverage run -m pytest apps/ -v --tb=short {{args}}
+    docker compose run --rm django uv run coverage run manage.py test apps {{args}}
 
 # Generate coverage json + terminal report
 cov-report:

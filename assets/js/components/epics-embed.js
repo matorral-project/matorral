@@ -23,6 +23,10 @@ export default function epicsEmbed() {
     assigneeConfirmStep: false,
     selectedAssigneeName: '',
     selectedAssigneeValue: '',
+    showBulkMilestoneModal: false,
+    milestoneConfirmStep: false,
+    selectedMilestoneName: '',
+    selectedMilestoneValue: '',
     showFiltersModal: false,
     expandedEpics: {},
   };
