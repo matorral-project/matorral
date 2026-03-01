@@ -3,6 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils import timezone, translation
+from django.utils.cache import patch_vary_headers
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 
@@ -16,6 +17,11 @@ from .models import User
 
 
 class ProfileView(LoginRequiredMixin, View):
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        patch_vary_headers(response, ("HX-Request",))
+        return response
+
     def get(self, request):
         form = UserChangeForm(instance=request.user)
         return render(request, self._template(request), self._context(request, form))
@@ -64,7 +70,9 @@ class ProfileView(LoginRequiredMixin, View):
         return render(request, self._template(request), self._context(request, form))
 
     def _template(self, request):
-        return "account/profile.html#page-content" if request.htmx else "account/profile.html"
+        if request.htmx and not request.htmx.history_restore_request:
+            return "account/profile.html#page-content"
+        return "account/profile.html"
 
     def _context(self, request, form):
         return {
@@ -92,8 +100,16 @@ class UploadProfileImageView(LoginRequiredMixin, View):
 
 
 class ConnectedAccountsView(LoginRequiredMixin, View):
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        patch_vary_headers(response, ("HX-Request",))
+        return response
+
     def get(self, request):
-        template = "account/connected_accounts.html#page-content" if request.htmx else "account/connected_accounts.html"
+        if request.htmx and not request.htmx.history_restore_request:
+            template = "account/connected_accounts.html#page-content"
+        else:
+            template = "account/connected_accounts.html"
         return render(
             request,
             template,
@@ -108,7 +124,12 @@ class ConnectedAccountsView(LoginRequiredMixin, View):
 class CustomPasswordChangeView(PasswordChangeView):
     """Custom password change view with HTMX partial rendering support."""
 
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        patch_vary_headers(response, ("HX-Request",))
+        return response
+
     def get_template_names(self):
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return ["account/password_change.html#page-content"]
         return ["account/password_change.html"]

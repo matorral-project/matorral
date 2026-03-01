@@ -47,7 +47,7 @@ class SprintListView(SprintViewMixin, SprintListContextMixin, LoginAndWorkspaceR
         return self.apply_sprint_filters(queryset, self.search_query, self.status_filter, self.owner_filter)
 
     def get_template_names(self):
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             target = self.request.htmx.target
             if target == "list-content":
                 return [f"{self.template_name}#list-content"]
@@ -197,7 +197,7 @@ class SprintDeleteView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSi
         return Sprint.objects.for_workspace(self.workspace)
 
     def get_template_names(self):
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return ["sprints/includes/delete_confirm_content.html"]
         return [self.template_name]
 

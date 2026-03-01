@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.utils.cache import patch_vary_headers
 
 from apps.workspaces.models import Workspace
 
@@ -15,8 +16,13 @@ class ProjectViewMixin:
         super().setup(request, *args, **kwargs)
         self.workspace = get_object_or_404(Workspace.objects, slug=kwargs["workspace_slug"])
 
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        patch_vary_headers(response, ("HX-Request",))
+        return response
+
     def get_template_names(self):
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return [f"{self.template_name}#page-content"]
         return [self.template_name]
 

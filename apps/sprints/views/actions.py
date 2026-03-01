@@ -1,6 +1,5 @@
 from django.contrib import messages
 from django.db import IntegrityError
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import View
@@ -9,6 +8,8 @@ from apps.issues.models import BaseIssue, Bug, Chore, IssueStatus, Story
 from apps.sprints.models import Sprint, SprintStatus
 from apps.sprints.views.mixins import SprintSingleObjectMixin, SprintViewMixin
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
+
+from django_htmx.http import HttpResponseClientRedirect
 
 
 class SprintStartView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSingleObjectMixin, View):
@@ -200,9 +201,7 @@ class SprintRemoveIssueView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, Vie
         # Check for custom redirect URL (e.g., from issue detail page)
         next_url = request.POST.get("next") or request.GET.get("next")
         if next_url and request.htmx:
-            response = HttpResponse()
-            response["HX-Redirect"] = next_url
-            return response
+            return HttpResponseClientRedirect(next_url)
 
         # Return the embedded issues list for HTMX (default behavior for sprint page)
         if request.htmx:

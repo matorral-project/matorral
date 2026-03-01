@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.http import Http404, HttpResponse, HttpResponseForbidden, HttpResponseNotAllowed, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils.cache import patch_vary_headers
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
@@ -16,6 +17,7 @@ from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
 from allauth.account.models import EmailAddress
 from allauth.account.views import SignupView
+from django_htmx.http import HttpResponseClientRedirect
 
 from .decorators import login_and_workspace_membership_required, workspace_admin_required
 from .forms import InvitationForm, MembershipForm, WorkspaceChangeForm
@@ -37,8 +39,13 @@ class WorkspaceDetailView(LoginAndWorkspaceRequiredMixin, DetailView):
     def get_queryset(self):
         return Workspace.objects.all()
 
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        patch_vary_headers(response, ("HX-Request",))
+        return response
+
     def get_template_names(self):
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return ["workspaces/workspace_detail.html#page-content"]
         return [self.template_name]
 
@@ -56,7 +63,7 @@ def workspace_home(request, workspace_slug):
     onboarding = get_onboarding_status(request.user, workspace)
     dashboard_data = {} if onboarding["should_show"] else get_user_dashboard_data(request.user, workspace)
 
-    if request.htmx:
+    if request.htmx and not request.htmx.history_restore_request:
         if request.htmx.target == "dashboard-content":
             template = "workspaces/home.html#dashboard-content"
         else:
@@ -64,7 +71,7 @@ def workspace_home(request, workspace_slug):
     else:
         template = "workspaces/home.html"
 
-    return render(
+    response = render(
         request,
         template,
         context={
@@ -75,6 +82,8 @@ def workspace_home(request, workspace_slug):
             **dashboard_data,
         },
     )
+    patch_vary_headers(response, ("HX-Request",))
+    return response
 
 
 @login_and_workspace_membership_required
@@ -82,17 +91,18 @@ def dismiss_onboarding(request, workspace_slug):
     if request.method == "POST":
         request.user.onboarding_completed = True
         request.user.save(update_fields=["onboarding_completed"])
-        response = HttpResponse(status=204)
-        response["HX-Redirect"] = reverse("workspaces:home", kwargs={"workspace_slug": workspace_slug})
-        return response
+        return HttpResponseClientRedirect(reverse("workspaces:home", kwargs={"workspace_slug": workspace_slug}))
     return HttpResponseNotAllowed(["POST"])
 
 
 @login_required
 def manage_workspaces(request):
     workspaces = Workspace.objects.for_user(request.user)
-    template = "workspaces/list_workspaces.html#page-content" if request.htmx else "workspaces/list_workspaces.html"
-    return render(
+    if request.htmx and not request.htmx.history_restore_request:
+        template = "workspaces/list_workspaces.html#page-content"
+    else:
+        template = "workspaces/list_workspaces.html"
+    response = render(
         request,
         template,
         {
@@ -101,6 +111,8 @@ def manage_workspaces(request):
             "create_workspace_form": WorkspaceChangeForm(),
         },
     )
+    patch_vary_headers(response, ("HX-Request",))
+    return response
 
 
 def accept_invitation(request, invitation_id):
@@ -209,8 +221,11 @@ def manage_workspace(request, workspace_slug):
         for field in workspace_form.fields.values():
             field.disabled = True
 
-    template = "workspaces/manage_workspace.html#page-content" if request.htmx else "workspaces/manage_workspace.html"
-    return render(
+    if request.htmx and not request.htmx.history_restore_request:
+        template = "workspaces/manage_workspace.html#page-content"
+    else:
+        template = "workspaces/manage_workspace.html"
+    response = render(
         request,
         template,
         {
@@ -221,17 +236,18 @@ def manage_workspace(request, workspace_slug):
             "is_only_workspace": request.user.workspaces.count() == 1,
         },
     )
+    patch_vary_headers(response, ("HX-Request",))
+    return response
 
 
 @login_and_workspace_membership_required
 def manage_workspace_members(request, workspace_slug):
     workspace = request.workspace
-    template = (
-        "workspaces/manage_workspace_members.html#page-content"
-        if request.htmx
-        else "workspaces/manage_workspace_members.html"
-    )
-    return render(
+    if request.htmx and not request.htmx.history_restore_request:
+        template = "workspaces/manage_workspace_members.html#page-content"
+    else:
+        template = "workspaces/manage_workspace_members.html"
+    response = render(
         request,
         template,
         {
@@ -244,6 +260,8 @@ def manage_workspace_members(request, workspace_slug):
             ),
         },
     )
+    patch_vary_headers(response, ("HX-Request",))
+    return response
 
 
 @workspace_admin_required
@@ -288,12 +306,10 @@ def create_workspace(request):
             Membership.objects.create(workspace=workspace, user=request.user, role=ROLE_ADMIN)
             messages.success(request, _('Workspace "{name}" created!').format(name=workspace.name))
             redirect_url = reverse("workspaces:manage_workspaces")
-            if request.headers.get("HX-Request"):
-                response = HttpResponse()
-                response["HX-Redirect"] = redirect_url
-                return response
+            if request.htmx:
+                return HttpResponseClientRedirect(redirect_url)
             return HttpResponseRedirect(redirect_url)
-        if request.headers.get("HX-Request"):
+        if request.htmx:
             return render(
                 request,
                 "workspaces/includes/create_workspace_form_fields.html",

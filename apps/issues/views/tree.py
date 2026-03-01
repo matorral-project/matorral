@@ -11,6 +11,8 @@ from django.views.generic import View
 from apps.issues.models import BaseIssue, Bug, Chore, Epic, Story
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
+from django_htmx.http import HttpResponseClientRefresh
+
 from .mixins import IssueViewMixin
 
 
@@ -133,7 +135,5 @@ class IssueMoveView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View):
                 )
 
         if request.htmx:
-            response = render(request, "includes/messages.html")
-            response["HX-Refresh"] = "true"
-            return response
+            return HttpResponseClientRefresh()
         return JsonResponse({"success": True})
