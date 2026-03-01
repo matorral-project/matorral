@@ -20,6 +20,9 @@ Parent template must listen for the filters-apply event and trigger the HTMX req
 <div class="modal"
      :class="{ 'modal-open': showFiltersModal }"
      @keydown.escape="showFiltersModal = false"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="filters-modal-title"
      x-data="{
        filterValues: {},
        allChoices: {},
@@ -86,7 +89,7 @@ Parent template must listen for the filters-apply event and trigger the HTMX req
          return data;
        },
        apply() {
-         $dispatch('filters-apply', this.getFilterData());
+         $dispatch('{{ dispatch_event|default:"filters-apply" }}', this.getFilterData());
          this.showFiltersModal = false;
        },
        countActive() {

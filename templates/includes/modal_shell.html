@@ -1,5 +1,8 @@
 {% load i18n %}
 <div class="modal" :class="{ 'modal-open': {{ show_var }} }"
+     role="dialog"
+     aria-modal="true"
+     {% if title_id %}aria-labelledby="{{ title_id }}"{% endif %}
      @keydown.escape="{{ show_var }} = false"
      {% if extra_attrs %}{{ extra_attrs|safe }}{% endif %}>
   <div class="modal-box{% if modal_size %} {{ modal_size }}{% endif %}">

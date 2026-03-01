@@ -8,7 +8,7 @@
            @issue-created.window="if (!$event.detail.targetId || $event.detail.targetId === 'epics-embed') { showNewIssueModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#epics-embed', swap: 'innerHTML'}) }"
            @epic-created.window="if (!$event.detail.targetId || $event.detail.targetId === 'epics-embed') { showNewEpicModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#epics-embed', swap: 'innerHTML'}) }"
            @milestone-created.window="if (!$event.detail.targetId || $event.detail.targetId === 'epics-embed') { showNewMilestoneModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#epics-embed', swap: 'innerHTML'}) }"
-           @filters-apply="
+           @filters-apply-embed="
              htmx.ajax('GET', '{{ embed_url }}?' + new URLSearchParams({
                status: $event.detail.status || '',
                priority: $event.detail.priority || '',
@@ -353,7 +353,7 @@
          hx-trigger="issueChanged from:body">
     </div>
     {# Filters modal #}
-    {% include "includes/filters_modal.html" %}
+    {% include "includes/filters_modal.html" with dispatch_event="filters-apply-embed" %}
   </section>
   <div id="messages" class="toast toast-end toast-bottom z-50" hx-swap-oob="true">
     {% include "includes/messages.html" %}

@@ -10,3 +10,4 @@ if (typeof window.SiteJS === 'undefined') {
 window.SiteJS.app = {
   Cookies: JsCookie.default,
 };
+

@@ -8,7 +8,7 @@
            @htmx:after-swap="selectedCount = document.querySelectorAll('[name=issues]:checked').length"
            @show-cascade-modal.document="showEditModal = false"
            @issue-created.window="showNewIssueModal = false; htmx.ajax('GET', $event.detail.embedUrl, {target: '#page-content', swap: 'innerHTML'})"
-           @filters-apply.window="
+           @filters-apply-page.window="
              let u = '{% url 'workspace_issue_list' workspace.slug %}?' + new URLSearchParams({
                status: $event.detail.status || '',
                type: $event.detail.type || '',
@@ -397,7 +397,7 @@
          hx-swap="innerHTML"
          hx-trigger="issueChanged from:body">
     </div>
-    {% include "includes/filters_modal.html" %}
+    {% include "includes/filters_modal.html" with dispatch_event="filters-apply-page" %}
   </section>
   <div id="messages" class="toast toast-end toast-bottom z-50" hx-swap-oob="true">
     {% include "includes/messages.html" %}

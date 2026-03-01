@@ -5,7 +5,7 @@
   {% partialdef page-content inline %}
   <section class="app-card relative"
            x-data="sprintList()"
-           @filters-apply.window="
+           @filters-apply-page.window="
              let u = '{% url 'sprints:sprint_list' workspace.slug %}?' + new URLSearchParams({
                status: $event.detail.status || '',
                owner: $event.detail.owner || '',
@@ -168,9 +168,9 @@
       {% endpartialdef list-content %}
     </div>
     {# Bulk Delete Modal #}
-    <div class="modal" :class="{ 'modal-open': showBulkDeleteModal }" @keydown.escape="showBulkDeleteModal = false">
+    <div class="modal" :class="{ 'modal-open': showBulkDeleteModal }" @keydown.escape="showBulkDeleteModal = false" role="dialog" aria-modal="true" aria-labelledby="sprint-bulk-delete-modal-title">
       <div class="modal-box">
-        <h3 class="font-bold text-lg mb-4">{% translate "Delete Sprints" %}</h3>
+        <h3 id="sprint-bulk-delete-modal-title" class="font-bold text-lg mb-4">{% translate "Delete Sprints" %}</h3>
         <p class="mb-4">
           {% blocktranslate %}Are you sure you want to delete the selected sprints? This action cannot be undone.{% endblocktranslate %}
         </p>
@@ -198,7 +198,7 @@
     {% url 'sprints:sprints_bulk_owner' workspace.slug as owner_post_url %}
     {% json_vals page=page_obj.number search=search_query status_filter=status_filter owner_filter=owner_filter as owner_hx_vals %}
     {% include "includes/bulk_person_modal.html" with show_var="showBulkOwnerModal" confirm_step_var="ownerConfirmStep" selected_name_var="selectedOwnerName" selected_value_var="selectedOwnerValue" hidden_input_id="bulk-owner-value" hidden_input_name="owner" radio_name_prefix="owner" modal_title=owner_modal_title prompt_text=owner_prompt_text confirm_text=owner_confirm_text none_label=owner_none_label post_url=owner_post_url hx_vals=owner_hx_vals hx_include="[name='sprints']:checked, #bulk-owner-value" hx_target="#page-content" hx_indicator="#list-loading" current_user_id=request.user.pk current_user_name=request.user.get_display_name %}
-    {% include "includes/filters_modal.html" %}
+    {% include "includes/filters_modal.html" with dispatch_event="filters-apply-page" %}
   </section>
   <div id="messages" class="toast toast-end toast-bottom z-50" hx-swap-oob="true">
     {% include "includes/messages.html" %}

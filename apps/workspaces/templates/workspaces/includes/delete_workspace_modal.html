@@ -15,7 +15,11 @@
     </p>
     <footer class="modal-card-foot">
       <div class="modal-action flex-wrap gap-2">
-        <a href="{% url 'workspaces:create_workspace' %}" class="btn btn-primary">{% translate "Create a new workspace first" %}</a>
+        <a href="{% url 'workspaces:create_workspace' %}"
+           class="btn btn-primary"
+           hx-get="{% url 'workspaces:create_workspace' %}"
+           hx-push-url="true"
+           hx-target="#page-content">{% translate "Create a new workspace first" %}</a>
         <form action="{% url 'workspaces:delete_workspace' request.workspace.slug %}" method="post">
           {% csrf_token %}
           <input type="hidden" name="delete_account" value="1">

@@ -1,7 +1,7 @@
 {% load i18n %}
-<div class="modal" :class="{ 'modal-open': {{ show_var }} }" @keydown.escape="{{ show_var }} = false">
+<div class="modal" :class="{ 'modal-open': {{ show_var }} }" @keydown.escape="{{ show_var }} = false" role="dialog" aria-modal="true" aria-labelledby="{{ hidden_input_id }}-title">
   <div class="modal-box">
-    <h3 class="font-bold text-lg mb-4">{{ modal_title }}</h3>
+    <h3 id="{{ hidden_input_id }}-title" class="font-bold text-lg mb-4">{{ modal_title }}</h3>
     <input type="hidden" name="{{ hidden_input_name|default:'assignee' }}" :value="{{ selected_value_var }}" id="{{ hidden_input_id }}">
     <div x-show="!{{ confirm_step_var }}" x-cloak>
       <p class="mb-4">{{ prompt_text }}</p>

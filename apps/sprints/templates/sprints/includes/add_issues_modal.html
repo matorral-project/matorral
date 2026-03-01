@@ -1,9 +1,9 @@
 {% load i18n %}
 {# Add Issues Modal #}
-<div class="modal" :class="{ 'modal-open': showAddIssuesModal }" @keydown.escape="showAddIssuesModal = false">
+<div class="modal" :class="{ 'modal-open': showAddIssuesModal }" @keydown.escape="showAddIssuesModal = false" role="dialog" aria-modal="true" aria-labelledby="add-issues-modal-title">
   <div class="modal-box max-w-3xl">
     <div id="add-issues-modal-content">
-      <h3 class="font-bold text-lg mb-4">{% translate "Add Issues to Sprint" %}</h3>
+      <h3 id="add-issues-modal-title" class="font-bold text-lg mb-4">{% translate "Add Issues to Sprint" %}</h3>
       <p class="text-base-content/70">{% translate "Loading..." %}</p>
     </div>
   </div>
