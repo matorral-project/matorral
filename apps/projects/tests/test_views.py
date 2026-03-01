@@ -831,3 +831,48 @@ class ProjectBulkMoveViewTest(ProjectViewTestCase):
         response = self.client.get(self._get_bulk_move_url())
 
         self.assertEqual(405, response.status_code)
+
+
+class ProjectMoveViewTest(ProjectViewTestCase):
+    """Tests for ProjectMoveView (single project move)."""
+
+    def setUp(self):
+        super().setUp()
+        self.target_workspace = WorkspaceFactory()
+        MembershipFactory(workspace=self.target_workspace, user=self.user, role=ROLE_MEMBER)
+        self.project = ProjectFactory(workspace=self.workspace)
+
+    def _get_move_url(self, project=None):
+        project = project or self.project
+        return reverse(
+            "projects:project_move",
+            kwargs={"workspace_slug": self.workspace.slug, "key": project.key},
+        )
+
+    def test_move_project_moves_project_to_target_workspace(self):
+        response = self.client.post(self._get_move_url(), {"workspace": self.target_workspace.pk})
+        self.project.refresh_from_db()
+        self.assertEqual(self.target_workspace, self.project.workspace)
+        self.assertRedirects(response, self._get_list_url())
+
+    def test_move_project_shows_success_message(self):
+        response = self.client.post(self._get_move_url(), {"workspace": self.target_workspace.pk}, follow=True)
+        self.assertContains(response, self.project.key)
+        self.assertContains(response, self.target_workspace.name)
+
+    def test_move_to_workspace_without_membership_returns_404(self):
+        other_workspace = WorkspaceFactory()  # user is NOT a member
+        response = self.client.post(self._get_move_url(), {"workspace": other_workspace.pk})
+        self.assertEqual(404, response.status_code)
+
+    def test_move_nonexistent_project_returns_404(self):
+        url = reverse(
+            "projects:project_move",
+            kwargs={"workspace_slug": self.workspace.slug, "key": "INVALID"},
+        )
+        response = self.client.post(url, {"workspace": self.target_workspace.pk})
+        self.assertEqual(404, response.status_code)
+
+    def test_get_not_allowed(self):
+        response = self.client.get(self._get_move_url())
+        self.assertEqual(405, response.status_code)
