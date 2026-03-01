@@ -21,10 +21,7 @@
   </footer>
   <footer class="border-t border-neutral-content/20 px-4 py-4">
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-      <p>{{ site.name }} &mdash; {% translate "Copyright" %} <span id="copyright-year">2024</span></p>
+      <p>{{ site.name }} &mdash; {% translate "Copyright" %} {% now "Y" %}</p>
     </div>
   </footer>
 </div>
-<script>
-    document.getElementById('copyright-year').innerText = (new Date()).getFullYear();
-</script>
