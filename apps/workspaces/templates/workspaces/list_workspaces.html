@@ -24,10 +24,10 @@
           {% for workspace in workspaces %}
             <tr>
               <td>{{ workspace.name }}</td>
-              <td><a class="link" href="{{ workspace.get_absolute_url }}"
-                     hx-get="{{ workspace.get_absolute_url }}"
-                     hx-push-url="true"
-                     hx-target="#page-content">{% translate "View Workspace" %}</a></td>
+              <td>
+                <!-- DO NOT USE HTMx GET here, we need a full-page reload to update the sidebar menu items to point to the new workspace -->
+                <a class="link" href="{{ workspace.get_absolute_url }}">{% translate "View Workspace" %}</a>
+              </td>
               <td class="mt-inline-buttons mt-justify-content-end">
                 <a class="mt-button-secondary mx-1"
                    href="{% url 'workspaces:manage_workspace' workspace.slug %}"

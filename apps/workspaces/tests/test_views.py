@@ -207,11 +207,11 @@ class TestDismissOnboardingView(WorkspaceTestMixin, TestCase):
         self.admin.refresh_from_db()
         self.assertTrue(self.admin.onboarding_completed)
 
-    def test_post_returns_204_with_hx_redirect(self):
+    def test_post_returns_hx_redirect(self):
         self.client.force_login(self.admin)
         url = reverse("workspaces:dismiss_onboarding", args=[self.workspace.slug])
         response = self.client.post(url)
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, 200)
         self.assertIn("HX-Redirect", response)
 
     def test_get_returns_405(self):

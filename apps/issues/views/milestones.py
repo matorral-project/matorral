@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.cache import patch_vary_headers
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView, View
 
@@ -31,6 +32,8 @@ from apps.utils.audit import bulk_create_delete_audit_logs
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 from apps.workspaces.models import Workspace
 
+from django_htmx.http import HttpResponseClientRedirect
+
 from .mixins import IssueListContextMixin
 
 User = get_user_model()
@@ -56,8 +59,13 @@ class MilestoneViewMixin:
         """Override TeamObjectViewMixin.get_queryset() to use project-scoped filtering."""
         return Milestone.objects.for_project(self.project)
 
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        patch_vary_headers(response, ("HX-Request",))
+        return response
+
     def get_template_names(self):
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return [f"{self.template_name}#page-content"]
         return [self.template_name]
 
@@ -104,7 +112,7 @@ class MilestoneDetailView(
     def get_template_names(self):
         if self.is_quick_view():
             return ["issues/milestones/milestone_quick_view.html"]
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return [f"{self.template_name}#page-content"]
         return [self.template_name]
 
@@ -280,7 +288,7 @@ class MilestoneUpdateView(
     def get_template_names(self):
         if self.is_modal():
             return ["issues/milestones/milestone_form_modal.html"]
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return [f"{self.template_name}#page-content"]
         return [self.template_name]
 
@@ -314,9 +322,7 @@ class MilestoneUpdateView(
                     "key": self.project.key,
                 },
             )
-            response = HttpResponse()
-            response["HX-Redirect"] = project_url
-            return response
+            return HttpResponseClientRedirect(project_url)
         return redirect(self.object.get_absolute_url())
 
 
@@ -334,7 +340,7 @@ class MilestoneDeleteView(
         return Milestone.objects.for_project(self.project)
 
     def get_template_names(self):
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return ["issues/milestones/delete_confirm_content.html"]
         return [self.template_name]
 
@@ -465,7 +471,7 @@ class MilestoneEpicCreateView(MilestoneViewMixin, LoginAndWorkspaceRequiredMixin
     def get_template_names(self):
         if self.is_modal():
             return ["issues/includes/epic_form_modal.html"]
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return [f"{self.template_name}#page-content"]
         return [self.template_name]
 
@@ -584,7 +590,7 @@ class MilestoneIssueCreateView(MilestoneViewMixin, LoginAndWorkspaceRequiredMixi
     def get_template_names(self):
         if self.is_modal():
             return ["issues/includes/issue_create_form_modal.html"]
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.history_restore_request:
             return [f"{self.template_name}#page-content"]
         return [self.template_name]
 

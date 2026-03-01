@@ -103,6 +103,9 @@ MIDDLEWARE = [
     "waffle.middleware.WaffleMiddleware",
 ]
 
+if not DEBUG:
+    MIDDLEWARE.insert(1, "matorral.middlewares.SiteDomainRedirectMiddleware")
+
 if ENABLE_DEBUG_TOOLBAR:
     MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
     INSTALLED_APPS.append("debug_toolbar")

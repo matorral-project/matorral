@@ -1,5 +1,35 @@
 from django.contrib.sites.models import Site
+from django.core.cache import cache
+from django.http import HttpResponsePermanentRedirect
 from django.utils.html import escape
+
+
+class SiteDomainRedirectMiddleware:
+    """Redirect requests to the canonical site domain over HTTPS.
+
+    Uses Django's Sites framework to determine the correct domain and
+    caches it to avoid a DB hit on every request.
+    """
+
+    CACHE_KEY = "site_domain"
+    CACHE_TIMEOUT = 3600  # 1 hour
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        site_domain = cache.get(self.CACHE_KEY)
+        if site_domain is None:
+            site_domain = Site.objects.get_current().domain
+            cache.set(self.CACHE_KEY, site_domain, self.CACHE_TIMEOUT)
+
+        request_host = request.get_host().split(":")[0]
+
+        if request_host != site_domain:
+            redirect_url = f"https://{site_domain}{request.get_full_path()}"
+            return HttpResponsePermanentRedirect(redirect_url)
+
+        return self.get_response(request)
 
 
 class HtmxPageTitleMiddleware:

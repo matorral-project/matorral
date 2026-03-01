@@ -1,15 +1,15 @@
 import datetime
 from collections import OrderedDict
 from functools import lru_cache
-from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
 from apps.issues.models import STATUS_CATEGORIES, BaseIssue, Epic, IssuePriority, IssueStatus
 from apps.utils.filters import parse_status_filter
+
+from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
 
 
 @lru_cache(maxsize=1)
@@ -475,13 +475,8 @@ def build_htmx_delete_response(request, deleted_object_url, redirect_url):
     ``deleted_object_url`` is the path of the page that no longer exists (the
     deleted object's ``get_absolute_url()``).
     """
-    response = HttpResponse()
-    current_url = request.htmx.current_url or ""
-    current_path = urlparse(current_url).path if current_url else ""
+    current_path = request.htmx.current_url_abs_path or ""
 
     if current_path and current_path == deleted_object_url:
-        response["HX-Redirect"] = redirect_url
-    else:
-        response["HX-Refresh"] = "true"
-
-    return response
+        return HttpResponseClientRedirect(redirect_url)
+    return HttpResponseClientRefresh()
