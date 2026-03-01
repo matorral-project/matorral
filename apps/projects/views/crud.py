@@ -1014,7 +1014,7 @@ class ProjectEpicCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Pr
             )
             script = (
                 "<script>window.dispatchEvent(new CustomEvent('epic-created', "
-                "{ detail: { embedUrl: '" + embed_url + "' } }));</script>"
+                "{ detail: { embedUrl: '" + embed_url + "', targetId: 'epics-embed' } }));</script>"
             )
             return HttpResponse(messages_div + script)
 
@@ -1062,8 +1062,8 @@ class ProjectIssueCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, P
         # Hide project field since it's preset
         if "project" in form.fields:
             del form.fields["project"]
-        # Hide parent field when pre-selected via query param
-        if self.epic and "parent" in form.fields:
+        # Hide parent field when pre-selected via query param, or when creating from the orphan section
+        if (self.epic or self.request.GET.get("embed") == "orphan") and "parent" in form.fields:
             del form.fields["parent"]
         return form
 
@@ -1124,8 +1124,14 @@ class ProjectIssueCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, P
         )
 
         if self.is_modal():
+            if self.request.GET.get("embed") == "orphan":
+                embed_url_name = "projects:project_orphan_issues_embed"
+                target_id = "issues-embed"
+            else:
+                embed_url_name = "projects:project_epics_embed"
+                target_id = "epics-embed"
             embed_url = reverse(
-                "projects:project_epics_embed",
+                embed_url_name,
                 kwargs={
                     "workspace_slug": self.kwargs["workspace_slug"],
                     "key": self.project.key,
@@ -1141,7 +1147,7 @@ class ProjectIssueCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, P
             )
             script = (
                 "<script>window.dispatchEvent(new CustomEvent('issue-created', "
-                "{ detail: { embedUrl: '" + embed_url + "' } }));</script>"
+                "{ detail: { embedUrl: '" + embed_url + "', targetId: '" + target_id + "' } }));</script>"
             )
             return HttpResponse(messages_div + script)
 
@@ -1232,7 +1238,7 @@ class ProjectMilestoneCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixi
             )
             script = (
                 "<script>window.dispatchEvent(new CustomEvent('milestone-created', "
-                "{ detail: { embedUrl: '" + embed_url + "' } }));</script>"
+                "{ detail: { embedUrl: '" + embed_url + "', targetId: 'epics-embed' } }));</script>"
             )
             return HttpResponse(messages_div + script)
 
