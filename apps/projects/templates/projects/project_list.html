@@ -7,7 +7,7 @@
            x-data="projectList()"
            @htmx:after-swap="selectedCount = document.querySelectorAll('[name=projects]:checked').length"
            @project-created.window="showNewProjectModal = false; htmx.ajax('GET', $event.detail.listUrl, {target: '#list-content', swap: 'innerHTML'})"
-           @filters-apply.window="
+           @filters-apply-page.window="
              let u = '{% url 'projects:project_list' workspace.slug %}?' + new URLSearchParams({
                status: $event.detail.status || '',
                lead: $event.detail.lead || '',
@@ -208,7 +208,7 @@
     {% include "projects/includes/bulk_delete_modal.html" %}
     {% include "projects/includes/bulk_lead_modal.html" %}
     {% include "projects/includes/bulk_move_modal.html" %}
-    {% include "includes/filters_modal.html" %}
+    {% include "includes/filters_modal.html" with dispatch_event="filters-apply-page" %}
     {% include "includes/cascade_status_modal.html" %}
     {% include "projects/includes/new_project_modal.html" %}
   </section>

@@ -86,7 +86,7 @@ Parent template must listen for the filters-apply event and trigger the HTMX req
          return data;
        },
        apply() {
-         $dispatch('filters-apply', this.getFilterData());
+         $dispatch('{{ dispatch_event|default:"filters-apply" }}', this.getFilterData());
          this.showFiltersModal = false;
        },
        countActive() {
