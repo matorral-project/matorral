@@ -168,9 +168,9 @@
       {% endpartialdef list-content %}
     </div>
     {# Bulk Delete Modal #}
-    <div class="modal" :class="{ 'modal-open': showBulkDeleteModal }" @keydown.escape="showBulkDeleteModal = false">
+    <div class="modal" :class="{ 'modal-open': showBulkDeleteModal }" @keydown.escape="showBulkDeleteModal = false" role="dialog" aria-modal="true" aria-labelledby="sprint-bulk-delete-modal-title">
       <div class="modal-box">
-        <h3 class="font-bold text-lg mb-4">{% translate "Delete Sprints" %}</h3>
+        <h3 id="sprint-bulk-delete-modal-title" class="font-bold text-lg mb-4">{% translate "Delete Sprints" %}</h3>
         <p class="mb-4">
           {% blocktranslate %}Are you sure you want to delete the selected sprints? This action cannot be undone.{% endblocktranslate %}
         </p>

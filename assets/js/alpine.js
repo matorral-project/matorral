@@ -13,6 +13,4 @@ Alpine.data('issuesEmbed', issuesEmbed);
 Alpine.data('projectList', projectList);
 Alpine.data('sprintList', sprintList);
 
-document.addEventListener('DOMContentLoaded', () => {
-    Alpine.start();
-});
+Alpine.start();

@@ -1,7 +1,7 @@
 {% load i18n %}
-<div class="modal" :class="{ 'modal-open': showMoveModal }">
+<div class="modal" :class="{ 'modal-open': showMoveModal }" role="dialog" aria-modal="true" aria-labelledby="move-project-modal-title">
   <div class="modal-box">
-    <h3 class="font-bold text-lg">{% translate "Move Project to Workspace" %}</h3>
+    <h3 id="move-project-modal-title" class="font-bold text-lg">{% translate "Move Project to Workspace" %}</h3>
 
     {# Step 1: Workspace selection #}
     <div x-show="!moveProjectConfirmStep">

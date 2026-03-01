@@ -1,7 +1,7 @@
 {% load i18n %}
-<div class="modal" :class="{ 'modal-open': showBulkLeadModal }">
+<div class="modal" :class="{ 'modal-open': showBulkLeadModal }" role="dialog" aria-modal="true" aria-labelledby="bulk-lead-modal-title">
   <div class="modal-box">
-    <h3 class="font-bold text-lg">{% translate "Set Lead" %}</h3>
+    <h3 id="bulk-lead-modal-title" class="font-bold text-lg">{% translate "Set Lead" %}</h3>
     <input type="hidden" name="lead" id="lead-hidden" :value="selectedLeadValue">
 
     {# Step 1: Selection #}

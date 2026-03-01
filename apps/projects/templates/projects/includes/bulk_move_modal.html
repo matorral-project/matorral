@@ -1,7 +1,7 @@
 {% load i18n %}
-<div class="modal" :class="{ 'modal-open': showBulkMoveModal }">
+<div class="modal" :class="{ 'modal-open': showBulkMoveModal }" role="dialog" aria-modal="true" aria-labelledby="bulk-move-modal-title">
   <div class="modal-box">
-    <h3 class="font-bold text-lg">{% translate "Move Projects to Workspace" %}</h3>
+    <h3 id="bulk-move-modal-title" class="font-bold text-lg">{% translate "Move Projects to Workspace" %}</h3>
     <input type="hidden" name="workspace" id="move-workspace-hidden" :value="selectedMoveWorkspaceValue">
 
     {# Step 1: Workspace selection #}

@@ -1,7 +1,7 @@
 {% load i18n %}
-<div class="modal" :class="{ 'modal-open': showBulkDeleteModal }">
+<div class="modal" :class="{ 'modal-open': showBulkDeleteModal }" role="dialog" aria-modal="true" aria-labelledby="bulk-delete-projects-modal-title">
   <div class="modal-box">
-    <h3 class="font-bold text-lg">{% translate "Delete Projects" %}</h3>
+    <h3 id="bulk-delete-projects-modal-title" class="font-bold text-lg">{% translate "Delete Projects" %}</h3>
     <p class="py-4">
       {% blocktranslate trimmed %}
         Are you sure you want to delete the selected projects?

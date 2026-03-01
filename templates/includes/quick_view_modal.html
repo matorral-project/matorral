@@ -1,4 +1,6 @@
 <div class="modal" :class="{ 'modal-open': showQuickViewModal }"
+     role="dialog"
+     aria-modal="true"
      @keydown.escape="showQuickViewModal = false">
   <div class="modal-box max-w-2xl">
     <button type="button" class="btn btn-sm btn-ghost btn-square absolute right-2 top-2" @click="showQuickViewModal = false">

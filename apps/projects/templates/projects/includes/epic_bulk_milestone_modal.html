@@ -1,7 +1,7 @@
 {% load i18n %}
-<div class="modal" :class="{ 'modal-open': showBulkMilestoneModal }" @keydown.escape="showBulkMilestoneModal = false">
+<div class="modal" :class="{ 'modal-open': showBulkMilestoneModal }" @keydown.escape="showBulkMilestoneModal = false" role="dialog" aria-modal="true" aria-labelledby="bulk-milestone-modal-title">
   <div class="modal-box">
-    <h3 class="font-bold text-lg mb-4">{% translate "Move to Milestone" %}</h3>
+    <h3 id="bulk-milestone-modal-title" class="font-bold text-lg mb-4">{% translate "Move to Milestone" %}</h3>
     <input type="hidden" name="milestone" id="bulk-milestone-hidden" :value="selectedMilestoneValue">
 
     {# Step 1: Selection #}

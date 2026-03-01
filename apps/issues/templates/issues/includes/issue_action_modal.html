@@ -1,7 +1,7 @@
 {% load i18n %}
-<div class="modal" :class="{ 'modal-open': showActionModal }" @keydown.escape="showActionModal = false">
+<div class="modal" :class="{ 'modal-open': showActionModal }" @keydown.escape="showActionModal = false" role="dialog" aria-modal="true" aria-labelledby="action-modal-title">
   <div class="modal-box">
-    <h3 class="font-bold text-lg mb-4" x-text="actionModalTitle"></h3>
+    <h3 id="action-modal-title" class="font-bold text-lg mb-4" x-text="actionModalTitle"></h3>
     <p class="mb-4" x-text="actionModalMessage"></p>
     <div class="modal-action">
       <button type="button" class="btn btn-ghost" @click="showActionModal = false">{% translate "Cancel" %}</button>

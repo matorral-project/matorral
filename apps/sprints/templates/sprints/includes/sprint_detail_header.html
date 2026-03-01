@@ -69,9 +69,9 @@
       </div>
     </div>
     {# Complete Sprint Modal #}
-    <div class="modal" :class="{ 'modal-open': showCompleteModal }" @keydown.escape="showCompleteModal = false">
+    <div class="modal" :class="{ 'modal-open': showCompleteModal }" @keydown.escape="showCompleteModal = false" role="dialog" aria-modal="true" aria-labelledby="complete-sprint-modal-title">
       <div class="modal-box">
-        <h3 class="font-bold text-lg mb-4">{% translate "Complete Sprint" %}</h3>
+        <h3 id="complete-sprint-modal-title" class="font-bold text-lg mb-4">{% translate "Complete Sprint" %}</h3>
         <p class="text-sm mb-4">
           {% blocktranslate %}Are you sure you want to complete this sprint? Incomplete issues will be moved to the next planning sprint if available.{% endblocktranslate %}
         </p>
@@ -86,9 +86,9 @@
       <div class="modal-backdrop" @click="showCompleteModal = false"></div>
     </div>
     {# Archive Sprint Modal #}
-    <div class="modal" :class="{ 'modal-open': showArchiveModal }" @keydown.escape="showArchiveModal = false">
+    <div class="modal" :class="{ 'modal-open': showArchiveModal }" @keydown.escape="showArchiveModal = false" role="dialog" aria-modal="true" aria-labelledby="archive-sprint-modal-title">
       <div class="modal-box">
-        <h3 class="font-bold text-lg mb-4">{% translate "Archive Sprint" %}</h3>
+        <h3 id="archive-sprint-modal-title" class="font-bold text-lg mb-4">{% translate "Archive Sprint" %}</h3>
         <p class="text-sm mb-4">
           {% blocktranslate %}Are you sure you want to archive this sprint?{% endblocktranslate %}
         </p>
