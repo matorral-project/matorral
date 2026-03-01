@@ -8,6 +8,18 @@ Found a bug? Please [open an issue](https://github.com/matorral-project/matorral
 
 ---
 
+## A Note on Feature Contributions
+
+Matorral is intentionally designed to be a **simple, focused project management tool**. We care deeply about keeping it approachable and avoiding unnecessary complexity — every feature we add is a feature every user has to understand, and every option we introduce is one more thing that can go wrong.
+
+Because of this, we ask that you **reach out before investing time in a new feature**. Please open a [GitHub Discussion](https://github.com/orgs/matorral-project/discussions) or [issue](https://github.com/matorral-project/matorral/issues) to share your idea and get feedback from the maintainers first. This conversation helps us align on whether the feature fits the project's direction — and it saves you from putting effort into a pull request that we may not be able to accept.
+
+We genuinely appreciate every contribution, and we want to make sure yours lands. Talking first is the best way to ensure that happens.
+
+Bug fixes and improvements to existing behavior are always welcome and generally don't need prior discussion.
+
+---
+
 ## Getting Started
 
 ### Requirements

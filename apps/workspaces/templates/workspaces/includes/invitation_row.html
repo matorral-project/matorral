@@ -7,11 +7,11 @@
   <td class="mt-inline-buttons mt-justify-content-end">
     <form hx-post="{% url 'workspaces:resend_invitation' request.workspace.slug invitation.id %}" hx-target="this" hx-swap="outerHTML">
       {% csrf_token %}
-      <input class="mt-button-secondary" type="submit" value="{% translate "Resend Invitation" %}">
+      <input class="mt-button-secondary" type="submit" value="{% translate "Resend" %}">
     </form>
-    <form hx-post="{% url 'workspaces:cancel_invitation' request.workspace.slug invitation.id %}" hx-target="closest tr" hx-swap="outerHTML swap:1s">
+    <form hx-post="{% url 'workspaces:cancel_invitation' request.workspace.slug invitation.id %}" hx-target="closest tr" hx-swap="outerHTML">
       {% csrf_token %}
-      <input class="mt-button-secondary mx-2" type="submit" value="{% translate "Cancel Invitation" %}">
+      <input class="mt-button-secondary mx-2" type="submit" value="{% translate "Cancel" %}">
     </form>
   </td>
 {% endif %}

@@ -1,7 +1,7 @@
 {% load i18n %}
 <section class="app-card">
   {% if pending_invitations %}
-    <h3 class="mt-subtitle">{% translate "Pending Invitations" %}</h3>
+    <h3 class="mt-subtitle">{% translate "Pending Invitates" %}</h3>
     <div class="table-responsive">
       <table class="table mt-table">
         <thead>
@@ -21,7 +21,7 @@
     </div>
   {% else %}
     <p class="my-2 mt-text-muted">
-      {% translate "Any pending invitations will show up here until accepted." %}
+      {% translate "Any pending invites will show up here until accepted." %}
     </p>
   {% endif %}
 </section>

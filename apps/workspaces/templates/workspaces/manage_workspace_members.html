@@ -58,10 +58,3 @@
   {% endpartialdef page-content %}
 </div>
 {% endblock %}
-{% block page_js %}
-<script>
-  document.body.addEventListener("invitationSent", function () {
-    document.getElementById("invite-modal-toggle").checked = false;
-  });
-</script>
-{% endblock %}

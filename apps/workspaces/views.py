@@ -342,13 +342,15 @@ def send_invitation_view(request, workspace_slug):
             )
             response = render(
                 request,
-                "workspaces/includes/invite_success.html",
+                "workspaces/manage_workspace_members.html#page-content",
                 {
+                    "workspace": request.workspace,
                     "invitation_form": InvitationForm(request.workspace),
                     "pending_invitations": pending_invitations,
                 },
             )
-            response["HX-Trigger"] = "invitationSent"
+            response["HX-Retarget"] = "#page-content"
+            response["HX-Reswap"] = "innerHTML"
             return response
     return render(
         request,

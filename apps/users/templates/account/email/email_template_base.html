@@ -128,7 +128,7 @@
               <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; color: #a3b18a; line-height: 1.5;">
                 {% block footer %}
                   <p style="margin: 0 0 8px 0;">
-                   {% translate "This email was sent to you because you created an account on" %} <a target="_blank" href="https://{{ site_domain }}" style="color: #3f5c0c;">{{ site_name }}.</a>
+                   {% translate "This email was sent to you because you created an account on" %} <a target="_blank" href="https://{{ current_site.domain }}" style="color: #3f5c0c;">{{ current_site.name }}.</a>
                   </p>
                   <p style="margin: 0;">If you didn't request this, you can safely ignore this email.</p>
                 {% endblock %}

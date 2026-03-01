@@ -139,9 +139,9 @@ class Invitation(BaseModel):
     )
 
     def get_url(self) -> str:
-        from apps.landing_pages.meta import absolute_url
+        from matorral.context_processors import get_root
 
-        return absolute_url(reverse("workspaces:accept_invitation", args=[self.id]))
+        return get_root() + reverse("workspaces:accept_invitation", args=[self.id])
 
 
 class Flag(AbstractUserFlag):
