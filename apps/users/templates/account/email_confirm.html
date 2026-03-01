@@ -3,4 +3,49 @@
 {% load account %}
 {% block page_title %}{% translate "Confirm Email" %}{% endblock %}
 {% block main_content %}
+<div class="flex justify-center my-8">
+  <div class="w-96 px-4 py-4">
+    <div class="text-center">
+      <h1 class="text-3xl font-bold text-base-content">Matorral</h1>
+    </div>
+    <h2 class="mt-6 text-center text-2xl font-bold text-base-content">
+      {% translate "Confirm Email Address" %}
+    </h2>
+    <div class="mt-6">
+      {% if confirmation %}
+        {% user_display confirmation.email_address.user as user_display %}
+        {% if can_confirm %}
+          <p class="text-sm text-base-content text-center mb-6">
+            {% blocktrans with confirmation.email_address.email as email %}
+              Please confirm that <a href="mailto:{{ email }}" class="mt-link">{{ email }}</a> is an email address for user {{ user_display }}.
+            {% endblocktrans %}
+          </p>
+          {% url 'account_confirm_email' confirmation.key as action_url %}
+          <form method="post" action="{{ action_url }}">
+            {% csrf_token %}
+            {{ redirect_field }}
+            <input class="btn btn-primary btn-block" type="submit" value="{% translate "Confirm" %}">
+          </form>
+        {% else %}
+          <div class="alert alert-error mt-4">
+            <p class="text-sm">
+              {% blocktrans with confirmation.email_address.email as email %}
+                Unable to confirm {{ email }} because it is already confirmed by a different account.
+              {% endblocktrans %}
+            </p>
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="alert alert-warning mt-4">
+          <p class="text-sm">
+            {% url 'account_email' as email_url %}
+            {% blocktrans %}
+              This email confirmation link expired or is invalid. Please <a href="{{ email_url }}" class="mt-link">issue a new email confirmation request</a>.
+            {% endblocktrans %}
+          </p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
 {% endblock %}
