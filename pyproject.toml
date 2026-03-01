@@ -45,8 +45,6 @@ dev = [
     "django-debug-toolbar",
     "pre-commit",
     "ruff>=0.15.2",
-    "pytest",
-    "pytest-django",
 ]
 prod = [
     "gunicorn",
@@ -87,11 +85,6 @@ django-celery-beat = { git = "https://github.com/celery/django-celery-beat", rev
 [tool.setuptools]
 py-modules = []
 
-[tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "matorral.settings.settings"
-pythonpath = ["."]
-testpaths = ["apps"]
-
 [tool.black]
 line-length = 120
 
@@ -122,7 +115,6 @@ known_third_party = [
     "hijack",
     "polymorphic",
     "psycopg2",
-    "pytest",
     "redis",
     "requests",
     "sentry_sdk",
