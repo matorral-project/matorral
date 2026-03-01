@@ -4,8 +4,8 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
       <div>
         <h6 class="footer-title text-white">{% translate "Company" %}</h6>
-        <a class="link link-hover block mb-2" href="{% url 'landing_pages:terms' %}">{% translate "Terms of Service" %}</a>
-        <a class="link link-hover block mb-2" href="{% url 'landing_pages:privacy' %}">{% translate "Privacy Policy" %}</a>
+        <a class="link link-hover block mb-2" href="{% url 'landing_pages:terms' %}" hx-boost="true">{% translate "Terms of Service" %}</a>
+        <a class="link link-hover block mb-2" href="{% url 'landing_pages:privacy' %}" hx-boost="true">{% translate "Privacy Policy" %}</a>
         <a class="link link-hover block" href="#">{% translate "License" %}</a>
       </div>
       <div>

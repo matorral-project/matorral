@@ -6,6 +6,9 @@
   <!-- Header: Logo/branding + desktop toggle button -->
   <div class="flex items-center px-2 py-3 min-h-16 gap-2">
     <a href="{% url 'landing_pages:home' %}"
+       hx-get="{% url 'landing_pages:home' %}"
+       hx-push-url="true"
+       hx-target="#page-content"
        class="is-drawer-close:hidden flex-1 text-2xl font-bold truncate text-secondary pl-4">
       {{ site.name }}
       {% if env_badge %}<span class="badge badge-neutral badge-xs ml-1">{{ env_badge }}</span>{% endif %}
@@ -21,17 +24,6 @@
   <!-- Main navigation -->
   <ul class="menu flex-1 px-2 gap-1 overflow-y-auto overflow-x-hidden w-full">
     {% if default_workspace %}
-    <li>
-      <a href="{% url 'workspaces:home' workspace_slug=default_workspace.slug %}"
-         hx-get="{% url 'workspaces:home' workspace_slug=default_workspace.slug %}"
-         hx-push-url="true"
-         hx-target="#page-content"
-         class="text-primary-content hover:bg-primary-content/10"
-         title="{% translate 'Home' %}">
-        <i class="fa fa-home w-5 text-center shrink-0"></i>
-        <span class="is-drawer-close:hidden truncate">{% translate "Home" %}</span>
-      </a>
-    </li>
     <li>
       <a href="{% url 'projects:project_list' workspace_slug=default_workspace.slug %}"
          hx-get="{% url 'projects:project_list' workspace_slug=default_workspace.slug %}"
@@ -123,18 +115,27 @@
       </div>
       <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-50 w-52 p-2 shadow-md text-base-content mb-2">
         <li>
-          <a href="{% url 'users:user_profile' %}">
+          <a href="{% url 'users:user_profile' %}"
+             hx-get="{% url 'users:user_profile' %}"
+             hx-push-url="true"
+             hx-target="#page-content">
             <i class="fa fa-user h-4 w-4"></i>{% translate "Profile" %}
           </a>
         </li>
         <li>
-          <a href="{% url 'users:connected_accounts' %}">
+          <a href="{% url 'users:connected_accounts' %}"
+             hx-get="{% url 'users:connected_accounts' %}"
+             hx-push-url="true"
+             hx-target="#page-content">
             <i class="fa fa-link h-4 w-4"></i>{% translate "Connected Accounts" %}
           </a>
         </li>
         {% if user.has_usable_password %}
         <li>
-          <a href="{% url 'account_change_password' %}">
+          <a href="{% url 'account_change_password' %}"
+             hx-get="{% url 'account_change_password' %}"
+             hx-push-url="true"
+             hx-target="#page-content">
             <i class="fa fa-unlock-alt h-4 w-4"></i>{% translate "Change Password" %}
           </a>
         </li>

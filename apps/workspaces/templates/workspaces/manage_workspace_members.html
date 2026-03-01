@@ -37,7 +37,11 @@
             <tr>
               <td>
                 {% if request.workspace_membership.is_admin or request.workspace_membership == membership %}
-                  <a class="link" href="{% url 'workspaces:workspace_membership_details' workspace.slug membership.pk %}">{{ membership.user }}</a>
+                  <a class="link"
+                     href="{% url 'workspaces:workspace_membership_details' workspace.slug membership.pk %}"
+                     hx-get="{% url 'workspaces:workspace_membership_details' workspace.slug membership.pk %}"
+                     hx-push-url="true"
+                     hx-target="#page-content">{{ membership.user }}</a>
                 {% else %}
                   {{ membership.user }}
                 {% endif %}
