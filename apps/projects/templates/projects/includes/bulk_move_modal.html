@@ -1,8 +1,11 @@
 {% load i18n %}
 <div class="modal" :class="{ 'modal-open': showBulkMoveModal }" role="dialog" aria-modal="true" aria-labelledby="bulk-move-modal-title">
-  <div class="modal-box">
+  <div class="modal-box" id="bulk-move-modal-body">
     <h3 id="bulk-move-modal-title" class="font-bold text-lg">{% translate "Move Projects to Workspace" %}</h3>
     <input type="hidden" name="workspace" id="move-workspace-hidden" :value="selectedMoveWorkspaceValue">
+
+    {# Progress step - shown while operation is in progress #}
+    {# This gets replaced with the progress template after submission #}
 
     {# Step 1: Workspace selection #}
     <div x-show="!moveConfirmStep">
@@ -71,10 +74,10 @@
                 hx-post="{% url 'projects:projects_bulk_move' workspace.slug %}"
                 hx-vals='{"page": "{{ page_obj.number|default:1 }}", "search": "{{ search_query|default:"" }}", "status_filter": "{{ status_filter|default:"" }}", "lead_filter": "{{ lead_filter|default:"" }}", "group_by": "{{ group_by|default:"" }}"}'
                 hx-include="[name='projects']:checked, #move-workspace-hidden"
-                hx-swap="none"
-                hx-indicator="#list-loading"
+                hx-target="#bulk-move-modal-body"
+                hx-swap="innerHTML"
                 hx-disabled-elt="this"
-                @click="confirmBulkMove()">
+                @click="moveConfirmStep = false; showMoveProgress = true">
           {% translate "Confirm Move" %}
         </button>
         <button type="button" class="btn" @click="moveConfirmStep = false">

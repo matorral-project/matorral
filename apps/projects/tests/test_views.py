@@ -793,17 +793,16 @@ class ProjectBulkMoveViewTest(ProjectViewTestCase):
         self.assertEqual(self.target_workspace, project1.workspace)
         self.assertEqual(self.target_workspace, project2.workspace)
 
-    def test_bulk_move_shows_success_message(self):
+    def test_bulk_move_dispatches_task(self):
         project = ProjectFactory(workspace=self.workspace)
 
-        response = self.client.post(
+        self.client.post(
             self._get_bulk_move_url(),
             {"projects": [project.key], "workspace": self.target_workspace.pk, "page": 1},
-            follow=True,
         )
 
-        self.assertContains(response, "being moved to")
-        self.assertContains(response, self.target_workspace.name)
+        project.refresh_from_db()
+        self.assertEqual(self.target_workspace, project.workspace)
 
     def test_bulk_move_empty_selection_shows_warning(self):
         response = self.client.post(
@@ -855,10 +854,10 @@ class ProjectMoveViewTest(ProjectViewTestCase):
         self.assertEqual(self.target_workspace, self.project.workspace)
         self.assertRedirects(response, self._get_list_url())
 
-    def test_move_project_shows_success_message(self):
-        response = self.client.post(self._get_move_url(), {"workspace": self.target_workspace.pk}, follow=True)
-        self.assertContains(response, self.project.key)
-        self.assertContains(response, self.target_workspace.name)
+    def test_move_project_moves_to_target_workspace(self):
+        self.client.post(self._get_move_url(), {"workspace": self.target_workspace.pk})
+        self.project.refresh_from_db()
+        self.assertEqual(self.target_workspace, self.project.workspace)
 
     def test_move_to_workspace_without_membership_returns_404(self):
         other_workspace = WorkspaceFactory()  # user is NOT a member
@@ -875,4 +874,23 @@ class ProjectMoveViewTest(ProjectViewTestCase):
 
     def test_get_not_allowed(self):
         response = self.client.get(self._get_move_url())
+        self.assertEqual(405, response.status_code)
+
+
+class MoveProgressViewTest(ProjectViewTestCase):
+    """Tests for MoveProgressView (polling endpoint)."""
+
+    def _get_progress_url(self, operation_id):
+        return reverse(
+            "projects:move_progress",
+            kwargs={"workspace_slug": self.workspace.slug, "operation_id": operation_id},
+        )
+
+    def test_missing_operation_returns_hx_refresh(self):
+        """When the operation is not in cache, the response triggers a client refresh."""
+        response = self.client.get(self._get_progress_url("nonexistent"), headers={"HX-Request": "true"})
+        self.assertEqual(response.get("HX-Refresh"), "true")
+
+    def test_post_not_allowed(self):
+        response = self.client.post(self._get_progress_url("test"))
         self.assertEqual(405, response.status_code)

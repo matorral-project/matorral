@@ -21,6 +21,7 @@ project_urlpatterns = (
         ),
         path("bulk-lead/", views.ProjectBulkLeadView.as_view(), name="projects_bulk_lead"),
         path("bulk-move/", views.ProjectBulkMoveView.as_view(), name="projects_bulk_move"),
+        path("move-progress/<str:operation_id>/", views.MoveProgressView.as_view(), name="move_progress"),
         path("<str:key>/", views.ProjectDetailView.as_view(), name="project_detail"),
         path(
             "<str:key>/epics/",
