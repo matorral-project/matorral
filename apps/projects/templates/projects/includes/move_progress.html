@@ -1,0 +1,14 @@
+{% load i18n %}
+<div id="move-progress-container"
+     hx-get="{% url 'projects:move_progress' workspace.slug operation_id %}"
+     hx-trigger="every 1s"
+     hx-swap="outerHTML"
+     class="p-6 text-center">
+  <p class="font-semibold mb-3">{% translate "Moving projects..." %}</p>
+  <progress class="progress progress-primary w-full"
+            value="{{ completed|default:0 }}"
+            max="{{ total }}"></progress>
+  <p class="text-sm text-base-content/70 mt-2">
+    {{ completed|default:0 }} / {{ total }} {% translate "project(s) moved" %}
+  </p>
+</div>

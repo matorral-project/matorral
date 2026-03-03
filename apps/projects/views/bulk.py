@@ -16,7 +16,7 @@ from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
 from ..forms import BulkActionForm, BulkLeadForm, BulkMoveForm
 from ..models import Project, ProjectStatus
-from ..tasks import move_project_task
+from ..tasks import start_move_operation
 from .crud import GROUP_BY_CHOICES, _attach_progress_to_projects
 from .mixins import ProjectViewMixin
 
@@ -295,12 +295,22 @@ class ProjectBulkMoveView(BulkActionMixin, LoginAndWorkspaceRequiredMixin, View)
     def perform_action(self):
         target_workspace = self.form.cleaned_data["workspace"]
         selected_qs = self.get_selected_queryset()
-        count = selected_qs.count()
-        for project in selected_qs:
-            move_project_task.delay(project.pk, target_workspace.pk)
-        messages.success(
-            self.request,
-            _("%(count)d project(s) are being moved to %(workspace)s.")
-            % {"count": count, "workspace": target_workspace.name},
-        )
+        project_ids = list(selected_qs.values_list("pk", flat=True))
+        self._operation_id = start_move_operation(project_ids, target_workspace.pk)
+        self._move_total = len(project_ids)
         return self.form.cleaned_data["page"]
+
+    def render_response(self, page):
+        # For HTMX requests with move operation, show progress instead of redirecting
+        if self.request.htmx and getattr(self, "_operation_id", None):
+            return render(
+                self.request,
+                "projects/includes/move_progress.html",
+                {
+                    "operation_id": self._operation_id,
+                    "total": self._move_total,
+                    "completed": 0,
+                    "workspace": self.workspace,
+                },
+            )
+        return super().render_response(page)

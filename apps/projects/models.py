@@ -1,7 +1,8 @@
 import re
 
+from django.apps import apps
 from django.contrib.auth import get_user_model
-from django.db import models
+from django.db import models, transaction
 from django.db.models import F, Func, Value
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -197,29 +198,35 @@ class Project(BaseModel):
         - All issue keys (format: {PROJECT_KEY}-{N}) are updated if the key changes.
         - Sprint assignments are removed from all work items (sprints are workspace-scoped).
         """
-        from apps.issues.models import BaseIssue, Bug, Chore, Story
+        BaseIssue = apps.get_model("issues", "BaseIssue")
+        Story = apps.get_model("issues", "Story")
+        Bug = apps.get_model("issues", "Bug")
+        Chore = apps.get_model("issues", "Chore")
 
-        old_key = self.key
+        with transaction.atomic():
+            old_key = self.key
 
-        key_taken = Project.objects.filter(workspace=target_workspace).exclude(pk=self.pk).filter(key=old_key).exists()
-
-        if key_taken:
-            original_workspace = self.workspace
-            self.workspace = target_workspace
-            new_key = self._generate_unique_key()
-            self.workspace = original_workspace
-        else:
-            new_key = old_key
-
-        if old_key != new_key:
-            BaseIssue.objects.filter(project=self).update(
-                key=Func(F("key"), Value(f"{old_key}-"), Value(f"{new_key}-"), function="REPLACE")
+            key_taken = (
+                Project.objects.filter(workspace=target_workspace).exclude(pk=self.pk).filter(key=old_key).exists()
             )
 
-        Story.objects.filter(project=self).update(sprint=None)
-        Bug.objects.filter(project=self).update(sprint=None)
-        Chore.objects.filter(project=self).update(sprint=None)
+            if key_taken:
+                original_workspace = self.workspace
+                self.workspace = target_workspace
+                new_key = self._generate_unique_key()
+                self.workspace = original_workspace
+            else:
+                new_key = old_key
 
-        self.workspace = target_workspace
-        self.key = new_key
-        self.save()
+            if old_key != new_key:
+                BaseIssue.objects.filter(project=self).update(
+                    key=Func(F("key"), Value(f"{old_key}-"), Value(f"{new_key}-"), function="REPLACE")
+                )
+
+            Story.objects.filter(project=self).update(sprint=None)
+            Bug.objects.filter(project=self).update(sprint=None)
+            Chore.objects.filter(project=self).update(sprint=None)
+
+            self.workspace = target_workspace
+            self.key = new_key
+            self.save()

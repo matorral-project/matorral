@@ -3,6 +3,7 @@ from collections import OrderedDict
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
@@ -31,7 +32,7 @@ from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 from apps.workspaces.models import Workspace
 
 from ..models import Project, ProjectStatus
-from ..tasks import move_project_task
+from ..tasks import start_move_operation
 from .mixins import ProjectFormMixin, ProjectSingleObjectMixin, ProjectViewMixin
 
 User = get_user_model()
@@ -1270,10 +1271,34 @@ class ProjectMoveView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, View):
             Workspace.objects.for_user(request.user).exclude(pk=self.workspace.pk),
             pk=target_workspace_pk,
         )
-        move_project_task.delay(project.pk, target_workspace.pk)
-        messages.success(
-            request,
-            _("Project %(key)s is being moved to %(workspace)s.")
-            % {"key": project.key, "workspace": target_workspace.name},
-        )
+        start_move_operation([project.pk], target_workspace.pk)
         return redirect(reverse("projects:project_list", kwargs={"workspace_slug": self.kwargs["workspace_slug"]}))
+
+
+class MoveProgressView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, View):
+    """HTMX polling endpoint that returns move operation progress."""
+
+    http_method_names = ["get"]
+
+    def get(self, request, *args, **kwargs):
+        from django_htmx.http import HttpResponseClientRefresh
+
+        operation_id = kwargs["operation_id"]
+        progress = cache.get(f"move_projects_{operation_id}")
+
+        if progress is None or progress["status"] == "completed":
+            # Operation is done, refresh the page to show updated list
+            response = HttpResponseClientRefresh()
+            return response
+
+        # Still in progress, return updated progress template
+        return render(
+            request,
+            "projects/includes/move_progress.html",
+            {
+                "operation_id": operation_id,
+                "total": progress["total"],
+                "completed": progress["completed"],
+                "workspace": self.workspace,
+            },
+        )
