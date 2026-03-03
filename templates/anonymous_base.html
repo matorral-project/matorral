@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block top_nav %}{% endblock %}
+{% block body %}
+<div class="flex flex-col items-center my-8">
+  <div class="text-center mb-6">
+    <h1 class="text-3xl font-bold text-base-content">
+      Matorral
+      <span class="badge badge-primary badge-sm align-middle">{{ env_badge }}</span>
+    </h1>
+  </div>
+  {% block content %}{% endblock %}
+</div>
+{% endblock %}
