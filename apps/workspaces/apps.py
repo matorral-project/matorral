@@ -7,4 +7,4 @@ class WorkspacesConfig(AppConfig):
     label = "workspaces"
 
     def ready(self):
-        import apps.workspaces.signals  # noqa: F401
+        import apps.workspaces.signals  # noqa: F401, PLC0415

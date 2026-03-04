@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.db.models import Case, IntegerField, Sum, Value, When
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
@@ -20,7 +22,6 @@ from apps.issues.forms import (
 from apps.issues.helpers import (
     build_grouped_issues,
     build_htmx_delete_response,
-    calculate_progress,
     count_subtasks_for_issue_ids,
     delete_subtasks_for_issue_ids,
 )
@@ -29,6 +30,7 @@ from apps.issues.views.mixins import ISSUE_TYPE_CHOICES
 from apps.projects.models import Project
 from apps.sprints.models import Sprint, SprintStatus
 from apps.utils.audit import bulk_create_delete_audit_logs
+from apps.utils.progress import build_progress_dict
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 from apps.workspaces.models import Workspace
 
@@ -132,9 +134,53 @@ class MilestoneDetailView(
                 .only("status", "estimated_points")
             )
         else:
-            all_children = []
+            all_children = BaseIssue.objects.none()
 
-        context["progress"] = calculate_progress(all_children)
+        # Calculate progress using database-level aggregation
+
+        # Get status categories for filtering
+        status_categories = BaseIssue.status_categories
+        done_statuses = [s for s, cat in status_categories.items() if cat == "done"]
+        in_progress_statuses = [s for s, cat in status_categories.items() if cat == "in_progress"]
+        todo_statuses = [s for s, cat in status_categories.items() if cat == "todo"]
+
+        # Aggregate the points by status category
+        aggregated = all_children.aggregate(
+            total_done_points=Sum(
+                Case(
+                    When(status__in=done_statuses, then=Coalesce("estimated_points", Value(1))),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                )
+            ),
+            total_in_progress_points=Sum(
+                Case(
+                    When(status__in=in_progress_statuses, then=Coalesce("estimated_points", Value(1))),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                )
+            ),
+            total_todo_points=Sum(
+                Case(
+                    When(status__in=todo_statuses, then=Coalesce("estimated_points", Value(1))),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                )
+            ),
+            total_estimated_points=Sum(Coalesce("estimated_points", Value(1))),
+        )
+
+        # Extract values, defaulting to 0 if None
+        total_done = aggregated["total_done_points"] or 0
+        total_in_progress = aggregated["total_in_progress_points"] or 0
+        total_todo = aggregated["total_todo_points"] or 0
+        total = aggregated["total_estimated_points"] or 0
+
+        if total > 0:
+            context["progress"] = build_progress_dict(total_done, total_in_progress, total_todo, total)
+        else:
+            context["progress"] = None
+
         return context
 
 

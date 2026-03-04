@@ -69,7 +69,7 @@ fixable = [
     "ALL",
 ]
 unfixable = []
-select = ["E", "F", "UP", "B", "SIM"]
+select = ["E", "F", "UP", "B", "SIM", "PLC0415"]
 
 [tool.ruff.format]
 quote-style = "double"

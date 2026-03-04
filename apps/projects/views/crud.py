@@ -18,7 +18,6 @@ from apps.issues.helpers import (
     annotate_epic_child_counts,
     build_grouped_epics_by_milestone,
     build_grouped_issues,
-    calculate_progress,
     count_subtasks_for_issue_ids,
     delete_subtasks_for_issue_ids,
     get_epic_content_type_id,
@@ -27,44 +26,25 @@ from apps.issues.models import BaseIssue, Epic, IssuePriority, IssueStatus, Mile
 from apps.issues.views.mixins import ISSUE_TYPE_CHOICES, WORK_ITEM_TYPE_CHOICES, IssueListContextMixin
 from apps.sprints.models import Sprint, SprintStatus
 from apps.utils.filters import build_filter_section, count_active_filters, get_status_filter_label, parse_status_filter
+from apps.utils.progress import build_progress_dict
 from apps.workspaces.limits import LimitExceededError, check_work_item_limit
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 from apps.workspaces.models import Workspace
 
+from django_htmx.http import HttpResponseClientRefresh
+
+from ..forms import ProjectDetailInlineEditForm, ProjectRowInlineEditForm
 from ..models import Project, ProjectStatus
 from ..tasks import start_move_operation
 from .mixins import ProjectFormMixin, ProjectSingleObjectMixin, ProjectViewMixin
 
 User = get_user_model()
 
+
 GROUP_BY_CHOICES = [
     ("status", _("Status")),
     ("lead", _("Lead")),
 ]
-
-
-def _attach_progress_to_projects(projects):
-    """Batch-compute progress for a list of projects, avoiding N+1 queries.
-
-    Fetches all work items (excludes epics) for the given projects in one query,
-    then attaches a progress dict to each project object.
-    """
-    project_ids = [p.pk for p in projects]
-    if not project_ids:
-        return
-
-    children_by_project = {}
-    all_children = (
-        BaseIssue.objects.filter(project_id__in=project_ids)
-        .exclude(polymorphic_ctype_id=get_epic_content_type_id())
-        .non_polymorphic()
-        .only("status", "estimated_points", "project_id")
-    )
-    for child in all_children:
-        children_by_project.setdefault(child.project_id, []).append(child)
-
-    for project in projects:
-        project.progress = calculate_progress(children_by_project.get(project.pk, []))
 
 
 class ProjectListView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, ListView):
@@ -95,7 +75,7 @@ class ProjectListView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, ListView
             queryset = queryset.order_by("status", "name")
         elif self.group_by == "lead":
             queryset = queryset.order_by("lead__first_name", "lead__last_name", "name")
-        return queryset
+        return queryset.with_progress()
 
     def get_paginate_by(self, queryset):
         if self.group_by:
@@ -200,7 +180,17 @@ class ProjectListView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, ListView
         context["active_filter_count"] = active_filter_count
 
         projects = list(context["projects"])
-        _attach_progress_to_projects(projects)
+        # Build progress dicts from the annotated weights
+        for project in projects:
+            total = getattr(project, "total_estimated_points", 0) or 0
+            if total:
+                done = getattr(project, "total_done_points", 0) or 0
+                in_progress = getattr(project, "total_in_progress_points", 0) or 0
+                todo = getattr(project, "total_todo_points", 0) or 0
+                project.progress = build_progress_dict(done, in_progress, todo, total)
+            else:
+                project.progress = None
+
         if self.group_by:
             context["grouped_projects"] = self._build_grouped_projects(projects)
         if context.get("is_paginated"):
@@ -221,7 +211,7 @@ class ProjectDetailView(
     template_name = "projects/project_detail.html"
 
     def get_queryset(self):
-        return Project.objects.for_workspace(self.workspace).select_related("lead", "workspace")
+        return Project.objects.for_workspace(self.workspace).with_progress().select_related("lead", "workspace")
 
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)
@@ -234,14 +224,18 @@ class ProjectDetailView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["page_title"] = f"{self.object.name} Roadmap"
-        work_items = (
-            BaseIssue.objects.filter(project=self.object)
-            .exclude(polymorphic_ctype_id=get_epic_content_type_id())
-            .non_polymorphic()
-            .only("status", "estimated_points")
-        )
-        context["progress"] = calculate_progress(work_items)
         context["move_target_workspaces"] = Workspace.objects.for_user(self.request.user).exclude(pk=self.workspace.pk)
+
+        # Add progress context for the project
+        total = getattr(self.object, "total_estimated_points", 0) or 0
+        if total:
+            done = getattr(self.object, "total_done_points", 0) or 0
+            in_progress = getattr(self.object, "total_in_progress_points", 0) or 0
+            todo = getattr(self.object, "total_todo_points", 0) or 0
+            context["progress"] = build_progress_dict(done, in_progress, todo, total)
+        else:
+            context["progress"] = None
+
         return context
 
 
@@ -420,8 +414,6 @@ class ProjectRowInlineEditView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin,
 
     def get(self, request, *args, **kwargs):
         """Return display mode (cancel=1) or edit mode for the project row."""
-        from ..forms import ProjectRowInlineEditForm
-
         project = get_object_or_404(
             Project.objects.for_workspace(self.workspace).select_related("lead"),
             key=kwargs["key"],
@@ -449,8 +441,6 @@ class ProjectRowInlineEditView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin,
 
     def post(self, request, *args, **kwargs):
         """Save inline edits and return display mode."""
-        from ..forms import ProjectRowInlineEditForm
-
         project = get_object_or_404(
             Project.objects.for_workspace(self.workspace).select_related("lead"),
             key=kwargs["key"],
@@ -501,8 +491,6 @@ class ProjectDetailInlineEditView(LoginAndWorkspaceRequiredMixin, ProjectViewMix
 
     def get(self, request, *args, **kwargs):
         """Return display mode (cancel=1) or edit mode for the project detail header."""
-        from ..forms import ProjectDetailInlineEditForm
-
         project = get_object_or_404(
             Project.objects.for_workspace(self.workspace).select_related("lead"),
             key=kwargs["key"],
@@ -531,8 +519,6 @@ class ProjectDetailInlineEditView(LoginAndWorkspaceRequiredMixin, ProjectViewMix
 
     def post(self, request, *args, **kwargs):
         """Save inline edits and return display mode."""
-        from ..forms import ProjectDetailInlineEditForm
-
         project = get_object_or_404(
             Project.objects.for_workspace(self.workspace).select_related("lead"),
             key=kwargs["key"],
@@ -635,7 +621,7 @@ class ProjectEpicsEmbedView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Pr
             else:
                 queryset = queryset.filter(milestone__key=self.milestone_filter)
 
-        return queryset.order_by("key")
+        return queryset.with_progress().order_by("key")
 
     def get_template_names(self):
         if self.request.htmx:
@@ -1281,8 +1267,6 @@ class MoveProgressView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, View):
     http_method_names = ["get"]
 
     def get(self, request, *args, **kwargs):
-        from django_htmx.http import HttpResponseClientRefresh
-
         operation_id = kwargs["operation_id"]
         progress = cache.get(f"move_projects_{operation_id}")
 

@@ -1,8 +1,10 @@
 import re
 
+from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Sum
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
@@ -100,6 +102,7 @@ class Sprint(BaseModel):
     )
 
     objects = SprintManager()
+    status_model = SprintStatus
 
     class Meta:
         constraints = [
@@ -204,28 +207,25 @@ class Sprint(BaseModel):
 
     def calculate_committed_points(self) -> int:
         """Sum estimated_points from all assigned work items."""
-        from django.db.models import Sum
-
-        from apps.issues.models import Bug, Chore, Story
+        Bug = apps.get_model("issues", "Bug")
+        Chore = apps.get_model("issues", "Chore")
+        Story = apps.get_model("issues", "Story")
 
         total = 0
         for model in [Story, Bug, Chore]:
-            result = model.objects.filter(sprint=self).aggregate(total=Sum("estimated_points"))
+            result = model.objects.for_sprint(self).aggregate(total=Sum("estimated_points"))
             total += result["total"] or 0
         return total
 
     def calculate_completed_points(self) -> int:
         """Sum points from done/archived work items."""
-        from django.db.models import Sum
+        Bug = apps.get_model("issues", "Bug")
+        Chore = apps.get_model("issues", "Chore")
+        Story = apps.get_model("issues", "Story")
 
-        from apps.issues.models import Bug, Chore, IssueStatus, Story
-
-        done_statuses = [IssueStatus.DONE, IssueStatus.ARCHIVED]
         total = 0
         for model in [Story, Bug, Chore]:
-            result = model.objects.filter(sprint=self, status__in=done_statuses).aggregate(
-                total=Sum("estimated_points")
-            )
+            result = model.objects.for_sprint(self).done().aggregate(total=Sum("estimated_points"))
             total += result["total"] or 0
         return total
 

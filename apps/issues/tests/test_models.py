@@ -1,7 +1,8 @@
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from apps.issues.factories import BugFactory, ChoreFactory, EpicFactory, MilestoneFactory, StoryFactory
-from apps.issues.models import Bug, Chore, Epic, IssueStatus, Milestone, Story
+from apps.issues.models import BaseIssue, Bug, Chore, Epic, IssueStatus, Milestone, Story
 from apps.projects.factories import ProjectFactory
 
 
@@ -211,8 +212,6 @@ class EpicMilestoneRelationshipTest(TestCase):
 
     def test_epic_milestone_must_belong_to_same_project(self):
         """Epic cannot link to milestone from a different project."""
-        from django.core.exceptions import ValidationError
-
         other_project = ProjectFactory()
         milestone = MilestoneFactory(project=other_project, title="Other Project Milestone")
         epic = Epic(project=self.project, title="Feature Epic", milestone=milestone)
@@ -334,8 +333,6 @@ class IssueCascadeDeleteTest(TestCase):
 
     def test_queryset_delete_cascades_to_children(self):
         """Deleting an epic via queryset.delete() also deletes its children."""
-        from apps.issues.models import BaseIssue
-
         epic = EpicFactory(project=self.project, title="Epic to delete")
         story = StoryFactory(project=self.project, title="Child story", parent=epic)
         bug = BugFactory(project=self.project, title="Child bug", parent=epic)
@@ -355,8 +352,6 @@ class IssueCascadeDeleteTest(TestCase):
 
     def test_bulk_delete_cascades_to_children(self):
         """Bulk deleting multiple epics also deletes all their children."""
-        from apps.issues.models import BaseIssue
-
         epic1 = EpicFactory(project=self.project, title="Epic 1")
         story1 = StoryFactory(project=self.project, title="Story under Epic 1", parent=epic1)
         epic2 = EpicFactory(project=self.project, title="Epic 2")
@@ -380,8 +375,6 @@ class IssueCascadeDeleteTest(TestCase):
 
         This tests the code path used by IssueDeleteView (detail page deletion).
         """
-        from apps.issues.models import BaseIssue
-
         epic = EpicFactory(project=self.project, title="Epic to delete")
         story = StoryFactory(project=self.project, title="Child story", parent=epic)
         bug = BugFactory(project=self.project, title="Child bug", parent=epic)
@@ -404,8 +397,6 @@ class IssueCascadeDeleteTest(TestCase):
 
         This more closely mimics IssueDeleteView which fetches via get_object().
         """
-        from apps.issues.models import BaseIssue
-
         epic = EpicFactory(project=self.project, title="Epic to delete")
         story = StoryFactory(project=self.project, title="Child story", parent=epic)
         bug = BugFactory(project=self.project, title="Child bug", parent=epic)

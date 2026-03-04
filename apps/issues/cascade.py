@@ -8,14 +8,20 @@ hierarchy change status. Supports cascading DOWN (to children) and UP
 
 from dataclasses import dataclass, field
 
+from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponse
 from django.template.loader import render_to_string
+from django.urls import reverse
 
 from apps.issues.models import BaseIssue, Epic, IssueStatus, Milestone, Subtask, SubtaskStatus
 from apps.issues.utils import get_cached_content_type
 from apps.projects.models import Project, ProjectStatus
 from apps.utils.audit import bulk_create_audit_logs
+
+Bug = apps.get_model("issues", "Bug")
+Chore = apps.get_model("issues", "Chore")
+Story = apps.get_model("issues", "Story")
 
 # Completed status sets per type
 COMPLETED_ISSUE_STATUSES = {IssueStatus.DONE, IssueStatus.WONT_DO, IssueStatus.ARCHIVED}
@@ -141,8 +147,6 @@ class CascadeInfo:
 
 def _get_subtask_content_type_ids():
     """Get ContentType IDs for work item types that can have subtasks."""
-    from apps.issues.models import Bug, Chore, Story
-
     return [get_cached_content_type(m).id for m in [Story, Bug, Chore]]
 
 
@@ -816,8 +820,6 @@ def _append_cascade_oob(request, cascade_info, response):
 
 def _build_cascade_context(request, cascade_info):
     """Build template context for cascade modal content."""
-    from django.urls import reverse
-
     context = {
         "cascade_down": None,
         "cascade_up": None,

@@ -3,7 +3,7 @@ Management command to find and fix orphaned issues (issues whose parent was dele
 """
 
 from django.core.management.base import BaseCommand
-from django.db import transaction
+from django.db import connection, transaction
 from django.utils.translation import gettext_lazy as _
 
 from apps.issues.models import BaseIssue
@@ -101,8 +101,6 @@ class Command(BaseCommand):
         Instead, we delete each orphan's polymorphic child table row first,
         then the base table row.
         """
-        from django.db import connection
-
         with transaction.atomic():
             orphan_pks = [issue.pk for issue in orphans]
             orphan_keys = {issue.pk: issue.key for issue in orphans}

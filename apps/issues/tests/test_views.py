@@ -1,9 +1,12 @@
+from datetime import date
+
 from django.test import Client, TestCase
 from django.urls import reverse
 
 from apps.issues.factories import BugFactory, ChoreFactory, EpicFactory, MilestoneFactory, StoryFactory
 from apps.issues.models import BaseIssue, BugSeverity, Epic, IssuePriority, IssueStatus, Milestone
 from apps.projects.factories import ProjectFactory
+from apps.sprints.factories import SprintFactory
 from apps.users.factories import UserFactory
 from apps.workspaces.factories import MembershipFactory, WorkspaceFactory
 from apps.workspaces.roles import ROLE_ADMIN
@@ -133,7 +136,6 @@ class IssueDetailViewTest(IssueViewTestBase):
 
     def test_epic_issues_embed_view_with_sprint_grouping(self):
         """Epic issues embed view works with sprint grouping."""
-        from apps.sprints.factories import SprintFactory
 
         epic = EpicFactory(project=self.project)
         sprint = SprintFactory(workspace=self.workspace, name="Test Sprint")
@@ -1490,7 +1492,6 @@ class IssueRowInlineEditViewTest(IssueViewTestBase):
 
     def test_embed_sprint_context_is_loaded(self):
         """GET with embed=1&sprint=KEY loads the sprint context."""
-        from apps.sprints.factories import SprintFactory
 
         story = StoryFactory(project=self.project)
         sprint = SprintFactory(workspace=self.workspace)
@@ -1750,7 +1751,6 @@ class EpicDetailInlineEditViewTest(IssueViewTestBase):
 
         self.assertEqual(200, response.status_code)
         epic.refresh_from_db()
-        from datetime import date
 
         self.assertEqual(date(2026, 3, 15), epic.due_date)
 
@@ -1903,7 +1903,6 @@ class IssueDetailInlineEditViewTest(IssueViewTestBase):
 
         self.assertEqual(200, response.status_code)
         story.refresh_from_db()
-        from datetime import date
 
         self.assertEqual(date(2026, 3, 15), story.due_date)
 

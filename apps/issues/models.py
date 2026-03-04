@@ -8,9 +8,9 @@ from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
-from apps.issues.managers import IssueManager, MilestoneManager, SubtaskManager
-from apps.projects.models import Project
+from apps.issues.managers import IssueManager, KeyNumber, MilestoneManager, SubtaskManager
 from apps.utils.models import BaseModel
+from apps.utils.progress import calculate_progress
 
 from auditlog.registry import auditlog
 from polymorphic.models import PolymorphicModel
@@ -77,7 +77,7 @@ class Milestone(BaseModel):
     """
 
     project = models.ForeignKey(
-        Project,
+        "projects.Project",
         verbose_name=_("Project"),
         on_delete=models.CASCADE,
         related_name="milestones",
@@ -124,6 +124,7 @@ class Milestone(BaseModel):
     )
 
     objects = MilestoneManager()
+    status_model = IssueStatus
 
     class Meta:
         constraints = [
@@ -179,6 +180,10 @@ class Milestone(BaseModel):
             },
         )
 
+    @classmethod
+    def get_priority_choices(cls):
+        return IssuePriority.choices
+
 
 class BaseIssue(MP_Node, PolymorphicModel):
     """
@@ -187,7 +192,7 @@ class BaseIssue(MP_Node, PolymorphicModel):
     """
 
     project = models.ForeignKey(
-        Project,
+        "projects.Project",
         verbose_name=_("Project"),
         on_delete=models.CASCADE,
         related_name="issues",
@@ -251,6 +256,8 @@ class BaseIssue(MP_Node, PolymorphicModel):
     # Sorting is handled at query time via ordered_by_key() instead.
 
     objects = IssueManager()
+    status_categories = STATUS_CATEGORIES
+    status_model = IssueStatus
 
     class Meta:
         constraints = [
@@ -339,8 +346,6 @@ class BaseIssue(MP_Node, PolymorphicModel):
 
     def get_children_issues(self):
         """Return all direct children of this issue, ordered by key."""
-        from apps.issues.managers import KeyNumber
-
         return self.get_children().annotate(key_number=KeyNumber("key")).order_by("key_number")
 
     def get_descendant_issues(self):
@@ -351,12 +356,17 @@ class BaseIssue(MP_Node, PolymorphicModel):
         """Return all ancestors of this issue."""
         return self.get_ancestors()
 
+    def get_status_category(self, category=None):
+        return STATUS_CATEGORIES.get(self.status, category or "todo")
+
     def get_progress(self):
         """Calculate progress based on descendants' statuses and story points."""
-        from apps.issues.helpers import calculate_progress
-
         children = self.get_descendants().non_polymorphic().only("status", "estimated_points")
         return calculate_progress(children)
+
+    @classmethod
+    def get_priority_choices(cls):
+        return IssuePriority.choices
 
 
 @auditlog.register(

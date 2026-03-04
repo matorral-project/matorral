@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from django.apps import apps
 from django.db import models
 from django.db.models import IntegerField, OuterRef, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
@@ -44,27 +45,19 @@ class SprintQuerySet(models.QuerySet):
 
     def active(self) -> SprintQuerySet:
         """Filter to active sprints."""
-        from apps.sprints.models import SprintStatus
-
-        return self.filter(status=SprintStatus.ACTIVE)
+        return self.filter(status=self.model.status_model.ACTIVE)
 
     def planning(self) -> SprintQuerySet:
         """Filter to planning sprints."""
-        from apps.sprints.models import SprintStatus
-
-        return self.filter(status=SprintStatus.PLANNING)
+        return self.filter(status=self.model.status_model.PLANNING)
 
     def completed(self) -> SprintQuerySet:
         """Filter to completed sprints."""
-        from apps.sprints.models import SprintStatus
-
-        return self.filter(status=SprintStatus.COMPLETED)
+        return self.filter(status=self.model.status_model.COMPLETED)
 
     def not_archived(self) -> SprintQuerySet:
         """Exclude archived sprints."""
-        from apps.sprints.models import SprintStatus
-
-        return self.exclude(status=SprintStatus.ARCHIVED)
+        return self.exclude(status=self.model.status_model.ARCHIVED)
 
     def search(self, query: str) -> SprintQuerySet:
         """Search sprints by name or key (case-insensitive)."""
@@ -89,14 +82,19 @@ class SprintQuerySet(models.QuerySet):
     def with_progress(self) -> SprintQuerySet:
         """Annotate sprints with progress weights computed at the database level.
 
-        Adds progress_done_weight, progress_in_progress_weight, and
-        progress_total_weight annotations by summing work item weights
+        Adds total_estimated_points, total_done_points, total_in_progress_points,
+        and total_todo_points annotations by summing work item weights
         (estimated_points or 1) across Story, Bug, and Chore models.
         """
-        from apps.issues.models import STATUS_CATEGORIES, Bug, Chore, Story
 
-        done_statuses = [s for s, cat in STATUS_CATEGORIES.items() if cat == "done"]
-        in_progress_statuses = [s for s, cat in STATUS_CATEGORIES.items() if cat == "in_progress"]
+        BaseIssue = apps.get_model("issues", "BaseIssue")
+        Story = apps.get_model("issues", "Story")
+        Bug = apps.get_model("issues", "Bug")
+        Chore = apps.get_model("issues", "Chore")
+
+        done_statuses = [s for s, cat in BaseIssue.status_categories.items() if cat == "done"]
+        in_progress_statuses = [s for s, cat in BaseIssue.status_categories.items() if cat == "in_progress"]
+
         models = [Story, Bug, Chore]
 
         done = sum((_work_item_weight(m, done_statuses) for m in models), Value(0))
@@ -104,9 +102,10 @@ class SprintQuerySet(models.QuerySet):
         total = sum((_work_item_weight(m) for m in models), Value(0))
 
         return self.annotate(
-            progress_done_weight=done,
-            progress_in_progress_weight=in_progress,
-            progress_total_weight=total,
+            total_done_points=done,
+            total_in_progress_points=in_progress,
+            total_todo_points=total - done - in_progress,
+            total_estimated_points=total,
         )
 
 

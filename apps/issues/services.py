@@ -4,6 +4,9 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.issues.models import BaseIssue, Bug, BugSeverity, Chore, Epic, IssueStatus, Story, Subtask, SubtaskStatus
 
+from auditlog.models import LogEntry
+from django_comments_xtd.models import XtdComment
+
 # Models that can be converted between (work items only, not Epic)
 CONVERTIBLE_TYPES = {
     "story": Story,
@@ -150,9 +153,6 @@ def _delete_type_row(model_class, base_issue_id: int):
 
 def _update_generic_fk_content_types(issue_id: int, old_ct: ContentType, new_ct: ContentType):
     """Update ContentType references in models with GenericForeignKey to this issue."""
-    from auditlog.models import LogEntry
-    from django_comments_xtd.models import XtdComment
-
     # Update Subtasks
     Subtask.objects.filter(content_type=old_ct, object_id=issue_id).update(content_type=new_ct)
 
@@ -165,8 +165,6 @@ def _update_generic_fk_content_types(issue_id: int, old_ct: ContentType, new_ct:
 
 def _create_conversion_audit_log(issue_id: int, source_type: str, target_type: str, content_type: ContentType):
     """Create an audit log entry recording the type conversion."""
-    from auditlog.models import LogEntry
-
     # Get the issue for representation
     issue = BaseIssue.objects.get(pk=issue_id)
 
@@ -323,9 +321,6 @@ def _create_epic_row(
 
 def _update_generic_fk_content_types_for_epic(issue_id: int, old_ct: ContentType, new_ct: ContentType):
     """Update ContentType references for comments and audit log (not subtasks, they're handled separately)."""
-    from auditlog.models import LogEntry
-    from django_comments_xtd.models import XtdComment
-
     # Update Comments (django_comments_xtd uses object_pk as string)
     XtdComment.objects.filter(content_type=old_ct, object_pk=str(issue_id)).update(content_type=new_ct)
 
@@ -354,8 +349,6 @@ def _convert_subtasks_to_stories(subtasks: list[Subtask], epic: Epic):
 
 def _create_promotion_audit_log(issue_id: int, source_type: str, content_type: ContentType):
     """Create an audit log entry recording the promotion to Epic."""
-    from auditlog.models import LogEntry
-
     # Get the issue for representation
     issue = BaseIssue.objects.get(pk=issue_id)
 

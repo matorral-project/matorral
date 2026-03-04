@@ -1,11 +1,12 @@
 from django.test import RequestFactory, TestCase
 
 from apps.issues.factories import BugFactory, EpicFactory, MilestoneFactory, StoryFactory
-from apps.issues.helpers import build_grouped_issues, build_htmx_delete_response, calculate_progress
+from apps.issues.helpers import build_grouped_issues, build_htmx_delete_response
 from apps.issues.models import BaseIssue, Epic, IssuePriority, IssueStatus
 from apps.projects.factories import ProjectFactory
 from apps.sprints.factories import SprintFactory
 from apps.users.factories import UserFactory
+from apps.utils.progress import calculate_progress
 
 from django_htmx.middleware import HtmxDetails
 

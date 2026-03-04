@@ -115,8 +115,10 @@ class WorkspaceBulkActionMixin(IssueListContextMixin, WorkspaceIssueViewMixin):
         # Build queryset based on context
         if is_project_epics_embed and project_filter:
             project = get_object_or_404(Project.objects.for_workspace(self.workspace), key=project_filter)
-            queryset = Epic.objects.for_project(project).select_related(
-                "project", "project__workspace", "assignee", "milestone"
+            queryset = (
+                Epic.objects.for_project(project)
+                .with_progress()
+                .select_related("project", "project__workspace", "assignee", "milestone")
             )
         elif is_sprint_embed and sprint_filter:
             sprint = get_object_or_404(Sprint.objects.for_workspace(self.workspace), key=sprint_filter)
