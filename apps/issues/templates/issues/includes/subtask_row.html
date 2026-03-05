@@ -14,7 +14,7 @@
     <i class="fa fa-ban text-error"></i>
     {% elif subtask.status == "in_progress" %}
     <i class="fa fa-spinner text-warning"></i>
-    {% else %}
+    {% else %}{# ready or other statuses #}
     <i class="fa fa-square-o text-base-content/60"></i>
     {% endif %}
   </button>
@@ -27,8 +27,8 @@
     {{ subtask.title }}
   </span>
 
-  {# Status badge #}
-  {% if subtask.status == "todo" %}
+  {# Status badge - maps IssueStatus values to display #}
+  {% if subtask.status == "ready" %}
   <span class="badge badge-ghost badge-sm">{% translate "To Do" %}</span>
   {% elif subtask.status == "in_progress" %}
   <span class="badge badge-warning badge-sm">{% translate "In Progress" %}</span>

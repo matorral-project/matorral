@@ -1,7 +1,6 @@
-from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 
-from apps.issues.models import BaseIssue, Bug, BugSeverity, Chore, Epic, IssueStatus, Milestone, Story, Subtask
+from apps.issues.models import BaseIssue, Bug, BugSeverity, Chore, Epic, IssueStatus, Milestone, Story
 from apps.projects.models import ProjectStatus
 from apps.sprints.models import Sprint, SprintStatus
 from apps.utils.tests.base import WorkspaceTestMixin
@@ -188,14 +187,18 @@ class CreateDemoProjectTest(WorkspaceTestMixin, TestCase):
 
     def test_subtasks_created(self):
         expected_count = sum(len(tasks) for tasks in SUBTASKS.values())
-        total_subtasks = Subtask.objects.count()
-        self.assertEqual(total_subtasks, expected_count)
+        # Subtasks are now BaseIssue children in the tree structure
+        # depth=1 is epic, depth=2 is story/bug/chore, depth=3 is subtask
+        # Actually, let's count by checking children of work items
+        work_items = BaseIssue.objects.filter(project=self.project).work_items()
+        total_children = sum(item.get_children().count() for item in work_items)
+        self.assertEqual(total_children, expected_count)
 
     def test_subtasks_on_correct_items(self):
         for item_title in SUBTASKS:
             item = BaseIssue.objects.get(project=self.project, title=item_title)
-            ct = ContentType.objects.get_for_model(item)
-            subtask_count = Subtask.objects.filter(content_type=ct, object_id=item.pk).count()
+            # Subtasks are now children in the tree structure
+            subtask_count = item.get_children().count()
             self.assertEqual(
                 subtask_count,
                 len(SUBTASKS[item_title]),

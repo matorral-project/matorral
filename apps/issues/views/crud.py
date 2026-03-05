@@ -21,12 +21,10 @@ from apps.issues.helpers import (
     annotate_epic_child_counts,
     build_grouped_issues,
     build_htmx_delete_response,
-    count_subtasks_for_issue_ids,
     delete_subtasks_for_issue_ids,
 )
-from apps.issues.models import BaseIssue, Bug, BugSeverity, Epic, IssuePriority, IssueStatus, Milestone, Subtask
+from apps.issues.models import BaseIssue, Bug, BugSeverity, Epic, IssuePriority, IssueStatus, Milestone
 from apps.issues.services import IssueConversionError, PromotionError, convert_issue_type, promote_to_epic
-from apps.issues.utils import get_cached_content_type
 from apps.projects.models import Project
 from apps.sprints.models import Sprint, SprintStatus
 from apps.workspaces.limits import LimitExceededError, check_work_item_limit
@@ -488,11 +486,8 @@ class IssueDeleteView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, IssueSingl
             "key": self.object.key,
             "title": self.object.title,
         }
-        context["descendant_count"] = self.object.get_descendant_count()
-        # Collect all issue IDs (self + descendants) for subtask count
-        descendant_ids = list(self.object.get_descendants().values_list("pk", flat=True))
-        all_ids = [self.object.pk] + descendant_ids
-        context["subtask_count"] = count_subtasks_for_issue_ids(all_ids)
+        # Count all descendants (children) - includes both work items and subtasks
+        context["children_count"] = self.object.get_descendants().count()
         return context
 
     def get_success_url(self):
@@ -713,9 +708,8 @@ class IssuePromoteToEpicView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
 
         form = IssuePromoteToEpicForm(initial=initial, project=self.project)
 
-        # Get subtask count for display
-        content_type = get_cached_content_type(type(real_issue))
-        subtask_count = Subtask.objects.filter(content_type=content_type, object_id=real_issue.pk).count()
+        # Get subtask count for display (now using tree structure)
+        subtask_count = real_issue.get_children().count()
 
         source = request.GET.get("source", "")
         context = {
@@ -751,10 +745,9 @@ class IssuePromoteToEpicView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
 
         if form.is_valid():
             milestone = form.cleaned_data.get("milestone")
-            convert_subtasks = form.cleaned_data.get("convert_subtasks", True)
 
             try:
-                epic = promote_to_epic(real_issue, milestone=milestone, convert_subtasks=convert_subtasks)
+                epic = promote_to_epic(real_issue, milestone=milestone)
                 messages.success(
                     request,
                     _("%(key)s promoted from %(old)s to Epic.")
@@ -780,8 +773,7 @@ class IssuePromoteToEpicView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
                 return redirect(real_issue.get_absolute_url())
 
         # Form validation failed - re-render modal content
-        content_type = get_cached_content_type(type(real_issue))
-        subtask_count = Subtask.objects.filter(content_type=content_type, object_id=real_issue.pk).count()
+        subtask_count = real_issue.get_children().count()
 
         context = {
             "issue": real_issue,

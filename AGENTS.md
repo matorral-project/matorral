@@ -102,6 +102,32 @@ Epic.add_root(project=project, title="Epic title", milestone=milestone)
 epic.add_child(instance=Story(project=project, title="Story title"))
 ```
 
+**Polymorphic issue types:**
+```python
+from apps.issues.models import BaseIssue, Epic, Story, Bug, Chore, Subtask
+
+# Filter by type
+BaseIssue.objects.for_project(project).instance_of(Story, Bug, Chore)  # Work items only
+
+# Children are retrieved via treebeard methods regardless of type
+epic.get_children()  # Returns Story, Bug, Chore instances
+story.get_children()  # Returns Subtask instances
+bug.get_children()  # Returns Subtask instances
+chore.get_children()  # Returns Subtask instances
+
+# Never use depth to identify subtasks
+# Depth depends on whether parent story has an epic:
+#   - With epic: Epic(depth=1) → Story(depth=2) → Subtask(depth=3)
+#   - Without epic: Story(depth=1) → Subtask(depth=2)
+BASE_ISSUE.objects.filter(...).instance_of(Subtask)  # ✓ Correct
+BASE_ISSUE.objects.filter(depth__gt=2)  # ✗ Wrong!
+```
+
+**Hierarchy:**
+- **Epic**: Root-level or under milestone, contains work items
+- **Work items (Story/Bug/Chore)**: Children of epics, can have sprints, or can be orphans (no parent epic)
+- **Subtask**: Children of work items, always leaf nodes
+
 **ContentType caching** (use in hot paths to prevent deadlocks):
 ```python
 from apps.issues.utils import get_cached_content_type

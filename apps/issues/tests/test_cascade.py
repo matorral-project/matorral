@@ -9,8 +9,8 @@ from apps.issues.cascade import (
     get_parent_and_siblings,
     map_status_for_cascade_up,
 )
-from apps.issues.factories import EpicFactory, MilestoneFactory, StoryFactory, SubtaskFactory
-from apps.issues.models import IssueStatus, SubtaskStatus
+from apps.issues.factories import BaseIssueSubtaskFactory, EpicFactory, MilestoneFactory, StoryFactory
+from apps.issues.models import IssueStatus
 from apps.projects.factories import ProjectFactory
 from apps.projects.models import ProjectStatus
 from apps.users.factories import UserFactory
@@ -62,8 +62,8 @@ class GetChildrenForCascadeTest(TestCase):
     def test_work_item_children_are_subtasks(self):
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
-        subtask1 = SubtaskFactory(parent=story)
-        subtask2 = SubtaskFactory(parent=story)
+        subtask1 = BaseIssueSubtaskFactory(parent=story)
+        subtask2 = BaseIssueSubtaskFactory(parent=story)
 
         children, child_type = get_children_for_cascade(story)
 
@@ -74,7 +74,7 @@ class GetChildrenForCascadeTest(TestCase):
     def test_subtask_has_no_children(self):
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
-        subtask = SubtaskFactory(parent=story)
+        subtask = BaseIssueSubtaskFactory(parent=story)
 
         children, child_type = get_children_for_cascade(subtask)
 
@@ -91,8 +91,8 @@ class GetParentAndSiblingsTest(TestCase):
     def test_subtask_parent_is_work_item(self):
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
-        subtask1 = SubtaskFactory(parent=story)
-        subtask2 = SubtaskFactory(parent=story)
+        subtask1 = BaseIssueSubtaskFactory(parent=story)
+        subtask2 = BaseIssueSubtaskFactory(parent=story)
 
         parent, siblings = get_parent_and_siblings(subtask1)
 
@@ -184,13 +184,13 @@ class MapStatusForCascadeUpTest(TestCase):
     def test_subtask_done_to_issue(self):
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
-        result = map_status_for_cascade_up(SubtaskStatus.DONE, story)
+        result = map_status_for_cascade_up(IssueStatus.DONE, story)
         self.assertEqual(result, IssueStatus.DONE)
 
     def test_subtask_wont_do_to_issue(self):
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
-        result = map_status_for_cascade_up(SubtaskStatus.WONT_DO, story)
+        result = map_status_for_cascade_up(IssueStatus.WONT_DO, story)
         self.assertEqual(result, IssueStatus.WONT_DO)
 
     def test_issue_in_progress_to_milestone(self):
@@ -204,7 +204,7 @@ class MapStatusForCascadeUpTest(TestCase):
     def test_subtask_in_progress_to_issue(self):
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
-        result = map_status_for_cascade_up(SubtaskStatus.IN_PROGRESS, story)
+        result = map_status_for_cascade_up(IssueStatus.IN_PROGRESS, story)
         self.assertEqual(result, IssueStatus.IN_PROGRESS)
 
 
@@ -303,20 +303,20 @@ class CheckCascadeDownTest(TestCase):
     def test_work_item_done_cascades_to_subtasks(self):
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
-        subtask = SubtaskFactory(parent=story, status=SubtaskStatus.TODO)
+        subtask = BaseIssueSubtaskFactory(parent=story, status=IssueStatus.READY)
 
         info = check_cascade_opportunities(story, IssueStatus.DONE)
 
         self.assertIsNotNone(info.cascade_down)
         self.assertEqual(len(info.cascade_down.children), 1)
         self.assertEqual(info.cascade_down.children[0].pk, subtask.pk)
-        self.assertEqual(info.cascade_down.target_status, SubtaskStatus.DONE)
+        self.assertEqual(info.cascade_down.target_status, IssueStatus.DONE)
 
     def test_work_item_in_progress_does_not_cascade_down_to_subtasks(self):
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
-        SubtaskFactory(parent=story, status=SubtaskStatus.TODO)
-        SubtaskFactory(parent=story, status=SubtaskStatus.DONE)
+        BaseIssueSubtaskFactory(parent=story, status=IssueStatus.READY)
+        BaseIssueSubtaskFactory(parent=story, status=IssueStatus.DONE)
 
         info = check_cascade_opportunities(story, IssueStatus.IN_PROGRESS)
 
@@ -325,11 +325,11 @@ class CheckCascadeDownTest(TestCase):
     def test_no_subtask_cascade_for_planning_status(self):
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
-        SubtaskFactory(parent=story, status=SubtaskStatus.TODO)
+        BaseIssueSubtaskFactory(parent=story, status=IssueStatus.READY)
 
         info = check_cascade_opportunities(story, IssueStatus.PLANNING)
 
-        # PLANNING has no SubtaskStatus equivalent
+        # PLANNING has no subtask cascade (subtasks use IssueStatus)
         self.assertIsNone(info.cascade_down)
 
 
@@ -406,10 +406,10 @@ class CheckCascadeUpTest(TestCase):
     def test_subtask_done_with_all_siblings_offers_parent_completion(self):
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
-        SubtaskFactory(parent=story, status=SubtaskStatus.DONE)
-        subtask2 = SubtaskFactory(parent=story, status=SubtaskStatus.DONE)
+        BaseIssueSubtaskFactory(parent=story, status=IssueStatus.DONE)
+        subtask2 = BaseIssueSubtaskFactory(parent=story, status=IssueStatus.DONE)
 
-        info = check_cascade_opportunities(subtask2, SubtaskStatus.DONE)
+        info = check_cascade_opportunities(subtask2, IssueStatus.DONE)
 
         self.assertIsNotNone(info.cascade_up)
         self.assertEqual(info.cascade_up.parent.pk, story.pk)
@@ -458,12 +458,12 @@ class ApplyCascadeTest(TestCase):
     def test_apply_cascade_down_subtasks(self):
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
-        subtask = SubtaskFactory(parent=story, status=SubtaskStatus.TODO)
+        subtask = BaseIssueSubtaskFactory(parent=story, status=IssueStatus.READY)
 
         apply_cascade(
             cascade_down_pks=[subtask.pk],
-            cascade_down_status=SubtaskStatus.DONE,
-            cascade_down_model_type="subtask",
+            cascade_down_status=IssueStatus.DONE,
+            cascade_down_model_type="issue",
             cascade_up_pk=None,
             cascade_up_status="",
             cascade_up_model_type="",
@@ -471,7 +471,7 @@ class ApplyCascadeTest(TestCase):
         )
 
         subtask.refresh_from_db()
-        self.assertEqual(subtask.status, SubtaskStatus.DONE)
+        self.assertEqual(subtask.status, IssueStatus.DONE)
 
     def test_apply_cascade_down_milestones(self):
         milestone = MilestoneFactory(project=self.project, status=IssueStatus.DRAFT)
@@ -589,7 +589,7 @@ class DeepCascadeDownTest(TestCase):
         milestone = MilestoneFactory(project=self.project, status=IssueStatus.DRAFT)
         epic = EpicFactory(project=self.project, milestone=milestone, status=IssueStatus.IN_PROGRESS)
         story = StoryFactory(project=self.project, parent=epic, status=IssueStatus.DRAFT)
-        subtask = SubtaskFactory(parent=story, status=SubtaskStatus.TODO)
+        subtask = BaseIssueSubtaskFactory(parent=story, status=IssueStatus.READY)
 
         info = check_cascade_opportunities(self.project, ProjectStatus.COMPLETED)
 
@@ -614,7 +614,7 @@ class DeepCascadeDownTest(TestCase):
         self.assertEqual(subtask_group.model_type, "subtask")
         self.assertEqual(len(subtask_group.items), 1)
         self.assertEqual(subtask_group.items[0].pk, subtask.pk)
-        self.assertEqual(subtask_group.target_status, SubtaskStatus.DONE)
+        self.assertEqual(subtask_group.target_status, IssueStatus.DONE)
 
         # total_count includes all
         self.assertEqual(info.cascade_down.total_count, 4)
@@ -624,7 +624,7 @@ class DeepCascadeDownTest(TestCase):
         milestone = MilestoneFactory(project=self.project, status=IssueStatus.IN_PROGRESS)
         epic = EpicFactory(project=self.project, milestone=milestone, status=IssueStatus.PLANNING)
         story = StoryFactory(project=self.project, parent=epic, status=IssueStatus.DRAFT)
-        subtask = SubtaskFactory(parent=story, status=SubtaskStatus.TODO)
+        subtask = BaseIssueSubtaskFactory(parent=story, status=IssueStatus.READY)
 
         info = check_cascade_opportunities(milestone, IssueStatus.DONE)
 
@@ -647,7 +647,7 @@ class DeepCascadeDownTest(TestCase):
         """Epic DONE cascades to all descendant work items and their subtasks."""
         epic = EpicFactory(project=self.project, status=IssueStatus.IN_PROGRESS)
         story = StoryFactory(project=self.project, parent=epic, status=IssueStatus.DRAFT)
-        subtask = SubtaskFactory(parent=story, status=SubtaskStatus.TODO)
+        subtask = BaseIssueSubtaskFactory(parent=story, status=IssueStatus.READY)
 
         info = check_cascade_opportunities(epic, IssueStatus.DONE)
 
@@ -670,14 +670,14 @@ class DeepCascadeDownTest(TestCase):
         milestone = MilestoneFactory(project=self.project, status=IssueStatus.DONE)
         epic = EpicFactory(project=self.project, milestone=milestone, status=IssueStatus.DONE)
         story = StoryFactory(project=self.project, parent=epic, status=IssueStatus.DRAFT)
-        subtask = SubtaskFactory(parent=story, status=SubtaskStatus.TODO)
+        subtask = BaseIssueSubtaskFactory(parent=story, status=IssueStatus.READY)
 
         info = check_cascade_opportunities(self.project, ProjectStatus.COMPLETED)
 
         self.assertIsNotNone(info.cascade_down)
         # Milestone and epic are already DONE -> not eligible for project cascade
         # But story is DRAFT -> eligible as issue
-        # Subtask is TODO -> but its parent story is eligible, so subtask should be included
+        # Subtask is READY -> but its parent story is eligible, so subtask should be included
         all_pks = {c.pk for c in info.cascade_down.all_items}
         self.assertNotIn(milestone.pk, all_pks)
         self.assertNotIn(epic.pk, all_pks)
@@ -699,16 +699,14 @@ class DeepCascadeDownTest(TestCase):
         milestone = MilestoneFactory(project=self.project, status=IssueStatus.IN_PROGRESS)
         epic = EpicFactory(project=self.project, milestone=milestone, status=IssueStatus.PLANNING)
         story = StoryFactory(project=self.project, parent=epic, status=IssueStatus.DRAFT)
-        SubtaskFactory(parent=story, status=SubtaskStatus.TODO)
+        BaseIssueSubtaskFactory(parent=story, status=IssueStatus.READY)
 
         info = check_cascade_opportunities(self.project, ProjectStatus.ARCHIVED)
 
         self.assertIsNotNone(info.cascade_down)
         self.assertEqual(len(info.cascade_down.groups), 3)
 
-        # Milestones get ARCHIVED target
+        # All groups get ARCHIVED target (subtasks are BaseIssue children, support ARCHIVED)
         self.assertEqual(info.cascade_down.groups[0].target_status, IssueStatus.ARCHIVED)
-        # Issues get ARCHIVED target
         self.assertEqual(info.cascade_down.groups[1].target_status, IssueStatus.ARCHIVED)
-        # Subtasks get DONE target (no ARCHIVED in SubtaskStatus)
-        self.assertEqual(info.cascade_down.groups[2].target_status, SubtaskStatus.DONE)
+        self.assertEqual(info.cascade_down.groups[2].target_status, IssueStatus.ARCHIVED)

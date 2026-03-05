@@ -11,19 +11,10 @@
       </svg>
       <div>
         <p>{% blocktranslate with key=milestone.key title=milestone.title %}Are you sure you want to delete <strong>{{ key }}</strong> - {{ title }}?{% endblocktranslate %}</p>
-        {% if epic_count > 0 %}
+        {% if epic_count > 0 or children_count > 0 %}
         <p class="mt-2 text-error font-semibold">
-          {% blocktranslate count count=epic_count %}This will also delete {{ count }} epic and all its child issues.{% plural %}This will also delete {{ count }} epics and all their child issues.{% endblocktranslate %}
-        </p>
-        {% endif %}
-        {% if work_item_count > 0 %}
-        <p class="mt-2 text-error font-semibold">
-          {% blocktranslate count count=work_item_count %}{{ count }} work item will be permanently deleted.{% plural %}{{ count }} work items will be permanently deleted.{% endblocktranslate %}
-        </p>
-        {% endif %}
-        {% if subtask_count > 0 %}
-        <p class="mt-2 text-error font-semibold">
-          {% blocktranslate count count=subtask_count %}{{ count }} subtask will be permanently deleted.{% plural %}{{ count }} subtasks will be permanently deleted.{% endblocktranslate %}
+          {% blocktranslate count count=epic_count %}This will also delete {{ count }} epic{% plural %}This will also delete {{ count }} epics{% endblocktranslate %}.
+          {% blocktranslate count count=children_count %}{{ count }} child will be permanently deleted.{% plural %}{{ count }} children will be permanently deleted.{% endblocktranslate %}
         </p>
         {% endif %}
       </div>

@@ -12,7 +12,6 @@ from apps.issues.helpers import (
     build_grouped_epics_by_milestone,
     build_grouped_issues,
     calculate_valid_page,
-    count_subtasks_for_issue_ids,
     delete_subtasks_for_issue_ids,
 )
 from apps.issues.models import BaseIssue, Bug, Chore, Epic, IssuePriority, IssueStatus, Milestone, Story
@@ -616,8 +615,7 @@ class WorkspaceIssueBulkDeletePreviewView(WorkspaceBulkActionMixin, LoginAndWork
                 "issues/includes/bulk_delete_confirm_content.html",
                 {
                     "selected_count": 0,
-                    "descendant_count": 0,
-                    "subtask_count": 0,
+                    "children_count": 0,
                 },
             )
 
@@ -625,14 +623,10 @@ class WorkspaceIssueBulkDeletePreviewView(WorkspaceBulkActionMixin, LoginAndWork
         selected_keys = list(selected_queryset.values_list("key", flat=True))
         selected_count = len(selected_keys)
 
-        # Compute cascade counts
-        selected_ids = list(selected_queryset.values_list("pk", flat=True))
-        descendant_ids = []
+        # Compute cascade counts - count all descendants (children) for all selected issues
+        children_count = 0
         for issue in selected_queryset:
-            descendant_ids.extend(issue.get_descendants().values_list("pk", flat=True))
-        descendant_count = len(descendant_ids)
-        all_ids = selected_ids + descendant_ids
-        subtask_count = count_subtasks_for_issue_ids(all_ids)
+            children_count += issue.get_descendants().count()
 
         # Determine context: embed type, checkbox name, hx-target, hx-indicator
         embed_value = request.POST.get("embed", "")
@@ -681,8 +675,7 @@ class WorkspaceIssueBulkDeletePreviewView(WorkspaceBulkActionMixin, LoginAndWork
             "issues/includes/bulk_delete_confirm_content.html",
             {
                 "selected_count": selected_count,
-                "descendant_count": descendant_count,
-                "subtask_count": subtask_count,
+                "children_count": children_count,
                 "selected_keys": selected_keys,
                 "checkbox_name": checkbox_name,
                 "delete_url": delete_url,

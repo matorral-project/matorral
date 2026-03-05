@@ -2,8 +2,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from apps.issues.factories import BugFactory, EpicFactory, StoryFactory, SubtaskFactory
-from apps.issues.models import Bug, BugSeverity, Chore, Story, Subtask
+from apps.issues.factories import BaseIssueSubtaskFactory, BugFactory, EpicFactory, StoryFactory
+from apps.issues.models import BaseIssue, Bug, BugSeverity, Chore, Story
 from apps.issues.services import IssueConversionError, convert_issue_type
 from apps.projects.factories import ProjectFactory
 from apps.users.factories import UserFactory
@@ -120,18 +120,17 @@ class ConvertIssueTypeServiceTest(TestCase):
         self.assertEqual(original_depth, converted.depth)
 
     def test_convert_preserves_subtasks(self):
-        """Converting preserves subtasks with updated ContentType."""
+        """Converting preserves subtasks in the tree structure."""
         story = StoryFactory(project=self.project)
-        subtask = SubtaskFactory(parent=story, title="My Subtask")
+        subtask = BaseIssueSubtaskFactory(parent=story, title="My Subtask")
         original_subtask_pk = subtask.pk
 
-        converted = convert_issue_type(story, "bug")
+        convert_issue_type(story, "bug")
 
-        # Fetch updated subtask
-        updated_subtask = Subtask.objects.get(pk=original_subtask_pk)
+        # Fetch updated subtask - subtasks are now tree children, not separate ContentType
+        updated_subtask = BaseIssue.objects.get(pk=original_subtask_pk)
         self.assertEqual("My Subtask", updated_subtask.title)
-        self.assertEqual(ContentType.objects.get_for_model(Bug), updated_subtask.content_type)
-        self.assertEqual(converted.pk, updated_subtask.object_id)
+        self.assertEqual(story.pk, updated_subtask.get_parent().pk)
 
     def test_convert_preserves_comments(self):
         """Converting preserves comments with updated ContentType."""

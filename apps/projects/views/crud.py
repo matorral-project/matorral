@@ -18,7 +18,7 @@ from apps.issues.helpers import (
     annotate_epic_child_counts,
     build_grouped_epics_by_milestone,
     build_grouped_issues,
-    count_subtasks_for_issue_ids,
+    count_children_for_issue_ids,
     delete_subtasks_for_issue_ids,
     get_epic_content_type_id,
 )
@@ -333,14 +333,11 @@ class ProjectDeleteView(
         context["page_title"] = _("Delete %s") % project.name
         context["milestone_count"] = Milestone.objects.for_project(project).count()
         context["epic_count"] = Epic.objects.for_project(project).count()
-        # Work items = all non-epic issues
-        work_item_ids = list(
-            BaseIssue.objects.for_project(project)
-            .exclude(polymorphic_ctype_id=get_epic_content_type_id())
-            .values_list("pk", flat=True)
-        )
-        context["work_item_count"] = len(work_item_ids)
-        context["subtask_count"] = count_subtasks_for_issue_ids(work_item_ids)
+
+        # Count all descendants (children) for all epics
+        epic_ids = list(Epic.objects.for_project(project).values_list("pk", flat=True))
+        context["children_count"] = count_children_for_issue_ids(epic_ids)
+
         return context
 
     def get_success_url(self):

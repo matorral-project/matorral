@@ -1,9 +1,9 @@
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from apps.issues.factories import EpicFactory, MilestoneFactory, StoryFactory, SubtaskFactory
+from apps.issues.factories import BaseIssueSubtaskFactory, EpicFactory, MilestoneFactory, StoryFactory
 from apps.issues.helpers import count_subtasks_for_issue_ids, delete_subtasks_for_issue_ids
-from apps.issues.models import BaseIssue, Milestone, Subtask
+from apps.issues.models import BaseIssue, Milestone
 from apps.projects.factories import ProjectFactory
 from apps.projects.models import Project
 from apps.sprints.factories import SprintFactory
@@ -27,18 +27,18 @@ class SubtaskCleanupHelpersTest(TestCase):
     def test_count_subtasks_for_issue_ids(self):
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
-        SubtaskFactory(parent=story)
-        SubtaskFactory(parent=story)
+        BaseIssueSubtaskFactory(parent=story)
+        BaseIssueSubtaskFactory(parent=story)
         self.assertEqual(count_subtasks_for_issue_ids([story.pk]), 2)
 
     def test_delete_subtasks_for_issue_ids(self):
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
-        SubtaskFactory(parent=story)
-        SubtaskFactory(parent=story)
+        BaseIssueSubtaskFactory(parent=story)
+        BaseIssueSubtaskFactory(parent=story)
         deleted = delete_subtasks_for_issue_ids([story.pk])
         self.assertEqual(deleted, 2)
-        self.assertEqual(Subtask.objects.filter(object_id=story.pk).count(), 0)
+        self.assertEqual(story.get_children().count(), 0)
 
     def test_delete_subtasks_for_empty_ids(self):
         self.assertEqual(delete_subtasks_for_issue_ids([]), 0)
@@ -47,9 +47,9 @@ class SubtaskCleanupHelpersTest(TestCase):
         epic = EpicFactory(project=self.project)
         story1 = StoryFactory(project=self.project, parent=epic)
         story2 = StoryFactory(project=self.project, parent=epic)
-        SubtaskFactory(parent=story1)
-        SubtaskFactory(parent=story2)
-        SubtaskFactory(parent=story2)
+        BaseIssueSubtaskFactory(parent=story1)
+        BaseIssueSubtaskFactory(parent=story2)
+        BaseIssueSubtaskFactory(parent=story2)
         self.assertEqual(count_subtasks_for_issue_ids([story1.pk, story2.pk]), 3)
 
 
@@ -98,25 +98,24 @@ class MilestoneCascadeDeleteTest(TestCase):
         milestone = MilestoneFactory(project=self.project)
         epic = EpicFactory(project=self.project, milestone=milestone)
         story = StoryFactory(project=self.project, parent=epic)
-        subtask = SubtaskFactory(parent=story)
+        subtask = BaseIssueSubtaskFactory(parent=story)
         subtask_pk = subtask.pk
 
         self.client.post(self._get_delete_url(milestone))
 
-        self.assertFalse(Subtask.objects.filter(pk=subtask_pk).exists())
+        self.assertFalse(BaseIssue.objects.filter(pk=subtask_pk).exists())
 
     def test_milestone_delete_get_shows_cascade_counts(self):
         milestone = MilestoneFactory(project=self.project)
         epic = EpicFactory(project=self.project, milestone=milestone)
         story = StoryFactory(project=self.project, parent=epic)
-        SubtaskFactory(parent=story)
+        BaseIssueSubtaskFactory(parent=story)
 
         response = self.client.get(self._get_delete_url(milestone))
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["epic_count"], 1)
-        self.assertEqual(response.context["work_item_count"], 1)
-        self.assertEqual(response.context["subtask_count"], 1)
+        self.assertEqual(response.context["children_count"], 2)  # story + subtask
 
     def test_milestone_delete_with_no_epics(self):
         milestone = MilestoneFactory(project=self.project)
@@ -150,33 +149,33 @@ class IssueDeleteCascadeTest(TestCase):
     def test_issue_delete_cleans_up_subtasks(self):
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
-        subtask = SubtaskFactory(parent=story)
+        subtask = BaseIssueSubtaskFactory(parent=story)
         subtask_pk = subtask.pk
 
         self.client.post(self._get_delete_url(story))
 
-        self.assertFalse(Subtask.objects.filter(pk=subtask_pk).exists())
+        self.assertFalse(BaseIssue.objects.filter(pk=subtask_pk).exists())
 
     def test_epic_delete_cleans_up_descendant_subtasks(self):
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
-        SubtaskFactory(parent=story)
-        SubtaskFactory(parent=story)
+        BaseIssueSubtaskFactory(parent=story)
+        BaseIssueSubtaskFactory(parent=story)
 
         self.client.post(self._get_delete_url(epic))
 
-        self.assertEqual(Subtask.objects.count(), 0)
+        self.assertEqual(story.get_children().count(), 0)
 
-    def test_issue_delete_get_shows_subtask_count(self):
+    def test_issue_delete_get_shows_children_count(self):
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
-        SubtaskFactory(parent=story)
-        SubtaskFactory(parent=story)
+        BaseIssueSubtaskFactory(parent=story)
+        BaseIssueSubtaskFactory(parent=story)
 
         response = self.client.get(self._get_delete_url(story))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context["subtask_count"], 2)
+        self.assertEqual(response.context["children_count"], 2)
 
 
 class ProjectDeleteCascadeTest(TestCase):
@@ -202,27 +201,26 @@ class ProjectDeleteCascadeTest(TestCase):
     def test_project_delete_cleans_up_subtasks(self):
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
-        subtask = SubtaskFactory(parent=story)
+        subtask = BaseIssueSubtaskFactory(parent=story)
         subtask_pk = subtask.pk
 
         self.client.post(self._get_delete_url())
 
         self.assertFalse(Project.objects.filter(pk=self.project.pk).exists())
-        self.assertFalse(Subtask.objects.filter(pk=subtask_pk).exists())
+        self.assertFalse(BaseIssue.objects.filter(pk=subtask_pk).exists())
 
     def test_project_delete_get_shows_cascade_counts(self):
         milestone = MilestoneFactory(project=self.project)  # noqa: F841
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
-        SubtaskFactory(parent=story)
+        BaseIssueSubtaskFactory(parent=story)
 
         response = self.client.get(self._get_delete_url())
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["milestone_count"], 1)
         self.assertEqual(response.context["epic_count"], 1)
-        self.assertEqual(response.context["work_item_count"], 1)
-        self.assertEqual(response.context["subtask_count"], 1)
+        self.assertEqual(response.context["children_count"], 2)  # story + subtask
 
 
 class SprintDeleteTest(TestCase):

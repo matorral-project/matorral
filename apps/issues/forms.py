@@ -12,8 +12,6 @@ from apps.issues.models import (
     IssueStatus,
     Milestone,
     Story,
-    Subtask,
-    SubtaskStatus,
 )
 from apps.issues.widgets import UserComboboxWidget
 from apps.projects.models import Project
@@ -555,16 +553,26 @@ class MilestoneDetailInlineEditForm(MilestoneRowInlineEditForm):
 
 
 # ============================================================================
-# Subtask forms
+# Subtask forms - using BaseIssue for subtasks
 # ============================================================================
 
+# Subtask status choices - subset of IssueStatus
+SUBTASK_STATUS_CHOICES = [
+    ("ready", _("To Do")),
+    ("in_progress", _("In Progress")),
+    ("done", _("Done")),
+    ("wont_do", _("Won't Do")),
+]
 
-class SubtaskForm(forms.ModelForm):
-    """Form for creating a new subtask."""
 
-    class Meta:
-        model = Subtask
-        fields = ["title"]
+class SubtaskForm(forms.Form):
+    """Form for creating a new subtask (BaseIssue child)."""
+
+    title = forms.CharField(
+        max_length=255,
+        required=True,
+        widget=forms.TextInput(attrs={"placeholder": _("Add a subtask...")}),
+    )
 
     def clean_title(self):
         title = self.cleaned_data.get("title")
@@ -574,7 +582,7 @@ class SubtaskForm(forms.ModelForm):
 
 
 class SubtaskInlineEditForm(forms.Form):
-    """Form for inline editing subtask title and status."""
+    """Form for inline editing subtask (BaseIssue) title and status."""
 
     title = forms.CharField(
         max_length=255,
@@ -582,7 +590,7 @@ class SubtaskInlineEditForm(forms.Form):
         error_messages={"required": _("Title is required.")},
     )
     status = forms.ChoiceField(
-        choices=SubtaskStatus.choices,
+        choices=SUBTASK_STATUS_CHOICES,
         required=True,
     )
 

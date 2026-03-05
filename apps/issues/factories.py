@@ -9,9 +9,7 @@ from apps.issues.models import (
     Milestone,
     Story,
     Subtask,
-    SubtaskStatus,
 )
-from apps.issues.utils import get_cached_content_type
 from apps.projects.factories import ProjectFactory
 
 import factory
@@ -127,24 +125,35 @@ class ChoreFactory(factory.django.DjangoModelFactory):
 
 
 class SubtaskFactory(factory.django.DjangoModelFactory):
-    """Factory for creating Subtask instances."""
+    """Factory for creating Subtask instances (children of work items)."""
 
     class Meta:
         model = Subtask
 
+    project = factory.SubFactory(ProjectFactory)
     title = factory.Sequence(lambda n: f"Subtask {n}")
-    status = SubtaskStatus.TODO
-    position = factory.Sequence(lambda n: n)
+    key = ""
+    description = ""
+    status = IssueStatus.READY  # Subtasks start as READY (actionable)
+    priority = IssuePriority.MEDIUM
+    estimated_points = None
+    assignee = None
+    due_date = None
 
-    # The parent must be provided and will set content_type and object_id
     @classmethod
     def _create(cls, model_class, *args, parent=None, **kwargs):
-        """Override to set GenericForeignKey fields from parent."""
+        """Override to add as child to parent work item."""
         if parent is None:
             raise ValueError("SubtaskFactory requires a 'parent' argument (a work item instance)")
 
-        content_type = get_cached_content_type(type(parent))
-        kwargs["content_type"] = content_type
-        kwargs["object_id"] = parent.pk
+        # Ensure subtask inherits project from parent
+        kwargs["project"] = parent.project
 
-        return super()._create(model_class, *args, **kwargs)
+        obj = model_class(**kwargs)
+        obj.key = obj.key or obj._generate_unique_key()
+        # Add as child to parent (creates the subtask as a Subtask child)
+        return parent.add_child(instance=obj)
+
+
+# Backward compatibility alias
+BaseIssueSubtaskFactory = SubtaskFactory

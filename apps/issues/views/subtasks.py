@@ -4,9 +4,8 @@ from django.utils.translation import gettext_lazy as _
 from django.views import View
 
 from apps.issues.cascade import build_cascade_oob_response
-from apps.issues.forms import SubtaskForm, SubtaskInlineEditForm
-from apps.issues.models import Subtask, SubtaskStatus
-from apps.issues.utils import get_cached_content_type
+from apps.issues.forms import SUBTASK_STATUS_CHOICES, SubtaskForm, SubtaskInlineEditForm
+from apps.issues.models import IssuePriority, IssueStatus, Subtask
 from apps.issues.views.comments import IssueCommentsViewMixin
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
@@ -18,8 +17,8 @@ class SubtaskViewMixin(IssueCommentsViewMixin):
     """Base mixin for subtask views. Extends IssueCommentsViewMixin for workspace/project/issue setup."""
 
     def get_subtasks(self):
-        """Get all subtasks for the current issue."""
-        return Subtask.objects.for_parent(self.issue)
+        """Get all subtasks for the current issue (children in tree)."""
+        return self.issue.get_children().order_by("key")
 
     def get_subtask_count(self):
         """Get the count of subtasks for the current issue."""
@@ -41,7 +40,7 @@ class SubtaskViewMixin(IssueCommentsViewMixin):
             "subtask_count": subtask_count,
             "can_add_subtask": subtask_count < MAX_SUBTASKS_PER_PARENT,
             "max_subtasks": MAX_SUBTASKS_PER_PARENT,
-            "status_choices": SubtaskStatus.choices,
+            "status_choices": SUBTASK_STATUS_CHOICES,
         }
 
 
@@ -54,7 +53,7 @@ class SubtaskListView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, View):
 
 
 class SubtaskCreateView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, View):
-    """POST to create a new subtask and return updated list."""
+    """POST to create a new subtask (BaseIssue child) and return updated list."""
 
     def post(self, request, *args, **kwargs):
         if not self.can_add_subtask():
@@ -64,15 +63,23 @@ class SubtaskCreateView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, View):
 
         form = SubtaskForm(request.POST)
         if form.is_valid():
-            subtask = form.save(commit=False)
-            content_type = get_cached_content_type(type(self.issue))
-            subtask.content_type = content_type
-            subtask.object_id = self.issue.pk
-
-            # Set position to be at the end
-            existing_count = self.get_subtask_count()
-            subtask.position = existing_count
-            subtask.save()
+            # Create Subtask as child of the current issue
+            # Note: Subtask.save() auto-generates the key
+            subtask = Subtask(
+                project=self.project,
+                title=form.cleaned_data["title"],
+                status=IssueStatus.READY,
+                priority=IssuePriority.MEDIUM,
+                assignee=None,
+                due_date=None,
+                estimated_points=None,
+                description="",
+                created_by=request.user if request.user.is_authenticated else None,
+            )
+            # Add as child to parent (this sets key via save() and path via treebeard)
+            self.issue.add_child(instance=subtask)
+            # Refresh the issue to ensure we get updated children
+            self.issue.refresh_from_db()
 
         context = self.get_subtasks_context()
         return render(request, "issues/includes/subtasks_list.html", context)
@@ -84,7 +91,7 @@ class SubtaskInlineEditView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, Vi
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
         self.subtask = get_object_or_404(
-            Subtask.objects.for_parent(self.issue),
+            self.get_subtasks(),
             pk=kwargs["subtask_pk"],
         )
 
@@ -96,7 +103,7 @@ class SubtaskInlineEditView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, Vi
                 "project": self.project,
                 "issue": self.issue,
                 "subtask": self.subtask,
-                "status_choices": SubtaskStatus.choices,
+                "status_choices": SUBTASK_STATUS_CHOICES,
             }
             return render(request, "issues/includes/subtask_row.html", context)
 
@@ -106,7 +113,7 @@ class SubtaskInlineEditView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, Vi
             "project": self.project,
             "issue": self.issue,
             "subtask": self.subtask,
-            "status_choices": SubtaskStatus.choices,
+            "status_choices": SUBTASK_STATUS_CHOICES,
         }
         return render(request, "issues/includes/subtask_row_edit.html", context)
 
@@ -123,7 +130,7 @@ class SubtaskInlineEditView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, Vi
                 "project": self.project,
                 "issue": self.issue,
                 "subtask": self.subtask,
-                "status_choices": SubtaskStatus.choices,
+                "status_choices": SUBTASK_STATUS_CHOICES,
             }
             response = render(request, "issues/includes/subtask_row.html", context)
 
@@ -139,18 +146,18 @@ class SubtaskInlineEditView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, Vi
             "project": self.project,
             "issue": self.issue,
             "subtask": self.subtask,
-            "status_choices": SubtaskStatus.choices,
+            "status_choices": SUBTASK_STATUS_CHOICES,
         }
         return render(request, "issues/includes/subtask_row.html", context)
 
 
 class SubtaskDeleteView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, View):
-    """POST to delete a subtask and return updated list."""
+    """POST to delete a subtask (BaseIssue child) and return updated list."""
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
         self.subtask = get_object_or_404(
-            Subtask.objects.for_parent(self.issue),
+            self.get_subtasks(),
             pk=kwargs["subtask_pk"],
         )
 
@@ -162,26 +169,26 @@ class SubtaskDeleteView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, View):
 
 
 class SubtaskStatusToggleView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, View):
-    """POST to cycle subtask status: TODO -> IN_PROGRESS -> DONE -> TODO."""
+    """POST to cycle subtask status: READY -> IN_PROGRESS -> DONE -> READY."""
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
         self.subtask = get_object_or_404(
-            Subtask.objects.for_parent(self.issue),
+            self.get_subtasks(),
             pk=kwargs["subtask_pk"],
         )
 
     def post(self, request, *args, **kwargs):
-        # Cycle through statuses: TODO -> IN_PROGRESS -> DONE -> TODO
-        if self.subtask.status == SubtaskStatus.TODO:
-            self.subtask.status = SubtaskStatus.IN_PROGRESS
-        elif self.subtask.status == SubtaskStatus.IN_PROGRESS:
-            self.subtask.status = SubtaskStatus.DONE
-        elif self.subtask.status == SubtaskStatus.DONE:
-            self.subtask.status = SubtaskStatus.TODO
+        # Cycle through statuses: READY -> IN_PROGRESS -> DONE -> READY
+        if self.subtask.status == IssueStatus.READY:
+            self.subtask.status = IssueStatus.IN_PROGRESS
+        elif self.subtask.status == IssueStatus.IN_PROGRESS:
+            self.subtask.status = IssueStatus.DONE
+        elif self.subtask.status == IssueStatus.DONE:
+            self.subtask.status = IssueStatus.READY
         else:
-            # WONT_DO -> TODO
-            self.subtask.status = SubtaskStatus.TODO
+            # WONT_DO -> READY
+            self.subtask.status = IssueStatus.READY
         self.subtask.save()
 
         context = {
@@ -189,6 +196,6 @@ class SubtaskStatusToggleView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, 
             "project": self.project,
             "issue": self.issue,
             "subtask": self.subtask,
-            "status_choices": SubtaskStatus.choices,
+            "status_choices": SUBTASK_STATUS_CHOICES,
         }
         return render(request, "issues/includes/subtask_row.html", context)

@@ -288,15 +288,15 @@ class IssueDeleteViewTest(IssueViewTestBase):
         self.assertEqual(302, response.status_code)
         self.assertFalse(BaseIssue.objects.filter(pk=issue_pk).exists())
 
-    def test_delete_shows_descendant_count(self):
-        """Delete view shows count of child issues that will be deleted."""
+    def test_delete_shows_children_count(self):
+        """Delete view shows count of children that will be deleted."""
         epic = EpicFactory(project=self.project)
         StoryFactory(project=self.project, parent=epic)
         StoryFactory(project=self.project, parent=epic)
 
         response = self.client.get(self._get_delete_url(epic))
 
-        self.assertContains(response, "2 child issues")
+        self.assertContains(response, "2 children")
 
     def test_delete_epic_cascades_to_children(self):
         """Deleting an epic via the view also deletes its children."""

@@ -2,7 +2,6 @@ import logging
 from collections import defaultdict
 from datetime import timedelta
 
-from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.utils import timezone
 
@@ -16,7 +15,6 @@ from apps.issues.models import (
     Milestone,
     Story,
     Subtask,
-    SubtaskStatus,
 )
 from apps.projects.models import Project, ProjectStatus
 from apps.sprints.models import Sprint, SprintStatus
@@ -460,23 +458,23 @@ SPRINT_PLANNING_ITEMS = [
     "Email digest preferences",
 ]
 
-# Subtasks for key work items
+# Subtasks for key work items (now using IssueStatus)
 SUBTASKS = {
     "Stripe integration for payments": [
-        ("Set up Stripe API keys and webhook endpoint", SubtaskStatus.DONE),
-        ("Implement payment intent creation flow", SubtaskStatus.DONE),
-        ("Handle webhook events (payment succeeded/failed)", SubtaskStatus.DONE),
-        ("Add idempotency keys for retry safety", SubtaskStatus.DONE),
+        ("Set up Stripe API keys and webhook endpoint", IssueStatus.DONE),
+        ("Implement payment intent creation flow", IssueStatus.DONE),
+        ("Handle webhook events (payment succeeded/failed)", IssueStatus.DONE),
+        ("Add idempotency keys for retry safety", IssueStatus.DONE),
     ],
     "Real-time metrics dashboard": [
-        ("Design dashboard wireframes", SubtaskStatus.TODO),
-        ("Implement WebSocket connection for live updates", SubtaskStatus.TODO),
-        ("Build chart components (line, bar, pie)", SubtaskStatus.TODO),
+        ("Design dashboard wireframes", IssueStatus.READY),
+        ("Implement WebSocket connection for live updates", IssueStatus.READY),
+        ("Build chart components (line, bar, pie)", IssueStatus.READY),
     ],
     "SOC 2 Type II compliance audit": [
-        ("Document access control policies", SubtaskStatus.TODO),
-        ("Set up audit logging for all sensitive operations", SubtaskStatus.TODO),
-        ("Engage external auditor and schedule review", SubtaskStatus.TODO),
+        ("Document access control policies", IssueStatus.READY),
+        ("Set up audit logging for all sensitive operations", IssueStatus.READY),
+        ("Engage external auditor and schedule review", IssueStatus.READY),
     ],
 }
 
@@ -617,25 +615,20 @@ def _assign_sprint_items(work_items_by_title, sprints):
 
 
 def _create_subtasks(work_items_by_title):
-    """Create subtasks via bulk_create."""
-    story_ct = ContentType.objects.get_for_model(Story)
-    chore_ct = ContentType.objects.get_for_model(Chore)
-
-    subtasks = []
+    """Create subtasks as BaseIssue children via add_child."""
     for item_title, task_list in SUBTASKS.items():
         item = work_items_by_title[item_title]
-        ct = chore_ct if isinstance(item, Chore) else story_ct
-        for position, (title, status) in enumerate(task_list):
-            subtasks.append(
-                Subtask(
-                    content_type=ct,
-                    object_id=item.pk,
+        for _position, (title, status) in enumerate(task_list):
+            # Create subtask as a child of the work item using BaseIssue tree structure
+            item.add_child(
+                instance=Subtask(
+                    project=item.project,
                     title=title,
                     status=status,
-                    position=position,
+                    priority=IssuePriority.MEDIUM,
+                    assignee=item.assignee,
                 )
             )
-    Subtask.objects.bulk_create(subtasks)
 
 
 @transaction.atomic

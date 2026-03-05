@@ -4,7 +4,7 @@ from django.contrib.messages import get_messages
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from apps.issues.factories import BugFactory, EpicFactory, StoryFactory, SubtaskFactory
+from apps.issues.factories import BaseIssueSubtaskFactory, BugFactory, EpicFactory, StoryFactory
 from apps.issues.models import Bug, IssuePriority, IssueStatus, Story
 from apps.projects.factories import ProjectFactory
 from apps.sprints.factories import SprintFactory
@@ -59,12 +59,12 @@ class TestBulkActionNoIssuesSelected(BulkActionTestBase):
 class TestBulkDeletePreviewCascadeCounts(BulkActionTestBase):
     """Test 2: Bulk delete preview modal shows correct descendant and subtask counts."""
 
-    def test_preview_context_includes_descendant_and_subtask_counts(self):
-        """Preview modal counts the selected epic, its story descendant, and story's subtasks."""
+    def test_preview_context_includes_children_count(self):
+        """Preview modal counts the selected epic and its descendants (children)."""
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
-        SubtaskFactory(parent=story)
-        SubtaskFactory(parent=story)
+        BaseIssueSubtaskFactory(parent=story)
+        BaseIssueSubtaskFactory(parent=story)
 
         response = self._post(
             "workspace_issues_bulk_delete_preview",
@@ -73,10 +73,8 @@ class TestBulkDeletePreviewCascadeCounts(BulkActionTestBase):
 
         self.assertEqual(200, response.status_code)
         self.assertEqual(1, response.context["selected_count"])
-        # Story is the sole descendant of the epic
-        self.assertEqual(1, response.context["descendant_count"])
-        # Both subtasks belong to the story (a descendant of the selected epic)
-        self.assertEqual(2, response.context["subtask_count"])
+        # Children: story + 2 subtasks (all descendants in tree hierarchy)
+        self.assertEqual(3, response.context["children_count"])
 
 
 class TestBulkStatusInvalidValue(BulkActionTestBase):

@@ -51,32 +51,49 @@ def get_epic_content_type_id():
     return ContentType.objects.get_for_model(models.Epic).id
 
 
-@lru_cache(maxsize=1)
-def _get_subtask_content_type_ids():
-    """Get ContentType IDs for all issue types that can have subtasks (cached)."""
-    return [ContentType.objects.get_for_model(model).id for model in [models.Story, models.Bug, models.Chore]]
-
-
 def count_subtasks_for_issue_ids(issue_ids):
-    """Return count of Subtask objects linked to the given issue IDs via GenericFK."""
+    """Return count of subtasks (children) for the given issue IDs.
+
+    Subtasks are now BaseIssue children in the tree structure.
+    """
     if not issue_ids:
         return 0
 
-    return models.Subtask.objects.filter(
-        content_type_id__in=_get_subtask_content_type_ids(),
-        object_id__in=issue_ids,
-    ).count()
+    # Count children of the given issues
+    return models.BaseIssue.objects.filter(pk__in=issue_ids).aggregate(total=Sum("numchild"))["total"] or 0
+
+
+def count_children_for_issue_ids(issue_ids):
+    """Return count of all descendants (children) for the given issue IDs.
+
+    This includes both work items (Story, Bug, Chore) and subtasks, using
+    Django-treebeard's path-based counting for efficient counting.
+    """
+    if not issue_ids:
+        return 0
+
+    # Build path regex to find all descendants
+    issue_ids = [pk for pk in issue_ids if pk]
+    if not issue_ids:
+        return 0
+
+    total = 0
+    for issue in models.BaseIssue.objects.filter(pk__in=issue_ids):
+        total += issue.get_descendants().count()
+    return total
 
 
 def delete_subtasks_for_issue_ids(issue_ids):
-    """Delete all Subtask objects linked to the given issue IDs via GenericFK. Returns count deleted."""
+    """Delete all subtasks (children) for the given issue IDs. Returns count deleted."""
     if not issue_ids:
         return 0
 
-    deleted, _ = models.Subtask.objects.filter(
-        content_type_id__in=_get_subtask_content_type_ids(),
-        object_id__in=issue_ids,
-    ).delete()
+    # Delete all children of the given issues
+    deleted = 0
+    for issue in models.BaseIssue.objects.filter(pk__in=issue_ids):
+        subtask_count = issue.numchild
+        issue.get_children().delete()
+        deleted += subtask_count
 
     return deleted
 
@@ -173,10 +190,10 @@ def annotate_epic_child_counts(epics):
     if not epic_paths:
         return
 
-    # Query all direct children of all epics at once
+    # Query all direct children of all epics at once (work items: Story, Bug, Chore)
     all_children = (
         models.BaseIssue.objects.filter(path__regex=r"^(" + "|".join(epic_paths) + r")")
-        .filter(depth=2)  # Direct children of root epics (depth=1)
+        .instance_of(models.Story, models.Bug, models.Chore)
         .non_polymorphic()
         .only("path")
     )
@@ -402,7 +419,7 @@ def build_grouped_issues(
                 return (2, 0)
             try:
                 key_num = int(sprint.key.rsplit("-", 1)[1])
-            except (IndexError, ValueError):
+            except IndexError, ValueError:
                 key_num = 0
             return (status_order.get(sprint.status, 1), key_num)
 

@@ -10,6 +10,8 @@
 <span class="badge badge-error badge-outline badge-sm text-xs whitespace-nowrap gap-1"><i class="fa fa-bug"></i> {% translate "Bug" %}</span>
 {% elif issue_type == "chore" %}
 <span class="badge badge-warning badge-outline badge-sm text-xs whitespace-nowrap gap-1"><i class="fa fa-wrench"></i> {% translate "Chore" %}</span>
+{% elif issue_type == "subtask" %}
+<span class="badge badge-success badge-outline badge-sm text-xs whitespace-nowrap gap-1"><i class="fa fa-tasks"></i> {% translate "Subtask" %}</span>
 {% else %}
 <span class="badge badge-outline badge-sm text-xs whitespace-nowrap gap-1"><i class="fa fa-circle"></i> {{ issue.get_issue_type_display }}</span>
 {% endif %}

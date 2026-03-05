@@ -2,8 +2,15 @@ from django.contrib.contenttypes.models import ContentType
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from apps.issues.factories import BugFactory, ChoreFactory, EpicFactory, MilestoneFactory, StoryFactory, SubtaskFactory
-from apps.issues.models import Epic, IssueStatus, Story, Subtask, SubtaskStatus
+from apps.issues.factories import (
+    BaseIssueSubtaskFactory,
+    BugFactory,
+    ChoreFactory,
+    EpicFactory,
+    MilestoneFactory,
+    StoryFactory,
+)
+from apps.issues.models import Epic, IssueStatus, Story
 from apps.issues.services import PromotionError, promote_to_epic
 from apps.projects.factories import ProjectFactory
 from apps.sprints.factories import SprintFactory
@@ -63,6 +70,22 @@ class PromoteToEpicServiceTest(TestCase):
         self.assertEqual("critical", epic.priority)
         self.assertFalse(hasattr(epic, "severity"))
 
+    def test_promote_bug_to_epic_preserves_subtask_assignee(self):
+        """Promoting a Bug with subtasks preserves their assignees."""
+        user = UserFactory()
+        bug = BugFactory(project=self.project)
+        BaseIssueSubtaskFactory(parent=bug, title="Subtask 1", assignee=user)
+        BaseIssueSubtaskFactory(parent=bug, title="Subtask 2", assignee=None)
+
+        epic = promote_to_epic(bug)
+
+        children = list(epic.get_children())
+        self.assertEqual(2, len(children))
+
+        child_by_title = {c.title: c for c in children}
+        self.assertEqual(user, child_by_title["Subtask 1"].assignee)
+        self.assertIsNone(child_by_title["Subtask 2"].assignee)
+
     def test_promote_chore_to_epic(self):
         """Promoting a Chore to Epic works correctly."""
         chore = ChoreFactory(project=self.project, title="Test Chore")
@@ -71,6 +94,17 @@ class PromoteToEpicServiceTest(TestCase):
 
         self.assertIsInstance(epic, Epic)
         self.assertEqual("Test Chore", epic.title)
+
+    def test_promote_chore_to_epic_preserves_subtask_assignee(self):
+        """Promoting a Chore with subtasks preserves their assignees."""
+        user = UserFactory()
+        chore = ChoreFactory(project=self.project)
+        BaseIssueSubtaskFactory(parent=chore, title="Subtask 1", assignee=user)
+
+        epic = promote_to_epic(chore)
+
+        child = epic.get_children().first()
+        self.assertEqual(user, child.assignee)
 
     def test_promote_epic_raises_error(self):
         """Attempting to promote an Epic raises an error."""
@@ -198,15 +232,13 @@ class PromoteToEpicServiceTest(TestCase):
 
     def test_promote_converts_subtasks_to_stories(self):
         """Promoting converts subtasks to Stories as children of the new Epic."""
+        user = UserFactory()
         story = StoryFactory(project=self.project, priority="high")
-        SubtaskFactory(parent=story, title="Subtask 1", status=SubtaskStatus.TODO)
-        SubtaskFactory(parent=story, title="Subtask 2", status=SubtaskStatus.IN_PROGRESS)
-        SubtaskFactory(parent=story, title="Subtask 3", status=SubtaskStatus.DONE)
+        BaseIssueSubtaskFactory(parent=story, title="Subtask 1", status=IssueStatus.READY, assignee=user)
+        BaseIssueSubtaskFactory(parent=story, title="Subtask 2", status=IssueStatus.IN_PROGRESS)
+        BaseIssueSubtaskFactory(parent=story, title="Subtask 3", status=IssueStatus.DONE, assignee=user)
 
-        epic = promote_to_epic(story, convert_subtasks=True)
-
-        # Original subtasks should be deleted
-        self.assertEqual(0, Subtask.objects.count())
+        epic = promote_to_epic(story)
 
         # New stories should exist as children of the Epic
         children = list(epic.get_children())
@@ -222,33 +254,50 @@ class PromoteToEpicServiceTest(TestCase):
             self.assertEqual("high", child.priority)  # Inherits parent's priority
             if child.title == "Subtask 1":
                 self.assertEqual(IssueStatus.DRAFT, child.status)
+                self.assertEqual(user, child.assignee)  # Assignee preserved
             elif child.title == "Subtask 2":
                 self.assertEqual(IssueStatus.IN_PROGRESS, child.status)
+                self.assertIsNone(child.assignee)  # No assignee
             elif child.title == "Subtask 3":
                 self.assertEqual(IssueStatus.DONE, child.status)
+                self.assertEqual(user, child.assignee)  # Assignee preserved
 
     def test_promote_with_wont_do_subtask(self):
         """Promoting maps WONT_DO subtask status correctly."""
         story = StoryFactory(project=self.project)
-        SubtaskFactory(parent=story, title="Cancelled task", status=SubtaskStatus.WONT_DO)
+        BaseIssueSubtaskFactory(parent=story, title="Cancelled task", status=IssueStatus.WONT_DO)
 
-        epic = promote_to_epic(story, convert_subtasks=True)
+        epic = promote_to_epic(story)
 
         child = epic.get_children().first()
         self.assertEqual(IssueStatus.WONT_DO, child.status)
 
-    def test_promote_without_subtask_conversion_deletes_subtasks(self):
-        """Promoting with convert_subtasks=False deletes subtasks."""
+    def test_promote_preserves_subtask_assignee(self):
+        """Promoting preserves subtask assignees when converted to stories."""
+        user = UserFactory()
         story = StoryFactory(project=self.project)
-        SubtaskFactory(parent=story, title="Subtask 1")
-        SubtaskFactory(parent=story, title="Subtask 2")
+        BaseIssueSubtaskFactory(parent=story, title="Subtask 1", assignee=user)
+        BaseIssueSubtaskFactory(parent=story, title="Subtask 2", assignee=None)
 
-        epic = promote_to_epic(story, convert_subtasks=False)
+        epic = promote_to_epic(story)
 
-        # Subtasks should be deleted
-        self.assertEqual(0, Subtask.objects.count())
-        # No children should exist
-        self.assertEqual(0, epic.get_children().count())
+        children = list(epic.get_children())
+        self.assertEqual(2, len(children))
+
+        child_by_title = {c.title: c for c in children}
+        self.assertEqual(user, child_by_title["Subtask 1"].assignee)
+        self.assertIsNone(child_by_title["Subtask 2"].assignee)
+
+    def test_promote_preserves_subtasks(self):
+        """Promoting preserves subtasks as children of the new Epic."""
+        story = StoryFactory(project=self.project)
+        BaseIssueSubtaskFactory(parent=story, title="Subtask 1")
+        BaseIssueSubtaskFactory(parent=story, title="Subtask 2")
+
+        epic = promote_to_epic(story)
+
+        # Children should be preserved
+        self.assertEqual(2, epic.get_children().count())
 
     def test_promote_preserves_tree_children(self):
         """Promoting preserves existing tree children (they become Epic's children)."""
@@ -302,8 +351,8 @@ class IssuePromoteToEpicViewTest(TestCase):
     def test_get_shows_subtask_count(self):
         """Modal content shows the subtask count when subtasks exist."""
         story = StoryFactory(project=self.project)
-        SubtaskFactory(parent=story, title="Subtask 1")
-        SubtaskFactory(parent=story, title="Subtask 2")
+        BaseIssueSubtaskFactory(parent=story, title="Subtask 1")
+        BaseIssueSubtaskFactory(parent=story, title="Subtask 2")
 
         response = self.client.get(self._get_promote_url(story))
 
@@ -380,14 +429,14 @@ class IssuePromoteToEpicViewTest(TestCase):
         epic = Epic.objects.get(pk=story.pk)
         self.assertEqual(milestone, epic.milestone)
 
-    def test_post_with_subtask_conversion(self):
-        """POST request converts subtasks when checkbox is checked."""
+    def test_post_preserves_subtasks(self):
+        """POST request preserves subtasks as children of the promoted Epic."""
         story = StoryFactory(project=self.project)
-        SubtaskFactory(parent=story, title="Subtask 1")
+        BaseIssueSubtaskFactory(parent=story, title="Subtask 1")
 
         response = self.client.post(
             self._get_promote_url(story),
-            {"convert_subtasks": "on"},
+            {},
         )
 
         self.assertEqual(302, response.status_code)
@@ -396,22 +445,6 @@ class IssuePromoteToEpicViewTest(TestCase):
         children = list(epic.get_children())
         self.assertEqual(1, len(children))
         self.assertEqual("Subtask 1", children[0].title)
-
-    def test_post_without_subtask_conversion(self):
-        """POST request without checkbox deletes subtasks."""
-        story = StoryFactory(project=self.project)
-        SubtaskFactory(parent=story, title="Subtask 1")
-
-        response = self.client.post(
-            self._get_promote_url(story),
-            {},  # No convert_subtasks checkbox
-        )
-
-        self.assertEqual(302, response.status_code)
-
-        epic = Epic.objects.get(pk=story.pk)
-        self.assertEqual(0, epic.get_children().count())
-        self.assertEqual(0, Subtask.objects.count())
 
     def test_post_epic_returns_error(self):
         """POST request for an Epic returns an error."""

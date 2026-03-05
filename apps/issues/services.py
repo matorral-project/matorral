@@ -2,7 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import connection, transaction
 from django.utils.translation import gettext_lazy as _
 
-from apps.issues.models import BaseIssue, Bug, BugSeverity, Chore, Epic, IssueStatus, Story, Subtask, SubtaskStatus
+from apps.issues.models import BaseIssue, Bug, BugSeverity, Chore, Epic, IssueStatus, Story
 
 from auditlog.models import LogEntry
 from django_comments_xtd.models import XtdComment
@@ -33,7 +33,7 @@ def convert_issue_type(
     1. Creating a new row in the target type's table
     2. Updating the polymorphic_ctype on BaseIssue
     3. Deleting the old type-specific row
-    4. Updating ContentType references in generic FKs (comments, history, subtasks)
+    4. Updating ContentType references in generic FKs (comments, history)
 
     Args:
         issue: The BaseIssue instance to convert (must be Story, Bug, or Chore)
@@ -98,7 +98,7 @@ def convert_issue_type(
         # Step 3: Delete the old type-specific row
         _delete_type_row(source_model, base_issue_id)
 
-        # Step 4: Update ContentType references in generic FKs
+        # Step 4: Update ContentType references in generic FKs (comments, history)
         _update_generic_fk_content_types(base_issue_id, old_content_type, new_content_type)
 
         # Step 5: Create audit log entry for the conversion
@@ -153,9 +153,6 @@ def _delete_type_row(model_class, base_issue_id: int):
 
 def _update_generic_fk_content_types(issue_id: int, old_ct: ContentType, new_ct: ContentType):
     """Update ContentType references in models with GenericForeignKey to this issue."""
-    # Update Subtasks
-    Subtask.objects.filter(content_type=old_ct, object_id=issue_id).update(content_type=new_ct)
-
     # Update Comments (django_comments_xtd uses object_pk as string)
     XtdComment.objects.filter(content_type=old_ct, object_pk=str(issue_id)).update(content_type=new_ct)
 
@@ -186,19 +183,9 @@ class PromotionError(Exception):
     pass
 
 
-# Mapping from SubtaskStatus to IssueStatus for subtask-to-story conversion
-SUBTASK_TO_STORY_STATUS_MAP = {
-    SubtaskStatus.TODO: IssueStatus.DRAFT,
-    SubtaskStatus.IN_PROGRESS: IssueStatus.IN_PROGRESS,
-    SubtaskStatus.DONE: IssueStatus.DONE,
-    SubtaskStatus.WONT_DO: IssueStatus.WONT_DO,
-}
-
-
 def promote_to_epic(
     issue: BaseIssue,
     milestone=None,
-    convert_subtasks: bool = True,
 ) -> Epic:
     """
     Promote a work item (Story, Bug, Chore) to an Epic.
@@ -208,13 +195,11 @@ def promote_to_epic(
     2. Updating the polymorphic_ctype to Epic
     3. Deleting the old type-specific row
     4. Moving to root if the issue had a parent (Epics must be root-level)
-    5. Converting subtasks to Stories as children of the new Epic (optional)
-    6. Updating ContentType references in comments, history
+    5. Subtasks (children of the work item) are preserved as children of the Epic
 
     Args:
         issue: The BaseIssue instance to promote (must be Story, Bug, or Chore)
         milestone: Optional Milestone to link the Epic to
-        convert_subtasks: If True, convert subtasks to Stories; if False, delete them
 
     Returns:
         The promoted Epic instance
@@ -247,11 +232,8 @@ def promote_to_epic(
         # Inherit parent epic's milestone if no milestone explicitly provided
         if had_parent and milestone is None:
             parent_real = parent.get_real_instance()
-            if isinstance(parent_real, Epic) and parent_real.milestone_id:
+            if isinstance(parent_real, Epic) and hasattr(parent_real, "milestone_id") and parent_real.milestone_id:
                 milestone = parent_real.milestone
-
-        # Collect subtasks before any changes
-        subtasks = list(Subtask.objects.filter(content_type=old_content_type, object_id=base_issue_id))
 
         # Step 1: Create the Epic row with the same baseissue_ptr_id
         # Note: priority is now on BaseIssue, so it's already preserved
@@ -267,7 +249,6 @@ def promote_to_epic(
         _delete_type_row(source_model, base_issue_id)
 
         # Step 4: Update ContentType references in generic FKs (comments, history)
-        # Note: We exclude subtasks here since we're handling them separately
         _update_generic_fk_content_types_for_epic(base_issue_id, old_content_type, new_content_type)
 
         # Step 5: Get the Epic instance
@@ -283,12 +264,9 @@ def promote_to_epic(
             # Refresh from DB to get updated path
             epic.refresh_from_db()
 
-        # Step 7: Handle subtasks
-        if subtasks:
-            if convert_subtasks:
-                _convert_subtasks_to_stories(subtasks, epic)
-            # Always delete the original subtasks
-            Subtask.objects.filter(content_type=old_content_type, object_id=base_issue_id).delete()
+        # Step 7: Convert subtasks (BaseIssue children) to Stories
+        # When promoting to Epic, subtasks become Stories as children of the Epic
+        _convert_subtasks_to_stories(epic)
 
         # Step 8: Create audit log entry
         _create_promotion_audit_log(base_issue_id, source_type, new_content_type)
@@ -320,31 +298,12 @@ def _create_epic_row(
 
 
 def _update_generic_fk_content_types_for_epic(issue_id: int, old_ct: ContentType, new_ct: ContentType):
-    """Update ContentType references for comments and audit log (not subtasks, they're handled separately)."""
+    """Update ContentType references for comments and audit log."""
     # Update Comments (django_comments_xtd uses object_pk as string)
     XtdComment.objects.filter(content_type=old_ct, object_pk=str(issue_id)).update(content_type=new_ct)
 
     # Update Audit Log entries
     LogEntry.objects.filter(content_type=old_ct, object_id=issue_id).update(content_type=new_ct)
-
-
-def _convert_subtasks_to_stories(subtasks: list[Subtask], epic: Epic):
-    """Convert subtasks to Story instances as children of the Epic."""
-    for subtask in subtasks:
-        # Map subtask status to story status
-        story_status = SUBTASK_TO_STORY_STATUS_MAP.get(subtask.status, IssueStatus.DRAFT)
-
-        # Create Story with subtask's title
-        story = Story(
-            project=epic.project,
-            title=subtask.title,
-            status=story_status,
-            priority=epic.priority,
-        )
-        story.key = story._generate_unique_key()
-
-        # Add as child of the Epic
-        epic.add_child(instance=story)
 
 
 def _create_promotion_audit_log(issue_id: int, source_type: str, content_type: ContentType):
@@ -362,3 +321,90 @@ def _create_promotion_audit_log(issue_id: int, source_type: str, content_type: C
             "type": [source_type.title(), "Epic"],
         },
     )
+
+
+def _convert_subtasks_to_stories(epic: Epic) -> None:
+    """Convert subtasks (BaseIssue children) to Stories as children of the Epic.
+
+    Each subtask becomes a Story:
+    - READY subtasks become DRAFT Stories
+    - Other statuses are preserved
+    - Priority is inherited from the Epic
+    """
+
+    # Get all children (which are BaseIssue instances, formerly subtasks)
+    children = list(epic.get_children())
+
+    for child in children:
+        # Get the real instance to check polymorphic type
+        real_child = child.get_real_instance()
+
+        # Skip if already a Story
+        if isinstance(real_child, Story):
+            continue
+
+        # Convert subtask to Story
+        _convert_single_subtask_to_story(child, epic)
+
+
+def _convert_single_subtask_to_story(subtask: BaseIssue, epic: Epic) -> None:
+    """Convert a single BaseIssue subtask to a Story.
+
+    - READY subtasks become DRAFT Stories
+    - Other statuses are preserved
+    - Priority is inherited from the Epic
+    - Assignee is preserved from the subtask
+    """
+    # Determine new status (READY -> DRAFT, others preserved)
+    new_status = IssueStatus.DRAFT if subtask.status == IssueStatus.READY else subtask.status
+
+    # Inherit priority from epic
+    priority = epic.priority
+
+    # Preserve assignee from subtask
+    assignee = subtask.assignee
+
+    with transaction.atomic():
+        base_issue_id = subtask.pk
+        old_content_type = ContentType.objects.get_for_model(BaseIssue)
+        new_content_type = ContentType.objects.get_for_model(Story)
+
+        # Step 1: Create the Story row
+        _create_story_row(
+            base_issue_id,
+            sprint_id=None,
+        )
+
+        # Step 2: Update BaseIssue (polymorphic_ctype, status, priority, assignee)
+        BaseIssue.objects.filter(pk=base_issue_id).update(
+            polymorphic_ctype=new_content_type,
+            status=new_status,
+            priority=priority,
+            assignee=assignee,
+        )
+
+        # Step 3: Update ContentType references in generic FKs
+        _update_generic_fk_content_types_for_epic(base_issue_id, old_content_type, new_content_type)
+
+
+def _create_story_row(
+    base_issue_id: int,
+    sprint_id: int | None = None,
+):
+    """Insert a row into the Story table.
+
+    Note: estimated_points is on BaseIssue, not Story.
+    """
+    table_name = Story._meta.db_table
+
+    columns = ["baseissue_ptr_id", "sprint_id"]
+    values = [base_issue_id, sprint_id]
+
+    placeholders = ", ".join(["%s"] * len(columns))
+    column_names = ", ".join(columns)
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"INSERT INTO {table_name} ({column_names}) VALUES ({placeholders})",  # noqa: S608
+            values,
+        )

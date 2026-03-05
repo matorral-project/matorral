@@ -3,8 +3,8 @@
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from apps.issues.factories import EpicFactory, MilestoneFactory, StoryFactory, SubtaskFactory
-from apps.issues.models import IssueStatus, SubtaskStatus
+from apps.issues.factories import BaseIssueSubtaskFactory, EpicFactory, MilestoneFactory, StoryFactory
+from apps.issues.models import IssueStatus
 from apps.projects.factories import ProjectFactory
 from apps.projects.models import ProjectStatus
 from apps.users.factories import UserFactory
@@ -276,7 +276,7 @@ class CascadeApplyViewTest(CascadeViewTestBase):
         """Cascade DOWN correctly updates subtasks."""
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
-        subtask = SubtaskFactory(parent=story, status=SubtaskStatus.TODO)
+        subtask = BaseIssueSubtaskFactory(parent=story, status=IssueStatus.READY)
 
         response = self.client.post(
             self._get_cascade_apply_url(),
@@ -284,14 +284,14 @@ class CascadeApplyViewTest(CascadeViewTestBase):
                 "cascade_down": "1",
                 "down_group_count": "1",
                 "down_ids_0": str(subtask.pk),
-                "down_status_0": SubtaskStatus.DONE,
-                "down_model_type_0": "subtask",
+                "down_status_0": IssueStatus.DONE,
+                "down_model_type_0": "issue",
             },
         )
 
         self.assertEqual(204, response.status_code)
         subtask.refresh_from_db()
-        self.assertEqual(subtask.status, SubtaskStatus.DONE)
+        self.assertEqual(subtask.status, IssueStatus.DONE)
 
     def test_apply_cascade_up_project(self):
         """Cascade UP correctly updates project status."""
@@ -314,7 +314,7 @@ class CascadeApplyViewTest(CascadeViewTestBase):
         milestone = MilestoneFactory(project=self.project, status=IssueStatus.DRAFT)
         epic = EpicFactory(project=self.project, milestone=milestone, status=IssueStatus.DRAFT)
         story = StoryFactory(project=self.project, parent=epic, status=IssueStatus.DRAFT)
-        subtask = SubtaskFactory(parent=story, status=SubtaskStatus.TODO)
+        subtask = BaseIssueSubtaskFactory(parent=story, status=IssueStatus.READY)
 
         response = self.client.post(
             self._get_cascade_apply_url(),
@@ -328,8 +328,8 @@ class CascadeApplyViewTest(CascadeViewTestBase):
                 "down_status_1": IssueStatus.DONE,
                 "down_model_type_1": "issue",
                 "down_ids_2": str(subtask.pk),
-                "down_status_2": SubtaskStatus.DONE,
-                "down_model_type_2": "subtask",
+                "down_status_2": IssueStatus.DONE,
+                "down_model_type_2": "issue",
             },
         )
 
@@ -341,7 +341,7 @@ class CascadeApplyViewTest(CascadeViewTestBase):
         self.assertEqual(milestone.status, IssueStatus.DONE)
         self.assertEqual(epic.status, IssueStatus.DONE)
         self.assertEqual(story.status, IssueStatus.DONE)
-        self.assertEqual(subtask.status, SubtaskStatus.DONE)
+        self.assertEqual(subtask.status, IssueStatus.DONE)
 
     def test_no_cascade_flags_does_nothing(self):
         """POST without cascade_down or cascade_up flags makes no changes."""

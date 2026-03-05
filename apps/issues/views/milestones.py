@@ -22,7 +22,6 @@ from apps.issues.forms import (
 from apps.issues.helpers import (
     build_grouped_issues,
     build_htmx_delete_response,
-    count_subtasks_for_issue_ids,
     delete_subtasks_for_issue_ids,
 )
 from apps.issues.models import BaseIssue, IssuePriority, IssueStatus, Milestone
@@ -391,16 +390,17 @@ class MilestoneDeleteView(
         return [self.template_name]
 
     def _get_cascade_counts(self):
-        """Compute epic, work item, and subtask counts for the cascade deletion."""
+        """Compute children count for the cascade deletion.
+
+        Returns total children count (including epics, work items, and subtasks).
+        """
         epics = list(self.object.epics.all())
         epic_count = len(epics)
-        all_descendant_ids = []
+        # Count all descendants (children) for all epics
+        children_count = 0
         for epic in epics:
-            all_descendant_ids.extend(epic.get_descendants().values_list("pk", flat=True))
-        work_item_count = len(all_descendant_ids)
-        all_issue_ids = [e.pk for e in epics] + all_descendant_ids
-        subtask_count = count_subtasks_for_issue_ids(all_issue_ids) if all_issue_ids else 0
-        return epic_count, work_item_count, subtask_count, epics, all_issue_ids
+            children_count += epic.get_descendants().count()
+        return epic_count, children_count, epics
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -408,10 +408,9 @@ class MilestoneDeleteView(
             "key": self.object.key,
             "title": self.object.title,
         }
-        epic_count, work_item_count, subtask_count, _epics, _ids = self._get_cascade_counts()
+        epic_count, children_count, _epics = self._get_cascade_counts()
         context["epic_count"] = epic_count
-        context["work_item_count"] = work_item_count
-        context["subtask_count"] = subtask_count
+        context["children_count"] = children_count
         return context
 
     def get_success_url(self):

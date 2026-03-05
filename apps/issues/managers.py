@@ -7,7 +7,6 @@ from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from apps.issues.helpers import _work_item_weight
-from apps.issues.utils import get_cached_content_type
 
 from polymorphic.managers import PolymorphicManager
 from polymorphic.query import PolymorphicQuerySet
@@ -520,22 +519,3 @@ class MilestoneManager(models.Manager):
 
     def with_progress(self) -> MilestoneQuerySet:
         return self.get_queryset().with_progress()
-
-
-class SubtaskQuerySet(QuerySet):
-    """Custom QuerySet for Subtask model."""
-
-    def for_parent(self, parent: BaseIssue) -> SubtaskQuerySet:
-        """Filter subtasks for a specific parent issue."""
-        content_type = get_cached_content_type(type(parent))
-        return self.filter(content_type=content_type, object_id=parent.pk)
-
-
-class SubtaskManager(models.Manager):
-    """Custom Manager for Subtask model."""
-
-    def get_queryset(self) -> SubtaskQuerySet:
-        return SubtaskQuerySet(self.model, using=self._db)
-
-    def for_parent(self, parent: BaseIssue) -> SubtaskQuerySet:
-        return self.get_queryset().for_parent(parent)
