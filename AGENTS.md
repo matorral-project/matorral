@@ -29,7 +29,7 @@ Any change to `pyproject.toml` requires `just requirements` to rebuild container
 ```bash
 # Django management
 just migrate                        # Run migrations
-just make-migrations                # Create migrations (for new apps: just manage ARGS='makemigrations <app_name>')
+just make-migrations                # Create migrations
 just manage ARGS='<command>'        # Arbitrary manage.py command
 just shell                          # Django shell
 just dbshell                        # PostgreSQL shell
