@@ -125,6 +125,7 @@ class Milestone(BaseModel):
 
     objects = MilestoneManager()
     status_model = IssueStatus
+    status_categories = STATUS_CATEGORIES
 
     class Meta:
         constraints = [

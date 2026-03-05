@@ -383,6 +383,9 @@ class IssueManager(PolymorphicManager):
     def done(self) -> IssueQuerySet:
         return self.get_queryset().done()
 
+    def with_progress(self) -> IssueQuerySet:
+        return self.get_queryset().with_progress()
+
 
 class MilestoneQuerySet(QuerySet):
     """Custom QuerySet for Milestone model."""
@@ -449,48 +452,17 @@ class MilestoneQuerySet(QuerySet):
         are descendants of the epics linked to the milestone.
         """
 
-        # For each milestone, we sum work items from all its linked epics.
-        # Work items are descendants of epics, identified by path prefix matching:
-        # work_item.path starts with epic.path + 4-digit step
-        # Get epic paths for this milestone and create a combined regex pattern
-        # Then filter work items that match this pattern
-        # Helper to build subquery that sums work items from epics linked to milestone
         def epic_work_items_sum(model, statuses=None):
-            """Sum work items that are descendants of epics linked to milestone.
+            """Sum work items that are descendants of epics linked to milestone."""
 
-            Uses path prefix matching: work item path starts with epic.path + step.
-            """
-            Epic = apps.get_model("issues", "Epic")
+            queryset = model.objects.filter(project=OuterRef("project"))
 
-            # Get epic paths for this milestone as a subquery
-            Epic.objects.filter(milestone=OuterRef("pk")).values("path")
-
-            # Build regex pattern for all epic paths: ^(path1|path2|...)\\d{4}/
-            # This requires collecting all epic paths and creating an OR pattern
-
-            # Get the epic paths for correlation
-            Epic.objects.filter(milestone=OuterRef("pk")).values("path")
-
-            # Build a subquery with path regex matching
-            # Work item is descendant of epic if: work_item.path LIKE epic.path + '____/%'
-            # where ____ is exactly 4 digits (treebeard step)
+            if statuses:
+                queryset = queryset.filter(status__in=statuses)
 
             return Coalesce(
                 Subquery(
-                    model.objects.filter(
-                        project=OuterRef("project"),
-                    )
-                    .filter(
-                        # Match work items that are descendants of epics in this milestone
-                        # Work item path starts with epic.path + 4-digit step
-                        path__regex=r"^("
-                        + r"|".join(
-                            rf"\Q{epic['path']}\E"
-                            for epic in Epic.objects.filter(milestone=OuterRef("pk")).values("path")[:1]
-                        )
-                        + r")[0-9]{4}/",
-                    )
-                    .values("project")
+                    queryset.values("project")
                     .annotate(total=Sum(Coalesce("estimated_points", Value(1))))
                     .values("total")[:1],
                     output_field=IntegerField(),
@@ -499,7 +471,7 @@ class MilestoneQuerySet(QuerySet):
             )
 
         # Get status categories
-        status_categories = self.model.status_model.status_categories
+        status_categories = self.model.status_categories
         done_statuses = [s for s, cat in status_categories.items() if cat == "done"]
         in_progress_statuses = [s for s, cat in status_categories.items() if cat == "in_progress"]
         todo_statuses = [s for s, cat in status_categories.items() if cat == "todo"]
@@ -533,230 +505,6 @@ class MilestoneQuerySet(QuerySet):
             total_estimated_points=F("total_done_points") + F("total_in_progress_points") + F("total_todo_points")
         )
 
-        # This is tricky because we need to match against multiple paths
-        # Use a different approach: join epic and work items on path prefix
-
-        # For work items to be descendants of epics in this milestone:
-        # work_item.path LIKE epic.path + 4_digits + '/'
-        # epic.milestone = current_milestone
-
-        # Use a join-based approach instead
-        # Annotate with subqueries that use path matching via substring
-
-        # Since path regex with multiple alternatives is complex, use exists subquery
-        # to check if work item is descendant of any epic in this milestone
-
-        def descendants_sum(model, statuses=None):
-            """Sum work items that are descendants of epics linked to milestone."""
-            qs = model.objects.filter(
-                project=OuterRef("pk"),
-            )
-            if statuses:
-                qs = qs.filter(status__in=statuses)
-
-            return Coalesce(
-                Subquery(
-                    qs.values("project")
-                    .annotate(total=Sum(Coalesce("estimated_points", Value(1))))
-                    .values("total")[:1],
-                    output_field=IntegerField(),
-                ),
-                Value(0),
-            )
-
-        # Actually, for milestones we can use a simpler approach:
-        # Get the epic paths first, then use them to filter work items
-
-        # Let's use the helper function from helpers.py for sprint-based, but for
-        # milestones we need path-based matching
-
-        # The key insight is that for epics, we have path-based tree structure
-        # Work items (Story, Bug, Chore) are descendants of epics
-        # We need to match: work_item.path starts with epic.path + step
-
-        # For a single milestone, we can do:
-        # 1. Get epic paths for this milestone
-        # 2. Filter work items whose path matches any epic path + step
-
-        # Since we're in a subquery context, use a correlated subquery
-
-        Bug = apps.get_model("issues", "Bug")
-        Chore = apps.get_model("issues", "Chore")
-        Epic = apps.get_model("issues", "Epic")
-
-        # Get epic path subquery for this milestone
-        Epic.objects.filter(milestone=OuterRef("pk")).values("path")
-
-        # Helper to sum work items descending from epics of this milestone
-        def epic_work_items_sum(model, statuses=None):
-            """Sum work items that are descendants of epics linked to milestone."""
-            qs = model.objects.filter(
-                project=OuterRef("project"),
-            ).filter(
-                # Work item is descendant of an epic linked to this milestone
-                # path starts with epic.path + 4-digit step
-                path__regex=r"^(("
-                + "|".join(
-                    rf"({epic['path']})" for epic in Epic.objects.filter(milestone=OuterRef("pk")).values("path")[:1]
-                )
-                + r")[0-9]{{4}}/)",
-            )
-            if statuses:
-                qs = qs.filter(status__in=statuses)
-
-            return Coalesce(
-                Subquery(
-                    qs.values("project")
-                    .annotate(total=Sum(Coalesce("estimated_points", Value(1))))
-                    .values("total")[:1],
-                    output_field=IntegerField(),
-                ),
-                Value(0),
-            )
-
-        # Simplified: use a single subquery with EXISTS to check if work item
-        # is descendant of any epic in this milestone
-        Epic.objects.filter(
-            milestone=OuterRef("pk"),
-        ).filter(
-            # Work item path starts with epic path + step
-            models.Q()  # Placeholder for path matching
-        )
-
-        # Actually, for simplicity and correctness, use a different approach:
-        # Join epic and work items, then aggregate by milestone
-
-        # Get epic paths for this milestone
-        Epic.objects.filter(milestone=OuterRef("pk")).values("path")
-
-        # Build regex pattern for all epic paths
-        # Each epic path + 4-digit step = pattern
-
-        # For each work item model, sum estimated_points where work item is descendant
-        # of an epic linked to this milestone
-
-        # Use path prefix matching: work_item.path LIKE epic.path + '____/%'
-        # Where ____ is exactly 4 digits (treebeard step)
-
-        # For progress calculation, we need to sum work items from epics linked to milestone
-        # Use the issue path regex pattern
-
-        # Since this is complex with multiple OR conditions, use a simpler approach:
-        # Join epic and work items on path prefix, then aggregate
-
-        # Get epic paths subquery
-        Epic.objects.filter(milestone=OuterRef("pk")).values("path")
-
-        # Helper function using path regex
-        def epic_work_items_sum(model, statuses=None):
-            """Sum work items that are descendants of epics linked to milestone."""
-            # Match work items whose path starts with any epic's path + step
-            # Using a subquery to get epic paths and matching
-
-            # Since we can't easily create OR regex patterns in subqueries,
-            # use EXISTS to check if work item is descendant of any epic
-            Epic.objects.filter(milestone=OuterRef("pk"))
-
-            # For work item to be descendant: work_item.path starts with epic.path + step
-            # This requires path prefix matching
-
-            # Use substring matching: work_item.path LIKE epic.path + 4digits + '/'
-            # Since epic path varies, use a different approach
-
-            # Get epic path as subquery, then use regex matching
-            Epic.objects.filter(milestone=OuterRef("pk")).values("path")[:1]
-
-            # Match path: starts with epic.path followed by exactly 4 digits then /
-            # path regex: ^epic_path\d{4}/
-
-            # For multiple epics, we need OR logic which is complex in SQL
-            # Use a simpler approach: join epic with work items on path prefix
-
-            return Coalesce(
-                Subquery(
-                    model.objects.filter(
-                        project=OuterRef("project"),
-                    )
-                    .filter(
-                        # Use path regex withOuterRef to match epic path prefix
-                        # This is tricky - we need the epic path as a value
-                        path__regex=r"^(("
-                        + r"|".join(
-                            rf"\Q{epic['path']}\E"
-                            for epic in Epic.objects.filter(milestone=OuterRef("pk")).values("path")[:1]
-                        )
-                        + r")[0-9]{4}/)",
-                    )
-                    .values("project")
-                    .annotate(total=Sum(Coalesce("estimated_points", Value(1))))
-                    .values("total")[:1],
-                    output_field=IntegerField(),
-                ),
-                Value(0),
-            )
-
-        # Let me simplify this significantly
-        # For milestones, the progress comes from linked epics' work items
-        # Use the existing issue path-based approach but adapted for milestone context
-
-        # Get epic paths for this milestone
-        Epic.objects.filter(milestone=OuterRef("pk")).values("path")
-
-        # For progress, sum work items from epics where epic.milestone = current
-        # Work items are descendants of epics (path starts with epic.path + step)
-
-        # Simpler approach: use path prefix matching with subquery for epic paths
-        # Since we're in a subquery context, we need to correlate properly
-
-        def epic_work_items_sum(model, statuses=None):
-            """Sum work items that are descendants of epics linked to milestone."""
-            # Join work items with epics on path prefix
-            # epic.milestone = current_milestone AND work_item.path LIKE epic.path + step
-
-            # Use a join approach with subquery
-            epic_alias = Epic.objects.filter(milestone=OuterRef("pk")).values("path")[:1]
-
-            qs = model.objects.filter(
-                project=OuterRef("project"),
-            ).filter(
-                # Work item path starts with epic.path + 4-digit step
-                # epic.milestone = current milestone
-                path__regex=rf"^{epic_alias}[0-9]{{4}}/",
-            )
-            if statuses:
-                qs = qs.filter(status__in=statuses)
-
-            return Coalesce(
-                Subquery(
-                    qs.values("project")
-                    .annotate(total=Sum(Coalesce("estimated_points", Value(1))))
-                    .values("total")[:1],
-                    output_field=IntegerField(),
-                ),
-                Value(0),
-            )
-
-        # Annotate with progress from epic work items
-        return self.annotate(
-            total_done_points=(
-                epic_work_items_sum(Story, done_statuses)
-                + epic_work_items_sum(Bug, done_statuses)
-                + epic_work_items_sum(Chore, done_statuses)
-            ),
-            total_in_progress_points=(
-                epic_work_items_sum(Story, in_progress_statuses)
-                + epic_work_items_sum(Bug, in_progress_statuses)
-                + epic_work_items_sum(Chore, in_progress_statuses)
-            ),
-            total_todo_points=(
-                epic_work_items_sum(Story, todo_statuses)
-                + epic_work_items_sum(Bug, todo_statuses)
-                + epic_work_items_sum(Chore, todo_statuses)
-            ),
-        ).annotate(
-            total_estimated_points=F("total_done_points") + F("total_in_progress_points") + F("total_todo_points")
-        )
-
 
 class MilestoneManager(models.Manager):
     """Custom Manager for Milestone model."""
@@ -769,6 +517,9 @@ class MilestoneManager(models.Manager):
 
     def for_workspace(self, workspace: Workspace) -> MilestoneQuerySet:
         return self.get_queryset().for_workspace(workspace)
+
+    def with_progress(self) -> MilestoneQuerySet:
+        return self.get_queryset().with_progress()
 
 
 class SubtaskQuerySet(QuerySet):

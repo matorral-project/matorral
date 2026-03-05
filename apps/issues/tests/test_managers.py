@@ -377,3 +377,103 @@ class MilestoneQuerySetStatusFilterTest(TestCase):
         self.assertIn(self.in_progress, milestones)
         self.assertNotIn(self.done, milestones)
         self.assertNotIn(self.archived, milestones)
+
+
+class MilestoneQuerySetWithProgressTest(TestCase):
+    """Tests for Milestone with_progress annotation."""
+
+    def setUp(self):
+        workspace = WorkspaceFactory()
+        self.project = ProjectFactory(workspace=workspace)
+
+        self.empty_milestone = MilestoneFactory(project=self.project)
+
+        # Now a milestone with epics but not issues
+        self.milestone_with_empty_epics = MilestoneFactory(project=self.project)
+        EpicFactory.create_batch(3, project=self.project, milestone=self.milestone_with_empty_epics)
+
+        # And finally a milestone with epics with stories, bugs and chores
+        self.full_milestone = MilestoneFactory(project=self.project)
+        full_epics = EpicFactory.create_batch(2, project=self.project, milestone=self.full_milestone)
+
+        # TO-DO: randomize the estimated points per issue so epics get different points too
+        for epic in full_epics:
+            # Create some to-do issues: total points = 17
+            StoryFactory.create_batch(
+                3, project=self.project, parent=epic, status=IssueStatus.DRAFT, estimated_points=1
+            )
+            BugFactory.create_batch(
+                2, project=self.project, parent=epic, status=IssueStatus.PLANNING, estimated_points=2
+            )
+            ChoreFactory.create_batch(
+                2, project=self.project, parent=epic, status=IssueStatus.READY, estimated_points=5
+            )
+
+            # Then some in progress issues: total points = 22
+            StoryFactory.create_batch(
+                5, project=self.project, parent=epic, status=IssueStatus.IN_PROGRESS, estimated_points=3
+            )
+            BugFactory.create_batch(
+                2, project=self.project, parent=epic, status=IssueStatus.BLOCKED, estimated_points=2
+            )
+            ChoreFactory.create_batch(
+                3, project=self.project, parent=epic, status=IssueStatus.IN_PROGRESS, estimated_points=1
+            )
+
+            # Then some done issues: total points = 9
+            StoryFactory.create_batch(3, project=self.project, parent=epic, status=IssueStatus.DONE, estimated_points=1)
+            BugFactory.create_batch(
+                3, project=self.project, parent=epic, status=IssueStatus.ARCHIVED, estimated_points=1
+            )
+            ChoreFactory.create_batch(
+                3, project=self.project, parent=epic, status=IssueStatus.WONT_DO, estimated_points=None
+            )
+
+    def test_with_progress_adds_annotations(self):
+        """with_progress adds progress annotations to milestones."""
+        milestone_with_progress = Milestone.objects.with_progress().get(pk=self.empty_milestone.pk)
+
+        # Check that annotations are present
+        self.assertTrue(hasattr(milestone_with_progress, "total_estimated_points"))
+        self.assertTrue(hasattr(milestone_with_progress, "total_done_points"))
+        self.assertTrue(hasattr(milestone_with_progress, "total_in_progress_points"))
+        self.assertTrue(hasattr(milestone_with_progress, "total_todo_points"))
+
+    def test_with_progress_returns_query_set(self):
+        """with_progress returns a QuerySet that can be chained."""
+        qs = Milestone.objects.for_project(self.project).with_progress()
+        self.assertEqual(qs.count(), 3)
+
+        # Verify all milestones have the annotations
+        for milestone in qs:
+            self.assertTrue(hasattr(milestone, "total_estimated_points"))
+            self.assertTrue(hasattr(milestone, "total_done_points"))
+            self.assertTrue(hasattr(milestone, "total_in_progress_points"))
+            self.assertTrue(hasattr(milestone, "total_todo_points"))
+
+    def test_with_empty_milestone_with_progress_has_zero_points(self):
+        """Milestone without epics has zero points."""
+        milestone = Milestone.objects.with_progress().get(pk=self.empty_milestone.pk)
+
+        self.assertEqual(0, milestone.total_estimated_points)
+        self.assertEqual(0, milestone.total_done_points)
+        self.assertEqual(0, milestone.total_in_progress_points)
+        self.assertEqual(0, milestone.total_todo_points)
+
+    def test_milestone_with_empty_epics_with_progress_has_zero_points(self):
+        """Milestone without epics has zero points."""
+        milestone = Milestone.objects.with_progress().get(pk=self.milestone_with_empty_epics.pk)
+
+        self.assertEqual(0, milestone.total_estimated_points)
+        self.assertEqual(0, milestone.total_done_points)
+        self.assertEqual(0, milestone.total_in_progress_points)
+        self.assertEqual(0, milestone.total_todo_points)
+
+    def test_full_milestone_with_progress_has_points(self):
+        """Milestone with epics has points."""
+        milestone = Milestone.objects.with_progress().get(pk=self.full_milestone.pk)
+
+        self.assertEqual(17 * 2, milestone.total_todo_points)
+        self.assertEqual(22 * 2, milestone.total_in_progress_points)
+        self.assertEqual(9 * 2, milestone.total_done_points)
+        self.assertEqual(2 * (17 + 22 + 9), milestone.total_estimated_points)
