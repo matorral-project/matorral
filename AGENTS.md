@@ -37,6 +37,9 @@ just dbshell                        # PostgreSQL shell
 # Testing
 just test [module]                  # e.g., just test apps.issues.tests.test_views
 
+# Code Quality (MUST run before completing work)
+just pre-commit                     # Run all pre-commit hooks on all files
+
 # Frontend
 just npm-build                      # Build frontend assets in container
 npm run dev                         # Watch mode (via Vite dev server)

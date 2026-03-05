@@ -84,6 +84,10 @@ cov *args:
     just test-cov {{args}}
     just cov-report
 
+# Run pre-commit on all files
+pre-commit:
+    pre-commit run --all-files
+
 # Bootstrap the project: start containers and apply migrations
 init: start-detached make-migrations migrate
 
