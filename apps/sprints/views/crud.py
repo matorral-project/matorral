@@ -8,12 +8,13 @@ from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from apps.issues.helpers import build_grouped_issues, build_progress_dict, calculate_progress
+from apps.issues.helpers import build_grouped_issues
 from apps.issues.models import BaseIssue, Bug, Chore, Story
 from apps.issues.views.mixins import IssueListContextMixin
 from apps.sprints.forms import SprintDetailInlineEditForm, SprintForm, SprintRowInlineEditForm
 from apps.sprints.models import Sprint, SprintStatus
 from apps.sprints.views.mixins import SprintFormMixin, SprintListContextMixin, SprintSingleObjectMixin, SprintViewMixin
+from apps.utils.progress import build_progress_dict, calculate_progress
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
 
@@ -73,11 +74,12 @@ class SprintListView(SprintViewMixin, SprintListContextMixin, LoginAndWorkspaceR
 
         # Build progress dicts from the annotated weights
         for sprint in context["sprints"]:
-            total = getattr(sprint, "progress_total_weight", 0)
+            total = getattr(sprint, "total_estimated_points", 0) or 0
             if total:
-                done = getattr(sprint, "progress_done_weight", 0)
-                in_progress = getattr(sprint, "progress_in_progress_weight", 0)
-                sprint.progress = build_progress_dict(done, in_progress, total - done - in_progress)
+                done = getattr(sprint, "total_done_points", 0) or 0
+                in_progress = getattr(sprint, "total_in_progress_points", 0) or 0
+                todo = getattr(sprint, "total_todo_points", 0) or 0
+                sprint.progress = build_progress_dict(done, in_progress, todo, total)
             else:
                 sprint.progress = None
 
@@ -244,8 +246,10 @@ class SprintIssueListEmbedView(SprintViewMixin, IssueListContextMixin, LoginAndW
         # Sort by is only available when not grouping
         self.sort_by = self.request.GET.get("sort_by", "").strip() if not self.group_by else ""
 
-        queryset = BaseIssue.objects.for_sprint(self.sprint).select_related(
-            "project", "project__workspace", "assignee", "polymorphic_ctype"
+        queryset = (
+            BaseIssue.objects.work_items()
+            .for_sprint(self.sprint)
+            .select_related("project", "project__workspace", "assignee", "polymorphic_ctype")
         )
 
         # Apply filters

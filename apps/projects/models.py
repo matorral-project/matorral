@@ -101,6 +101,7 @@ class Project(BaseModel):
     )
 
     objects = ProjectQuerySet.as_manager()
+    status_model = ProjectStatus
 
     class Meta:
         constraints = [

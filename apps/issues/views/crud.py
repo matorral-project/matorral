@@ -23,7 +23,8 @@ from apps.issues.helpers import (
     build_grouped_issues,
     build_htmx_delete_response,
 )
-from apps.issues.models import BaseIssue, Bug, BugSeverity, Epic, IssuePriority, IssueStatus, Milestone
+from apps.issues.models import BaseIssue, Bug, BugSeverity, Epic, IssuePriority, IssueStatus, Milestone, Subtask
+from apps.issues.services import IssueConversionError, PromotionError, convert_issue_type, promote_to_epic
 from apps.projects.models import Project
 from apps.sprints.models import Sprint, SprintStatus
 from apps.workspaces.limits import LimitExceededError, check_work_item_limit
@@ -603,8 +604,6 @@ class IssueConvertTypeView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View)
 
     def get(self, request, *args, **kwargs):
         """Return the modal content with type selection."""
-        from django.shortcuts import render
-
         issue = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["key"])
         real_issue = issue.get_real_instance()
         current_type = real_issue.get_issue_type()
@@ -631,10 +630,6 @@ class IssueConvertTypeView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View)
 
     def post(self, request, *args, **kwargs):
         """Perform the type conversion."""
-
-        from django.shortcuts import render
-
-        from apps.issues.services import IssueConversionError, convert_issue_type
 
         issue = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["key"])
         real_issue = issue.get_real_instance()
@@ -699,10 +694,6 @@ class IssuePromoteToEpicView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
 
     def get(self, request, *args, **kwargs):
         """Return the modal content with promotion options."""
-        from django.shortcuts import render
-
-        from apps.issues.models import Subtask
-
         issue = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["key"])
         real_issue = issue.get_real_instance()
         current_type = real_issue.get_issue_type()
@@ -744,10 +735,6 @@ class IssuePromoteToEpicView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
 
     def post(self, request, *args, **kwargs):
         """Perform the promotion to Epic."""
-
-        from django.shortcuts import render
-
-        from apps.issues.services import PromotionError, promote_to_epic
 
         issue = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["key"])
         real_issue = issue.get_real_instance()
@@ -794,8 +781,6 @@ class IssuePromoteToEpicView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
                 return redirect(real_issue.get_absolute_url())
 
         # Form validation failed - re-render modal content
-        from apps.issues.models import Subtask
-
         subtask_count = real_issue.get_children().instance_of(Subtask).count()
 
         context = {
@@ -1101,8 +1086,6 @@ class IssueRowInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
 
     def get(self, request, *args, **kwargs):
         """Return display mode (cancel=1) or edit mode for the issue row."""
-        from django.shortcuts import render
-
         issue = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["key"])
         context, real_issue = self._get_context(request, issue)
 
@@ -1146,8 +1129,6 @@ class IssueRowInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
 
     def post(self, request, *args, **kwargs):
         """Save inline edits and return display mode."""
-        from django.shortcuts import render
-
         issue = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["key"])
         form = IssueRowInlineEditForm(request.POST, workspace_members=request.workspace_members)
         context, real_issue = self._get_context(request, issue, form)
@@ -1227,8 +1208,6 @@ class EpicDetailInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, V
 
     def get(self, request, *args, **kwargs):
         """Return display mode (cancel=1) or edit mode for the epic detail header."""
-        from django.shortcuts import render
-
         epic = get_object_or_404(
             Epic.objects.for_project(self.project).select_related("assignee", "milestone"),
             key=kwargs["key"],
@@ -1262,8 +1241,6 @@ class EpicDetailInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, V
 
     def post(self, request, *args, **kwargs):
         """Save inline edits and return display mode."""
-        from django.shortcuts import render
-
         epic = get_object_or_404(
             Epic.objects.for_project(self.project).select_related("assignee", "milestone"),
             key=kwargs["key"],
@@ -1337,8 +1314,6 @@ class IssueDetailInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, 
 
     def get(self, request, *args, **kwargs):
         """Return display mode (cancel=1) or edit mode for the issue detail header."""
-        from django.shortcuts import render
-
         issue = get_object_or_404(
             BaseIssue.objects.for_project(self.project).select_related("assignee"),
             key=kwargs["key"],
@@ -1376,8 +1351,6 @@ class IssueDetailInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, 
 
     def post(self, request, *args, **kwargs):
         """Save inline edits and return display mode."""
-        from django.shortcuts import render
-
         issue = get_object_or_404(
             BaseIssue.objects.for_project(self.project).select_related("assignee"),
             key=kwargs["key"],

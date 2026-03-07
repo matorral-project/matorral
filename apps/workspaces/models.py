@@ -15,6 +15,7 @@ from waffle.utils import get_cache, keyfmt
 from . import roles as workspace_roles
 from .context import EmptyWorkspaceContextException, get_current_workspace
 from .managers import WorkspaceQuerySet
+from matorral.context_processors import get_root
 
 
 class WorkspaceScopedManager(models.Manager):
@@ -139,8 +140,6 @@ class Invitation(BaseModel):
     )
 
     def get_url(self) -> str:
-        from matorral.context_processors import get_root
-
         return get_root() + reverse("workspaces:accept_invitation", args=[self.id])
 
 

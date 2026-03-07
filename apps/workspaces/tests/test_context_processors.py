@@ -1,3 +1,4 @@
+from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory, TestCase
 
 from apps.users.factories import UserFactory
@@ -33,8 +34,6 @@ class TestOnboardingContextProcessor(TestCase):
         self.assertEqual(context["onboarding_pending_count"], 0)
 
     def test_returns_zero_when_user_not_authenticated(self):
-        from django.contrib.auth.models import AnonymousUser
-
         request = self._make_request(user=AnonymousUser(), workspace=self.workspace)
         context = onboarding_context(request)
         self.assertEqual(context["onboarding_pending_count"], 0)
@@ -86,8 +85,6 @@ class TestDefaultWorkspaceContextProcessor(TestCase):
         self.assertEqual(context.get("default_workspace"), self.workspace)
 
     def test_returns_empty_dict_for_unauthenticated_user_without_workspace(self):
-        from django.contrib.auth.models import AnonymousUser
-
         request = self.factory.get("/")
         request.user = AnonymousUser()
         context = default_workspace(request)

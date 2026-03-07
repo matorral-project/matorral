@@ -1,3 +1,4 @@
+from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.db.models import Case, CharField, F, IntegerField, Value, When
 from django.db.models.functions import Substr
@@ -6,6 +7,7 @@ from django.utils.cache import patch_vary_headers
 from django.utils.translation import gettext_lazy as _
 
 from apps.issues.forms import get_form_class_for_type
+from apps.issues.managers import KeyNumber
 from apps.issues.models import BaseIssue, IssuePriority, IssueStatus
 from apps.projects.models import Project
 from apps.utils.filters import (
@@ -18,6 +20,11 @@ from apps.utils.filters import (
 from apps.workspaces.models import Workspace
 
 User = get_user_model()
+
+Bug = apps.get_model("issues", "Bug")
+Chore = apps.get_model("issues", "Chore")
+Epic = apps.get_model("issues", "Epic")
+Story = apps.get_model("issues", "Story")
 
 # Issue type choices for filtering (milestones are workspace-scoped, not project issues)
 ISSUE_TYPE_CHOICES = [
@@ -103,9 +110,7 @@ class IssueListContextMixin:
         priority_filter: str = "",
     ):
         """Apply type, search, status, assignee, sprint, and priority filters to an issue queryset."""
-        from apps.issues.models import Bug, Chore, Epic, Story
-
-        # Local model mapping (avoid circular imports)
+        # Local model mapping
         issue_type_models = {
             "epic": Epic,
             "story": Story,
@@ -157,8 +162,6 @@ class IssueListContextMixin:
 
         When no grouping is active, sort_by can be used to customize the sort order.
         """
-        from apps.issues.managers import KeyNumber
-
         if group_by == "project":
             queryset = queryset.annotate(
                 priority_order=get_priority_order_annotation(),
@@ -168,8 +171,6 @@ class IssueListContextMixin:
             # Root issues (no epic parent, depth=1) go first, then group by parent epic path
             # For children (depth>1), use the parent's path (first steplen chars) for grouping
             # Then order by priority within each group
-            from apps.issues.models import BaseIssue
-
             steplen = BaseIssue.steplen
             queryset = queryset.annotate(
                 has_epic_parent=Case(

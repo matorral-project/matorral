@@ -1,6 +1,8 @@
 from django.contrib import messages
 from django.db import IntegrityError
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import View
 
@@ -162,9 +164,6 @@ class SprintAddIssuesView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, Sprin
 
         # Return the embedded issues list for HTMX
         if request.htmx:
-            from django.http import HttpResponseRedirect
-            from django.urls import reverse
-
             return HttpResponseRedirect(
                 reverse(
                     "sprints:sprint_issues_embed",
@@ -205,9 +204,6 @@ class SprintRemoveIssueView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, Vie
 
         # Return the embedded issues list for HTMX (default behavior for sprint page)
         if request.htmx:
-            from django.http import HttpResponseRedirect
-            from django.urls import reverse
-
             return HttpResponseRedirect(
                 reverse(
                     "sprints:sprint_issues_embed",
