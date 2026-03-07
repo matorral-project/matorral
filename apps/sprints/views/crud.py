@@ -2,7 +2,9 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib import messages
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views import View
@@ -135,10 +137,46 @@ class SprintCreateView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintFo
     template_name = "sprints/sprint_form.html"
     form_class = SprintForm
 
+    def is_modal(self):
+        return self.request.GET.get("modal") == "1"
+
+    def get_template_names(self):
+        if self.is_modal():
+            return ["sprints/includes/sprint_form_modal.html"]
+        if self.request.htmx and not self.request.htmx.history_restore_request:
+            return [f"{self.template_name}#page-content"]
+        return [self.template_name]
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["page_title"] = _("New Sprint")
         return context
+
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.workspace = self.workspace
+        self.object.created_by = self.request.user
+        self.object.save()
+
+        messages.success(self.request, _("Sprint created successfully."))
+
+        if self.is_modal():
+            list_url = reverse("sprints:sprint_list", kwargs={"workspace_slug": self.workspace.slug})
+            messages_html = render_to_string(
+                "includes/messages.html",
+                {"messages": messages.get_messages(self.request)},
+                request=self.request,
+            )
+            messages_div = (
+                f'<div id="messages" class="toast toast-end toast-bottom z-50" hx-swap-oob="true">{messages_html}</div>'
+            )
+            script = (
+                "<script>window.dispatchEvent(new CustomEvent('sprint-created', "
+                "{ detail: { listUrl: '" + list_url + "' } }));</script>"
+            )
+            return HttpResponse(messages_div + script)
+
+        return redirect(self.object.get_absolute_url())
 
     def get_initial(self):
         initial = super().get_initial()
@@ -154,15 +192,6 @@ class SprintCreateView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintFo
 
         return initial
 
-    def form_valid(self, form):
-        self.object = form.save(commit=False)
-        self.object.workspace = self.workspace
-        self.object.created_by = self.request.user
-        self.object.save()
-
-        messages.success(self.request, _("Sprint created successfully."))
-        return redirect(self.object.get_absolute_url())
-
 
 class SprintUpdateView(
     SprintViewMixin,
@@ -176,6 +205,16 @@ class SprintUpdateView(
     template_name = "sprints/sprint_form.html"
     form_class = SprintForm
 
+    def is_modal(self):
+        return self.request.GET.get("modal") == "1"
+
+    def get_template_names(self):
+        if self.is_modal():
+            return ["sprints/includes/sprint_form_modal.html"]
+        if self.request.htmx and not self.request.htmx.history_restore_request:
+            return [f"{self.template_name}#page-content"]
+        return [self.template_name]
+
     def get_queryset(self):
         return Sprint.objects.for_workspace(self.workspace)
 
@@ -187,6 +226,23 @@ class SprintUpdateView(
     def form_valid(self, form):
         self.object = form.save()
         messages.success(self.request, _("Sprint updated successfully."))
+
+        if self.is_modal():
+            list_url = reverse("sprints:sprint_list", kwargs={"workspace_slug": self.workspace.slug})
+            messages_html = render_to_string(
+                "includes/messages.html",
+                {"messages": messages.get_messages(self.request)},
+                request=self.request,
+            )
+            messages_div = (
+                f'<div id="messages" class="toast toast-end toast-bottom z-50" hx-swap-oob="true">{messages_html}</div>'
+            )
+            script = (
+                "<script>window.dispatchEvent(new CustomEvent('sprint-updated', "
+                "{ detail: { listUrl: '" + list_url + "' } }));</script>"
+            )
+            return HttpResponse(messages_div + script)
+
         return redirect(self.object.get_absolute_url())
 
 
