@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
+from django.templatetags.static import static
 from django.views.decorators.cache import cache_control
 from django.views.decorators.http import require_GET
 
@@ -10,14 +11,22 @@ from health_check.views import MainView
 
 
 def home(request):
+    context = {
+        "page_title": "Open Source Project Management tool",
+        "page_description": (
+            "Project management made simple, built with Django + HTMX + Tailwind. "
+            "Open Source. Matorral gives your team a clear, flexible way to plan and deliver software."
+        ),
+        "og_image": request.build_absolute_uri(static("landing_pages/images/app-screenshot.png")),
+    }
     if request.user.is_authenticated:
         workspace = Workspace.objects.for_user(request.user).first()
         if workspace:
             return HttpResponseRedirect(workspace.get_absolute_url())
         else:
-            return render(request, "landing_pages/landing_page.html")
+            return render(request, "landing_pages/landing_page.html", context)
     else:
-        return render(request, "landing_pages/landing_page.html")
+        return render(request, "landing_pages/landing_page.html", context)
 
 
 @require_GET

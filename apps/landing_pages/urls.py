@@ -9,12 +9,24 @@ urlpatterns = [
     path("favicon.ico", views.favicon, name="favicon"),
     path(
         "terms/",
-        TemplateView.as_view(template_name="landing_pages/terms.html"),
+        TemplateView.as_view(
+            template_name="landing_pages/terms.html",
+            extra_context={
+                "page_title": "Terms of Service",
+                "page_description": "Read our terms of service for using Matorral.",
+            },
+        ),
         name="terms",
     ),
     path(
         "privacy/",
-        TemplateView.as_view(template_name="landing_pages/privacy.html"),
+        TemplateView.as_view(
+            template_name="landing_pages/privacy.html",
+            extra_context={
+                "page_title": "Privacy Policy",
+                "page_description": "Read our privacy policy and learn how we handle your data.",
+            },
+        ),
         name="privacy",
     ),
     path("400/", TemplateView.as_view(template_name="errors/400.html"), name="400"),

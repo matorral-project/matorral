@@ -40,6 +40,7 @@ DJANGO_APPS = [
     "django.contrib.postgres",
     "django.contrib.staticfiles",
     "django.contrib.sites",
+    "django.contrib.sitemaps",
     "django.forms",
 ]
 
@@ -403,7 +404,9 @@ WAFFLE_FLAG_MODEL = "workspaces.Flag"
 
 
 SITE_DESCRIPTION = gettext_lazy("The project management tool that doesn't get in your way.")
-SITE_KEYWORDS = "project management, django"
+SITE_KEYWORDS = (
+    "project management, open source, django, ticketing, bug tracking, issue tracker, jira alternative, scrum"
+)
 
 USE_HTTPS_IN_ABSOLUTE_URLS = env.bool("USE_HTTPS_IN_ABSOLUTE_URLS", default=False)
 

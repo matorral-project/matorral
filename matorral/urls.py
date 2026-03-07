@@ -17,6 +17,7 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.sitemaps.views import sitemap
 from django.urls import include, path
 from django.views.generic import RedirectView
 from django.views.i18n import JavaScriptCatalog
@@ -24,10 +25,15 @@ from django.views.i18n import JavaScriptCatalog
 from apps.issues.urls import milestones_urlpatterns as milestones_project_urls
 from apps.issues.urls import project_urlpatterns as issues_project_urls
 from apps.issues.urls import workspace_urlpatterns as issues_workspace_urls
+from apps.landing_pages.sitemaps import StaticViewSitemap
 from apps.projects.urls import project_urlpatterns as projects_project_urls
 from apps.sprints.urls import workspace_urlpatterns as sprints_urls
 from apps.users.views import CustomPasswordChangeView
 from apps.workspaces.urls import standalone_urlpatterns as workspaces_standalone_urls
+
+sitemaps = {
+    "static": StaticViewSitemap,
+}
 
 handler400 = "matorral.error_views.bad_request"
 handler403 = "matorral.error_views.permission_denied"
@@ -69,6 +75,7 @@ urlpatterns = [
     # django-comments-xtd urls
     path("comments/", include("django_comments_xtd.urls")),
     path("attachments/", include("attachments.urls", namespace="attachments")),
+    path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="sitemap"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.ENABLE_DEBUG_TOOLBAR:
