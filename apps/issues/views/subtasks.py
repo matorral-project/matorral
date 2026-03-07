@@ -45,10 +45,12 @@ class SubtaskViewMixin(IssueCommentsViewMixin):
 
 
 class SubtaskListView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, View):
-    """GET subtasks list for an issue via HTMX."""
+    """GET subtasks list for an issue via HTMX. With ?form=1, returns the creation form for the modal."""
 
     def get(self, request, *args, **kwargs):
         context = self.get_subtasks_context()
+        if request.GET.get("form"):
+            return render(request, "issues/includes/subtask_create_form.html", context)
         return render(request, "issues/includes/subtasks_list.html", context)
 
 
@@ -186,3 +188,34 @@ class SubtaskStatusToggleView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, 
             "status_choices": IssueStatus.choices,
         }
         return render(request, "issues/includes/subtask_row.html", context)
+
+
+class SubtaskCloneView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, View):
+    """POST to clone a subtask and return the updated list."""
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.subtask = get_object_or_404(
+            self.issue.get_children().instance_of(Subtask),
+            pk=kwargs["subtask_pk"],
+        )
+
+    def post(self, request, *args, **kwargs):
+        if not self.can_add_subtask():
+            return HttpResponseBadRequest(
+                _("Maximum number of subtasks reached (%(max)s).") % {"max": MAX_SUBTASKS_PER_PARENT}
+            )
+
+        cloned = Subtask(
+            project=self.subtask.project,
+            title=_("%(title)s (Copy)") % {"title": self.subtask.title},
+            status=self.subtask.status,
+            priority=self.subtask.priority,
+            assignee=self.subtask.assignee,
+            description=self.subtask.description,
+        )
+        cloned.key = cloned._generate_unique_key()
+        self.issue.add_child(instance=cloned)
+
+        context = self.get_subtasks_context()
+        return render(request, "issues/includes/subtasks_list.html", context)

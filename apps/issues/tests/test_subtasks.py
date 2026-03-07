@@ -78,6 +78,17 @@ class SubtaskTestBase(TestCase):
             },
         )
 
+    def _get_subtask_clone_url(self, issue, subtask):
+        return reverse(
+            "issues:issue_subtask_clone",
+            kwargs={
+                "workspace_slug": self.workspace.slug,
+                "project_key": self.project.key,
+                "key": issue.key,
+                "subtask_pk": subtask.pk,
+            },
+        )
+
 
 class SubtaskModelTest(TestCase):
     """Tests for the Subtask model."""
@@ -449,4 +460,93 @@ class SubtaskStatusToggleViewTest(SubtaskTestBase):
 
         self.assertEqual(200, response.status_code)
         self.assertContains(response, "Toggle me")
-        self.assertContains(response, "fa-spinner")  # In Progress state icon
+        self.assertContains(response, "In Progress")  # Status badge text
+
+
+class SubtaskListViewFormTest(SubtaskTestBase):
+    """Tests for SubtaskListView with ?form=1 (modal creation form)."""
+
+    def test_form_endpoint_returns_200(self):
+        """GET with ?form=1 returns the creation form."""
+        story = StoryFactory(project=self.project)
+
+        response = self.client.get(self._get_subtasks_url(story) + "?form=1")
+
+        self.assertEqual(200, response.status_code)
+
+    def test_form_endpoint_contains_title_input(self):
+        """GET with ?form=1 returns a form with a title input."""
+        story = StoryFactory(project=self.project)
+
+        response = self.client.get(self._get_subtasks_url(story) + "?form=1")
+
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, 'name="title"')
+
+
+class SubtaskCloneViewTest(SubtaskTestBase):
+    """Tests for SubtaskCloneView."""
+
+    def test_clone_subtask(self):
+        """Cloning a subtask creates a new subtask."""
+        story = StoryFactory(project=self.project)
+        subtask = SubtaskFactory(parent=story, title="Original subtask")
+
+        response = self.client.post(self._get_subtask_clone_url(story, subtask))
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(2, story.get_children().instance_of(Subtask).count())
+
+    def test_clone_adds_copy_suffix(self):
+        """Cloned subtask title has '(Copy)' suffix."""
+        story = StoryFactory(project=self.project)
+        subtask = SubtaskFactory(parent=story, title="Original subtask")
+
+        self.client.post(self._get_subtask_clone_url(story, subtask))
+
+        story.refresh_from_db()
+        titles = list(story.get_children().instance_of(Subtask).values_list("title", flat=True))
+        self.assertIn("Original subtask (Copy)", titles)
+
+    def test_clone_generates_unique_key(self):
+        """Cloned subtask has a different key from the original."""
+        story = StoryFactory(project=self.project)
+        subtask = SubtaskFactory(parent=story, title="Original subtask")
+
+        self.client.post(self._get_subtask_clone_url(story, subtask))
+
+        story.refresh_from_db()
+        keys = list(story.get_children().instance_of(Subtask).values_list("key", flat=True))
+        self.assertEqual(2, len(set(keys)))
+
+    def test_clone_preserves_status(self):
+        """Cloned subtask has the same status as the original."""
+        story = StoryFactory(project=self.project)
+        subtask = SubtaskFactory(parent=story, status=IssueStatus.IN_PROGRESS)
+
+        self.client.post(self._get_subtask_clone_url(story, subtask))
+
+        story.refresh_from_db()
+        cloned = story.get_children().instance_of(Subtask).exclude(pk=subtask.pk).get()
+        self.assertEqual(IssueStatus.IN_PROGRESS, cloned.status)
+
+    def test_clone_returns_updated_list(self):
+        """Cloning returns the updated subtasks list."""
+        story = StoryFactory(project=self.project)
+        subtask = SubtaskFactory(parent=story, title="My subtask")
+
+        response = self.client.post(self._get_subtask_clone_url(story, subtask))
+
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, "My subtask")
+        self.assertContains(response, "My subtask (Copy)")
+
+    def test_clone_at_limit_rejected(self):
+        """Cloning when at the subtask limit returns 400."""
+        story = StoryFactory(project=self.project)
+        subtasks = [SubtaskFactory(parent=story, title=f"Subtask {i}") for i in range(MAX_SUBTASKS_PER_PARENT)]
+
+        response = self.client.post(self._get_subtask_clone_url(story, subtasks[0]))
+
+        self.assertEqual(400, response.status_code)
+        self.assertEqual(MAX_SUBTASKS_PER_PARENT, story.get_children().instance_of(Subtask).count())

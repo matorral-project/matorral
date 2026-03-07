@@ -279,19 +279,15 @@ class IssueDetailView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, IssueSingl
         context = super().get_context_data(**kwargs)
         issue = context["issue"]
         context["page_title"] = f"[{issue.key}] {issue.title}"
-        context["children"] = issue.get_children_issues()
         context["parent"] = issue.get_parent_issue()
 
-        # Set appropriate label for children based on issue type
         issue_type = issue.get_issue_type()
         if issue_type == "epic":
+            context["children"] = issue.get_children_issues()
             context["children_label"] = _("Issues")
-            # Show linked milestone if any
             context["milestone"] = issue.milestone
-            # Calculate progress from children
             context["progress"] = issue.get_progress()
         else:
-            context["children_label"] = _("Children")
             # Needed for inline editing to show severity field for bugs
             context["is_bug"] = isinstance(issue, Bug)
 

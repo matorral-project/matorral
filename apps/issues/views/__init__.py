@@ -41,6 +41,7 @@ from .milestones import (
     WorkspaceEpicCreateView,
 )
 from .subtasks import (
+    SubtaskCloneView,
     SubtaskCreateView,
     SubtaskDeleteView,
     SubtaskInlineEditView,
@@ -85,6 +86,7 @@ __all__ = [
     "SubtaskInlineEditView",
     "SubtaskDeleteView",
     "SubtaskStatusToggleView",
+    "SubtaskCloneView",
     "MilestoneDetailView",
     "MilestoneCreateView",
     "MilestoneUpdateView",

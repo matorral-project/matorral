@@ -1,0 +1,22 @@
+{% load i18n %}
+<form hx-post="{% url 'issues:issue_subtask_add' workspace.slug project.key issue.key %}"
+      hx-target="#subtasks-section"
+      hx-swap="outerHTML"
+      @htmx:after-request="if (event.detail.successful) showNewSubtaskModal = false">
+  {% csrf_token %}
+  <div class="form-control mb-4">
+    <label class="label">
+      <span class="label-text font-medium">{% translate "Title" %}</span>
+    </label>
+    <input type="text"
+           name="title"
+           class="input input-bordered w-full"
+           placeholder="{% translate "Enter subtask title..." %}"
+           required
+           autofocus>
+  </div>
+  <div class="modal-action">
+    <button type="button" class="btn" @click="showNewSubtaskModal = false">{% translate "Cancel" %}</button>
+    <button type="submit" class="btn btn-primary">{% translate "Create" %}</button>
+  </div>
+</form>
