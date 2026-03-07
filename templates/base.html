@@ -41,6 +41,7 @@
         {% include 'includes/google_analytics.html' %}
     {% endif %}
     {% vite_asset 'assets/js/site.js' %}
+    {% vite_asset 'assets/js/app.js' %}
     {% vite_hmr_client %}
     <script src="{% url 'javascript-catalog' %}" defer></script>
     {% block page_head %}

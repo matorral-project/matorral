@@ -2,7 +2,7 @@
 {% for message in messages %}
 <div class="alert {% if message.tags %}alert-{{ message.level_tag }}{% endif %} shadow-lg mb-2 notification">
   <span>{{ message }}</span>
-  <button class="btn btn-sm btn-ghost delete"><i class="fa fa-times"></i></button>
+  <button class="btn btn-sm btn-ghost notification-delete"><i class="fa fa-times"></i></button>
 </div>
 {% endfor %}
 {% endif %}
