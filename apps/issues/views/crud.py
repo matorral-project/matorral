@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib import messages
+from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
@@ -513,7 +514,17 @@ class IssueDeleteView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, IssueSingl
         deleted_url = self.object.get_absolute_url()
         redirect_url = self._get_htmx_redirect_url()
 
-        self.object.delete()
+        with transaction.atomic():
+            try:
+                # Delete descendants using treebeard (non_polymorphic avoids ContentType lookups)
+                self.object.get_descendants().non_polymorphic().delete()
+                self.object.delete()
+            except Exception as e:
+                messages.error(self.request, _("Failed to delete: %(error)s") % {"error": str(e)})
+                if self.request.htmx:
+                    return HttpResponse(status=400)
+                return redirect(deleted_url)
+
         messages.success(self.request, _("%(type)s deleted successfully.") % {"type": issue_type})
 
         if self.request.htmx:

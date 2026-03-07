@@ -13,7 +13,7 @@ from django.template.loader import render_to_string
 
 from apps.issues.models import BaseIssue, Epic, IssueStatus, Milestone, Subtask
 from apps.projects.models import Project, ProjectStatus
-from apps.utils.audit import bulk_create_audit_logs
+from apps.utils.models import AuditLog
 
 # Completed status sets per type
 COMPLETED_ISSUE_STATUSES = {IssueStatus.DONE, IssueStatus.WONT_DO, IssueStatus.ARCHIVED}
@@ -529,7 +529,9 @@ def _apply_cascade_down(pks, target_status, model_type, actor):
         old_values = {obj.pk: status_choices.get(obj.status, obj.status) for obj in objects}
         new_display = status_choices.get(target_status, target_status)
         Milestone.objects.filter(pk__in=pks).update(status=target_status)
-        bulk_create_audit_logs(objects, "status", old_values, new_display, actor=actor)
+        AuditLog.objects.bulk_create_for(
+            objects, field_name="status", old_values=old_values, new_display=new_display, actor=actor
+        )
     else:
         # "issue" - mixed Milestone + BaseIssue possible (from Project cascade)
         milestone_pks = []
@@ -547,14 +549,18 @@ def _apply_cascade_down(pks, target_status, model_type, actor):
             old_values = {obj.pk: status_choices.get(obj.status, obj.status) for obj in m_objects}
             new_display = status_choices.get(target_status, target_status)
             Milestone.objects.filter(pk__in=milestone_pks).update(status=target_status)
-            bulk_create_audit_logs(m_objects, "status", old_values, new_display, actor=actor)
+            AuditLog.objects.bulk_create_for(
+                m_objects, field_name="status", old_values=old_values, new_display=new_display, actor=actor
+            )
 
         if issue_pks:
             i_objects = list(BaseIssue.objects.filter(pk__in=issue_pks).select_related("polymorphic_ctype"))
             old_values = {obj.pk: status_choices.get(obj.status, obj.status) for obj in i_objects}
             new_display = status_choices.get(target_status, target_status)
             BaseIssue.objects.filter(pk__in=issue_pks).update(status=target_status)
-            bulk_create_audit_logs(i_objects, "status", old_values, new_display, actor=actor)
+            AuditLog.objects.bulk_create_for(
+                i_objects, field_name="status", old_values=old_values, new_display=new_display, actor=actor
+            )
 
 
 def _apply_cascade_up(pk, target_status, model_type, actor):
@@ -567,7 +573,9 @@ def _apply_cascade_up(pk, target_status, model_type, actor):
             new_display = status_choices.get(target_status, target_status)
             obj.status = target_status
             obj.save(update_fields=["status", "updated_at"])
-            bulk_create_audit_logs([obj], "status", {obj.pk: old_display}, new_display, actor=actor)
+            AuditLog.objects.create_for(
+                obj, field_name="status", old_value=old_display, new_value=new_display, actor=actor
+            )
     elif model_type == "milestone":
         status_choices = dict(IssueStatus.choices)
         obj = Milestone.objects.filter(pk=pk).first()
@@ -576,7 +584,9 @@ def _apply_cascade_up(pk, target_status, model_type, actor):
             new_display = status_choices.get(target_status, target_status)
             obj.status = target_status
             obj.save(update_fields=["status", "updated_at"])
-            bulk_create_audit_logs([obj], "status", {obj.pk: old_display}, new_display, actor=actor)
+            AuditLog.objects.create_for(
+                obj, field_name="status", old_value=old_display, new_value=new_display, actor=actor
+            )
     else:
         # "issue" - BaseIssue subclass
         status_choices = dict(IssueStatus.choices)
@@ -586,7 +596,9 @@ def _apply_cascade_up(pk, target_status, model_type, actor):
             new_display = status_choices.get(target_status, target_status)
             obj.status = target_status
             obj.save(update_fields=["status", "updated_at"])
-            bulk_create_audit_logs([obj], "status", {obj.pk: old_display}, new_display, actor=actor)
+            AuditLog.objects.create_for(
+                obj, field_name="status", old_value=old_display, new_value=new_display, actor=actor
+            )
 
 
 # ============================================================================

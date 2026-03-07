@@ -10,8 +10,8 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import View
 
 from apps.issues.cascade import build_cascade_oob_response_bulk
-from apps.utils.audit import bulk_create_audit_logs
 from apps.utils.filters import get_status_filter_label, parse_status_filter
+from apps.utils.models import AuditLog
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
 from ..forms import BulkActionForm, BulkLeadForm, BulkMoveForm
@@ -228,7 +228,9 @@ class ProjectBulkStatusView(BulkActionMixin, LoginAndWorkspaceRequiredMixin, Vie
         self._cascade_objects = objects
 
         updated_count = selected_qs.update(status=self.status)
-        bulk_create_audit_logs(objects, "status", old_values, new_display, actor=self.request.user)
+        AuditLog.objects.bulk_create_for(
+            objects, field_name="status", old_values=old_values, new_display=new_display, actor=self.request.user
+        )
 
         messages.success(
             self.request,
@@ -264,7 +266,9 @@ class ProjectBulkLeadView(BulkActionMixin, LoginAndWorkspaceRequiredMixin, View)
         new_display = lead.get_display_name() if lead else None
 
         updated_count = selected_qs.update(lead=lead)
-        bulk_create_audit_logs(objects, "lead", old_values, new_display, actor=self.request.user)
+        AuditLog.objects.bulk_create_for(
+            objects, field_name="lead", old_values=old_values, new_display=new_display, actor=self.request.user
+        )
 
         if lead:
             messages.success(

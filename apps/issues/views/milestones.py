@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
@@ -26,7 +27,7 @@ from apps.issues.models import BaseIssue, IssuePriority, IssueStatus, Milestone
 from apps.issues.views.mixins import ISSUE_TYPE_CHOICES
 from apps.projects.models import Project
 from apps.sprints.models import Sprint, SprintStatus
-from apps.utils.audit import bulk_create_delete_audit_logs
+from apps.utils.models import AuditLog
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 from apps.workspaces.models import Workspace
 
@@ -368,25 +369,33 @@ class MilestoneDeleteView(
         return self.project.get_absolute_url()
 
     def form_valid(self, form):
-        # Cascade: delete subtasks, audit log descendants, delete epics, then milestone
         deleted_url = self.object.get_absolute_url()
         redirect_url = self.object.project.get_absolute_url()
 
-        epics = list(self.object.epics.all())
-        all_descendants = []
-        for epic in epics:
-            all_descendants.extend(list(epic.get_descendants()))
+        with transaction.atomic():
+            try:
+                epics = self.object.epics.all()
 
-        # Audit log descendants before bulk delete (treebeard may not fire signals)
-        if all_descendants:
-            bulk_create_delete_audit_logs(all_descendants, actor=self.request.user)
+                # Audit log ALL deleted items (epics + all descendants)
+                all_deleted = []
+                for epic in epics:
+                    all_deleted.extend(list(epic.get_descendants()))
+                all_deleted.extend(epics)  # Include epics themselves
 
-        # Delete each epic (treebeard handles tree descendants)
-        for epic in epics:
-            epic.delete()
+                if all_deleted:
+                    AuditLog.objects.bulk_create_for(all_deleted, actor=self.request.user)
 
-        # Delete the milestone itself
-        self.object.delete()
+                # Delete epics and all their descendants via treebeard
+                epics.non_polymorphic().delete()
+
+                # Delete the milestone itself
+                self.object.delete()
+            except Exception as e:
+                messages.error(self.request, _("Failed to delete milestone: %(error)s") % {"error": str(e)})
+                if self.request.htmx:
+                    return HttpResponse(status=400)
+                return redirect(deleted_url)
+
         messages.success(self.request, _("Milestone deleted successfully."))
 
         if self.request.htmx:

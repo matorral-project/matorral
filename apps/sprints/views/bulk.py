@@ -10,7 +10,7 @@ from apps.issues.helpers import calculate_valid_page
 from apps.sprints.forms import SprintBulkActionForm, SprintBulkOwnerForm
 from apps.sprints.models import Sprint, SprintStatus
 from apps.sprints.views.mixins import SprintListContextMixin, SprintViewMixin
-from apps.utils.audit import bulk_create_audit_logs
+from apps.utils.models import AuditLog
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
 
@@ -172,7 +172,13 @@ class SprintBulkStatusView(SprintBulkActionMixin, LoginAndWorkspaceRequiredMixin
         new_display = status_choices.get(self.status, self.status)
 
         updated_count = selected_qs.update(status=self.status)
-        bulk_create_audit_logs(selected_sprints, "status", old_values, new_display, actor=self.request.user)
+        AuditLog.objects.bulk_create_for(
+            selected_sprints,
+            field_name="status",
+            old_values=old_values,
+            new_display=new_display,
+            actor=self.request.user,
+        )
 
         messages.success(
             self.request,
@@ -202,7 +208,9 @@ class SprintBulkOwnerView(SprintBulkActionMixin, LoginAndWorkspaceRequiredMixin,
         new_display = owner.get_display_name() if owner else None
 
         updated_count = selected_qs.update(owner=owner)
-        bulk_create_audit_logs(objects, "owner", old_values, new_display, actor=self.request.user)
+        AuditLog.objects.bulk_create_for(
+            objects, field_name="owner", old_values=old_values, new_display=new_display, actor=self.request.user
+        )
 
         if owner:
             messages.success(

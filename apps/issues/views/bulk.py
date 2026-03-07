@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -16,8 +17,8 @@ from apps.issues.helpers import (
 from apps.issues.models import BaseIssue, Bug, Chore, Epic, IssuePriority, IssueStatus, Milestone, Story
 from apps.projects.models import Project
 from apps.sprints.models import Sprint, SprintStatus
-from apps.utils.audit import bulk_create_audit_logs
 from apps.utils.filters import get_status_filter_label, parse_status_filter
+from apps.utils.models import AuditLog
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
 from .mixins import WORK_ITEM_TYPE_CHOICES, IssueListContextMixin, WorkspaceIssueViewMixin
@@ -358,12 +359,25 @@ class WorkspaceIssueBulkDeleteView(WorkspaceBulkActionMixin, LoginAndWorkspaceRe
     def perform_action(self):
         selected_queryset = self.get_selected_queryset()
         selected_count = selected_queryset.count()
-        # Treebeard delete cascades to subtask tree children automatically
-        selected_queryset.delete()
-        messages.success(
-            self.request,
-            _("%(count)d issue(s) deleted successfully.") % {"count": selected_count},
-        )
+
+        with transaction.atomic():
+            try:
+                # Audit log ONLY selected items (not descendants)
+                AuditLog.objects.bulk_create_for(selected_queryset.non_polymorphic(), actor=self.request.user)
+
+                # Delete descendants for all selected issues using treebeard
+                for issue in selected_queryset.non_polymorphic():
+                    if issue.numchild > 0:
+                        issue.get_descendants().delete()
+
+                # Delete selected issues (Django cascade handles any remaining dependencies)
+                selected_queryset.delete()
+
+            except Exception as e:
+                messages.error(self.request, _("Failed to delete selected items: %(error)s") % {"error": str(e)})
+                return redirect(self.request.path + f"?page={self.form.cleaned_data.get('page', 1)}")
+
+        messages.success(self.request, _("%(count)d issue(s) deleted successfully.") % {"count": selected_count})
         remaining_count = self.get_queryset().work_items().search(self.form.cleaned_data["search"]).count()
         return calculate_valid_page(remaining_count, self.form.cleaned_data["page"])
 
@@ -392,7 +406,9 @@ class WorkspaceIssueBulkStatusView(WorkspaceBulkActionMixin, LoginAndWorkspaceRe
         self._cascade_objects = objects
 
         updated_count = selected_qs.update(status=self.status)
-        bulk_create_audit_logs(objects, "status", old_values, new_display, actor=self.request.user)
+        AuditLog.objects.bulk_create_for(
+            objects, field_name="status", old_values=old_values, new_display=new_display, actor=self.request.user
+        )
 
         messages.success(
             self.request,
@@ -432,7 +448,9 @@ class WorkspaceIssueBulkPriorityView(WorkspaceBulkActionMixin, LoginAndWorkspace
         for model_class in (Epic, Story, Bug, Chore):
             updated_count += model_class.objects.filter(pk__in=selected_pks).update(priority=self.priority)
 
-        bulk_create_audit_logs(objects, "priority", old_values, new_display, actor=self.request.user)
+        AuditLog.objects.bulk_create_for(
+            objects, field_name="priority", old_values=old_values, new_display=new_display, actor=self.request.user
+        )
 
         messages.success(
             self.request,
@@ -457,7 +475,9 @@ class WorkspaceIssueBulkRemoveFromSprintView(WorkspaceBulkActionMixin, LoginAndW
             all_old_values.update({obj.pk: str(obj.sprint) for obj in objects})
             removed_count += qs.update(sprint=None)
 
-        bulk_create_audit_logs(all_objects, "sprint", all_old_values, None, actor=self.request.user)
+        AuditLog.objects.bulk_create_for(
+            all_objects, field_name="sprint", old_values=all_old_values, new_display=None, actor=self.request.user
+        )
 
         messages.success(
             self.request,
@@ -507,7 +527,13 @@ class WorkspaceIssueBulkAddToSprintView(WorkspaceBulkActionMixin, LoginAndWorksp
             all_old_values.update({obj.pk: str(obj.sprint) if obj.sprint else None for obj in objects})
             updated_count += qs.update(sprint=self.sprint)
 
-        bulk_create_audit_logs(all_objects, "sprint", all_old_values, new_display, actor=self.request.user)
+        AuditLog.objects.bulk_create_for(
+            all_objects,
+            field_name="sprint",
+            old_values=all_old_values,
+            new_display=new_display,
+            actor=self.request.user,
+        )
 
         messages.success(
             self.request,
@@ -537,7 +563,9 @@ class WorkspaceIssueBulkAssigneeView(WorkspaceBulkActionMixin, LoginAndWorkspace
         new_display = assignee.get_display_name() if assignee else None
 
         updated_count = selected_qs.update(assignee=assignee)
-        bulk_create_audit_logs(objects, "assignee", old_values, new_display, actor=self.request.user)
+        AuditLog.objects.bulk_create_for(
+            objects, field_name="assignee", old_values=old_values, new_display=new_display, actor=self.request.user
+        )
 
         if assignee:
             messages.success(
@@ -580,7 +608,9 @@ class WorkspaceIssueBulkMilestoneView(WorkspaceBulkActionMixin, LoginAndWorkspac
         new_display = str(milestone) if milestone else None
 
         updated_count = Epic.objects.filter(pk__in=selected_pks).move_to_milestone(milestone)
-        bulk_create_audit_logs(objects, "milestone", old_values, new_display, actor=self.request.user)
+        AuditLog.objects.bulk_create_for(
+            objects, field_name="milestone", old_values=old_values, new_display=new_display, actor=self.request.user
+        )
 
         if milestone:
             messages.success(
