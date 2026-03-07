@@ -15,7 +15,7 @@ Matorral is a Django-based project management tool with workspace-scoped multi-t
 Requires Docker Compose. `just` is the task runner.
 
 ```bash
-just init               # First-time setup: copy .env, build containers, migrate, seed DB
+just init               # First-time setup: copy .env, build containers, migrate, seed DB. This will delete the existing DB if it exists!
 just start              # Start all containers with logs
 just start-detached     # Start in background
 just stop               # Stop containers
