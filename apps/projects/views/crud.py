@@ -18,6 +18,7 @@ from apps.issues.helpers import (
     annotate_epic_child_counts,
     build_grouped_epics_by_milestone,
     build_grouped_issues,
+    build_htmx_delete_response,
     get_epic_content_type_id,
 )
 from apps.issues.models import BaseIssue, Epic, IssuePriority, IssueStatus, Milestone
@@ -347,8 +348,18 @@ class ProjectDeleteView(
         )
 
     def form_valid(self, form):
+        # Django's CASCADE delete will handle all issues (epics, work items, subtasks)
+        # No need to manually delete subtasks first
+        deleted_url = self.object.get_absolute_url()
+        redirect_url = self.get_success_url()
+
+        self.object.delete()
         messages.success(self.request, _("Project deleted successfully."))
-        return super().form_valid(form)
+
+        if self.request.htmx:
+            return build_htmx_delete_response(self.request, deleted_url, redirect_url)
+
+        return redirect(redirect_url)
 
 
 class ProjectCloneView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, View):

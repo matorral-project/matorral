@@ -28,7 +28,7 @@
 {% endif %}
 <div class="modal-action">
   <button class="btn btn-ghost" @click="showDeleteModal = false">{% translate "Cancel" %}</button>
-  <form action="{% url 'projects:project_delete' workspace.slug project.key %}" method="post">
+  <form hx-post="{% url 'projects:project_delete' workspace.slug project.key %}" hx-swap="none">
     {% csrf_token %}
     <button class="btn btn-error" type="submit">{% translate "Delete Project" %}</button>
   </form>

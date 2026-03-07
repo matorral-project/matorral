@@ -1,3 +1,5 @@
+import json
+
 from django.conf import settings
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -384,6 +386,42 @@ class ProjectDeleteViewTest(ProjectViewTestCase):
         response = self.client.post(self._get_delete_url(project), follow=True)
 
         self.assertContains(response, "Project deleted successfully")
+
+    def test_delete_htmx_detail_page_returns_hx_location(self):
+        """HTMX delete from detail page returns HX-Location with target."""
+        project = ProjectFactory(workspace=self.workspace)
+        project_pk = project.pk
+        detail_url = self._get_detail_url(project)
+        list_url = self._get_list_url()
+
+        response = self.client.post(
+            self._get_delete_url(project),
+            HTTP_HX_REQUEST="true",
+            HTTP_HX_CURRENT_URL=f"http://testserver{detail_url}",
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.assertIn("HX-Location", response)
+        location_data = json.loads(response["HX-Location"])
+        self.assertEqual(location_data["path"], list_url)
+        self.assertEqual(location_data["target"], "#page-content")
+        self.assertFalse(Project.objects.filter(pk=project_pk).exists())
+
+    def test_delete_htmx_other_page_returns_hx_refresh(self):
+        """HTMX delete from other page returns HX-Refresh."""
+        project = ProjectFactory(workspace=self.workspace)
+        project_pk = project.pk
+
+        response = self.client.post(
+            self._get_delete_url(project),
+            HTTP_HX_REQUEST="true",
+            HTTP_HX_CURRENT_URL="http://testserver/w/workspace/projects/",
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(response["HX-Refresh"], "true")
+        self.assertNotIn("HX-Location", response)
+        self.assertFalse(Project.objects.filter(pk=project_pk).exists())
 
 
 class ProjectBulkDeleteViewTest(ProjectViewTestCase):

@@ -1,3 +1,5 @@
+import json
+
 from django.test import RequestFactory, TestCase
 
 from apps.issues.factories import BugFactory, EpicFactory, MilestoneFactory, StoryFactory
@@ -25,14 +27,18 @@ class BuildHtmxDeleteResponseTest(TestCase):
         return request
 
     def test_returns_redirect_when_on_deleted_object_page(self):
-        """Returns HX-Redirect when the current URL matches the deleted object URL."""
+        """Returns HX-Location when the current URL matches the deleted object URL."""
         deleted_url = "/w/my-workspace/p/PROJ/issues/STORY-1/"
         redirect_url = "/w/my-workspace/p/PROJ/"
         request = self._make_htmx_request(f"http://testserver{deleted_url}")
 
         response = build_htmx_delete_response(request, deleted_url, redirect_url)
 
-        self.assertEqual(response["HX-Redirect"], redirect_url)
+        # Check HX-Location header is set with proper JSON format
+        location_header = response["HX-Location"]
+        location_data = json.loads(location_header)
+        self.assertEqual(location_data["path"], redirect_url)
+        self.assertEqual(location_data["target"], "#page-content")
         self.assertNotIn("HX-Refresh", response)
 
     def test_returns_refresh_when_on_other_page(self):

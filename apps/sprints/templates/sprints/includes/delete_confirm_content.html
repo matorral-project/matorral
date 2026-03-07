@@ -18,7 +18,7 @@
 {% endif %}
 <div class="modal-action">
   <button class="btn btn-ghost" @click="showDeleteModal = false">{% translate "Cancel" %}</button>
-  <form action="{% url 'sprints:sprint_delete' workspace.slug sprint.key %}" method="post">
+  <form hx-post="{% url 'sprints:sprint_delete' workspace.slug sprint.key %}" hx-swap="none">
     {% csrf_token %}
     <button type="submit" class="btn btn-error">{% translate "Delete Sprint" %}</button>
   </form>

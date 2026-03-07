@@ -166,9 +166,31 @@ def get_template_names(self):
 # CBVs: override dispatch() in the mixin; FBVs: call after render()
 from django.utils.cache import patch_vary_headers
 patch_vary_headers(response, ("HX-Request",))
+
+# HTMX delete pattern: use build_htmx_delete_response() for detail page deletions
+# This returns HX-Location with target="#page-content" to swap only main content,
+# preserving sidebar and layout. Returns HX-Refresh for embedded list deletions.
+from apps.issues.helpers import build_htmx_delete_response
+def form_valid(self, form):
+    deleted_url = self.object.get_absolute_url()
+    redirect_url = self.get_success_url()
+    self.object.delete()
+    if self.request.htmx:
+        return build_htmx_delete_response(self.request, deleted_url, redirect_url)
+    return redirect(redirect_url)
 ```
 
-**Circular imports**: Use `django.apps.apps.get_model()`. Never put imports inside functions or methods — always at file top.
+**Import Placement**:
+- **ALWAYS place imports at the top of the file**
+- **NEVER place imports inside functions or methods**
+- This is mandatory and non-negotiable
+
+**Circular imports**: Use `django.apps.apps.get_model()`.
+
+**After making changes**:
+```bash
+just pre-commit    # Run pre-commit hooks on all files to catch issues
+```
 
 **Celery periodic tasks**: Scheduled tasks are defined in `SCHEDULED_TASKS` in `settings.py` and registered via a data migration (see `apps/sprints/migrations/0004_schedule_celery_tasks.py`). To add a new periodic task: add it to `SCHEDULED_TASKS`, then create a data migration in the relevant app using `apps.get_model("django_celery_beat", ...)` with `IntervalSchedule`/`CrontabSchedule` + `PeriodicTask.objects.update_or_create(...)`. Always include a reverse function that deletes the rows.
 

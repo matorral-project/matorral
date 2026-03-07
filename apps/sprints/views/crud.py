@@ -10,7 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from apps.issues.helpers import build_grouped_issues
+from apps.issues.helpers import build_grouped_issues, build_htmx_delete_response
 from apps.issues.models import BaseIssue, Bug, Chore, Story
 from apps.issues.views.mixins import IssueListContextMixin
 from apps.sprints.forms import SprintDetailInlineEditForm, SprintForm, SprintRowInlineEditForm
@@ -278,8 +278,16 @@ class SprintDeleteView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSi
         )
 
     def form_valid(self, form):
+        deleted_url = self.object.get_absolute_url()
+        redirect_url = self.get_success_url()
+
+        self.object.delete()
         messages.success(self.request, _("Sprint deleted successfully."))
-        return super().form_valid(form)
+
+        if self.request.htmx:
+            return build_htmx_delete_response(self.request, deleted_url, redirect_url)
+
+        return redirect(redirect_url)
 
 
 class SprintIssueListEmbedView(SprintViewMixin, IssueListContextMixin, LoginAndWorkspaceRequiredMixin, ListView):

@@ -1,4 +1,5 @@
 import datetime
+import json
 from collections import OrderedDict
 from functools import lru_cache
 
@@ -6,6 +7,7 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import IntegerField, OuterRef, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
+from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
 from apps.issues import models
@@ -13,7 +15,7 @@ from apps.sprints import models as sprints_models
 from apps.utils.filters import parse_status_filter
 from apps.utils.progress import build_progress_dict, calculate_progress
 
-from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
+from django_htmx.http import HttpResponseClientRefresh
 
 
 def _work_item_weight(model, statuses: list[str] | None = None) -> Coalesce:
@@ -419,15 +421,20 @@ def build_htmx_delete_response(request, deleted_object_url, redirect_url):
     Determines whether the user is on the deleted object's own page or on a
     parent/list page, and returns the right HTMX header:
 
-    - On the deleted object's detail page → HX-Redirect to ``redirect_url``
+    - On the deleted object's detail page → HX-Location to ``redirect_url``
       (e.g. the parent's detail page or the project page).
     - On any other page (embedded list, etc.) → HX-Refresh to reload in place.
 
     ``deleted_object_url`` is the path of the page that no longer exists (the
-    deleted object's ``get_absolute_url()``).
+    deleted object's ``get_absolute_url()``.
     """
+
     current_path = request.htmx.current_url_abs_path or ""
 
     if current_path and current_path == deleted_object_url:
-        return HttpResponseClientRedirect(redirect_url)
+        # Use HX-Location with target="#page-content" to swap only the main content
+        location_data = json.dumps({"path": redirect_url, "target": "#page-content"})
+        response = HttpResponse(status=200)
+        response["HX-Location"] = location_data
+        return response
     return HttpResponseClientRefresh()
