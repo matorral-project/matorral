@@ -18,6 +18,7 @@
         <div class="flex gap-4 justify-center">
           <a href="{% url 'account_signup' %}" class="btn btn-primary" hx-boost="true">{% translate "Sign Up" %}</a>
           <a href="{% url 'account_login' %}" class="btn btn-outline" hx-boost="true">{% translate "Sign In" %}</a>
+          <a href="https://github.com/matorral-project/matorral" target="_blank" rel="noopener" class="btn btn-outline">{% translate "Get it for Free" %}</a>
         </div>
       </div>
     </div>
@@ -155,7 +156,10 @@
   <section class="py-16 px-4 bg-base-200">
     <div class="max-w-2xl mx-auto text-center">
       <h2 class="text-3xl font-bold mb-4">{% translate "Ready to get started?" %}</h2>
-      <a href="{% url 'account_signup' %}" class="btn btn-primary btn-lg" hx-boost="true">{% translate "Sign Up for Free" %}</a>
+      <div class="flex gap-4 justify-center">
+        <a href="{% url 'account_signup' %}" class="btn btn-primary btn-lg" hx-boost="true">{% translate "Sign Up for Free" %}</a>
+        <a href="https://github.com/matorral-project/matorral" target="_blank" rel="noopener" class="btn btn-outline btn-lg">{% translate "View on GitHub" %}</a>
+      </div>
     </div>
   </section>
 </main>
