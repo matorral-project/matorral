@@ -49,16 +49,23 @@ An example demo instance is available at **[matorral.matagus.dev](https://matorr
 ```bash
 git clone https://github.com/matorral-project/matorral.git
 cd matorral
-cp .env.example .env   # review and set required variables (e.g. SECRET_KEY)
-just init
+just init               # First-time setup: copies .env, builds containers, runs migrations
 ```
 
 This starts the containers and runs migrations. Then:
 
 ```bash
-just start              # start with logs
-just start-detached     # start in background
-just logs               # tail logs (useful after start-bg)
+just start              # Start with logs (foreground)
+just start-detached     # Start in background
+just logs               # View all service logs
+just logs-django        # View Django logs only
+just logs-db            # View PostgreSQL logs only
+```
+
+Verify your environment is ready:
+
+```bash
+just doctor             # Check environment health (.env, containers, migrations)
 ```
 
 Open http://localhost:8000. Create an admin account:
@@ -70,7 +77,13 @@ just createsuperuser
 To stop:
 
 ```bash
-just stop
+just stop               # Stop all services
+```
+
+See all available commands:
+
+```bash
+just --list             # List all recipes with descriptions
 ```
 
 ## Configuration

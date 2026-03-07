@@ -26,23 +26,51 @@ Any change to `pyproject.toml` requires `just requirements` to rebuild container
 
 ## Common Commands
 
+### Environment
 ```bash
-# Django management
+just --list                         # List all recipes with descriptions
+just doctor                         # Verify environment is healthy (.env, containers, migrations)
+just check                          # Run all checks (tests, migrations, pre-commit) - CI-friendly
+just status                         # Show status of all containers
+```
+
+### Django Management
+```bash
 just migrate                        # Run migrations
 just make-migrations                # Create migrations
-just manage ARGS='<command>'        # Arbitrary manage.py command
+just check-migrations               # Check for uncreated migrations (CI-friendly)
+just manage <command>               # Run any Django manage.py command
 just shell                          # Django shell
 just dbshell                        # PostgreSQL shell
+just loaddata <fixture>             # Load fixture data
+just dumpdata <model>               # Dump data to fixture
+```
 
-# Testing
+### Testing & Quality
+```bash
 just test [module]                  # e.g., just test apps.issues.tests.test_views
-
-# Code Quality (MUST run before completing work)
+just test-cov [module]              # Run tests with coverage
+just cov                            # Run tests with coverage and generate reports
 just pre-commit                     # Run all pre-commit hooks on all files
+just lint                           # Run ruff linter
+just fmt                            # Run ruff formatter
+```
 
-# Frontend
+### Frontend
+```bash
 just npm-build                      # Build frontend assets in container
-npm run dev                         # Watch mode (via Vite dev server)
+just npm-type-check                 # Run TypeScript type checker
+npm run dev                         # Watch mode (via Vite dev server, outside Docker)
+```
+
+### Logs (Service-specific)
+```bash
+just logs                           # All services
+just logs-django                    # Django only
+just logs-db                        # PostgreSQL only
+just logs-celery                    # Celery worker
+just logs-redis                     # Redis
+just logs-vite                      # Vite dev server
 ```
 
 Outside Docker, use `uv run python manage.py test apps` (requires a running PostgreSQL instance).
