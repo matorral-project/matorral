@@ -21,11 +21,8 @@ from apps.issues.helpers import (
     annotate_epic_child_counts,
     build_grouped_issues,
     build_htmx_delete_response,
-    count_subtasks_for_issue_ids,
-    delete_subtasks_for_issue_ids,
 )
 from apps.issues.models import BaseIssue, Bug, BugSeverity, Epic, IssuePriority, IssueStatus, Milestone
-from apps.issues.utils import get_cached_content_type
 from apps.projects.models import Project
 from apps.sprints.models import Sprint, SprintStatus
 from apps.workspaces.limits import LimitExceededError, check_work_item_limit
@@ -488,10 +485,6 @@ class IssueDeleteView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, IssueSingl
             "title": self.object.title,
         }
         context["descendant_count"] = self.object.get_descendant_count()
-        # Collect all issue IDs (self + descendants) for subtask count
-        descendant_ids = list(self.object.get_descendants().values_list("pk", flat=True))
-        all_ids = [self.object.pk] + descendant_ids
-        context["subtask_count"] = count_subtasks_for_issue_ids(all_ids)
         return context
 
     def get_success_url(self):
@@ -520,10 +513,6 @@ class IssueDeleteView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, IssueSingl
         deleted_url = self.object.get_absolute_url()
         redirect_url = self._get_htmx_redirect_url()
 
-        # Delete subtasks before issue deletion (GenericFK won't cascade)
-        descendant_ids = list(self.object.get_descendants().values_list("pk", flat=True))
-        all_ids = [self.object.pk] + descendant_ids
-        delete_subtasks_for_issue_ids(all_ids)
         self.object.delete()
         messages.success(self.request, _("%(type)s deleted successfully.") % {"type": issue_type})
 
@@ -723,8 +712,7 @@ class IssuePromoteToEpicView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
         form = IssuePromoteToEpicForm(initial=initial, project=self.project)
 
         # Get subtask count for display
-        content_type = get_cached_content_type(type(real_issue))
-        subtask_count = Subtask.objects.filter(content_type=content_type, object_id=real_issue.pk).count()
+        subtask_count = real_issue.get_children().instance_of(Subtask).count()
 
         source = request.GET.get("source", "")
         context = {
@@ -795,8 +783,7 @@ class IssuePromoteToEpicView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
         # Form validation failed - re-render modal content
         from apps.issues.models import Subtask
 
-        content_type = get_cached_content_type(type(real_issue))
-        subtask_count = Subtask.objects.filter(content_type=content_type, object_id=real_issue.pk).count()
+        subtask_count = real_issue.get_children().instance_of(Subtask).count()
 
         context = {
             "issue": real_issue,

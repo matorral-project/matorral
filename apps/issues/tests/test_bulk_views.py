@@ -73,10 +73,7 @@ class TestBulkDeletePreviewCascadeCounts(BulkActionTestBase):
 
         self.assertEqual(200, response.status_code)
         self.assertEqual(1, response.context["selected_count"])
-        # Story is the sole descendant of the epic
-        self.assertEqual(1, response.context["descendant_count"])
-        # Both subtasks belong to the story (a descendant of the selected epic)
-        self.assertEqual(2, response.context["subtask_count"])
+        self.assertEqual(3, response.context["descendant_count"])
 
 
 class TestBulkStatusInvalidValue(BulkActionTestBase):

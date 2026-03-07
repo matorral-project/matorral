@@ -12,8 +12,6 @@ from apps.issues.helpers import (
     build_grouped_epics_by_milestone,
     build_grouped_issues,
     calculate_valid_page,
-    count_subtasks_for_issue_ids,
-    delete_subtasks_for_issue_ids,
 )
 from apps.issues.models import BaseIssue, Bug, Chore, Epic, IssuePriority, IssueStatus, Milestone, Story
 from apps.projects.models import Project
@@ -360,13 +358,7 @@ class WorkspaceIssueBulkDeleteView(WorkspaceBulkActionMixin, LoginAndWorkspaceRe
     def perform_action(self):
         selected_queryset = self.get_selected_queryset()
         selected_count = selected_queryset.count()
-        # Collect all issue IDs (selected + descendants) for subtask cleanup
-        selected_ids = list(selected_queryset.values_list("pk", flat=True))
-        descendant_ids = []
-        for issue in selected_queryset:
-            descendant_ids.extend(issue.get_descendants().values_list("pk", flat=True))
-        all_ids = selected_ids + descendant_ids
-        delete_subtasks_for_issue_ids(all_ids)
+        # Treebeard delete cascades to subtask tree children automatically
         selected_queryset.delete()
         messages.success(
             self.request,
@@ -615,7 +607,6 @@ class WorkspaceIssueBulkDeletePreviewView(WorkspaceBulkActionMixin, LoginAndWork
                 {
                     "selected_count": 0,
                     "descendant_count": 0,
-                    "subtask_count": 0,
                 },
             )
 
@@ -624,13 +615,11 @@ class WorkspaceIssueBulkDeletePreviewView(WorkspaceBulkActionMixin, LoginAndWork
         selected_count = len(selected_keys)
 
         # Compute cascade counts
-        selected_ids = list(selected_queryset.values_list("pk", flat=True))
+        list(selected_queryset.values_list("pk", flat=True))
         descendant_ids = []
         for issue in selected_queryset:
             descendant_ids.extend(issue.get_descendants().values_list("pk", flat=True))
         descendant_count = len(descendant_ids)
-        all_ids = selected_ids + descendant_ids
-        subtask_count = count_subtasks_for_issue_ids(all_ids)
 
         # Determine context: embed type, checkbox name, hx-target, hx-indicator
         embed_value = request.POST.get("embed", "")
@@ -680,7 +669,6 @@ class WorkspaceIssueBulkDeletePreviewView(WorkspaceBulkActionMixin, LoginAndWork
             {
                 "selected_count": selected_count,
                 "descendant_count": descendant_count,
-                "subtask_count": subtask_count,
                 "selected_keys": selected_keys,
                 "checkbox_name": checkbox_name,
                 "delete_url": delete_url,

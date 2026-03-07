@@ -3,24 +3,21 @@ Cascade status change service.
 
 Detects and applies cascading status changes when items in the project
 hierarchy change status. Supports cascading DOWN (to children) and UP
-(to parent) with cross-type status mapping (ProjectStatus <-> IssueStatus <-> SubtaskStatus).
+(to parent) with cross-type status mapping (ProjectStatus <-> IssueStatus).
 """
 
 from dataclasses import dataclass, field
 
-from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 
-from apps.issues.models import BaseIssue, Epic, IssueStatus, Milestone, Subtask, SubtaskStatus
-from apps.issues.utils import get_cached_content_type
+from apps.issues.models import BaseIssue, Epic, IssueStatus, Milestone, Subtask
 from apps.projects.models import Project, ProjectStatus
 from apps.utils.audit import bulk_create_audit_logs
 
 # Completed status sets per type
 COMPLETED_ISSUE_STATUSES = {IssueStatus.DONE, IssueStatus.WONT_DO, IssueStatus.ARCHIVED}
 COMPLETED_PROJECT_STATUSES = {ProjectStatus.COMPLETED, ProjectStatus.ARCHIVED}
-COMPLETED_SUBTASK_STATUSES = {SubtaskStatus.DONE, SubtaskStatus.WONT_DO}
 
 
 # ============================================================================
@@ -34,20 +31,6 @@ _ISSUE_CASCADE_DOWN_ELIGIBLE = {
     IssueStatus.WONT_DO: lambda s: s not in COMPLETED_ISSUE_STATUSES,
     IssueStatus.PLANNING: lambda s: s == IssueStatus.DRAFT,
     IssueStatus.READY: lambda s: s in {IssueStatus.DRAFT, IssueStatus.PLANNING},
-}
-
-# For SubtaskStatus children when parent moves to an IssueStatus
-_SUBTASK_CASCADE_DOWN_ELIGIBLE = {
-    IssueStatus.DONE: lambda s: s not in COMPLETED_SUBTASK_STATUSES,
-    IssueStatus.ARCHIVED: lambda s: s not in COMPLETED_SUBTASK_STATUSES,
-    IssueStatus.WONT_DO: lambda s: s not in COMPLETED_SUBTASK_STATUSES,
-}
-
-# Maps an IssueStatus to the target SubtaskStatus for cascade down
-_ISSUE_TO_SUBTASK_TARGET = {
-    IssueStatus.DONE: SubtaskStatus.DONE,
-    IssueStatus.ARCHIVED: SubtaskStatus.DONE,  # No ARCHIVED in SubtaskStatus
-    IssueStatus.WONT_DO: SubtaskStatus.WONT_DO,
 }
 
 # For ProjectStatus -> IssueStatus cascade down
@@ -74,7 +57,7 @@ class CascadeDownGroup:
     items: list = field(default_factory=list)  # list of model instances
     target_status: str = ""
     target_status_display: str = ""
-    model_type: str = ""  # "issue", "milestone", "subtask"
+    model_type: str = ""  # "issue", "milestone"
 
 
 @dataclass
@@ -139,26 +122,11 @@ class CascadeInfo:
 # ============================================================================
 
 
-def _get_subtask_content_type_ids():
-    """Get ContentType IDs for work item types that can have subtasks."""
-    from apps.issues.models import Bug, Chore, Story
-
-    return [get_cached_content_type(m).id for m in [Story, Bug, Chore]]
-
-
-def _get_subtasks_for_issue_ids(issue_ids):
-    """Get all subtasks for the given issue PKs."""
-    if not issue_ids:
-        return []
-    ct_ids = _get_subtask_content_type_ids()
-    return list(Subtask.objects.filter(content_type_id__in=ct_ids, object_id__in=issue_ids))
-
-
 def get_children_for_cascade(obj):
     """Return children for cascade DOWN, as (queryset_or_list, model_type).
 
     Returns:
-        tuple: (children, model_type) where model_type is 'issue', 'milestone', or 'subtask'
+        tuple: (children, model_type) where model_type is 'issue', 'milestone', or 'none'
     """
     if isinstance(obj, Project):
         # Project children = milestones + orphan epics (epics without milestone)
@@ -176,14 +144,14 @@ def get_children_for_cascade(obj):
         children = list(obj.get_children())
         return children, "issue"
 
-    if isinstance(obj, BaseIssue):
-        # Work item children = subtasks via GenericFK
-        content_type = get_cached_content_type(type(obj))
-        subtasks = list(Subtask.objects.filter(content_type=content_type, object_id=obj.pk))
-        return subtasks, "subtask"
-
     if isinstance(obj, Subtask):
+        # Subtasks are leaves in the hierarchy
         return [], "none"
+
+    if isinstance(obj, BaseIssue):
+        # Work item children = subtasks via treebeard
+        children = list(obj.get_children().instance_of(Subtask))
+        return children, "issue"
 
     return [], "none"
 
@@ -199,15 +167,6 @@ def get_parent_and_siblings(obj):
     Returns:
         tuple: (parent_instance, siblings_queryset_or_list)
     """
-    if isinstance(obj, Subtask):
-        # parent = the work item (GenericFK)
-        parent = obj.parent
-        if parent is None:
-            return None, []
-        # siblings = other subtasks of same parent
-        siblings = Subtask.objects.filter(content_type=obj.content_type, object_id=obj.object_id).exclude(pk=obj.pk)
-        return parent, siblings
-
     if isinstance(obj, BaseIssue):
         real_obj = obj.get_real_instance() if hasattr(obj, "get_real_instance") else obj
 
@@ -227,7 +186,7 @@ def get_parent_and_siblings(obj):
                 milestones = list(Milestone.objects.for_project(project))
                 return project, other_orphan_epics + milestones
         else:
-            # Work item -> parent is epic (treebeard get_parent)
+            # Work item or Subtask -> parent is epic or work item (treebeard get_parent)
             tree_parent = real_obj.get_parent()
             if tree_parent is None:
                 return None, []
@@ -264,13 +223,13 @@ def map_status_for_cascade_up(trigger_status, parent):
 
     if isinstance(parent, (Milestone, BaseIssue)):
         # Child -> IssueStatus parent
-        if trigger_status in (SubtaskStatus.DONE, IssueStatus.DONE):
+        if trigger_status == IssueStatus.DONE:
             return IssueStatus.DONE
-        if trigger_status in (SubtaskStatus.WONT_DO, IssueStatus.WONT_DO):
+        if trigger_status == IssueStatus.WONT_DO:
             return IssueStatus.WONT_DO
         if trigger_status == IssueStatus.ARCHIVED:
             return IssueStatus.ARCHIVED
-        if trigger_status in (SubtaskStatus.IN_PROGRESS, IssueStatus.IN_PROGRESS):
+        if trigger_status == IssueStatus.IN_PROGRESS:
             return IssueStatus.IN_PROGRESS
         return None
 
@@ -281,9 +240,7 @@ def _is_completed_status(status, obj):
     """Check if a status is a 'completed' status for the given object type."""
     if isinstance(obj, Project):
         return status in COMPLETED_PROJECT_STATUSES
-    if isinstance(obj, Subtask):
-        return status in COMPLETED_SUBTASK_STATUSES
-    # Milestone or BaseIssue
+    # Milestone, BaseIssue, or Subtask (which is now a BaseIssue)
     return status in COMPLETED_ISSUE_STATUSES
 
 
@@ -296,7 +253,7 @@ def check_cascade_opportunities(obj, new_status):
     """Check for cascade opportunities after a status change.
 
     Args:
-        obj: The object whose status changed (Project, Milestone, BaseIssue, or Subtask)
+        obj: The object whose status changed (Project, Milestone, or BaseIssue)
         new_status: The new status value
 
     Returns:
@@ -324,7 +281,7 @@ def _check_cascade_down(obj, new_status):
     if isinstance(obj, Epic):
         return _check_epic_cascade_down(obj, new_status)
 
-    if isinstance(obj, BaseIssue) and not isinstance(obj, Subtask):
+    if isinstance(obj, BaseIssue):
         return _check_work_item_cascade_down(obj, new_status)
 
     return None
@@ -341,7 +298,6 @@ def _check_project_cascade_down(project, new_status):
         return None
 
     issue_choices = dict(IssueStatus.choices)
-    subtask_choices = dict(SubtaskStatus.choices)
     groups = []
 
     # 1. Milestones
@@ -357,7 +313,7 @@ def _check_project_cascade_down(project, new_status):
             )
         )
 
-    # 2. All issues in the project
+    # 2. All issues in the project (includes Subtasks as tree nodes)
     all_issues = list(BaseIssue.objects.for_project(project).select_related("polymorphic_ctype"))
     eligible_issues = [i for i in all_issues if eligible_pred(i.status)]
     if eligible_issues:
@@ -369,23 +325,6 @@ def _check_project_cascade_down(project, new_status):
                 model_type="issue",
             )
         )
-
-    # 3. Subtasks of all eligible issues
-    eligible_issue_pks = [i.pk for i in eligible_issues]
-    subtask_target = _ISSUE_TO_SUBTASK_TARGET.get(issue_target)
-    subtask_pred = _SUBTASK_CASCADE_DOWN_ELIGIBLE.get(issue_target)
-    if subtask_target and subtask_pred and eligible_issue_pks:
-        all_subtasks = _get_subtasks_for_issue_ids(eligible_issue_pks)
-        eligible_subtasks = [s for s in all_subtasks if subtask_pred(s.status)]
-        if eligible_subtasks:
-            groups.append(
-                CascadeDownGroup(
-                    items=eligible_subtasks,
-                    target_status=subtask_target,
-                    target_status_display=str(subtask_choices.get(subtask_target, subtask_target)),
-                    model_type="subtask",
-                )
-            )
 
     if not groups:
         return None
@@ -400,10 +339,9 @@ def _check_milestone_cascade_down(milestone, new_status):
         return None
 
     issue_choices = dict(IssueStatus.choices)
-    subtask_choices = dict(SubtaskStatus.choices)
     groups = []
 
-    # 1. Collect all issues: epics + their descendants
+    # Collect all issues: epics + their descendants (includes Subtasks as tree nodes)
     all_issues = []
     for epic in milestone.epics.all():
         all_issues.append(epic)
@@ -420,23 +358,6 @@ def _check_milestone_cascade_down(milestone, new_status):
             )
         )
 
-    # 2. Subtasks of eligible issues (content type filtering handles epic exclusion)
-    eligible_issue_pks = [i.pk for i in eligible_issues]
-    subtask_target = _ISSUE_TO_SUBTASK_TARGET.get(new_status)
-    subtask_pred = _SUBTASK_CASCADE_DOWN_ELIGIBLE.get(new_status)
-    if subtask_target and subtask_pred and eligible_issue_pks:
-        all_subtasks = _get_subtasks_for_issue_ids(eligible_issue_pks)
-        eligible_subtasks = [s for s in all_subtasks if subtask_pred(s.status)]
-        if eligible_subtasks:
-            groups.append(
-                CascadeDownGroup(
-                    items=eligible_subtasks,
-                    target_status=subtask_target,
-                    target_status_display=str(subtask_choices.get(subtask_target, subtask_target)),
-                    model_type="subtask",
-                )
-            )
-
     if not groups:
         return None
 
@@ -450,10 +371,9 @@ def _check_epic_cascade_down(epic, new_status):
         return None
 
     issue_choices = dict(IssueStatus.choices)
-    subtask_choices = dict(SubtaskStatus.choices)
     groups = []
 
-    # 1. All descendants via treebeard
+    # All descendants via treebeard (includes Subtasks as tree nodes)
     descendants = list(epic.get_descendants())
     eligible_issues = [i for i in descendants if issue_pred(i.status)]
     if eligible_issues:
@@ -466,23 +386,6 @@ def _check_epic_cascade_down(epic, new_status):
             )
         )
 
-    # 2. Subtasks of eligible work items
-    eligible_work_item_pks = [i.pk for i in eligible_issues]
-    subtask_target = _ISSUE_TO_SUBTASK_TARGET.get(new_status)
-    subtask_pred = _SUBTASK_CASCADE_DOWN_ELIGIBLE.get(new_status)
-    if subtask_target and subtask_pred and eligible_work_item_pks:
-        all_subtasks = _get_subtasks_for_issue_ids(eligible_work_item_pks)
-        eligible_subtasks = [s for s in all_subtasks if subtask_pred(s.status)]
-        if eligible_subtasks:
-            groups.append(
-                CascadeDownGroup(
-                    items=eligible_subtasks,
-                    target_status=subtask_target,
-                    target_status_display=str(subtask_choices.get(subtask_target, subtask_target)),
-                    model_type="subtask",
-                )
-            )
-
     if not groups:
         return None
 
@@ -490,32 +393,31 @@ def _check_epic_cascade_down(epic, new_status):
 
 
 def _check_work_item_cascade_down(obj, new_status):
-    """Check cascade DOWN from work item to subtasks only."""
-    content_type = ContentType.objects.get_for_model(type(obj))
-    subtasks = list(Subtask.objects.filter(content_type=content_type, object_id=obj.pk))
+    """Check cascade DOWN from work item to its subtask children."""
+    # Subtasks are leaves — no children to cascade to
+    if isinstance(obj, Subtask):
+        return None
+
+    subtasks = list(obj.get_children().instance_of(Subtask))
     if not subtasks:
         return None
 
-    subtask_pred = _SUBTASK_CASCADE_DOWN_ELIGIBLE.get(new_status)
-    if subtask_pred is None:
+    issue_pred = _ISSUE_CASCADE_DOWN_ELIGIBLE.get(new_status)
+    if issue_pred is None:
         return None
 
-    subtask_target = _ISSUE_TO_SUBTASK_TARGET.get(new_status)
-    if subtask_target is None:
-        return None
-
-    eligible = [s for s in subtasks if subtask_pred(s.status)]
+    eligible = [s for s in subtasks if issue_pred(s.status)]
     if not eligible:
         return None
 
-    subtask_choices = dict(SubtaskStatus.choices)
+    issue_choices = dict(IssueStatus.choices)
     return CascadeDownInfo(
         groups=[
             CascadeDownGroup(
                 items=eligible,
-                target_status=subtask_target,
-                target_status_display=str(subtask_choices.get(subtask_target, subtask_target)),
-                model_type="subtask",
+                target_status=new_status,
+                target_status_display=str(issue_choices.get(new_status, new_status)),
+                model_type="issue",
             )
         ]
     )
@@ -527,16 +429,11 @@ def _check_cascade_up(obj, new_status):
     For completed statuses: triggered when ALL siblings are also completed.
     For IN_PROGRESS: triggered immediately (bubbles up without checking siblings).
     """
-    in_progress_trigger = (isinstance(obj, Subtask) and new_status == SubtaskStatus.IN_PROGRESS) or (
-        isinstance(obj, (BaseIssue, Milestone)) and new_status == IssueStatus.IN_PROGRESS
-    )
+    in_progress_trigger = isinstance(obj, (BaseIssue, Milestone)) and new_status == IssueStatus.IN_PROGRESS
 
     if not in_progress_trigger:
         # Completed-status cascade up: check eligibility
-        if isinstance(obj, Subtask):
-            if new_status not in COMPLETED_SUBTASK_STATUSES:
-                return None
-        elif isinstance(obj, (BaseIssue, Milestone)):
+        if isinstance(obj, (BaseIssue, Milestone)):
             if new_status not in COMPLETED_ISSUE_STATUSES:
                 return None
         else:
@@ -608,7 +505,7 @@ def apply_cascade(
     Args:
         cascade_down_pks: list of PKs to update for cascade DOWN
         cascade_down_status: target status for cascade DOWN
-        cascade_down_model_type: 'issue', 'milestone', 'subtask', or 'project'
+        cascade_down_model_type: 'issue', 'milestone', or 'project'
         cascade_up_pk: PK of parent to update for cascade UP (or None)
         cascade_up_status: target status for cascade UP
         cascade_up_model_type: 'project', 'milestone', or 'issue'
@@ -627,14 +524,7 @@ def _apply_cascade_down(pks, target_status, model_type, actor):
     """Apply cascade DOWN: update children statuses."""
     status_choices = dict(IssueStatus.choices)
 
-    if model_type == "subtask":
-        status_choices = dict(SubtaskStatus.choices)
-        objects = list(Subtask.objects.filter(pk__in=pks))
-        old_values = {obj.pk: status_choices.get(obj.status, obj.status) for obj in objects}
-        new_display = status_choices.get(target_status, target_status)
-        Subtask.objects.filter(pk__in=pks).update(status=target_status)
-        bulk_create_audit_logs(objects, "status", old_values, new_display, actor=actor)
-    elif model_type == "milestone":
+    if model_type == "milestone":
         objects = list(Milestone.objects.filter(pk__in=pks))
         old_values = {obj.pk: status_choices.get(obj.status, obj.status) for obj in objects}
         new_display = status_choices.get(target_status, target_status)

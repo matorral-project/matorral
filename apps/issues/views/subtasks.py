@@ -5,8 +5,7 @@ from django.views import View
 
 from apps.issues.cascade import build_cascade_oob_response
 from apps.issues.forms import SubtaskForm, SubtaskInlineEditForm
-from apps.issues.models import Subtask, SubtaskStatus
-from apps.issues.utils import get_cached_content_type
+from apps.issues.models import IssueStatus, Subtask
 from apps.issues.views.comments import IssueCommentsViewMixin
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
@@ -19,7 +18,7 @@ class SubtaskViewMixin(IssueCommentsViewMixin):
 
     def get_subtasks(self):
         """Get all subtasks for the current issue."""
-        return Subtask.objects.for_parent(self.issue)
+        return self.issue.get_children().instance_of(Subtask)
 
     def get_subtask_count(self):
         """Get the count of subtasks for the current issue."""
@@ -41,7 +40,7 @@ class SubtaskViewMixin(IssueCommentsViewMixin):
             "subtask_count": subtask_count,
             "can_add_subtask": subtask_count < MAX_SUBTASKS_PER_PARENT,
             "max_subtasks": MAX_SUBTASKS_PER_PARENT,
-            "status_choices": SubtaskStatus.choices,
+            "status_choices": IssueStatus.choices,
         }
 
 
@@ -65,14 +64,9 @@ class SubtaskCreateView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, View):
         form = SubtaskForm(request.POST)
         if form.is_valid():
             subtask = form.save(commit=False)
-            content_type = get_cached_content_type(type(self.issue))
-            subtask.content_type = content_type
-            subtask.object_id = self.issue.pk
-
-            # Set position to be at the end
-            existing_count = self.get_subtask_count()
-            subtask.position = existing_count
-            subtask.save()
+            subtask.project = self.issue.project
+            subtask.key = subtask._generate_unique_key()
+            self.issue.add_child(instance=subtask)
 
         context = self.get_subtasks_context()
         return render(request, "issues/includes/subtasks_list.html", context)
@@ -84,7 +78,7 @@ class SubtaskInlineEditView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, Vi
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
         self.subtask = get_object_or_404(
-            Subtask.objects.for_parent(self.issue),
+            self.issue.get_children().instance_of(Subtask),
             pk=kwargs["subtask_pk"],
         )
 
@@ -96,7 +90,7 @@ class SubtaskInlineEditView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, Vi
                 "project": self.project,
                 "issue": self.issue,
                 "subtask": self.subtask,
-                "status_choices": SubtaskStatus.choices,
+                "status_choices": IssueStatus.choices,
             }
             return render(request, "issues/includes/subtask_row.html", context)
 
@@ -106,7 +100,7 @@ class SubtaskInlineEditView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, Vi
             "project": self.project,
             "issue": self.issue,
             "subtask": self.subtask,
-            "status_choices": SubtaskStatus.choices,
+            "status_choices": IssueStatus.choices,
         }
         return render(request, "issues/includes/subtask_row_edit.html", context)
 
@@ -123,7 +117,7 @@ class SubtaskInlineEditView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, Vi
                 "project": self.project,
                 "issue": self.issue,
                 "subtask": self.subtask,
-                "status_choices": SubtaskStatus.choices,
+                "status_choices": IssueStatus.choices,
             }
             response = render(request, "issues/includes/subtask_row.html", context)
 
@@ -139,7 +133,7 @@ class SubtaskInlineEditView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, Vi
             "project": self.project,
             "issue": self.issue,
             "subtask": self.subtask,
-            "status_choices": SubtaskStatus.choices,
+            "status_choices": IssueStatus.choices,
         }
         return render(request, "issues/includes/subtask_row.html", context)
 
@@ -150,7 +144,7 @@ class SubtaskDeleteView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, View):
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
         self.subtask = get_object_or_404(
-            Subtask.objects.for_parent(self.issue),
+            self.issue.get_children().instance_of(Subtask),
             pk=kwargs["subtask_pk"],
         )
 
@@ -162,26 +156,26 @@ class SubtaskDeleteView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, View):
 
 
 class SubtaskStatusToggleView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, View):
-    """POST to cycle subtask status: TODO -> IN_PROGRESS -> DONE -> TODO."""
+    """POST to cycle subtask status: DRAFT -> IN_PROGRESS -> DONE -> DRAFT."""
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
         self.subtask = get_object_or_404(
-            Subtask.objects.for_parent(self.issue),
+            self.issue.get_children().instance_of(Subtask),
             pk=kwargs["subtask_pk"],
         )
 
     def post(self, request, *args, **kwargs):
-        # Cycle through statuses: TODO -> IN_PROGRESS -> DONE -> TODO
-        if self.subtask.status == SubtaskStatus.TODO:
-            self.subtask.status = SubtaskStatus.IN_PROGRESS
-        elif self.subtask.status == SubtaskStatus.IN_PROGRESS:
-            self.subtask.status = SubtaskStatus.DONE
-        elif self.subtask.status == SubtaskStatus.DONE:
-            self.subtask.status = SubtaskStatus.TODO
+        # Cycle through statuses: DRAFT -> IN_PROGRESS -> DONE -> DRAFT
+        if self.subtask.status == IssueStatus.DRAFT:
+            self.subtask.status = IssueStatus.IN_PROGRESS
+        elif self.subtask.status == IssueStatus.IN_PROGRESS:
+            self.subtask.status = IssueStatus.DONE
+        elif self.subtask.status == IssueStatus.DONE:
+            self.subtask.status = IssueStatus.DRAFT
         else:
-            # WONT_DO -> TODO
-            self.subtask.status = SubtaskStatus.TODO
+            # WONT_DO, ARCHIVED, etc. -> DRAFT
+            self.subtask.status = IssueStatus.DRAFT
         self.subtask.save()
 
         context = {
@@ -189,6 +183,6 @@ class SubtaskStatusToggleView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, 
             "project": self.project,
             "issue": self.issue,
             "subtask": self.subtask,
-            "status_choices": SubtaskStatus.choices,
+            "status_choices": IssueStatus.choices,
         }
         return render(request, "issues/includes/subtask_row.html", context)

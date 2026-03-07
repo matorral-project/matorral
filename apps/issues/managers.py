@@ -4,8 +4,6 @@ from django.db import models
 from django.db.models import Case, Func, IntegerField, QuerySet, Value, When
 from django.utils import timezone
 
-from apps.issues.utils import get_cached_content_type
-
 from polymorphic.managers import PolymorphicManager
 from polymorphic.query import PolymorphicQuerySet
 from treebeard.mp_tree import MP_NodeQuerySet
@@ -90,6 +88,12 @@ class IssueQuerySet(MP_NodeQuerySet, PolymorphicQuerySet):
         from apps.issues.models import Bug, Chore, Story
 
         return self.instance_of(Story, Bug, Chore)
+
+    def subtasks(self) -> IssueQuerySet:
+        """Filter to subtasks only."""
+        from apps.issues.models import Subtask
+
+        return self.instance_of(Subtask)
 
     def roots(self) -> IssueQuerySet:
         """Filter to root-level issues (no parent)."""
@@ -269,22 +273,3 @@ class MilestoneManager(models.Manager):
 
     def for_workspace(self, workspace: Workspace) -> MilestoneQuerySet:
         return self.get_queryset().for_workspace(workspace)
-
-
-class SubtaskQuerySet(QuerySet):
-    """Custom QuerySet for Subtask model."""
-
-    def for_parent(self, parent: BaseIssue) -> SubtaskQuerySet:
-        """Filter subtasks for a specific parent issue."""
-        content_type = get_cached_content_type(type(parent))
-        return self.filter(content_type=content_type, object_id=parent.pk)
-
-
-class SubtaskManager(models.Manager):
-    """Custom Manager for Subtask model."""
-
-    def get_queryset(self) -> SubtaskQuerySet:
-        return SubtaskQuerySet(self.model, using=self._db)
-
-    def for_parent(self, parent: BaseIssue) -> SubtaskQuerySet:
-        return self.get_queryset().for_parent(parent)

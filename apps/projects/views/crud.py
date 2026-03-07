@@ -19,8 +19,6 @@ from apps.issues.helpers import (
     build_grouped_epics_by_milestone,
     build_grouped_issues,
     calculate_progress,
-    count_subtasks_for_issue_ids,
-    delete_subtasks_for_issue_ids,
     get_epic_content_type_id,
 )
 from apps.issues.models import BaseIssue, Epic, IssuePriority, IssueStatus, Milestone
@@ -346,7 +344,6 @@ class ProjectDeleteView(
             .values_list("pk", flat=True)
         )
         context["work_item_count"] = len(work_item_ids)
-        context["subtask_count"] = count_subtasks_for_issue_ids(work_item_ids)
         return context
 
     def get_success_url(self):
@@ -356,13 +353,6 @@ class ProjectDeleteView(
         )
 
     def form_valid(self, form):
-        # Delete subtasks before project deletion (GenericFK won't cascade)
-        work_item_ids = list(
-            BaseIssue.objects.for_project(self.object)
-            .exclude(polymorphic_ctype_id=get_epic_content_type_id())
-            .values_list("pk", flat=True)
-        )
-        delete_subtasks_for_issue_ids(work_item_ids)
         messages.success(self.request, _("Project deleted successfully."))
         return super().form_valid(form)
 

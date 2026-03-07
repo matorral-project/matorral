@@ -9,9 +9,7 @@ from apps.issues.models import (
     Milestone,
     Story,
     Subtask,
-    SubtaskStatus,
 )
-from apps.issues.utils import get_cached_content_type
 from apps.projects.factories import ProjectFactory
 
 import factory
@@ -132,19 +130,17 @@ class SubtaskFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Subtask
 
+    project = factory.SubFactory(ProjectFactory)
     title = factory.Sequence(lambda n: f"Subtask {n}")
-    status = SubtaskStatus.TODO
-    position = factory.Sequence(lambda n: n)
+    status = IssueStatus.DRAFT
+    priority = IssuePriority.MEDIUM
 
-    # The parent must be provided and will set content_type and object_id
     @classmethod
     def _create(cls, model_class, *args, parent=None, **kwargs):
-        """Override to set GenericForeignKey fields from parent."""
+        """Override to use treebeard's add_child method. Requires a parent."""
         if parent is None:
             raise ValueError("SubtaskFactory requires a 'parent' argument (a work item instance)")
-
-        content_type = get_cached_content_type(type(parent))
-        kwargs["content_type"] = content_type
-        kwargs["object_id"] = parent.pk
-
-        return super()._create(model_class, *args, **kwargs)
+        kwargs["project"] = parent.project
+        obj = model_class(**kwargs)
+        obj.key = obj._generate_unique_key()
+        return parent.add_child(instance=obj)

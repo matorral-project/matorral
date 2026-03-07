@@ -3,7 +3,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from apps.issues.factories import BugFactory, EpicFactory, StoryFactory, SubtaskFactory
-from apps.issues.models import Bug, BugSeverity, Chore, Story, Subtask
+from apps.issues.models import Bug, BugSeverity, Chore, Story
 from apps.issues.services import IssueConversionError, convert_issue_type
 from apps.projects.factories import ProjectFactory
 from apps.users.factories import UserFactory
@@ -122,16 +122,21 @@ class ConvertIssueTypeServiceTest(TestCase):
     def test_convert_preserves_subtasks(self):
         """Converting preserves subtasks with updated ContentType."""
         story = StoryFactory(project=self.project)
-        subtask = SubtaskFactory(parent=story, title="My Subtask")
-        original_subtask_pk = subtask.pk
+        subtask_list = SubtaskFactory.create_batch(3, parent=story)
+        # get the pk, title, status of the subtasks to check later if they remain the same
+        subtask_data = [
+            {"pk": subtask.pk, "title": subtask.title, "status": subtask.status} for subtask in subtask_list
+        ]
 
-        converted = convert_issue_type(story, "bug")
+        converted_bug = convert_issue_type(story, "bug")
 
-        # Fetch updated subtask
-        updated_subtask = Subtask.objects.get(pk=original_subtask_pk)
-        self.assertEqual("My Subtask", updated_subtask.title)
-        self.assertEqual(ContentType.objects.get_for_model(Bug), updated_subtask.content_type)
-        self.assertEqual(converted.pk, updated_subtask.object_id)
+        # Fetch bug subtasks for the story converted to bug
+        new_subtasks_qs = converted_bug.get_children()
+        self.assertEqual(3, new_subtasks_qs.count())
+        self.assertListEqual(subtask_data, list(new_subtasks_qs.values("pk", "title", "status")))
+
+        # Verify the conversion
+        self.assertIsInstance(converted_bug, Bug)
 
     def test_convert_preserves_comments(self):
         """Converting preserves comments with updated ContentType."""

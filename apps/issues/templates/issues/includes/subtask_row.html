@@ -28,8 +28,8 @@
   </span>
 
   {# Status badge #}
-  {% if subtask.status == "todo" %}
-  <span class="badge badge-ghost badge-sm">{% translate "To Do" %}</span>
+  {% if subtask.status == "draft" %}
+  <span class="badge badge-ghost badge-sm">{% translate "Draft" %}</span>
   {% elif subtask.status == "in_progress" %}
   <span class="badge badge-warning badge-sm">{% translate "In Progress" %}</span>
   {% elif subtask.status == "done" %}

@@ -13,7 +13,6 @@ from apps.issues.models import (
     Milestone,
     Story,
     Subtask,
-    SubtaskStatus,
 )
 from apps.issues.widgets import UserComboboxWidget
 from apps.projects.models import Project
@@ -582,7 +581,7 @@ class SubtaskInlineEditForm(forms.Form):
         error_messages={"required": _("Title is required.")},
     )
     status = forms.ChoiceField(
-        choices=SubtaskStatus.choices,
+        choices=IssueStatus.choices,
         required=True,
     )
 

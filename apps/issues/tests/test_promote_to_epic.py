@@ -3,7 +3,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from apps.issues.factories import BugFactory, ChoreFactory, EpicFactory, MilestoneFactory, StoryFactory, SubtaskFactory
-from apps.issues.models import Epic, IssueStatus, Story, Subtask, SubtaskStatus
+from apps.issues.models import Epic, IssueStatus, Story, Subtask
 from apps.issues.services import PromotionError, promote_to_epic
 from apps.projects.factories import ProjectFactory
 from apps.sprints.factories import SprintFactory
@@ -199,9 +199,9 @@ class PromoteToEpicServiceTest(TestCase):
     def test_promote_converts_subtasks_to_stories(self):
         """Promoting converts subtasks to Stories as children of the new Epic."""
         story = StoryFactory(project=self.project, priority="high")
-        SubtaskFactory(parent=story, title="Subtask 1", status=SubtaskStatus.TODO)
-        SubtaskFactory(parent=story, title="Subtask 2", status=SubtaskStatus.IN_PROGRESS)
-        SubtaskFactory(parent=story, title="Subtask 3", status=SubtaskStatus.DONE)
+        SubtaskFactory(parent=story, title="Subtask 1", status=IssueStatus.DRAFT)
+        SubtaskFactory(parent=story, title="Subtask 2", status=IssueStatus.IN_PROGRESS)
+        SubtaskFactory(parent=story, title="Subtask 3", status=IssueStatus.DONE)
 
         epic = promote_to_epic(story, convert_subtasks=True)
 
@@ -230,7 +230,7 @@ class PromoteToEpicServiceTest(TestCase):
     def test_promote_with_wont_do_subtask(self):
         """Promoting maps WONT_DO subtask status correctly."""
         story = StoryFactory(project=self.project)
-        SubtaskFactory(parent=story, title="Cancelled task", status=SubtaskStatus.WONT_DO)
+        SubtaskFactory(parent=story, title="Cancelled task", status=IssueStatus.WONT_DO)
 
         epic = promote_to_epic(story, convert_subtasks=True)
 

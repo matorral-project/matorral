@@ -1,9 +1,9 @@
-from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from apps.issues.factories import BugFactory, ChoreFactory, StoryFactory, SubtaskFactory
-from apps.issues.models import Subtask, SubtaskStatus
+from apps.issues.factories import BugFactory, ChoreFactory, EpicFactory, StoryFactory, SubtaskFactory
+from apps.issues.models import IssueStatus, Subtask
 from apps.issues.views.subtasks import MAX_SUBTASKS_PER_PARENT
 from apps.projects.factories import ProjectFactory
 from apps.users.factories import UserFactory
@@ -93,31 +93,32 @@ class SubtaskModelTest(TestCase):
         subtask = SubtaskFactory(parent=story, title="Test subtask")
 
         self.assertEqual("Test subtask", subtask.title)
-        self.assertEqual(SubtaskStatus.TODO, subtask.status)
-        self.assertEqual(story.pk, subtask.object_id)
+        self.assertEqual(IssueStatus.DRAFT, subtask.status)
+        self.assertEqual(story.pk, subtask.get_parent().pk)
 
-    def test_subtask_parent_is_content_type(self):
-        """Subtask stores parent via GenericForeignKey."""
+    def test_subtask_is_tree_child_of_parent(self):
+        """Subtask is stored as a treebeard child of its parent."""
         story = StoryFactory(project=self.project)
         subtask = SubtaskFactory(parent=story)
 
-        content_type = ContentType.objects.get_for_model(story)
-        self.assertEqual(content_type, subtask.content_type)
-        self.assertEqual(story.pk, subtask.object_id)
+        children_pks = {c.pk for c in story.get_children()}
+        self.assertIn(subtask.pk, children_pks)
 
     def test_subtask_str(self):
-        """Subtask __str__ returns title."""
+        """Subtask __str__ includes key and title."""
         story = StoryFactory(project=self.project)
         subtask = SubtaskFactory(parent=story, title="My subtask")
 
-        self.assertEqual("My subtask", str(subtask))
+        self.assertIn("My subtask", str(subtask))
+        self.assertIn(subtask.key, str(subtask))
 
-    def test_subtask_title_stripped_on_save(self):
-        """Subtask title is stripped on save."""
+    def test_subtask_gets_issue_key(self):
+        """Subtask gets a project-scoped key on creation."""
         story = StoryFactory(project=self.project)
-        subtask = SubtaskFactory(parent=story, title="  Whitespace title  ")
+        subtask = SubtaskFactory(parent=story)
 
-        self.assertEqual("Whitespace title", subtask.title)
+        self.assertIsNotNone(subtask.key)
+        self.assertTrue(subtask.key.startswith(self.project.key))
 
     def test_subtask_works_with_different_issue_types(self):
         """Subtasks can be created for Story, Bug, and Chore types."""
@@ -127,19 +128,73 @@ class SubtaskModelTest(TestCase):
 
         for parent in [story, bug, chore]:
             subtask = SubtaskFactory(parent=parent, title=f"Subtask for {parent.__class__.__name__}")
-            self.assertEqual(parent.pk, subtask.object_id)
+            self.assertEqual(parent.pk, subtask.get_parent().pk)
+
+    def test_subtask_deleted_with_parent(self):
+        """Subtask is cascade-deleted when its parent work item is deleted."""
+        story = StoryFactory(project=self.project)
+        subtask = SubtaskFactory(parent=story)
+        subtask_pk = subtask.pk
+
+        story.delete()
+
+        self.assertFalse(Subtask.objects.filter(pk=subtask_pk).exists())
 
 
-class SubtaskManagerTest(TestCase):
-    """Tests for SubtaskManager."""
+class SubtaskValidationTest(TestCase):
+    """Tests for Subtask._validate_parent_type()."""
 
     @classmethod
     def setUpTestData(cls):
         cls.workspace = WorkspaceFactory()
         cls.project = ProjectFactory(workspace=cls.workspace)
 
-    def test_for_parent_filters_correctly(self):
-        """for_parent returns only subtasks for the given parent."""
+    def test_validate_parent_type_passes_for_story(self):
+        """Valid: subtask under a Story."""
+        story = StoryFactory(project=self.project)
+        subtask = SubtaskFactory(parent=story)
+
+        # Should not raise
+        subtask._validate_parent_type()
+
+    def test_validate_parent_type_passes_for_bug(self):
+        """Valid: subtask under a Bug."""
+        bug = BugFactory(project=self.project)
+        subtask = SubtaskFactory(parent=bug)
+
+        subtask._validate_parent_type()
+
+    def test_validate_parent_type_passes_for_chore(self):
+        """Valid: subtask under a Chore."""
+        chore = ChoreFactory(project=self.project)
+        subtask = SubtaskFactory(parent=chore)
+
+        subtask._validate_parent_type()
+
+    def test_validate_parent_type_rejects_epic_parent(self):
+        """Invalid: subtask cannot be a direct child of an Epic."""
+        epic = EpicFactory(project=self.project)
+        story = StoryFactory(project=self.project, parent=epic)
+        subtask = SubtaskFactory(parent=story)
+
+        # Move subtask to be a direct child of the epic
+        subtask.move(epic, pos="last-child")
+        subtask.refresh_from_db()
+
+        with self.assertRaises(ValidationError):
+            subtask._validate_parent_type()
+
+
+class SubtaskTreeTest(TestCase):
+    """Tests for Subtask tree relationships."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.workspace = WorkspaceFactory()
+        cls.project = ProjectFactory(workspace=cls.workspace)
+
+    def test_get_children_filters_correctly(self):
+        """get_children returns only subtasks for the given parent."""
         story1 = StoryFactory(project=self.project)
         story2 = StoryFactory(project=self.project)
 
@@ -147,11 +202,12 @@ class SubtaskManagerTest(TestCase):
         subtask2 = SubtaskFactory(parent=story1, title="Subtask 2")
         SubtaskFactory(parent=story2, title="Subtask 3")
 
-        subtasks = Subtask.objects.for_parent(story1)
+        subtasks = story1.get_children().instance_of(Subtask)
 
         self.assertEqual(2, subtasks.count())
-        self.assertIn(subtask1, subtasks)
-        self.assertIn(subtask2, subtasks)
+        subtask_pks = {s.pk for s in subtasks}
+        self.assertIn(subtask1.pk, subtask_pks)
+        self.assertIn(subtask2.pk, subtask_pks)
 
 
 class SubtaskListViewTest(SubtaskTestBase):
@@ -210,8 +266,14 @@ class SubtaskCreateViewTest(SubtaskTestBase):
         response = self.client.post(self._get_subtask_add_url(story), {"title": "New subtask"})
 
         self.assertEqual(200, response.status_code)
-        self.assertEqual(1, Subtask.objects.for_parent(story).count())
-        subtask = Subtask.objects.for_parent(story).first()
+
+        # Check the story now has a subtask
+        story.refresh_from_db()
+        subtask_qs = story.get_children().instance_of(Subtask)
+        self.assertEqual(1, subtask_qs.count())
+
+        # Check the subtask was properly created
+        subtask = subtask_qs.get()
         self.assertEqual("New subtask", subtask.title)
 
     def test_create_subtask_returns_updated_list(self):
@@ -227,27 +289,30 @@ class SubtaskCreateViewTest(SubtaskTestBase):
         """Creating a subtask when at the limit is rejected."""
         story = StoryFactory(project=self.project)
 
-        # Create max subtasks
         for i in range(MAX_SUBTASKS_PER_PARENT):
             SubtaskFactory(parent=story, title=f"Subtask {i}")
 
         response = self.client.post(self._get_subtask_add_url(story), {"title": "One more"})
 
         self.assertEqual(400, response.status_code)
-        self.assertEqual(MAX_SUBTASKS_PER_PARENT, Subtask.objects.for_parent(story).count())
+        self.assertEqual(MAX_SUBTASKS_PER_PARENT, story.get_children().instance_of(Subtask).count())
 
-    def test_create_subtask_position_auto_increments(self):
-        """New subtasks get position at the end."""
+    def test_create_subtask_ordered_by_treebeard_path(self):
+        """New subtasks are ordered by treebeard path (insertion order)."""
         story = StoryFactory(project=self.project)
 
         self.client.post(self._get_subtask_add_url(story), {"title": "First"})
         self.client.post(self._get_subtask_add_url(story), {"title": "Second"})
         self.client.post(self._get_subtask_add_url(story), {"title": "Third"})
 
-        subtasks = list(Subtask.objects.for_parent(story).order_by("position"))
-        self.assertEqual(0, subtasks[0].position)
-        self.assertEqual(1, subtasks[1].position)
-        self.assertEqual(2, subtasks[2].position)
+        # we need to refresh the story since we're using treebeard
+        story.refresh_from_db()
+
+        subtasks_qs = story.get_children().instance_of(Subtask)
+        self.assertEqual(3, subtasks_qs.count())
+
+        titles = list(subtasks_qs.values_list("title", flat=True))
+        self.assertListEqual(["First", "Second", "Third"], titles)
 
 
 class SubtaskInlineEditViewTest(SubtaskTestBase):
@@ -272,22 +337,21 @@ class SubtaskInlineEditViewTest(SubtaskTestBase):
         response = self.client.get(self._get_subtask_edit_url(story, subtask) + "?cancel=1")
 
         self.assertEqual(200, response.status_code)
-        # Should be in display mode (no input fields for editing, just text)
 
     def test_post_updates_subtask(self):
         """POST updates the subtask."""
         story = StoryFactory(project=self.project)
-        subtask = SubtaskFactory(parent=story, title="Original title", status=SubtaskStatus.TODO)
+        subtask = SubtaskFactory(parent=story, title="Original title", status=IssueStatus.DRAFT)
 
         response = self.client.post(
             self._get_subtask_edit_url(story, subtask),
-            {"title": "Updated title", "status": SubtaskStatus.IN_PROGRESS},
+            {"title": "Updated title", "status": IssueStatus.IN_PROGRESS},
         )
 
         self.assertEqual(200, response.status_code)
         subtask.refresh_from_db()
         self.assertEqual("Updated title", subtask.title)
-        self.assertEqual(SubtaskStatus.IN_PROGRESS, subtask.status)
+        self.assertEqual(IssueStatus.IN_PROGRESS, subtask.status)
 
     def test_post_returns_display_mode(self):
         """POST returns the updated row in display mode."""
@@ -296,7 +360,7 @@ class SubtaskInlineEditViewTest(SubtaskTestBase):
 
         response = self.client.post(
             self._get_subtask_edit_url(story, subtask),
-            {"title": "Updated", "status": SubtaskStatus.DONE},
+            {"title": "Updated", "status": IssueStatus.DONE},
         )
 
         self.assertEqual(200, response.status_code)
@@ -314,7 +378,7 @@ class SubtaskDeleteViewTest(SubtaskTestBase):
         response = self.client.post(self._get_subtask_delete_url(story, subtask))
 
         self.assertEqual(200, response.status_code)
-        self.assertEqual(0, Subtask.objects.for_parent(story).count())
+        self.assertEqual(0, story.get_children().instance_of(Subtask).count())
 
     def test_delete_returns_updated_list(self):
         """Deleting a subtask returns the updated list."""
@@ -332,54 +396,54 @@ class SubtaskDeleteViewTest(SubtaskTestBase):
 class SubtaskStatusToggleViewTest(SubtaskTestBase):
     """Tests for SubtaskStatusToggleView."""
 
-    def test_toggle_todo_to_in_progress(self):
-        """Toggling a todo subtask marks it as in_progress."""
+    def test_toggle_draft_to_in_progress(self):
+        """Toggling a draft subtask marks it as in_progress."""
         story = StoryFactory(project=self.project)
-        subtask = SubtaskFactory(parent=story, status=SubtaskStatus.TODO)
+        subtask = SubtaskFactory(parent=story, status=IssueStatus.DRAFT)
 
         response = self.client.post(self._get_subtask_toggle_url(story, subtask))
 
         self.assertEqual(200, response.status_code)
         subtask.refresh_from_db()
-        self.assertEqual(SubtaskStatus.IN_PROGRESS, subtask.status)
+        self.assertEqual(IssueStatus.IN_PROGRESS, subtask.status)
 
     def test_toggle_in_progress_to_done(self):
         """Toggling an in_progress subtask marks it as done."""
         story = StoryFactory(project=self.project)
-        subtask = SubtaskFactory(parent=story, status=SubtaskStatus.IN_PROGRESS)
+        subtask = SubtaskFactory(parent=story, status=IssueStatus.IN_PROGRESS)
 
         response = self.client.post(self._get_subtask_toggle_url(story, subtask))
 
         self.assertEqual(200, response.status_code)
         subtask.refresh_from_db()
-        self.assertEqual(SubtaskStatus.DONE, subtask.status)
+        self.assertEqual(IssueStatus.DONE, subtask.status)
 
-    def test_toggle_done_to_todo(self):
-        """Toggling a done subtask marks it as todo."""
+    def test_toggle_done_to_draft(self):
+        """Toggling a done subtask marks it as draft."""
         story = StoryFactory(project=self.project)
-        subtask = SubtaskFactory(parent=story, status=SubtaskStatus.DONE)
+        subtask = SubtaskFactory(parent=story, status=IssueStatus.DONE)
 
         response = self.client.post(self._get_subtask_toggle_url(story, subtask))
 
         self.assertEqual(200, response.status_code)
         subtask.refresh_from_db()
-        self.assertEqual(SubtaskStatus.TODO, subtask.status)
+        self.assertEqual(IssueStatus.DRAFT, subtask.status)
 
-    def test_toggle_wont_do_to_todo(self):
-        """Toggling a wont_do subtask marks it as todo."""
+    def test_toggle_wont_do_to_draft(self):
+        """Toggling a wont_do subtask marks it as draft."""
         story = StoryFactory(project=self.project)
-        subtask = SubtaskFactory(parent=story, status=SubtaskStatus.WONT_DO)
+        subtask = SubtaskFactory(parent=story, status=IssueStatus.WONT_DO)
 
         response = self.client.post(self._get_subtask_toggle_url(story, subtask))
 
         self.assertEqual(200, response.status_code)
         subtask.refresh_from_db()
-        self.assertEqual(SubtaskStatus.TODO, subtask.status)
+        self.assertEqual(IssueStatus.DRAFT, subtask.status)
 
     def test_toggle_returns_updated_row(self):
         """Toggling returns the updated row."""
         story = StoryFactory(project=self.project)
-        subtask = SubtaskFactory(parent=story, title="Toggle me", status=SubtaskStatus.TODO)
+        subtask = SubtaskFactory(parent=story, title="Toggle me", status=IssueStatus.DRAFT)
 
         response = self.client.post(self._get_subtask_toggle_url(story, subtask))
 

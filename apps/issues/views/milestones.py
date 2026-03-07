@@ -21,8 +21,6 @@ from apps.issues.helpers import (
     build_grouped_issues,
     build_htmx_delete_response,
     calculate_progress,
-    count_subtasks_for_issue_ids,
-    delete_subtasks_for_issue_ids,
 )
 from apps.issues.models import BaseIssue, IssuePriority, IssueStatus, Milestone
 from apps.issues.views.mixins import ISSUE_TYPE_CHOICES
@@ -345,7 +343,7 @@ class MilestoneDeleteView(
         return [self.template_name]
 
     def _get_cascade_counts(self):
-        """Compute epic, work item, and subtask counts for the cascade deletion."""
+        """Compute epic and work item counts for the cascade deletion."""
         epics = list(self.object.epics.all())
         epic_count = len(epics)
         all_descendant_ids = []
@@ -353,8 +351,7 @@ class MilestoneDeleteView(
             all_descendant_ids.extend(epic.get_descendants().values_list("pk", flat=True))
         work_item_count = len(all_descendant_ids)
         all_issue_ids = [e.pk for e in epics] + all_descendant_ids
-        subtask_count = count_subtasks_for_issue_ids(all_issue_ids) if all_issue_ids else 0
-        return epic_count, work_item_count, subtask_count, epics, all_issue_ids
+        return epic_count, work_item_count, epics, all_issue_ids
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -362,10 +359,9 @@ class MilestoneDeleteView(
             "key": self.object.key,
             "title": self.object.title,
         }
-        epic_count, work_item_count, subtask_count, _epics, _ids = self._get_cascade_counts()
+        epic_count, work_item_count, _epics, _ids = self._get_cascade_counts()
         context["epic_count"] = epic_count
         context["work_item_count"] = work_item_count
-        context["subtask_count"] = subtask_count
         return context
 
     def get_success_url(self):
@@ -380,10 +376,6 @@ class MilestoneDeleteView(
         all_descendants = []
         for epic in epics:
             all_descendants.extend(list(epic.get_descendants()))
-
-        # Delete subtasks for all affected issues
-        all_issue_ids = [e.pk for e in epics] + [d.pk for d in all_descendants]
-        delete_subtasks_for_issue_ids(all_issue_ids)
 
         # Audit log descendants before bulk delete (treebeard may not fire signals)
         if all_descendants:

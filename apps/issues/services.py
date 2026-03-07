@@ -2,7 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import connection, transaction
 from django.utils.translation import gettext_lazy as _
 
-from apps.issues.models import BaseIssue, Bug, BugSeverity, Chore, Epic, IssueStatus, Story, Subtask, SubtaskStatus
+from apps.issues.models import BaseIssue, Bug, BugSeverity, Chore, Epic, Story, Subtask
 
 # Models that can be converted between (work items only, not Epic)
 CONVERTIBLE_TYPES = {
@@ -153,9 +153,6 @@ def _update_generic_fk_content_types(issue_id: int, old_ct: ContentType, new_ct:
     from auditlog.models import LogEntry
     from django_comments_xtd.models import XtdComment
 
-    # Update Subtasks
-    Subtask.objects.filter(content_type=old_ct, object_id=issue_id).update(content_type=new_ct)
-
     # Update Comments (django_comments_xtd uses object_pk as string)
     XtdComment.objects.filter(content_type=old_ct, object_pk=str(issue_id)).update(content_type=new_ct)
 
@@ -186,15 +183,6 @@ class PromotionError(Exception):
     """Raised when an issue promotion to Epic fails."""
 
     pass
-
-
-# Mapping from SubtaskStatus to IssueStatus for subtask-to-story conversion
-SUBTASK_TO_STORY_STATUS_MAP = {
-    SubtaskStatus.TODO: IssueStatus.DRAFT,
-    SubtaskStatus.IN_PROGRESS: IssueStatus.IN_PROGRESS,
-    SubtaskStatus.DONE: IssueStatus.DONE,
-    SubtaskStatus.WONT_DO: IssueStatus.WONT_DO,
-}
 
 
 def promote_to_epic(
@@ -252,8 +240,8 @@ def promote_to_epic(
             if isinstance(parent_real, Epic) and parent_real.milestone_id:
                 milestone = parent_real.milestone
 
-        # Collect subtasks before any changes
-        subtasks = list(Subtask.objects.filter(content_type=old_content_type, object_id=base_issue_id))
+        # Collect subtasks before any changes (treebeard tree children)
+        subtasks = list(real_issue.get_children().instance_of(Subtask))
 
         # Step 1: Create the Epic row with the same baseissue_ptr_id
         # Note: priority is now on BaseIssue, so it's already preserved
@@ -289,8 +277,8 @@ def promote_to_epic(
         if subtasks:
             if convert_subtasks:
                 _convert_subtasks_to_stories(subtasks, epic)
-            # Always delete the original subtasks
-            Subtask.objects.filter(content_type=old_content_type, object_id=base_issue_id).delete()
+            # Always delete the original subtasks (treebeard-aware delete)
+            BaseIssue.objects.filter(pk__in=[s.pk for s in subtasks]).delete()
 
         # Step 8: Create audit log entry
         _create_promotion_audit_log(base_issue_id, source_type, new_content_type)
@@ -336,14 +324,11 @@ def _update_generic_fk_content_types_for_epic(issue_id: int, old_ct: ContentType
 def _convert_subtasks_to_stories(subtasks: list[Subtask], epic: Epic):
     """Convert subtasks to Story instances as children of the Epic."""
     for subtask in subtasks:
-        # Map subtask status to story status
-        story_status = SUBTASK_TO_STORY_STATUS_MAP.get(subtask.status, IssueStatus.DRAFT)
-
-        # Create Story with subtask's title
+        # Subtask already uses IssueStatus values directly
         story = Story(
             project=epic.project,
             title=subtask.title,
-            status=story_status,
+            status=subtask.status,
             priority=epic.priority,
         )
         story.key = story._generate_unique_key()

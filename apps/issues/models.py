@@ -1,14 +1,12 @@
 import re
 
 from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
-from apps.issues.managers import IssueManager, MilestoneManager, SubtaskManager
+from apps.issues.managers import IssueManager, MilestoneManager
 from apps.projects.models import Project
 from apps.utils.models import BaseModel
 
@@ -522,50 +520,30 @@ class Chore(WorkItemMixin, BaseIssue):
             raise ValidationError(_("Chores can only be children of Epics."))
 
 
-class SubtaskStatus(models.TextChoices):
-    TODO = "todo", _("To Do")
-    IN_PROGRESS = "in_progress", _("In Progress")
-    DONE = "done", _("Done")
-    WONT_DO = "wont_do", _("Won't Do")
-
-
-class Subtask(BaseModel):
+@auditlog.register(
+    include_fields=[
+        "key",
+        "title",
+        "description",
+        "status",
+        "assignee",
+        "priority",
+    ]
+)
+class Subtask(BaseIssue):
     """
-    A subtask belongs to a work item (Story, Bug, Chore, Issue). Max 20 per parent.
-    Subtasks are simple checklist-style items to break down work into smaller actionable items.
+    A subtask is a small unit of work that belongs to a work item (Story, Bug, Chore).
+    Subtasks live in the treebeard tree as children of work items.
     """
-
-    # GenericForeignKey to parent work item
-    content_type = models.ForeignKey(
-        ContentType,
-        on_delete=models.CASCADE,
-        limit_choices_to=models.Q(app_label="issues", model__in=["story", "bug", "chore"]),
-    )
-    object_id = models.PositiveIntegerField()
-    parent = GenericForeignKey("content_type", "object_id")
-
-    title = models.CharField(_("Title"), max_length=255)
-    status = models.CharField(
-        _("Status"),
-        max_length=20,
-        choices=SubtaskStatus.choices,
-        default=SubtaskStatus.TODO,
-        db_index=True,
-    )
-    position = models.PositiveIntegerField(_("Position"), default=0, db_index=True)
-
-    objects = SubtaskManager()
 
     class Meta:
-        ordering = ["position", "created_at"]
-        indexes = [models.Index(fields=["content_type", "object_id"])]
         verbose_name = _("Subtask")
         verbose_name_plural = _("Subtasks")
 
-    def __str__(self):
-        return self.title
-
-    def save(self, *args, **kwargs):
-        if self.title:
-            self.title = self.title.strip()
-        super().save(*args, **kwargs)
+    def _validate_parent_type(self):
+        """Subtasks must have a Story, Bug, or Chore parent."""
+        parent = self.get_parent()
+        if parent is None:
+            raise ValidationError(_("Subtasks must have a parent issue."))
+        if not isinstance(parent, (Story, Bug, Chore)):
+            raise ValidationError(_("Subtasks can only be children of Stories, Bugs, or Chores."))

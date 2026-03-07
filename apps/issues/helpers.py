@@ -18,39 +18,6 @@ def get_epic_content_type_id():
     return ContentType.objects.get_for_model(Epic).id
 
 
-@lru_cache(maxsize=1)
-def _get_subtask_content_type_ids():
-    """Get ContentType IDs for all issue types that can have subtasks (cached)."""
-    from apps.issues.models import Bug, Chore, Story
-
-    return [ContentType.objects.get_for_model(model).id for model in [Story, Bug, Chore]]
-
-
-def count_subtasks_for_issue_ids(issue_ids):
-    """Return count of Subtask objects linked to the given issue IDs via GenericFK."""
-    from apps.issues.models import Subtask
-
-    if not issue_ids:
-        return 0
-    return Subtask.objects.filter(
-        content_type_id__in=_get_subtask_content_type_ids(),
-        object_id__in=issue_ids,
-    ).count()
-
-
-def delete_subtasks_for_issue_ids(issue_ids):
-    """Delete all Subtask objects linked to the given issue IDs via GenericFK. Returns count deleted."""
-    from apps.issues.models import Subtask
-
-    if not issue_ids:
-        return 0
-    deleted, _ = Subtask.objects.filter(
-        content_type_id__in=_get_subtask_content_type_ids(),
-        object_id__in=issue_ids,
-    ).delete()
-    return deleted
-
-
 def build_progress_dict(done_weight: int, in_progress_weight: int, todo_weight: int) -> dict | None:
     """Build a progress dict from pre-computed weights.
 

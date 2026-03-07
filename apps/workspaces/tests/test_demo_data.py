@@ -1,4 +1,3 @@
-from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 
 from apps.issues.models import BaseIssue, Bug, BugSeverity, Chore, Epic, IssueStatus, Milestone, Story, Subtask
@@ -192,14 +191,12 @@ class CreateDemoProjectTest(WorkspaceTestMixin, TestCase):
         self.assertEqual(total_subtasks, expected_count)
 
     def test_subtasks_on_correct_items(self):
-        for item_title in SUBTASKS:
-            item = BaseIssue.objects.get(project=self.project, title=item_title)
-            ct = ContentType.objects.get_for_model(item)
-            subtask_count = Subtask.objects.filter(content_type=ct, object_id=item.pk).count()
+        for working_item_title in SUBTASKS:
+            working_item = BaseIssue.objects.get(project=self.project, title=working_item_title)
             self.assertEqual(
-                subtask_count,
-                len(SUBTASKS[item_title]),
-                f"Wrong subtask count for '{item_title}'",
+                working_item.get_children().count(),
+                len(SUBTASKS[working_item_title]),
+                f"Wrong subtask count for '{working_item_title}'",
             )
 
     def test_demo_items_have_no_created_by(self):

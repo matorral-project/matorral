@@ -2,7 +2,6 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from apps.issues.factories import EpicFactory, MilestoneFactory, StoryFactory, SubtaskFactory
-from apps.issues.helpers import count_subtasks_for_issue_ids, delete_subtasks_for_issue_ids
 from apps.issues.models import BaseIssue, Milestone, Subtask
 from apps.projects.factories import ProjectFactory
 from apps.projects.models import Project
@@ -13,44 +12,35 @@ from apps.workspaces.factories import MembershipFactory, WorkspaceFactory
 from apps.workspaces.roles import ROLE_ADMIN
 
 
-class SubtaskCleanupHelpersTest(TestCase):
-    """Tests for subtask cleanup utility functions."""
+class SubtaskCascadeDeleteTest(TestCase):
+    """Tests verifying subtasks are deleted via treebeard cascade when parent is deleted."""
 
     @classmethod
     def setUpTestData(cls):
         cls.workspace = WorkspaceFactory()
         cls.project = ProjectFactory(workspace=cls.workspace)
 
-    def test_count_subtasks_for_empty_ids(self):
-        self.assertEqual(count_subtasks_for_issue_ids([]), 0)
-
-    def test_count_subtasks_for_issue_ids(self):
+    def test_subtask_deleted_when_parent_story_deleted(self):
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
         SubtaskFactory(parent=story)
         SubtaskFactory(parent=story)
-        self.assertEqual(count_subtasks_for_issue_ids([story.pk]), 2)
 
-    def test_delete_subtasks_for_issue_ids(self):
-        epic = EpicFactory(project=self.project)
-        story = StoryFactory(project=self.project, parent=epic)
-        SubtaskFactory(parent=story)
-        SubtaskFactory(parent=story)
-        deleted = delete_subtasks_for_issue_ids([story.pk])
-        self.assertEqual(deleted, 2)
-        self.assertEqual(Subtask.objects.filter(object_id=story.pk).count(), 0)
+        story.delete()
 
-    def test_delete_subtasks_for_empty_ids(self):
-        self.assertEqual(delete_subtasks_for_issue_ids([]), 0)
+        self.assertEqual(0, Subtask.objects.count())
 
-    def test_count_subtasks_across_multiple_issues(self):
+    def test_multiple_subtasks_deleted_across_stories(self):
         epic = EpicFactory(project=self.project)
         story1 = StoryFactory(project=self.project, parent=epic)
         story2 = StoryFactory(project=self.project, parent=epic)
         SubtaskFactory(parent=story1)
         SubtaskFactory(parent=story2)
         SubtaskFactory(parent=story2)
-        self.assertEqual(count_subtasks_for_issue_ids([story1.pk, story2.pk]), 3)
+
+        epic.delete()
+
+        self.assertEqual(0, Subtask.objects.count())
 
 
 class MilestoneCascadeDeleteTest(TestCase):
@@ -115,8 +105,8 @@ class MilestoneCascadeDeleteTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["epic_count"], 1)
-        self.assertEqual(response.context["work_item_count"], 1)
-        self.assertEqual(response.context["subtask_count"], 1)
+        # work_item_count counts direct descendants of epics (story + subtask = 2)
+        self.assertEqual(response.context["work_item_count"], 2)
 
     def test_milestone_delete_with_no_epics(self):
         milestone = MilestoneFactory(project=self.project)
@@ -127,7 +117,7 @@ class MilestoneCascadeDeleteTest(TestCase):
 
 
 class IssueDeleteCascadeTest(TestCase):
-    """Tests for issue deletion with subtask cleanup."""
+    """Tests for issue deletion with subtask cascade."""
 
     def setUp(self):
         self.workspace = WorkspaceFactory()
@@ -167,7 +157,8 @@ class IssueDeleteCascadeTest(TestCase):
 
         self.assertEqual(Subtask.objects.count(), 0)
 
-    def test_issue_delete_get_shows_subtask_count(self):
+    def test_issue_delete_get_shows_descendant_count(self):
+        """Delete confirm page shows descendant_count (includes subtasks as tree descendants)."""
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
         SubtaskFactory(parent=story)
@@ -176,7 +167,8 @@ class IssueDeleteCascadeTest(TestCase):
         response = self.client.get(self._get_delete_url(story))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context["subtask_count"], 2)
+        # Subtasks are now tree descendants counted in descendant_count
+        self.assertEqual(response.context["descendant_count"], 2)
 
 
 class ProjectDeleteCascadeTest(TestCase):
@@ -221,8 +213,8 @@ class ProjectDeleteCascadeTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["milestone_count"], 1)
         self.assertEqual(response.context["epic_count"], 1)
-        self.assertEqual(response.context["work_item_count"], 1)
-        self.assertEqual(response.context["subtask_count"], 1)
+        # work_item_count = non-epic BaseIssues (story + subtask = 2)
+        self.assertEqual(response.context["work_item_count"], 2)
 
 
 class SprintDeleteTest(TestCase):
