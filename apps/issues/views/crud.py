@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib import messages
 from django.db import transaction
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -274,6 +274,12 @@ class IssueDetailView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, IssueSingl
         return BaseIssue.objects.for_project(self.project).select_related(
             "project", "project__workspace", "assignee", "polymorphic_ctype"
         )
+
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        if obj.get_issue_type() == "subtask":
+            raise Http404
+        return obj
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

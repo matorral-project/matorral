@@ -1,7 +1,7 @@
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from apps.issues.factories import BugFactory, ChoreFactory, EpicFactory, MilestoneFactory, StoryFactory
+from apps.issues.factories import BugFactory, ChoreFactory, EpicFactory, MilestoneFactory, StoryFactory, SubtaskFactory
 from apps.issues.models import BaseIssue, BugSeverity, Epic, IssuePriority, IssueStatus, Milestone
 from apps.projects.factories import ProjectFactory
 from apps.users.factories import UserFactory
@@ -167,6 +167,15 @@ class IssueDetailViewTest(IssueViewTestBase):
                 },
             )
         )
+
+        self.assertEqual(404, response.status_code)
+
+    def test_detail_view_404_for_subtask(self):
+        """Detail view returns 404 for subtasks — they are only visible in the parent's detail view."""
+        story = StoryFactory(project=self.project)
+        subtask = SubtaskFactory(project=self.project, parent=story)
+
+        response = self.client.get(self._get_detail_url(subtask))
 
         self.assertEqual(404, response.status_code)
 
