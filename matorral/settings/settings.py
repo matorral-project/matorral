@@ -10,6 +10,11 @@ from celery import schedules
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+if "test" in sys.argv or "pytest" in sys.argv:
+    PASSWORD_HASHERS = [
+        "django.contrib.auth.hashers.MD5PasswordHasher",
+    ]
+
 env = environ.Env()
 env.read_env(os.path.join(BASE_DIR, ".env"))
 
