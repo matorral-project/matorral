@@ -104,8 +104,8 @@ class PromoteToEpicServiceTest(TestCase):
         self.assertIsNone(epic.get_parent())
         self.assertEqual(1, epic.depth)
 
-    def test_promote_inherits_parent_milestone(self):
-        """Promoting an item inherits the parent epic's milestone when no milestone is specified."""
+    def test_promote_no_milestone_inheritance_from_parent(self):
+        """Promoting an item does NOT inherit the parent epic's milestone."""
         milestone = MilestoneFactory(project=self.project)
         parent_epic = EpicFactory(project=self.project, milestone=milestone)
         story = StoryFactory(project=self.project, parent=parent_epic)
@@ -113,7 +113,19 @@ class PromoteToEpicServiceTest(TestCase):
         epic = promote_to_epic(story)
 
         epic.refresh_from_db()
-        self.assertEqual(milestone, epic.milestone)
+        # User must explicitly select a milestone, no automatic inheritance
+        self.assertIsNone(epic.milestone)
+
+    def test_promote_with_no_milestone_creates_orphan_epic(self):
+        """Promoting with milestone=None creates an orphan epic even under parent with milestone."""
+        milestone = MilestoneFactory(project=self.project)
+        parent_epic = EpicFactory(project=self.project, milestone=milestone)
+        story = StoryFactory(project=self.project, parent=parent_epic)
+
+        epic = promote_to_epic(story, milestone=None)  # Explicitly no milestone
+
+        epic.refresh_from_db()
+        self.assertIsNone(epic.milestone)
 
     def test_promote_inherits_parent_milestone_with_no_milestone(self):
         """Promoting an item under a parent epic with no milestone results in no milestone."""

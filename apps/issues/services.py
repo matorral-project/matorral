@@ -180,12 +180,6 @@ def promote_to_epic(
         parent = real_issue.get_parent()
         had_parent = parent is not None
 
-        # Inherit parent epic's milestone if no milestone explicitly provided
-        if had_parent and milestone is None:
-            parent_real = parent.get_real_instance()
-            if isinstance(parent_real, Epic) and parent_real.milestone_id:
-                milestone = parent_real.milestone
-
         # Collect subtasks before any changes (treebeard tree children)
         subtasks = list(real_issue.get_children().instance_of(Subtask))
 
