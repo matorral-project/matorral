@@ -600,9 +600,11 @@ class IssueCloneView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View):
             _("%(type)s cloned successfully.") % {"type": saved_clone.get_issue_type_display()},
         )
 
-        # For HTMX requests, return HX-Refresh to reload the page
+        # For HTMX requests, trigger issueChanged event to refresh embedded lists
         if request.htmx:
-            return HttpResponseClientRefresh()
+            response = HttpResponse()
+            response["HX-Trigger"] = "issueChanged"
+            return response
 
         return redirect(saved_clone.get_absolute_url())
 
