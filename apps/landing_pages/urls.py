@@ -35,4 +35,5 @@ urlpatterns = [
     path("429/", TemplateView.as_view(template_name="errors/429.html"), name="429"),
     path("500/", TemplateView.as_view(template_name="errors/500.html"), name="500"),
     path("health/", views.health_check, name="health_check"),
+    path("demo-credentials/", views.demo_credentials, name="demo_credentials"),
 ]

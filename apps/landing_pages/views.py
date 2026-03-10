@@ -18,6 +18,8 @@ def home(request):
             "Open Source. Matorral gives your team a clear, flexible way to plan and deliver software."
         ),
         "og_image": request.build_absolute_uri(static("landing_pages/images/app-screenshot.png")),
+        "DEMO_CREDENTIALS_EMAIL": settings.DEMO_CREDENTIALS_EMAIL,
+        "DEMO_CREDENTIALS_PASSWORD": settings.DEMO_CREDENTIALS_PASSWORD,
     }
     if request.user.is_authenticated:
         workspace = Workspace.objects.for_user(request.user).first()
@@ -43,3 +45,11 @@ def health_check(request, *args, **kwargs):
     if tokens and request.GET.get("token") not in tokens:
         raise Http404
     return MainView.as_view()(request, *args, **kwargs)
+
+
+@require_GET
+def demo_credentials(request):
+    """HTMX endpoint to reveal demo credentials."""
+    if not settings.DEMO_CREDENTIALS_EMAIL:
+        raise Http404("Demo credentials not configured")
+    return render(request, "landing_pages/partials/demo_credentials.html")

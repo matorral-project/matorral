@@ -27,6 +27,10 @@ ENABLE_DEBUG_TOOLBAR = env.bool("ENABLE_DEBUG_TOOLBAR", default=False) and "test
 # Controls the badge shown in the top nav: local → "local", production → "beta", other → "demo".
 ENVIRONMENT = env("ENVIRONMENT", default="local")
 
+# Demo credentials for live demo instances (only shown when ENVIRONMENT is "production")
+DEMO_CREDENTIALS_EMAIL = env("DEMO_CREDENTIALS_EMAIL", default="")
+DEMO_CREDENTIALS_PASSWORD = env("DEMO_CREDENTIALS_PASSWORD", default="")
+
 # Wildcard is fine in dev; restrict to actual hostnames in production
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
 
