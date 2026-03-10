@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -401,6 +401,130 @@ class EpicCloneViewTest(IssueViewTestBase):
         self.assertEqual(f"{epic.title} (Copy)", cloned.title)
         self.assertNotEqual(epic.key, cloned.key)
         self.assertEqual(milestone, cloned.milestone)
+
+
+class StoryCloneViewTest(IssueViewTestBase):
+    """Tests for the story clone view."""
+
+    def test_clone_orphan_story_preserves_fields_and_due_date(self):
+        """Clone preserves all fields except title and key for orphan stories."""
+        future_due_date = date.today() + timedelta(days=30)
+        story = StoryFactory(
+            project=self.project,
+            title="Original Story",
+            description="Test description",
+            status=IssueStatus.IN_PROGRESS,
+            due_date=future_due_date,
+            estimated_points=5,
+            created_by=self.user,
+        )
+
+        self.client.post(self._get_clone_url(story))
+
+        cloned = BaseIssue.objects.filter(title__contains="(Copy)").get()
+        self.assertEqual("Test description", cloned.description)
+        self.assertEqual(IssueStatus.IN_PROGRESS, cloned.status)
+        self.assertEqual(story.assignee, cloned.assignee)
+        self.assertEqual(story.priority, cloned.priority)
+        self.assertEqual(story.project, cloned.project)
+        self.assertEqual(story.created_by, cloned.created_by)
+        self.assertEqual(future_due_date, cloned.due_date)
+        self.assertEqual(5, cloned.estimated_points)
+        self.assertEqual(f"{story.title} (Copy)", cloned.title)
+        self.assertNotEqual(story.key, cloned.key)
+        self.assertIsNone(cloned.get_parent())
+
+    def test_clone_story_under_epic_preserves_parent_and_fields(self):
+        """Clone preserves parent epic and all fields for stories under epics."""
+        future_due_date = date.today() + timedelta(days=30)
+        epic = EpicFactory(project=self.project)
+        story = StoryFactory(
+            project=self.project,
+            parent=epic,
+            title="Story Under Epic",
+            description="Test description",
+            status=IssueStatus.IN_PROGRESS,
+            due_date=future_due_date,
+            estimated_points=8,
+            created_by=self.user,
+        )
+
+        self.client.post(self._get_clone_url(story))
+
+        cloned = BaseIssue.objects.filter(title__contains="(Copy)").get()
+        self.assertEqual("Test description", cloned.description)
+        self.assertEqual(IssueStatus.IN_PROGRESS, cloned.status)
+        self.assertEqual(story.assignee, cloned.assignee)
+        self.assertEqual(story.priority, cloned.priority)
+        self.assertEqual(story.project, cloned.project)
+        self.assertEqual(story.created_by, cloned.created_by)
+        self.assertEqual(future_due_date, cloned.due_date)
+        self.assertEqual(8, cloned.estimated_points)
+        self.assertEqual(f"{story.title} (Copy)", cloned.title)
+        self.assertNotEqual(story.key, cloned.key)
+        self.assertEqual(epic, cloned.get_parent())
+
+
+class BugCloneViewTest(IssueViewTestBase):
+    """Tests for the bug clone view."""
+
+    def test_clone_orphan_bug_preserves_fields_and_due_date(self):
+        """Clone preserves all fields except title and key for orphan bugs."""
+        future_due_date = date.today() + timedelta(days=30)
+        bug = BugFactory(
+            project=self.project,
+            title="Original Bug",
+            description="Test description",
+            status=IssueStatus.IN_PROGRESS,
+            due_date=future_due_date,
+            severity=BugSeverity.CRITICAL,
+            created_by=self.user,
+        )
+
+        self.client.post(self._get_clone_url(bug))
+
+        cloned = BaseIssue.objects.filter(title__contains="(Copy)").get()
+        self.assertEqual("Test description", cloned.description)
+        self.assertEqual(IssueStatus.IN_PROGRESS, cloned.status)
+        self.assertEqual(bug.assignee, cloned.assignee)
+        self.assertEqual(bug.priority, cloned.priority)
+        self.assertEqual(bug.project, cloned.project)
+        self.assertEqual(bug.created_by, cloned.created_by)
+        self.assertEqual(future_due_date, cloned.due_date)
+        self.assertEqual(BugSeverity.CRITICAL, cloned.severity)
+        self.assertEqual(f"{bug.title} (Copy)", cloned.title)
+        self.assertNotEqual(bug.key, cloned.key)
+        self.assertIsNone(cloned.get_parent())
+
+    def test_clone_bug_under_epic_preserves_parent_and_fields(self):
+        """Clone preserves parent epic and all fields for bugs under epics."""
+        future_due_date = date.today() + timedelta(days=30)
+        epic = EpicFactory(project=self.project)
+        bug = BugFactory(
+            project=self.project,
+            parent=epic,
+            title="Bug Under Epic",
+            description="Test description",
+            status=IssueStatus.IN_PROGRESS,
+            due_date=future_due_date,
+            severity=BugSeverity.TRIVIAL,
+            created_by=self.user,
+        )
+
+        self.client.post(self._get_clone_url(bug))
+
+        cloned = BaseIssue.objects.filter(title__contains="(Copy)").get()
+        self.assertEqual("Test description", cloned.description)
+        self.assertEqual(IssueStatus.IN_PROGRESS, cloned.status)
+        self.assertEqual(bug.assignee, cloned.assignee)
+        self.assertEqual(bug.priority, cloned.priority)
+        self.assertEqual(bug.project, cloned.project)
+        self.assertEqual(bug.created_by, cloned.created_by)
+        self.assertEqual(future_due_date, cloned.due_date)
+        self.assertEqual(BugSeverity.TRIVIAL, cloned.severity)
+        self.assertEqual(f"{bug.title} (Copy)", cloned.title)
+        self.assertNotEqual(bug.key, cloned.key)
+        self.assertEqual(epic, cloned.get_parent())
 
 
 class IssueMoveViewTest(IssueViewTestBase):
