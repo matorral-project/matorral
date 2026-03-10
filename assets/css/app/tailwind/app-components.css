@@ -1,12 +1,3 @@
-.section {
-  @apply m-4;
-}
-
-.help {
-  /* forms */
-  @apply text-xs text-gray-700;
-}
-
 .app-card {
   @apply px-4 py-2 lg:py-4;
 }
