@@ -5,6 +5,8 @@ from django.db import models
 from django.db.models import F, IntegerField, OuterRef, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 
+from apps.issues.utils import get_work_item_ctype_ids
+
 if TYPE_CHECKING:
     from apps.projects.models import Project
     from apps.workspaces.models import Workspace
@@ -63,20 +65,19 @@ class ProjectQuerySet(models.QuerySet):
         Work items are Story, Bug, and Chore models (using instance_of()).
         """
 
-        Bug = apps.get_model("issues", "Bug")
-        Chore = apps.get_model("issues", "Chore")
-        Story = apps.get_model("issues", "Story")
-
-        # Get status categories for filtering
         BaseIssue = apps.get_model("issues", "BaseIssue")
         done_statuses = [s for s, cat in BaseIssue.status_categories.items() if cat == "done"]
         in_progress_statuses = [s for s, cat in BaseIssue.status_categories.items() if cat == "in_progress"]
         todo_statuses = [s for s, cat in BaseIssue.status_categories.items() if cat == "todo"]
 
-        # For each project, sum work items directly filtered by project
-        def project_work_items_sum(model, statuses=None):
+        # Query BaseIssue directly filtered by polymorphic_ctype_id — avoids unnecessary
+        # JOINs to subclass tables and uses the (project, polymorphic_ctype) index.
+        def project_work_items_sum(statuses=None):
             """Sum work items for a project."""
-            qs = model.objects.filter(project=OuterRef("pk"))
+            qs = BaseIssue.objects.non_polymorphic().filter(
+                project=OuterRef("pk"),
+                polymorphic_ctype_id__in=get_work_item_ctype_ids(),
+            )
             if statuses:
                 qs = qs.filter(status__in=statuses)
 
@@ -90,26 +91,12 @@ class ProjectQuerySet(models.QuerySet):
                 Value(0),
             )
 
-        # Annotate with progress from project work items
         qs = self.annotate(
-            total_done_points=(
-                project_work_items_sum(Story, done_statuses)
-                + project_work_items_sum(Bug, done_statuses)
-                + project_work_items_sum(Chore, done_statuses)
-            ),
-            total_in_progress_points=(
-                project_work_items_sum(Story, in_progress_statuses)
-                + project_work_items_sum(Bug, in_progress_statuses)
-                + project_work_items_sum(Chore, in_progress_statuses)
-            ),
-            total_todo_points=(
-                project_work_items_sum(Story, todo_statuses)
-                + project_work_items_sum(Bug, todo_statuses)
-                + project_work_items_sum(Chore, todo_statuses)
-            ),
+            total_done_points=project_work_items_sum(done_statuses),
+            total_in_progress_points=project_work_items_sum(in_progress_statuses),
+            total_todo_points=project_work_items_sum(todo_statuses),
         )
 
-        # total_estimated_points = done + in_progress + todo
         return qs.annotate(
             total_estimated_points=F("total_done_points") + F("total_in_progress_points") + F("total_todo_points")
         )

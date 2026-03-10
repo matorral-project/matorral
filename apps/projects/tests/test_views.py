@@ -4,6 +4,8 @@ from django.conf import settings
 from django.test import Client, TestCase
 from django.urls import reverse
 
+from apps.issues.factories import BugFactory, ChoreFactory, EpicFactory, MilestoneFactory, StoryFactory
+from apps.issues.models import IssueStatus
 from apps.projects.factories import ProjectFactory
 from apps.projects.models import Project, ProjectStatus
 from apps.users.factories import UserFactory
@@ -932,3 +934,157 @@ class MoveProgressViewTest(ProjectViewTestCase):
     def test_post_not_allowed(self):
         response = self.client.post(self._get_progress_url("test"))
         self.assertEqual(405, response.status_code)
+
+
+class ProjectQuerySetWithProgressTest(TestCase):
+    """Tests for ProjectQuerySet.with_progress()."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.project = ProjectFactory()
+        cls.epic = EpicFactory(project=cls.project)
+        cls.story_done = StoryFactory(project=cls.project, parent=cls.epic, status=IssueStatus.DONE, estimated_points=3)
+        cls.story_in_progress = StoryFactory(
+            project=cls.project, parent=cls.epic, status=IssueStatus.IN_PROGRESS, estimated_points=5
+        )
+        cls.bug_todo = BugFactory(project=cls.project, parent=cls.epic, status=IssueStatus.DRAFT, estimated_points=2)
+        cls.chore_todo = ChoreFactory(
+            project=cls.project, parent=cls.epic, status=IssueStatus.READY, estimated_points=None
+        )  # no points → weight 1
+
+        # Second project — must not affect cls.project counts
+        cls.other_project = ProjectFactory()
+        other_epic = EpicFactory(project=cls.other_project)
+        StoryFactory(project=cls.other_project, parent=other_epic, status=IssueStatus.DONE, estimated_points=10)
+
+    def _get_project(self):
+        return Project.objects.with_progress().get(pk=self.project.pk)
+
+    def test_with_progress_adds_annotations(self):
+        """with_progress adds the four progress annotations to projects."""
+        p = self._get_project()
+        self.assertTrue(hasattr(p, "total_done_points"))
+        self.assertTrue(hasattr(p, "total_in_progress_points"))
+        self.assertTrue(hasattr(p, "total_todo_points"))
+        self.assertTrue(hasattr(p, "total_estimated_points"))
+
+    def test_done_points(self):
+        """total_done_points sums work items in done-category statuses."""
+        p = self._get_project()
+        self.assertEqual(3, p.total_done_points)
+
+    def test_in_progress_points(self):
+        """total_in_progress_points sums work items in in_progress-category statuses."""
+        p = self._get_project()
+        self.assertEqual(5, p.total_in_progress_points)
+
+    def test_todo_points(self):
+        """total_todo_points sums work items in todo-category statuses (None points → 1)."""
+        p = self._get_project()
+        # bug_todo=2, chore_todo=None→1
+        self.assertEqual(3, p.total_todo_points)
+
+    def test_total_estimated_points(self):
+        """total_estimated_points is the sum of all three categories."""
+        p = self._get_project()
+        self.assertEqual(11, p.total_estimated_points)
+
+    def test_other_project_not_affected(self):
+        """Progress from another project does not bleed into this project."""
+        other = Project.objects.with_progress().get(pk=self.other_project.pk)
+        self.assertEqual(10, other.total_done_points)
+        self.assertEqual(10, other.total_estimated_points)
+
+    def test_empty_project_returns_zeros(self):
+        """Project with no work items returns zero for all annotations."""
+        empty = ProjectFactory()
+        p = Project.objects.with_progress().get(pk=empty.pk)
+        self.assertEqual(0, p.total_done_points)
+        self.assertEqual(0, p.total_in_progress_points)
+        self.assertEqual(0, p.total_todo_points)
+        self.assertEqual(0, p.total_estimated_points)
+
+
+class ProjectWithProgressMultipleMilestonesTest(TestCase):
+    """Project progress: 2 milestones, 7 epics total, each with mixed work items."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.project = ProjectFactory()
+
+        # Milestone 1 → 2 epics
+        m1 = MilestoneFactory(project=cls.project)
+        epic1 = EpicFactory(project=cls.project, milestone=m1)
+        epic2 = EpicFactory(project=cls.project, milestone=m1)
+        StoryFactory(project=cls.project, parent=epic1, status=IssueStatus.DONE, estimated_points=3)
+        BugFactory(project=cls.project, parent=epic2, status=IssueStatus.IN_PROGRESS, estimated_points=5)
+
+        # Milestone 2 → 5 epics
+        m2 = MilestoneFactory(project=cls.project)
+        epic3 = EpicFactory(project=cls.project, milestone=m2)
+        epic4 = EpicFactory(project=cls.project, milestone=m2)
+        epic5 = EpicFactory(project=cls.project, milestone=m2)
+        epic6 = EpicFactory(project=cls.project, milestone=m2)
+        epic7 = EpicFactory(project=cls.project, milestone=m2)
+        ChoreFactory(project=cls.project, parent=epic3, status=IssueStatus.DRAFT, estimated_points=2)
+        StoryFactory(project=cls.project, parent=epic4, status=IssueStatus.DONE, estimated_points=7)
+        ChoreFactory(project=cls.project, parent=epic5, status=IssueStatus.IN_PROGRESS, estimated_points=4)
+        BugFactory(project=cls.project, parent=epic6, status=IssueStatus.READY, estimated_points=None)  # → weight 1
+        StoryFactory(project=cls.project, parent=epic7, status=IssueStatus.DONE, estimated_points=6)
+
+    def test_progress_across_all_milestones_and_epics(self):
+        """Sums points across all 7 epics in both milestones. done=16, in_progress=9, todo=3, total=28."""
+        p = Project.objects.with_progress().get(pk=self.project.pk)
+        self.assertEqual(16, p.total_done_points)
+        self.assertEqual(9, p.total_in_progress_points)
+        self.assertEqual(3, p.total_todo_points)
+        self.assertEqual(28, p.total_estimated_points)
+
+
+class ProjectWithProgressOrphanWorkItemsTest(TestCase):
+    """Project progress: root-level work items (no epic parent) count alongside epic children."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.project = ProjectFactory()
+
+        # Epic with 3 children
+        epic = EpicFactory(project=cls.project)
+        StoryFactory(project=cls.project, parent=epic, status=IssueStatus.DONE, estimated_points=4)
+        StoryFactory(project=cls.project, parent=epic, status=IssueStatus.IN_PROGRESS, estimated_points=2)
+        BugFactory(project=cls.project, parent=epic, status=IssueStatus.DRAFT, estimated_points=1)
+
+        # 3 orphan work items — no epic parent, root-level nodes
+        StoryFactory(project=cls.project, status=IssueStatus.DONE, estimated_points=5)
+        BugFactory(project=cls.project, status=IssueStatus.DRAFT, estimated_points=3)
+        ChoreFactory(project=cls.project, status=IssueStatus.IN_PROGRESS, estimated_points=None)  # → weight 1
+
+    def test_epic_children_and_orphans_all_counted(self):
+        """
+        Both epic children and root-level orphan work items contribute to progress.
+        done=9, in_progress=3, todo=4, total=16.
+        """
+        p = Project.objects.with_progress().get(pk=self.project.pk)
+        self.assertEqual(9, p.total_done_points)
+        self.assertEqual(3, p.total_in_progress_points)
+        self.assertEqual(4, p.total_todo_points)
+        self.assertEqual(16, p.total_estimated_points)
+
+
+class ProjectWithProgressEmptyHierarchyTest(TestCase):
+    """Project progress: empty milestone + empty epics → all zeros."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.project = ProjectFactory()
+        MilestoneFactory(project=cls.project)  # empty milestone — no epics linked
+        EpicFactory(project=cls.project)  # empty epic, no milestone, no children
+        EpicFactory(project=cls.project)  # empty epic, no milestone, no children
+
+    def test_empty_hierarchy_returns_all_zeros(self):
+        """Empty milestone and childless epics contribute no points to any category."""
+        p = Project.objects.with_progress().get(pk=self.project.pk)
+        self.assertEqual(0, p.total_done_points)
+        self.assertEqual(0, p.total_in_progress_points)
+        self.assertEqual(0, p.total_todo_points)
+        self.assertEqual(0, p.total_estimated_points)

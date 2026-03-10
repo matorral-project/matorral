@@ -200,6 +200,29 @@ class IssueDetailViewTest(IssueViewTestBase):
         # Full page response must contain the base <html> tag
         self.assertContains(restore_response, "<html")
 
+    def test_detail_view_shows_progress_for_epic(self):
+        """Detail view includes progress context for epics with work items."""
+        epic = EpicFactory(project=self.project)
+        StoryFactory(project=self.project, parent=epic, status=IssueStatus.DONE, estimated_points=3)
+        StoryFactory(project=self.project, parent=epic, status=IssueStatus.DRAFT, estimated_points=7)
+
+        response = self.client.get(self._get_detail_url(epic))
+
+        # 3 of 10 points done → 30%
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(30, response.context["progress"]["done_pct"])
+        self.assertEqual(70, response.context["progress"]["todo_pct"])
+        self.assertEqual(10, response.context["progress"]["total_weight"])
+
+    def test_detail_view_has_no_progress_for_epic_without_work_items(self):
+        """Detail view returns None progress for an epic with no work items."""
+        epic = EpicFactory(project=self.project)
+
+        response = self.client.get(self._get_detail_url(epic))
+
+        self.assertEqual(200, response.status_code)
+        self.assertIsNone(response.context["progress"])
+
 
 class IssueCreateViewTest(IssueViewTestBase):
     """Tests for the issue create view."""

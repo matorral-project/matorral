@@ -2,8 +2,6 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.db.models import Case, IntegerField, Sum, Value, When
-from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
@@ -118,65 +116,24 @@ class MilestoneDetailView(
         return [self.template_name]
 
     def get_queryset(self):
-        return Milestone.objects.for_project(self.project).select_related("project", "project__workspace", "owner")
+        return (
+            Milestone.objects.for_project(self.project)
+            .with_progress()
+            .select_related("project", "project__workspace", "owner")
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["page_title"] = f"[{self.object.key}] {self.object.title}"
-        # Calculate overall milestone progress from all descendants of linked epics
-        epic_paths = list(self.object.epics.values_list("path", flat=True))
-        if epic_paths:
-            all_children = (
-                BaseIssue.objects.filter(path__regex=r"^(" + "|".join(epic_paths) + r")")
-                .filter(depth__gt=1)  # Exclude the epics themselves
-                .non_polymorphic()
-                .only("status", "estimated_points")
-            )
-        else:
-            all_children = BaseIssue.objects.none()
 
-        # Calculate progress using database-level aggregation
-
-        # Get status categories for filtering
-        status_categories = BaseIssue.status_categories
-        done_statuses = [s for s, cat in status_categories.items() if cat == "done"]
-        in_progress_statuses = [s for s, cat in status_categories.items() if cat == "in_progress"]
-        todo_statuses = [s for s, cat in status_categories.items() if cat == "todo"]
-
-        # Aggregate the points by status category
-        aggregated = all_children.aggregate(
-            total_done_points=Sum(
-                Case(
-                    When(status__in=done_statuses, then=Coalesce("estimated_points", Value(1))),
-                    default=Value(0),
-                    output_field=IntegerField(),
-                )
-            ),
-            total_in_progress_points=Sum(
-                Case(
-                    When(status__in=in_progress_statuses, then=Coalesce("estimated_points", Value(1))),
-                    default=Value(0),
-                    output_field=IntegerField(),
-                )
-            ),
-            total_todo_points=Sum(
-                Case(
-                    When(status__in=todo_statuses, then=Coalesce("estimated_points", Value(1))),
-                    default=Value(0),
-                    output_field=IntegerField(),
-                )
-            ),
-            total_estimated_points=Sum(Coalesce("estimated_points", Value(1))),
-        )
-
-        # Extract values, defaulting to 0 if None
-        total_done = aggregated["total_done_points"] or 0
-        total_in_progress = aggregated["total_in_progress_points"] or 0
-        total_todo = aggregated["total_todo_points"] or 0
-        total = aggregated["total_estimated_points"] or 0
-
+        total = self.object.total_estimated_points
         if total > 0:
-            context["progress"] = build_progress_dict(total_done, total_in_progress, total_todo, total)
+            context["progress"] = build_progress_dict(
+                self.object.total_done_points,
+                self.object.total_in_progress_points,
+                self.object.total_todo_points,
+                total,
+            )
         else:
             context["progress"] = None
 

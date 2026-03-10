@@ -5,8 +5,6 @@ from functools import lru_cache
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import IntegerField, OuterRef, Subquery, Sum, Value
-from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
@@ -16,35 +14,6 @@ from apps.utils.filters import parse_status_filter
 from apps.utils.progress import build_progress_dict, calculate_progress
 
 from django_htmx.http import HttpResponseClientRefresh
-
-
-def _work_item_weight(model, statuses: list[str] | None = None) -> Coalesce:
-    """Build a Subquery expression that sums work item weights.
-
-    Each item's weight is its estimated_points (or 1 if unset).
-    Optionally filters by status values.
-
-    Args:
-        model: The work item model (Story, Bug, or Chore)
-        statuses: Optional list of status values to filter by. If None, includes all statuses.
-
-    Returns:
-        A Coalesce expression that sums work item weights.
-    """
-
-    qs = model.objects.filter(sprint_id=OuterRef("pk"))
-
-    if statuses:
-        qs = qs.filter(status__in=statuses)
-
-    return Coalesce(
-        Subquery(
-            qs.values("sprint_id").annotate(total=Sum(Coalesce("estimated_points", Value(1)))).values("total")[:1],
-            output_field=IntegerField(),
-        ),
-        Value(0),
-        output_field=IntegerField(),
-    )
 
 
 @lru_cache(maxsize=1)

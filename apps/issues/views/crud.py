@@ -27,6 +27,7 @@ from apps.issues.models import BaseIssue, Bug, BugSeverity, Epic, IssuePriority,
 from apps.issues.services import IssueConversionError, PromotionError, convert_issue_type, promote_to_epic
 from apps.projects.models import Project
 from apps.sprints.models import Sprint, SprintStatus
+from apps.utils.progress import build_progress_dict
 from apps.workspaces.limits import LimitExceededError, check_work_item_limit
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
@@ -272,8 +273,10 @@ class IssueDetailView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, IssueSingl
         return [self.template_name]
 
     def get_queryset(self):
-        return BaseIssue.objects.for_project(self.project).select_related(
-            "project", "project__workspace", "assignee", "polymorphic_ctype"
+        return (
+            BaseIssue.objects.for_project(self.project)
+            .with_progress()
+            .select_related("project", "project__workspace", "assignee", "polymorphic_ctype")
         )
 
     def get_object(self, queryset=None):
@@ -293,7 +296,12 @@ class IssueDetailView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, IssueSingl
             context["children"] = issue.get_children_issues()
             context["children_label"] = _("Issues")
             context["milestone"] = issue.milestone
-            context["progress"] = issue.get_progress()
+            context["progress"] = build_progress_dict(
+                issue.total_done_points,
+                issue.total_in_progress_points,
+                issue.total_todo_points,
+                issue.total_estimated_points,
+            )
         else:
             # Needed for inline editing to show severity field for bugs
             context["is_bug"] = isinstance(issue, Bug)

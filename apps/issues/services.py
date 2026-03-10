@@ -1,13 +1,15 @@
 from django.contrib.contenttypes.models import ContentType
-from django.db import connection, transaction
+from django.db import models, transaction
 from django.utils.translation import gettext_lazy as _
 
 from apps.issues.models import BaseIssue, Bug, BugSeverity, Chore, Epic, Story, Subtask
+from apps.utils.models import AuditLog
 
+from auditlog.context import disable_auditlog
 from auditlog.models import LogEntry
 from django_comments_xtd.models import XtdComment
 
-# Models that can be converted between (work items only, not Epic)
+# Models that can be converted between (work items only, not Epic or Subtask or Milestone)
 CONVERTIBLE_TYPES = {
     "story": Story,
     "bug": Bug,
@@ -22,7 +24,7 @@ class IssueConversionError(Exception):
 
 
 def convert_issue_type(
-    issue: BaseIssue,
+    issue: Story | Bug | Chore,
     target_type: str,
     severity: str | None = None,
 ) -> BaseIssue:
@@ -79,102 +81,48 @@ def convert_issue_type(
     with transaction.atomic():
         base_issue_id = real_issue.pk
 
-        # Step 1: Create the new type-specific row
-        # We need to insert directly into the target table with the same baseissue_ptr_id
-        # Note: priority and estimated_points are on BaseIssue, so they're already preserved
-        if target_type == "bug":
-            _create_type_row(
-                target_model,
-                base_issue_id,
-                sprint_id=real_issue.sprint_id,
-                severity=severity,
+        # Step 1-2: Delete old child row and create new one (suppress auditlog
+        # signals since these are internal type-conversion operations, not user edits)
+        sprint_id = real_issue.sprint_id
+        with disable_auditlog():
+            models.Model.delete(real_issue, keep_parents=True)
+
+            # Restore pk cleared by Model.delete(); the BaseIssue row still exists
+            real_issue.pk = base_issue_id
+            create_kwargs = {"sprint_id": sprint_id}
+
+            if target_type == "bug":
+                create_kwargs["severity"] = severity
+
+            target_model.objects.create_from_super(
+                BaseIssue.objects.non_polymorphic().get(pk=base_issue_id),
+                **create_kwargs,
             )
-        else:
-            _create_type_row(target_model, base_issue_id, sprint_id=real_issue.sprint_id)
 
-        # Step 2: Update polymorphic_ctype on BaseIssue
-        BaseIssue.objects.filter(pk=base_issue_id).update(polymorphic_ctype=new_content_type)
+        # Step 3: Update ContentType references in generic FKs:
 
-        # Step 3: Delete the old type-specific row
-        _delete_type_row(source_model, base_issue_id)
+        # Update Comments (django_comments_xtd uses object_pk as string)
+        XtdComment.objects.filter(content_type=old_content_type, object_pk=str(base_issue_id)).update(
+            content_type=new_content_type
+        )
 
-        # Step 4: Update ContentType references in generic FKs
-        _update_generic_fk_content_types(base_issue_id, old_content_type, new_content_type)
+        # Update Audit Log entries
+        LogEntry.objects.filter(content_type=old_content_type, object_id=base_issue_id).update(
+            content_type=new_content_type
+        )
+
+        # Fetch the converted instance before creating audit log
+        converted = target_model.objects.get(pk=base_issue_id)
 
         # Step 5: Create audit log entry for the conversion
-        _create_conversion_audit_log(base_issue_id, source_type, target_type, new_content_type)
-
-        # Fetch and return the converted instance
-        return target_model.objects.get(pk=base_issue_id)
-
-
-def _create_type_row(
-    model_class,
-    base_issue_id: int,
-    sprint_id: int | None = None,
-    severity: str | None = None,
-):
-    """Insert a row into the type-specific table.
-
-    Note: priority and estimated_points are now on BaseIssue, so we don't
-    need to insert them into the child tables.
-    """
-    table_name = model_class._meta.db_table
-
-    # Build column/value lists based on model
-    # Work item tables only have: baseissue_ptr_id, sprint_id (and severity for Bug)
-    columns = ["baseissue_ptr_id", "sprint_id"]
-    values = [base_issue_id, sprint_id]
-
-    if model_class == Bug:
-        columns.append("severity")
-        values.append(severity)
-
-    placeholders = ", ".join(["%s"] * len(columns))
-    column_names = ", ".join(columns)
-
-    with connection.cursor() as cursor:
-        cursor.execute(
-            f"INSERT INTO {table_name} ({column_names}) VALUES ({placeholders})",  # noqa: S608
-            values,
+        AuditLog.objects.create_for(
+            converted,
+            field_name="type",
+            old_value=source_type.title(),
+            new_value=target_type.title(),
         )
 
-
-def _delete_type_row(model_class, base_issue_id: int):
-    """Delete the row from the type-specific table."""
-    table_name = model_class._meta.db_table
-
-    with connection.cursor() as cursor:
-        cursor.execute(
-            f"DELETE FROM {table_name} WHERE baseissue_ptr_id = %s",  # noqa: S608
-            [base_issue_id],
-        )
-
-
-def _update_generic_fk_content_types(issue_id: int, old_ct: ContentType, new_ct: ContentType):
-    """Update ContentType references in models with GenericForeignKey to this issue."""
-    # Update Comments (django_comments_xtd uses object_pk as string)
-    XtdComment.objects.filter(content_type=old_ct, object_pk=str(issue_id)).update(content_type=new_ct)
-
-    # Update Audit Log entries
-    LogEntry.objects.filter(content_type=old_ct, object_id=issue_id).update(content_type=new_ct)
-
-
-def _create_conversion_audit_log(issue_id: int, source_type: str, target_type: str, content_type: ContentType):
-    """Create an audit log entry recording the type conversion."""
-    # Get the issue for representation
-    issue = BaseIssue.objects.get(pk=issue_id)
-
-    LogEntry.objects.create(
-        content_type=content_type,
-        object_id=issue_id,
-        object_pk=str(issue_id),
-        object_repr=str(issue),
-        action=LogEntry.Action.UPDATE,
-        changes={
-            "type": [source_type.title(), target_type.title()],
-        },
-    )
+        return converted
 
 
 class PromotionError(Exception):
@@ -241,22 +189,28 @@ def promote_to_epic(
         # Collect subtasks before any changes (treebeard tree children)
         subtasks = list(real_issue.get_children().instance_of(Subtask))
 
-        # Step 1: Create the Epic row with the same baseissue_ptr_id
-        # Note: priority is now on BaseIssue, so it's already preserved
-        _create_epic_row(
-            base_issue_id,
-            milestone_id=milestone.pk if milestone else None,
+        # Step 1-2: Delete old child row and create Epic row (suppress auditlog
+        # signals since these are internal type-conversion operations, not user edits)
+        with disable_auditlog():
+            models.Model.delete(real_issue, keep_parents=True)
+            # Restore pk cleared by Model.delete(); the BaseIssue row still exists
+            real_issue.pk = base_issue_id
+            Epic.objects.create_from_super(
+                BaseIssue.objects.non_polymorphic().get(pk=base_issue_id),
+                milestone_id=milestone.pk if milestone else None,
+            )
+
+        # Step 3: Update ContentType references in generic FKs:
+
+        # Update Comments (django_comments_xtd uses object_pk as string)
+        XtdComment.objects.filter(content_type=old_content_type, object_pk=str(base_issue_id)).update(
+            content_type=new_content_type
         )
 
-        # Step 2: Update polymorphic_ctype on BaseIssue
-        BaseIssue.objects.filter(pk=base_issue_id).update(polymorphic_ctype=new_content_type)
-
-        # Step 3: Delete the old type-specific row
-        _delete_type_row(source_model, base_issue_id)
-
-        # Step 4: Update ContentType references in generic FKs (comments, history)
-        # Note: We exclude subtasks here since we're handling them separately
-        _update_generic_fk_content_types_for_epic(base_issue_id, old_content_type, new_content_type)
+        # Update Audit Log entries
+        LogEntry.objects.filter(content_type=old_content_type, object_id=base_issue_id).update(
+            content_type=new_content_type
+        )
 
         # Step 5: Get the Epic instance
         epic = Epic.objects.get(pk=base_issue_id)
@@ -278,42 +232,15 @@ def promote_to_epic(
             # Always delete the original subtasks (treebeard-aware delete)
             BaseIssue.objects.filter(pk__in=[s.pk for s in subtasks]).delete()
 
-        # Step 8: Create audit log entry
-        _create_promotion_audit_log(base_issue_id, source_type, new_content_type)
-
-        return epic
-
-
-def _create_epic_row(
-    base_issue_id: int,
-    milestone_id: int | None = None,
-):
-    """Insert a row into the Epic table.
-
-    Note: priority is now on BaseIssue, so we only insert milestone_id here.
-    """
-    table_name = Epic._meta.db_table
-
-    columns = ["baseissue_ptr_id", "milestone_id"]
-    values = [base_issue_id, milestone_id]
-
-    placeholders = ", ".join(["%s"] * len(columns))
-    column_names = ", ".join(columns)
-
-    with connection.cursor() as cursor:
-        cursor.execute(
-            f"INSERT INTO {table_name} ({column_names}) VALUES ({placeholders})",  # noqa: S608
-            values,
+        # Step 8: Create audit log entry for the promotion
+        AuditLog.objects.create_for(
+            epic,
+            field_name="type",
+            old_value=source_type.title(),
+            new_value="Epic",
         )
 
-
-def _update_generic_fk_content_types_for_epic(issue_id: int, old_ct: ContentType, new_ct: ContentType):
-    """Update ContentType references for comments and audit log (not subtasks, they're handled separately)."""
-    # Update Comments (django_comments_xtd uses object_pk as string)
-    XtdComment.objects.filter(content_type=old_ct, object_pk=str(issue_id)).update(content_type=new_ct)
-
-    # Update Audit Log entries
-    LogEntry.objects.filter(content_type=old_ct, object_id=issue_id).update(content_type=new_ct)
+        return epic
 
 
 def _convert_subtasks_to_stories(subtasks: list[Subtask], epic: Epic):
@@ -330,20 +257,3 @@ def _convert_subtasks_to_stories(subtasks: list[Subtask], epic: Epic):
 
         # Add as child of the Epic
         epic.add_child(instance=story)
-
-
-def _create_promotion_audit_log(issue_id: int, source_type: str, content_type: ContentType):
-    """Create an audit log entry recording the promotion to Epic."""
-    # Get the issue for representation
-    issue = BaseIssue.objects.get(pk=issue_id)
-
-    LogEntry.objects.create(
-        content_type=content_type,
-        object_id=issue_id,
-        object_pk=str(issue_id),
-        object_repr=str(issue),
-        action=LogEntry.Action.UPDATE,
-        changes={
-            "type": [source_type.title(), "Epic"],
-        },
-    )

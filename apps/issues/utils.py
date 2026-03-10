@@ -1,3 +1,4 @@
+from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 
@@ -26,6 +27,18 @@ def get_cached_content_type(model_class):
         _content_type_cache[cache_key] = ContentType.objects.get_for_model(model_class)
 
     return _content_type_cache[cache_key]
+
+
+def get_work_item_ctype_ids():
+    """Return cached ContentType IDs for work item models (Story, Bug, Chore).
+
+    Uses get_cached_content_type() to avoid repeated DB lookups.
+    """
+    return [
+        get_cached_content_type(apps.get_model("issues", "Story")).id,
+        get_cached_content_type(apps.get_model("issues", "Bug")).id,
+        get_cached_content_type(apps.get_model("issues", "Chore")).id,
+    ]
 
 
 def clear_content_type_cache():

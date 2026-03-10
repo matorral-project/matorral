@@ -8,7 +8,6 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.issues.managers import IssueManager, KeyNumber, MilestoneManager
 from apps.utils.models import BaseModel
-from apps.utils.progress import calculate_progress
 
 from auditlog.registry import auditlog
 from polymorphic.models import PolymorphicModel
@@ -221,7 +220,7 @@ class BaseIssue(MP_Node, PolymorphicModel):
     # Note: estimated_points lives on BaseIssue (not on WorkItemMixin) so that treebeard
     # tree queries across all issue types can access points in a single query without
     # extra JOINs. Epics inherit this field but should NOT use it directly — epic "points"
-    # are always the sum of their children's points, calculated via get_progress().
+    # are always the sum of their children's points, calculated via with_progress().
     estimated_points = models.PositiveIntegerField(
         _("Estimated Points"),
         null=True,
@@ -356,11 +355,6 @@ class BaseIssue(MP_Node, PolymorphicModel):
 
     def get_status_category(self, category=None):
         return STATUS_CATEGORIES.get(self.status, category or "todo")
-
-    def get_progress(self):
-        """Calculate progress based on descendants' statuses and story points."""
-        children = self.get_descendants().non_polymorphic().only("status", "estimated_points")
-        return calculate_progress(children)
 
     @classmethod
     def get_priority_choices(cls):

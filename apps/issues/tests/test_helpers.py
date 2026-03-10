@@ -294,49 +294,6 @@ class CalculateProgressTest(TestCase):
         self.assertEqual(result["total_weight"], 1)
 
 
-class GetProgressModelMethodTest(TestCase):
-    """Tests for BaseIssue.get_progress() model method."""
-
-    @classmethod
-    def setUpTestData(cls):
-        cls.project = ProjectFactory()
-
-    def test_epic_with_children(self):
-        epic = EpicFactory(project=self.project)
-        StoryFactory(
-            project=self.project,
-            parent=epic,
-            status=IssueStatus.DONE,
-            estimated_points=3,
-        )
-        StoryFactory(
-            project=self.project,
-            parent=epic,
-            status=IssueStatus.DRAFT,
-            estimated_points=7,
-        )
-
-        result = epic.get_progress()
-
-        self.assertIsNotNone(result)
-        self.assertEqual(result["done_pct"], 30)
-        self.assertEqual(result["todo_pct"], 70)
-        self.assertEqual(result["total_weight"], 10)
-
-    def test_epic_without_children(self):
-        epic = EpicFactory(project=self.project)
-        result = epic.get_progress()
-        self.assertIsNone(result)
-
-    def test_story_with_children(self):
-        """get_progress() works on non-epic issues too."""
-        epic = EpicFactory(project=self.project)
-        story = StoryFactory(project=self.project, parent=epic, status=IssueStatus.IN_PROGRESS)
-        result = story.get_progress()
-        # Stories typically have no children, so should return None
-        self.assertIsNone(result)
-
-
 class BuildGroupedIssuesProgressTest(TestCase):
     """Tests that build_grouped_issues() includes progress for epic groups."""
 
