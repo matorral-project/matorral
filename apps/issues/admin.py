@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from apps.issues.models import BaseIssue, Bug, Chore, Epic, Milestone, Story
+from apps.issues.models import BaseIssue, Bug, Chore, Epic, Milestone, Story, Subtask
 
 from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicChildModelFilter, PolymorphicParentModelAdmin
 
@@ -80,12 +80,20 @@ class ChoreAdmin(BaseIssueChildAdmin):
     search_fields = ["key", "title"]
 
 
+@admin.register(Subtask)
+class SubtaskAdmin(BaseIssueChildAdmin):
+    base_model = Subtask
+    list_display = ["key", "title", "project", "status", "priority"]
+    list_filter = ["status", "priority", "project"]
+    search_fields = ["key", "title"]
+
+
 @admin.register(BaseIssue)
 class BaseIssueParentAdmin(PolymorphicParentModelAdmin):
     """Parent admin for browsing all issue types."""
 
     base_model = BaseIssue
-    child_models = (Epic, Story, Bug, Chore)
+    child_models = (Epic, Story, Bug, Chore, Subtask)
     list_display = [
         "key",
         "title",

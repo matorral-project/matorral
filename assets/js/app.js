@@ -12,18 +12,26 @@ window.SiteJS.app = {
 };
 
 function initNotifications() {
-  document.querySelectorAll('.notification').forEach((notification) => {
-    const deleteBtn = notification.querySelector('.delete');
-    if (deleteBtn) {
-      deleteBtn.addEventListener('click', () => {
-        notification.remove();
-      });
-    }
+  document.querySelectorAll('.notification:not([data-initialized])').forEach((notification) => {
+    notification.setAttribute('data-initialized', 'true');
     setTimeout(() => {
       notification.remove();
     }, 5000);
   });
 }
+
+// Event delegation for delete buttons - works for both existing and dynamically added notifications
+document.body.addEventListener('click', (event) => {
+  const deleteBtn = event.target.closest('.notification-delete');
+  if (deleteBtn) {
+    event.preventDefault();
+    event.stopPropagation();
+    const notification = deleteBtn.closest('.notification');
+    if (notification) {
+      notification.remove();
+    }
+  }
+});
 
 document.addEventListener('DOMContentLoaded', initNotifications);
 document.body.addEventListener('htmx:oobAfterSwap', (event) => {

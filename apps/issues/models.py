@@ -1,15 +1,12 @@
 import re
 
 from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
-from apps.issues.managers import IssueManager, MilestoneManager, SubtaskManager
-from apps.projects.models import Project
+from apps.issues.managers import IssueManager, KeyNumber, MilestoneManager
 from apps.utils.models import BaseModel
 
 from auditlog.registry import auditlog
@@ -77,7 +74,7 @@ class Milestone(BaseModel):
     """
 
     project = models.ForeignKey(
-        Project,
+        "projects.Project",
         verbose_name=_("Project"),
         on_delete=models.CASCADE,
         related_name="milestones",
@@ -124,6 +121,7 @@ class Milestone(BaseModel):
     )
 
     objects = MilestoneManager()
+    status_model = IssueStatus
 
     class Meta:
         constraints = [
@@ -179,6 +177,10 @@ class Milestone(BaseModel):
             },
         )
 
+    @classmethod
+    def get_priority_choices(cls):
+        return IssuePriority.choices
+
 
 class BaseIssue(MP_Node, PolymorphicModel):
     """
@@ -187,7 +189,7 @@ class BaseIssue(MP_Node, PolymorphicModel):
     """
 
     project = models.ForeignKey(
-        Project,
+        "projects.Project",
         verbose_name=_("Project"),
         on_delete=models.CASCADE,
         related_name="issues",
@@ -218,7 +220,7 @@ class BaseIssue(MP_Node, PolymorphicModel):
     # Note: estimated_points lives on BaseIssue (not on WorkItemMixin) so that treebeard
     # tree queries across all issue types can access points in a single query without
     # extra JOINs. Epics inherit this field but should NOT use it directly — epic "points"
-    # are always the sum of their children's points, calculated via get_progress().
+    # are always the sum of their children's points, calculated via with_progress().
     estimated_points = models.PositiveIntegerField(
         _("Estimated Points"),
         null=True,
@@ -251,6 +253,8 @@ class BaseIssue(MP_Node, PolymorphicModel):
     # Sorting is handled at query time via ordered_by_key() instead.
 
     objects = IssueManager()
+    status_categories = STATUS_CATEGORIES
+    status_model = IssueStatus
 
     class Meta:
         constraints = [
@@ -334,13 +338,10 @@ class BaseIssue(MP_Node, PolymorphicModel):
 
     def get_parent_issue(self):
         """Return the parent issue, or None if this is a root issue."""
-        parent = self.get_parent()
-        return parent
+        return self.get_parent()
 
     def get_children_issues(self):
         """Return all direct children of this issue, ordered by key."""
-        from apps.issues.managers import KeyNumber
-
         return self.get_children().annotate(key_number=KeyNumber("key")).order_by("key_number")
 
     def get_descendant_issues(self):
@@ -351,12 +352,12 @@ class BaseIssue(MP_Node, PolymorphicModel):
         """Return all ancestors of this issue."""
         return self.get_ancestors()
 
-    def get_progress(self):
-        """Calculate progress based on descendants' statuses and story points."""
-        from apps.issues.helpers import calculate_progress
+    def get_status_category(self, category=None):
+        return STATUS_CATEGORIES.get(self.status, category or "todo")
 
-        children = self.get_descendants().non_polymorphic().only("status", "estimated_points")
-        return calculate_progress(children)
+    @classmethod
+    def get_priority_choices(cls):
+        return IssuePriority.choices
 
 
 @auditlog.register(
@@ -522,50 +523,30 @@ class Chore(WorkItemMixin, BaseIssue):
             raise ValidationError(_("Chores can only be children of Epics."))
 
 
-class SubtaskStatus(models.TextChoices):
-    TODO = "todo", _("To Do")
-    IN_PROGRESS = "in_progress", _("In Progress")
-    DONE = "done", _("Done")
-    WONT_DO = "wont_do", _("Won't Do")
-
-
-class Subtask(BaseModel):
+@auditlog.register(
+    include_fields=[
+        "key",
+        "title",
+        "description",
+        "status",
+        "assignee",
+        "priority",
+    ]
+)
+class Subtask(BaseIssue):
     """
-    A subtask belongs to a work item (Story, Bug, Chore, Issue). Max 20 per parent.
-    Subtasks are simple checklist-style items to break down work into smaller actionable items.
+    A subtask is a small unit of work that belongs to a work item (Story, Bug, Chore).
+    Subtasks live in the treebeard tree as children of work items.
     """
-
-    # GenericForeignKey to parent work item
-    content_type = models.ForeignKey(
-        ContentType,
-        on_delete=models.CASCADE,
-        limit_choices_to=models.Q(app_label="issues", model__in=["story", "bug", "chore"]),
-    )
-    object_id = models.PositiveIntegerField()
-    parent = GenericForeignKey("content_type", "object_id")
-
-    title = models.CharField(_("Title"), max_length=255)
-    status = models.CharField(
-        _("Status"),
-        max_length=20,
-        choices=SubtaskStatus.choices,
-        default=SubtaskStatus.TODO,
-        db_index=True,
-    )
-    position = models.PositiveIntegerField(_("Position"), default=0, db_index=True)
-
-    objects = SubtaskManager()
 
     class Meta:
-        ordering = ["position", "created_at"]
-        indexes = [models.Index(fields=["content_type", "object_id"])]
         verbose_name = _("Subtask")
         verbose_name_plural = _("Subtasks")
 
-    def __str__(self):
-        return self.title
-
-    def save(self, *args, **kwargs):
-        if self.title:
-            self.title = self.title.strip()
-        super().save(*args, **kwargs)
+    def _validate_parent_type(self):
+        """Subtasks must have a Story, Bug, or Chore parent."""
+        parent = self.get_parent()
+        if parent is None:
+            raise ValidationError(_("Subtasks must have a parent issue."))
+        if not isinstance(parent, (Story, Bug, Chore)):
+            raise ValidationError(_("Subtasks can only be children of Stories, Bugs, or Chores."))

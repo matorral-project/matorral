@@ -1,3 +1,5 @@
+from apps.workspaces.models import Workspace
+
 from .helpers import get_onboarding_status
 
 
@@ -24,8 +26,6 @@ def default_workspace(request):
 
     # Fallback: try to find user's first workspace
     if hasattr(request, "user") and request.user.is_authenticated:
-        from apps.workspaces.models import Workspace
-
         ws = Workspace.objects.for_user(request.user).first()
         if ws:
             return {"default_workspace": ws}

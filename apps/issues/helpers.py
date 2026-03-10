@@ -1,103 +1,25 @@
 import datetime
+import json
 from collections import OrderedDict
 from functools import lru_cache
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
-from apps.issues.models import STATUS_CATEGORIES, BaseIssue, Epic, IssuePriority, IssueStatus
+from apps.issues import models
+from apps.sprints import models as sprints_models
 from apps.utils.filters import parse_status_filter
+from apps.utils.progress import build_progress_dict, calculate_progress
 
-from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
+from django_htmx.http import HttpResponseClientRefresh
 
 
 @lru_cache(maxsize=1)
 def get_epic_content_type_id():
     """Get the ContentType ID for Epic model (cached)."""
-    return ContentType.objects.get_for_model(Epic).id
-
-
-@lru_cache(maxsize=1)
-def _get_subtask_content_type_ids():
-    """Get ContentType IDs for all issue types that can have subtasks (cached)."""
-    from apps.issues.models import Bug, Chore, Story
-
-    return [ContentType.objects.get_for_model(model).id for model in [Story, Bug, Chore]]
-
-
-def count_subtasks_for_issue_ids(issue_ids):
-    """Return count of Subtask objects linked to the given issue IDs via GenericFK."""
-    from apps.issues.models import Subtask
-
-    if not issue_ids:
-        return 0
-    return Subtask.objects.filter(
-        content_type_id__in=_get_subtask_content_type_ids(),
-        object_id__in=issue_ids,
-    ).count()
-
-
-def delete_subtasks_for_issue_ids(issue_ids):
-    """Delete all Subtask objects linked to the given issue IDs via GenericFK. Returns count deleted."""
-    from apps.issues.models import Subtask
-
-    if not issue_ids:
-        return 0
-    deleted, _ = Subtask.objects.filter(
-        content_type_id__in=_get_subtask_content_type_ids(),
-        object_id__in=issue_ids,
-    ).delete()
-    return deleted
-
-
-def build_progress_dict(done_weight: int, in_progress_weight: int, todo_weight: int) -> dict | None:
-    """Build a progress dict from pre-computed weights.
-
-    Returns a dict with todo/in_progress/done percentages and weights,
-    or None if the total weight is zero.
-    """
-    total_weight = done_weight + in_progress_weight + todo_weight
-    if total_weight == 0:
-        return None
-
-    done_pct = round(done_weight / total_weight * 100)
-    in_progress_pct = round(in_progress_weight / total_weight * 100)
-    todo_pct = 100 - done_pct - in_progress_pct
-
-    return {
-        "todo_pct": todo_pct,
-        "in_progress_pct": in_progress_pct,
-        "done_pct": done_pct,
-        "todo_weight": todo_weight,
-        "in_progress_weight": in_progress_weight,
-        "done_weight": done_weight,
-        "total_weight": total_weight,
-    }
-
-
-def calculate_progress(children) -> dict | None:
-    """Calculate progress percentages from a list of child issues.
-
-    Each child's weight is its estimated_points if set, otherwise 1.
-    Returns a dict with todo/in_progress/done percentages and weights,
-    or None if there are no children.
-    """
-    todo_weight = 0
-    in_progress_weight = 0
-    done_weight = 0
-
-    for child in children:
-        weight = getattr(child, "estimated_points", None) or 1
-        category = STATUS_CATEGORIES.get(child.status, "todo")
-        if category == "todo":
-            todo_weight += weight
-        elif category == "in_progress":
-            in_progress_weight += weight
-        else:
-            done_weight += weight
-
-    return build_progress_dict(done_weight, in_progress_weight, todo_weight)
+    return ContentType.objects.get_for_model(models.Epic).id
 
 
 def calculate_valid_page(total_count: int, current_page: int, per_page: int = settings.DEFAULT_PAGE_SIZE) -> int | None:
@@ -122,13 +44,11 @@ def build_grouped_epics_by_milestone(epics, project, include_empty_milestones: b
         List of dicts with keys: milestone (Milestone|None), name (str), epics (list),
         progress (dict|None)
     """
-    from apps.issues.models import Milestone
-
     grouped = OrderedDict()
 
     # If include_empty_milestones, pre-populate with all project milestones
     if include_empty_milestones:
-        all_milestones = Milestone.objects.for_project(project).order_by("key")
+        all_milestones = models.Milestone.objects.for_project(project).order_by("key")
         for milestone in all_milestones:
             group_name = f"[{milestone.key}] {milestone.title}"
             grouped[group_name] = {
@@ -162,18 +82,15 @@ def build_grouped_epics_by_milestone(epics, project, include_empty_milestones: b
                 }
             grouped[no_milestone_name]["epics"].append(epic)
 
-    # Calculate progress for each milestone group from descendants of its epics
+    # Calculate progress for each milestone group from the epic annotations
     for group in grouped.values():
         if group["epics"]:
-            epic_paths = [e.path for e in group["epics"]]
-            if epic_paths:
-                all_children = (
-                    BaseIssue.objects.filter(path__regex=r"^(" + "|".join(epic_paths) + r")")
-                    .filter(depth__gt=1)  # Exclude the epics themselves
-                    .non_polymorphic()
-                    .only("status", "estimated_points")
-                )
-                group["progress"] = calculate_progress(all_children)
+            # Sum progress from all epics in this group
+            total_done = sum(getattr(e, "total_done_points", 0) or 0 for e in group["epics"])
+            total_in_progress = sum(getattr(e, "total_in_progress_points", 0) or 0 for e in group["epics"])
+            total_todo = sum(getattr(e, "total_todo_points", 0) or 0 for e in group["epics"])
+            total = sum(getattr(e, "total_estimated_points", 0) or 0 for e in group["epics"])
+            group["progress"] = build_progress_dict(total_done, total_in_progress, total_todo, total)
 
     # Sort: milestones by key ascending, with "No Milestone" at the end
     def _milestone_sort_key(group):
@@ -199,14 +116,14 @@ def annotate_epic_child_counts(epics):
 
     # Query all direct children of all epics at once
     all_children = (
-        BaseIssue.objects.filter(path__regex=r"^(" + "|".join(epic_paths) + r")")
+        models.BaseIssue.objects.filter(path__regex=r"^(" + "|".join(epic_paths) + r")")
         .filter(depth=2)  # Direct children of root epics (depth=1)
         .non_polymorphic()
         .only("path")
     )
 
     # Count children per epic by matching path prefix
-    steplen = BaseIssue.steplen
+    steplen = models.BaseIssue.steplen
     counts = {}
     for child in all_children:
         parent_path = child.path[:steplen]
@@ -223,7 +140,7 @@ def get_orphan_work_items(project, search_query="", status_filter="", priority_f
     Supports optional search, status, priority, and assignee filtering.
     """
     queryset = (
-        BaseIssue.objects.for_project(project)
+        models.BaseIssue.objects.for_project(project)
         .roots()
         .work_items()
         .select_related("project", "project__workspace", "assignee")
@@ -232,12 +149,12 @@ def get_orphan_work_items(project, search_query="", status_filter="", priority_f
     if search_query:
         queryset = queryset.search(search_query)
 
-    status_values = parse_status_filter(status_filter, IssueStatus.choices)
+    status_values = parse_status_filter(status_filter, models.IssueStatus.choices)
     if status_values:
         queryset = queryset.filter(status__in=status_values)
 
     if priority_filter:
-        priority_values = parse_status_filter(priority_filter, IssuePriority.choices)
+        priority_values = parse_status_filter(priority_filter, models.IssuePriority.choices)
         if priority_values:
             queryset = queryset.filter(priority__in=priority_values)
 
@@ -275,9 +192,9 @@ def build_grouped_issues(
 
     if group_by == "epic":
         # Prefetch all parent epics in one query to avoid N+1
-        steplen = BaseIssue.steplen
+        steplen = models.BaseIssue.steplen
         parent_paths = {issue.path[:-steplen] for issue in issues if len(issue.path) > steplen}
-        epics_by_path = {epic.path: epic for epic in Epic.objects.filter(path__in=parent_paths)}
+        epics_by_path = {epic.path: epic for epic in models.Epic.objects.filter(path__in=parent_paths)}
 
         # If milestone is provided and include_empty_epics is True, include only epics linked to that milestone
         if milestone and include_empty_epics:
@@ -292,9 +209,10 @@ def build_grouped_issues(
                         "epic_key": epic.key,
                         "epic": epic,
                     }
+
         # If project is provided and include_empty_epics is True, include all epics (even those without children)
         elif project and include_empty_epics:
-            all_epics = Epic.objects.for_project(project).order_by("key")
+            all_epics = models.Epic.objects.for_project(project).order_by("key")
             for epic in all_epics:
                 epics_by_path[epic.path] = epic
                 group_name = f"[{epic.key}] {epic.title}"
@@ -308,8 +226,9 @@ def build_grouped_issues(
 
         for issue in issues:
             # Skip epics - they appear as group headers, not as items
-            if isinstance(issue, Epic):
+            if isinstance(issue, models.Epic):
                 continue
+
             parent_path = issue.path[:-steplen] if len(issue.path) > steplen else None
             parent = epics_by_path.get(parent_path) if parent_path else None
             group_name = f"[{parent.key}] {parent.title}" if parent else str(_("No Epic"))
@@ -325,10 +244,13 @@ def build_grouped_issues(
 
         # Calculate progress for each epic group from its issues list
         for group in grouped.values():
-            group["progress"] = calculate_progress(group["issues"])
+            epic = group.get("epic")
+            if epic is not None:
+                # Calculate progress from the issues in the group
+                group["progress"] = calculate_progress(group["issues"])
 
         # Sort epic groups by priority (Critical first, Low last), with "No Epic" at the end
-        priority_order = {choice[0]: i for i, choice in enumerate(IssuePriority.choices)}
+        priority_order = {choice[0]: i for i, choice in enumerate(models.IssuePriority.choices)}
         max_priority = len(priority_order)
 
         def _epic_sort_key(group):
@@ -341,10 +263,10 @@ def build_grouped_issues(
         return sorted(grouped.values(), key=_epic_sort_key)
 
     elif group_by == "status":
-        status_labels = dict(IssueStatus.choices)
+        status_labels = dict(models.IssueStatus.choices)
         for issue in issues:
             # Skip epics - they appear as group headers when grouping by epic, not as work items
-            if isinstance(issue, Epic):
+            if isinstance(issue, models.Epic):
                 continue
             group_name = status_labels.get(issue.status, issue.status)
             if group_name not in grouped:
@@ -352,10 +274,10 @@ def build_grouped_issues(
             grouped[group_name]["issues"].append(issue)
 
     elif group_by == "priority":
-        priority_labels = dict(IssuePriority.choices)
+        priority_labels = dict(models.IssuePriority.choices)
         for issue in issues:
             # Skip epics - they appear as group headers when grouping by epic, not as work items
-            if isinstance(issue, Epic):
+            if isinstance(issue, models.Epic):
                 continue
             priority = getattr(issue, "priority", None)
             group_name = priority_labels.get(priority, str(_("No Priority"))) if priority else str(_("No Priority"))
@@ -366,7 +288,7 @@ def build_grouped_issues(
     elif group_by == "assignee":
         for issue in issues:
             # Skip epics - they appear as group headers when grouping by epic, not as work items
-            if isinstance(issue, Epic):
+            if isinstance(issue, models.Epic):
                 continue
             assignee = getattr(issue, "assignee", None)
             group_name = assignee.get_display_name() if assignee else str(_("Unassigned"))
@@ -377,7 +299,7 @@ def build_grouped_issues(
     elif group_by == "project":
         for issue in issues:
             # Skip epics - they appear as group headers when grouping by epic, not as work items
-            if isinstance(issue, Epic):
+            if isinstance(issue, models.Epic):
                 continue
             project = getattr(issue, "project", None)
             group_name = f"[{project.key}] {project.name}" if project else str(_("No Project"))
@@ -390,17 +312,17 @@ def build_grouped_issues(
             grouped[group_name]["issues"].append(issue)
 
     elif group_by == "sprint":
-        from apps.sprints.models import Sprint, SprintStatus
-
         # Batch-load sprints to avoid N+1 queries
         sprint_ids = {issue.sprint_id for issue in issues if getattr(issue, "sprint_id", None)}
         sprints_by_id = {}
         if sprint_ids:
-            sprints_by_id = {s.pk: s for s in Sprint.objects.filter(pk__in=sprint_ids).select_related("workspace")}
+            sprints_by_id = {
+                s.pk: s for s in sprints_models.Sprint.objects.filter(pk__in=sprint_ids).select_related("workspace")
+            }
 
         for issue in issues:
             # Skip epics - they appear as group headers when grouping by epic, not as work items
-            if isinstance(issue, Epic):
+            if isinstance(issue, models.Epic):
                 continue
             sprint = sprints_by_id.get(issue.sprint_id) if getattr(issue, "sprint_id", None) else None
             group_name = f"[{sprint.key}] {sprint.name}" if sprint else str(_("No Sprint"))
@@ -413,7 +335,7 @@ def build_grouped_issues(
             grouped[group_name]["issues"].append(issue)
 
         # Sort: active sprints first, then planning, then by key number, "No Sprint" at end
-        status_order = {SprintStatus.ACTIVE: 0, SprintStatus.PLANNING: 1}
+        status_order = {sprints_models.SprintStatus.ACTIVE: 0, sprints_models.SprintStatus.PLANNING: 1}
 
         def _sprint_sort_key(group):
             sprint = group.get("sprint")
@@ -440,7 +362,7 @@ def build_grouped_issues(
         ]
 
         for issue in issues:
-            if isinstance(issue, Epic):
+            if isinstance(issue, models.Epic):
                 continue
             due = getattr(issue, "due_date", None)
             if due is None:
@@ -468,15 +390,20 @@ def build_htmx_delete_response(request, deleted_object_url, redirect_url):
     Determines whether the user is on the deleted object's own page or on a
     parent/list page, and returns the right HTMX header:
 
-    - On the deleted object's detail page → HX-Redirect to ``redirect_url``
+    - On the deleted object's detail page → HX-Location to ``redirect_url``
       (e.g. the parent's detail page or the project page).
     - On any other page (embedded list, etc.) → HX-Refresh to reload in place.
 
     ``deleted_object_url`` is the path of the page that no longer exists (the
-    deleted object's ``get_absolute_url()``).
+    deleted object's ``get_absolute_url()``.
     """
+
     current_path = request.htmx.current_url_abs_path or ""
 
     if current_path and current_path == deleted_object_url:
-        return HttpResponseClientRedirect(redirect_url)
+        # Use HX-Location with target="#page-content" to swap only the main content
+        location_data = json.dumps({"path": redirect_url, "target": "#page-content"})
+        response = HttpResponse(status=200)
+        response["HX-Location"] = location_data
+        return response
     return HttpResponseClientRefresh()

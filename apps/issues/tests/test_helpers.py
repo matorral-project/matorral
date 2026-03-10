@@ -1,11 +1,14 @@
+import json
+
 from django.test import RequestFactory, TestCase
 
 from apps.issues.factories import BugFactory, EpicFactory, MilestoneFactory, StoryFactory
-from apps.issues.helpers import build_grouped_issues, build_htmx_delete_response, calculate_progress
+from apps.issues.helpers import build_grouped_issues, build_htmx_delete_response
 from apps.issues.models import BaseIssue, Epic, IssuePriority, IssueStatus
 from apps.projects.factories import ProjectFactory
 from apps.sprints.factories import SprintFactory
 from apps.users.factories import UserFactory
+from apps.utils.progress import calculate_progress
 
 from django_htmx.middleware import HtmxDetails
 
@@ -24,14 +27,18 @@ class BuildHtmxDeleteResponseTest(TestCase):
         return request
 
     def test_returns_redirect_when_on_deleted_object_page(self):
-        """Returns HX-Redirect when the current URL matches the deleted object URL."""
+        """Returns HX-Location when the current URL matches the deleted object URL."""
         deleted_url = "/w/my-workspace/p/PROJ/issues/STORY-1/"
         redirect_url = "/w/my-workspace/p/PROJ/"
         request = self._make_htmx_request(f"http://testserver{deleted_url}")
 
         response = build_htmx_delete_response(request, deleted_url, redirect_url)
 
-        self.assertEqual(response["HX-Redirect"], redirect_url)
+        # Check HX-Location header is set with proper JSON format
+        location_header = response["HX-Location"]
+        location_data = json.loads(location_header)
+        self.assertEqual(location_data["path"], redirect_url)
+        self.assertEqual(location_data["target"], "#page-content")
         self.assertNotIn("HX-Refresh", response)
 
     def test_returns_refresh_when_on_other_page(self):
@@ -285,49 +292,6 @@ class CalculateProgressTest(TestCase):
 
         self.assertEqual(result["done_pct"], 100)
         self.assertEqual(result["total_weight"], 1)
-
-
-class GetProgressModelMethodTest(TestCase):
-    """Tests for BaseIssue.get_progress() model method."""
-
-    @classmethod
-    def setUpTestData(cls):
-        cls.project = ProjectFactory()
-
-    def test_epic_with_children(self):
-        epic = EpicFactory(project=self.project)
-        StoryFactory(
-            project=self.project,
-            parent=epic,
-            status=IssueStatus.DONE,
-            estimated_points=3,
-        )
-        StoryFactory(
-            project=self.project,
-            parent=epic,
-            status=IssueStatus.DRAFT,
-            estimated_points=7,
-        )
-
-        result = epic.get_progress()
-
-        self.assertIsNotNone(result)
-        self.assertEqual(result["done_pct"], 30)
-        self.assertEqual(result["todo_pct"], 70)
-        self.assertEqual(result["total_weight"], 10)
-
-    def test_epic_without_children(self):
-        epic = EpicFactory(project=self.project)
-        result = epic.get_progress()
-        self.assertIsNone(result)
-
-    def test_story_with_children(self):
-        """get_progress() works on non-epic issues too."""
-        epic = EpicFactory(project=self.project)
-        story = StoryFactory(project=self.project, parent=epic, status=IssueStatus.IN_PROGRESS)
-        result = story.get_progress()
-        # Stories typically have no children, so should return None
-        self.assertIsNone(result)
 
 
 class BuildGroupedIssuesProgressTest(TestCase):

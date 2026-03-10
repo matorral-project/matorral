@@ -2,7 +2,7 @@ from datetime import date, timedelta
 
 from django.test import TestCase
 
-from apps.issues.factories import BugFactory, ChoreFactory, EpicFactory, MilestoneFactory, StoryFactory
+from apps.issues.factories import BugFactory, ChoreFactory, EpicFactory, MilestoneFactory, StoryFactory, SubtaskFactory
 from apps.issues.models import BaseIssue, Bug, Epic, IssueStatus, Milestone, Story
 from apps.projects.factories import ProjectFactory
 from apps.sprints.factories import SprintFactory
@@ -377,3 +377,166 @@ class MilestoneQuerySetStatusFilterTest(TestCase):
         self.assertIn(self.in_progress, milestones)
         self.assertNotIn(self.done, milestones)
         self.assertNotIn(self.archived, milestones)
+
+
+class MilestoneQuerySetWithProgressTest(TestCase):
+    """Tests for MilestoneQuerySet.with_progress()."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.project = ProjectFactory()
+        cls.milestone = MilestoneFactory(project=cls.project)
+
+        # Epic linked to the milestone with a mix of work items
+        cls.epic = EpicFactory(project=cls.project, milestone=cls.milestone)
+        cls.story_done = StoryFactory(project=cls.project, parent=cls.epic, status=IssueStatus.DONE, estimated_points=3)
+        cls.story_in_progress = StoryFactory(
+            project=cls.project, parent=cls.epic, status=IssueStatus.IN_PROGRESS, estimated_points=5
+        )
+        cls.bug_todo = BugFactory(project=cls.project, parent=cls.epic, status=IssueStatus.DRAFT, estimated_points=2)
+        cls.chore_todo = ChoreFactory(
+            project=cls.project, parent=cls.epic, status=IssueStatus.READY, estimated_points=None
+        )  # no points → weight 1
+
+        # Second epic on a different milestone — must not affect cls.milestone counts
+        cls.other_milestone = MilestoneFactory(project=cls.project)
+        cls.other_epic = EpicFactory(project=cls.project, milestone=cls.other_milestone)
+        StoryFactory(project=cls.project, parent=cls.other_epic, status=IssueStatus.DONE, estimated_points=10)
+
+        # Root-level work item (no epic parent) — must not be counted
+        StoryFactory(project=cls.project, status=IssueStatus.DONE, estimated_points=7)
+
+        # Subtask under a story — must not be counted (only direct epic children count)
+        SubtaskFactory(parent=cls.story_done)
+
+    def _get_milestone(self):
+        return Milestone.objects.with_progress().get(pk=self.milestone.pk)
+
+    def test_with_progress_adds_annotations(self):
+        """with_progress adds the four progress annotations."""
+        m = self._get_milestone()
+        self.assertTrue(hasattr(m, "total_done_points"))
+        self.assertTrue(hasattr(m, "total_in_progress_points"))
+        self.assertTrue(hasattr(m, "total_todo_points"))
+        self.assertTrue(hasattr(m, "total_estimated_points"))
+
+    def test_done_points(self):
+        """total_done_points sums work items in done-category statuses."""
+        m = self._get_milestone()
+        self.assertEqual(3, m.total_done_points)
+
+    def test_in_progress_points(self):
+        """total_in_progress_points sums work items in in_progress-category statuses."""
+        m = self._get_milestone()
+        self.assertEqual(5, m.total_in_progress_points)
+
+    def test_todo_points(self):
+        """total_todo_points sums work items in todo-category statuses (None points → 1)."""
+        m = self._get_milestone()
+        # bug_todo=2, chore_todo=None→1
+        self.assertEqual(3, m.total_todo_points)
+
+    def test_total_estimated_points(self):
+        """total_estimated_points is the sum of all three categories."""
+        m = self._get_milestone()
+        self.assertEqual(11, m.total_estimated_points)
+
+    def test_other_milestone_not_affected(self):
+        """Progress from another milestone's epics does not bleed into this milestone."""
+        other = Milestone.objects.with_progress().get(pk=self.other_milestone.pk)
+        self.assertEqual(10, other.total_done_points)
+        self.assertEqual(10, other.total_estimated_points)
+
+    def test_empty_milestone_returns_zeros(self):
+        """Milestone with no linked epics returns zero for all annotations."""
+        empty = MilestoneFactory(project=self.project)
+        m = Milestone.objects.with_progress().get(pk=empty.pk)
+        self.assertEqual(0, m.total_done_points)
+        self.assertEqual(0, m.total_in_progress_points)
+        self.assertEqual(0, m.total_todo_points)
+        self.assertEqual(0, m.total_estimated_points)
+
+    def test_chainable_with_other_filters(self):
+        """with_progress() is composable with other queryset methods."""
+        milestones = Milestone.objects.for_project(self.project).with_progress()
+        self.assertEqual(2, milestones.count())
+
+
+class IssueQuerySetWithProgressTest(TestCase):
+    """Tests for IssueQuerySet.with_progress() — Epic path."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.project = ProjectFactory()
+        cls.epic = EpicFactory(project=cls.project)
+        cls.story_done = StoryFactory(project=cls.project, parent=cls.epic, status=IssueStatus.DONE, estimated_points=3)
+        cls.story_in_progress = StoryFactory(
+            project=cls.project, parent=cls.epic, status=IssueStatus.IN_PROGRESS, estimated_points=5
+        )
+        cls.bug_todo = BugFactory(project=cls.project, parent=cls.epic, status=IssueStatus.DRAFT, estimated_points=2)
+        cls.chore_todo = ChoreFactory(
+            project=cls.project, parent=cls.epic, status=IssueStatus.READY, estimated_points=None
+        )  # no points → weight 1
+
+        # Second epic — must not bleed into cls.epic counts
+        cls.other_epic = EpicFactory(project=cls.project)
+        StoryFactory(project=cls.project, parent=cls.other_epic, status=IssueStatus.DONE, estimated_points=10)
+
+        # Root-level work item (no epic parent, depth=1) — must not be counted
+        StoryFactory(project=cls.project, status=IssueStatus.DONE, estimated_points=7)
+
+        # Subtask under a story — must not be counted
+        SubtaskFactory(parent=cls.story_done)
+
+    def _get_epic(self):
+        return BaseIssue.objects.for_project(self.project).with_progress().get(pk=self.epic.pk)
+
+    def test_with_progress_adds_annotations(self):
+        """with_progress adds the four progress annotations to epics."""
+        e = self._get_epic()
+        self.assertTrue(hasattr(e, "total_done_points"))
+        self.assertTrue(hasattr(e, "total_in_progress_points"))
+        self.assertTrue(hasattr(e, "total_todo_points"))
+        self.assertTrue(hasattr(e, "total_estimated_points"))
+
+    def test_done_points(self):
+        """total_done_points sums work items in done-category statuses."""
+        e = self._get_epic()
+        self.assertEqual(3, e.total_done_points)
+
+    def test_in_progress_points(self):
+        """total_in_progress_points sums work items in in_progress-category statuses."""
+        e = self._get_epic()
+        self.assertEqual(5, e.total_in_progress_points)
+
+    def test_todo_points(self):
+        """total_todo_points sums work items in todo-category statuses (None points → 1)."""
+        e = self._get_epic()
+        # bug_todo=2, chore_todo=None→1
+        self.assertEqual(3, e.total_todo_points)
+
+    def test_total_estimated_points(self):
+        """total_estimated_points is the sum of all three categories."""
+        e = self._get_epic()
+        self.assertEqual(11, e.total_estimated_points)
+
+    def test_other_epic_not_affected(self):
+        """Progress from another epic does not bleed into this epic."""
+        other = BaseIssue.objects.for_project(self.project).with_progress().get(pk=self.other_epic.pk)
+        self.assertEqual(10, other.total_done_points)
+        self.assertEqual(10, other.total_estimated_points)
+
+    def test_subtasks_not_counted(self):
+        """Subtasks (children of work items) are not counted in epic progress."""
+        e = self._get_epic()
+        # If subtasks were counted the done points would exceed 3
+        self.assertEqual(3, e.total_done_points)
+
+    def test_empty_epic_returns_zeros(self):
+        """Epic with no work item descendants returns zero for all annotations."""
+        empty_epic = EpicFactory(project=self.project)
+        e = BaseIssue.objects.for_project(self.project).with_progress().get(pk=empty_epic.pk)
+        self.assertEqual(0, e.total_done_points)
+        self.assertEqual(0, e.total_in_progress_points)
+        self.assertEqual(0, e.total_todo_points)
+        self.assertEqual(0, e.total_estimated_points)

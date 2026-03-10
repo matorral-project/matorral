@@ -10,14 +10,15 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import View
 
 from apps.issues.cascade import build_cascade_oob_response_bulk
-from apps.utils.audit import bulk_create_audit_logs
 from apps.utils.filters import get_status_filter_label, parse_status_filter
+from apps.utils.models import AuditLog
+from apps.utils.progress import build_progress_dict
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
 from ..forms import BulkActionForm, BulkLeadForm, BulkMoveForm
 from ..models import Project, ProjectStatus
 from ..tasks import start_move_operation
-from .crud import GROUP_BY_CHOICES, _attach_progress_to_projects
+from .crud import GROUP_BY_CHOICES
 from .mixins import ProjectViewMixin
 
 User = get_user_model()
@@ -124,8 +125,13 @@ class BulkActionMixin(ProjectViewMixin):
 
         # Handle pagination based on grouping
         if group_by:
-            projects = list(queryset)
-            _attach_progress_to_projects(projects)
+            projects = list(queryset.with_progress())
+            for project in projects:
+                total = getattr(project, "total_estimated_points", 0) or 0
+                done = getattr(project, "total_done_points", 0) or 0
+                in_progress = getattr(project, "total_in_progress_points", 0) or 0
+                todo = getattr(project, "total_todo_points", 0) or 0
+                project.progress = build_progress_dict(done, in_progress, todo, total)
             context = {
                 "workspace": self.workspace,
                 "projects": projects,
@@ -144,9 +150,14 @@ class BulkActionMixin(ProjectViewMixin):
                 "grouped_projects": self._build_grouped_projects(projects, group_by),
             }
         else:
-            paginator = Paginator(queryset, settings.DEFAULT_PAGE_SIZE)
+            paginator = Paginator(queryset.with_progress(), settings.DEFAULT_PAGE_SIZE)
             page_obj = paginator.get_page(page or 1)
-            _attach_progress_to_projects(list(page_obj))
+            for project in page_obj:
+                total = getattr(project, "total_estimated_points", 0) or 0
+                done = getattr(project, "total_done_points", 0) or 0
+                in_progress = getattr(project, "total_in_progress_points", 0) or 0
+                todo = getattr(project, "total_todo_points", 0) or 0
+                project.progress = build_progress_dict(done, in_progress, todo, total)
             context = {
                 "workspace": self.workspace,
                 "projects": page_obj,
@@ -228,7 +239,9 @@ class ProjectBulkStatusView(BulkActionMixin, LoginAndWorkspaceRequiredMixin, Vie
         self._cascade_objects = objects
 
         updated_count = selected_qs.update(status=self.status)
-        bulk_create_audit_logs(objects, "status", old_values, new_display, actor=self.request.user)
+        AuditLog.objects.bulk_create_for(
+            objects, field_name="status", old_values=old_values, new_display=new_display, actor=self.request.user
+        )
 
         messages.success(
             self.request,
@@ -264,7 +277,9 @@ class ProjectBulkLeadView(BulkActionMixin, LoginAndWorkspaceRequiredMixin, View)
         new_display = lead.get_display_name() if lead else None
 
         updated_count = selected_qs.update(lead=lead)
-        bulk_create_audit_logs(objects, "lead", old_values, new_display, actor=self.request.user)
+        AuditLog.objects.bulk_create_for(
+            objects, field_name="lead", old_values=old_values, new_display=new_display, actor=self.request.user
+        )
 
         if lead:
             messages.success(

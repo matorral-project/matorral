@@ -3,7 +3,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from apps.issues.factories import BugFactory, ChoreFactory, EpicFactory, MilestoneFactory, StoryFactory, SubtaskFactory
-from apps.issues.models import Epic, IssueStatus, Story, Subtask, SubtaskStatus
+from apps.issues.models import Epic, IssueStatus, Story, Subtask
 from apps.issues.services import PromotionError, promote_to_epic
 from apps.projects.factories import ProjectFactory
 from apps.sprints.factories import SprintFactory
@@ -104,8 +104,8 @@ class PromoteToEpicServiceTest(TestCase):
         self.assertIsNone(epic.get_parent())
         self.assertEqual(1, epic.depth)
 
-    def test_promote_inherits_parent_milestone(self):
-        """Promoting an item inherits the parent epic's milestone when no milestone is specified."""
+    def test_promote_no_milestone_inheritance_from_parent(self):
+        """Promoting an item does NOT inherit the parent epic's milestone."""
         milestone = MilestoneFactory(project=self.project)
         parent_epic = EpicFactory(project=self.project, milestone=milestone)
         story = StoryFactory(project=self.project, parent=parent_epic)
@@ -113,7 +113,19 @@ class PromoteToEpicServiceTest(TestCase):
         epic = promote_to_epic(story)
 
         epic.refresh_from_db()
-        self.assertEqual(milestone, epic.milestone)
+        # User must explicitly select a milestone, no automatic inheritance
+        self.assertIsNone(epic.milestone)
+
+    def test_promote_with_no_milestone_creates_orphan_epic(self):
+        """Promoting with milestone=None creates an orphan epic even under parent with milestone."""
+        milestone = MilestoneFactory(project=self.project)
+        parent_epic = EpicFactory(project=self.project, milestone=milestone)
+        story = StoryFactory(project=self.project, parent=parent_epic)
+
+        epic = promote_to_epic(story, milestone=None)  # Explicitly no milestone
+
+        epic.refresh_from_db()
+        self.assertIsNone(epic.milestone)
 
     def test_promote_inherits_parent_milestone_with_no_milestone(self):
         """Promoting an item under a parent epic with no milestone results in no milestone."""
@@ -199,9 +211,9 @@ class PromoteToEpicServiceTest(TestCase):
     def test_promote_converts_subtasks_to_stories(self):
         """Promoting converts subtasks to Stories as children of the new Epic."""
         story = StoryFactory(project=self.project, priority="high")
-        SubtaskFactory(parent=story, title="Subtask 1", status=SubtaskStatus.TODO)
-        SubtaskFactory(parent=story, title="Subtask 2", status=SubtaskStatus.IN_PROGRESS)
-        SubtaskFactory(parent=story, title="Subtask 3", status=SubtaskStatus.DONE)
+        SubtaskFactory(parent=story, title="Subtask 1", status=IssueStatus.DRAFT)
+        SubtaskFactory(parent=story, title="Subtask 2", status=IssueStatus.IN_PROGRESS)
+        SubtaskFactory(parent=story, title="Subtask 3", status=IssueStatus.DONE)
 
         epic = promote_to_epic(story, convert_subtasks=True)
 
@@ -230,7 +242,7 @@ class PromoteToEpicServiceTest(TestCase):
     def test_promote_with_wont_do_subtask(self):
         """Promoting maps WONT_DO subtask status correctly."""
         story = StoryFactory(project=self.project)
-        SubtaskFactory(parent=story, title="Cancelled task", status=SubtaskStatus.WONT_DO)
+        SubtaskFactory(parent=story, title="Cancelled task", status=IssueStatus.WONT_DO)
 
         epic = promote_to_epic(story, convert_subtasks=True)
 

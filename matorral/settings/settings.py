@@ -10,6 +10,11 @@ from celery import schedules
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+if "test" in sys.argv or "pytest" in sys.argv:
+    PASSWORD_HASHERS = [
+        "django.contrib.auth.hashers.MD5PasswordHasher",
+    ]
+
 env = environ.Env()
 env.read_env(os.path.join(BASE_DIR, ".env"))
 
@@ -21,6 +26,10 @@ ENABLE_DEBUG_TOOLBAR = env.bool("ENABLE_DEBUG_TOOLBAR", default=False) and "test
 # Environment name: "local", "production", or any custom value (e.g. "demo", "staging").
 # Controls the badge shown in the top nav: local → "local", production → "beta", other → "demo".
 ENVIRONMENT = env("ENVIRONMENT", default="local")
+
+# Demo credentials for live demo instances (only shown when ENVIRONMENT is "production")
+DEMO_CREDENTIALS_EMAIL = env("DEMO_CREDENTIALS_EMAIL", default="")
+DEMO_CREDENTIALS_PASSWORD = env("DEMO_CREDENTIALS_PASSWORD", default="")
 
 # Wildcard is fine in dev; restrict to actual hostnames in production
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
@@ -40,6 +49,7 @@ DJANGO_APPS = [
     "django.contrib.postgres",
     "django.contrib.staticfiles",
     "django.contrib.sites",
+    "django.contrib.sitemaps",
     "django.forms",
 ]
 
@@ -403,7 +413,9 @@ WAFFLE_FLAG_MODEL = "workspaces.Flag"
 
 
 SITE_DESCRIPTION = gettext_lazy("The project management tool that doesn't get in your way.")
-SITE_KEYWORDS = "project management, django"
+SITE_KEYWORDS = (
+    "project management, open source, django, ticketing, bug tracking, issue tracker, jira alternative, scrum"
+)
 
 USE_HTTPS_IN_ABSOLUTE_URLS = env.bool("USE_HTTPS_IN_ABSOLUTE_URLS", default=False)
 

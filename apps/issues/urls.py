@@ -161,6 +161,11 @@ project_urlpatterns = (
             views.SubtaskStatusToggleView.as_view(),
             name="issue_subtask_toggle",
         ),
+        path(
+            "<str:key>/subtasks/<int:subtask_pk>/clone/",
+            views.SubtaskCloneView.as_view(),
+            name="issue_subtask_clone",
+        ),
     ],
     "issues",
 )

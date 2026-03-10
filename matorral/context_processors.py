@@ -23,6 +23,8 @@ def base_context(request):
         "site_keywords": getattr(settings, "SITE_KEYWORDS", ""),
         "is_debug": settings.DEBUG,
         "env_badge": _ENV_BADGE_LABELS.get(environment, "demo"),
+        "DEMO_CREDENTIALS_EMAIL": getattr(settings, "DEMO_CREDENTIALS_EMAIL", ""),
+        "DEMO_CREDENTIALS_PASSWORD": getattr(settings, "DEMO_CREDENTIALS_PASSWORD", ""),
     }
 
 

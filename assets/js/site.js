@@ -5,6 +5,13 @@ import './alpine';
 
 window.__cssFramework = 'tailwind';
 
+// Safe wrapper for Google Analytics event tracking
+window.trackGAEvent = function(eventName, params) {
+  if (typeof window.gtag === 'function') {
+    window.gtag('event', eventName, params);
+  }
+};
+
 // Sidebar state: restore from localStorage, defaulting to open
 document.addEventListener('DOMContentLoaded', () => {
   const drawer = document.getElementById('sidebar-drawer');

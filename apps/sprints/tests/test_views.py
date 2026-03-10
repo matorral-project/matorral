@@ -1,3 +1,4 @@
+import json
 from datetime import timedelta
 
 from django.test import Client, TestCase
@@ -619,6 +620,42 @@ class SprintDeleteViewTest(SprintViewTestBase):
 
         self.assertIn("item_count", response.context)
         self.assertEqual(2, response.context["item_count"])
+
+    def test_delete_htmx_detail_page_returns_hx_location(self):
+        """HTMX delete from detail page returns HX-Location with target."""
+        sprint = SprintFactory(workspace=self.workspace)
+        sprint_pk = sprint.pk
+        detail_url = self._get_detail_url(sprint)
+        list_url = self._get_list_url()
+
+        response = self.client.post(
+            self._get_delete_url(sprint),
+            HTTP_HX_REQUEST="true",
+            HTTP_HX_CURRENT_URL=f"http://testserver{detail_url}",
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.assertIn("HX-Location", response)
+        location_data = json.loads(response["HX-Location"])
+        self.assertEqual(location_data["path"], list_url)
+        self.assertEqual(location_data["target"], "#page-content")
+        self.assertFalse(Sprint.objects.filter(pk=sprint_pk).exists())
+
+    def test_delete_htmx_other_page_returns_hx_refresh(self):
+        """HTMX delete from other page returns HX-Refresh."""
+        sprint = SprintFactory(workspace=self.workspace)
+        sprint_pk = sprint.pk
+
+        response = self.client.post(
+            self._get_delete_url(sprint),
+            HTTP_HX_REQUEST="true",
+            HTTP_HX_CURRENT_URL="http://testserver/w/workspace/sprints/",
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(response["HX-Refresh"], "true")
+        self.assertNotIn("HX-Location", response)
+        self.assertFalse(Sprint.objects.filter(pk=sprint_pk).exists())
 
 
 class SprintStartViewTest(SprintViewTestBase):

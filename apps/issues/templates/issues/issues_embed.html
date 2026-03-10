@@ -705,8 +705,10 @@
     </div>
     {% include "includes/filters_modal.html" with dispatch_event="filters-apply-embed" %}
   </section>
+  {% if messages %}
   <div id="messages" class="toast toast-end toast-bottom z-50" hx-swap-oob="true">
     {% include "includes/messages.html" %}
   </div>
+  {% endif %}
   {% endpartialdef embed-content %}
 </div>

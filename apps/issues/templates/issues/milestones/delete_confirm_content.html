@@ -16,9 +16,6 @@
       {% if work_item_count > 0 %}
       <li>{% blocktranslate count count=work_item_count %}{{ count }} work item{% plural %}{{ count }} work items{% endblocktranslate %}</li>
       {% endif %}
-      {% if subtask_count > 0 %}
-      <li>{% blocktranslate count count=subtask_count %}{{ count }} subtask{% plural %}{{ count }} subtasks{% endblocktranslate %}</li>
-      {% endif %}
     </ul>
   </div>
 </div>

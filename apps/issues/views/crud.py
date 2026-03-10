@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib import messages
-from django.http import HttpResponse
+from django.db import transaction
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -21,13 +22,12 @@ from apps.issues.helpers import (
     annotate_epic_child_counts,
     build_grouped_issues,
     build_htmx_delete_response,
-    count_subtasks_for_issue_ids,
-    delete_subtasks_for_issue_ids,
 )
-from apps.issues.models import BaseIssue, Bug, BugSeverity, Epic, IssuePriority, IssueStatus, Milestone
-from apps.issues.utils import get_cached_content_type
+from apps.issues.models import BaseIssue, Bug, BugSeverity, Epic, IssuePriority, IssueStatus, Milestone, Subtask
+from apps.issues.services import IssueConversionError, PromotionError, convert_issue_type, promote_to_epic
 from apps.projects.models import Project
 from apps.sprints.models import Sprint, SprintStatus
+from apps.utils.progress import build_progress_dict
 from apps.workspaces.limits import LimitExceededError, check_work_item_limit
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
@@ -273,27 +273,36 @@ class IssueDetailView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, IssueSingl
         return [self.template_name]
 
     def get_queryset(self):
-        return BaseIssue.objects.for_project(self.project).select_related(
-            "project", "project__workspace", "assignee", "polymorphic_ctype"
+        return (
+            BaseIssue.objects.for_project(self.project)
+            .with_progress()
+            .select_related("project", "project__workspace", "assignee", "polymorphic_ctype")
         )
+
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        if obj.get_issue_type() == "subtask":
+            raise Http404
+        return obj
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         issue = context["issue"]
         context["page_title"] = f"[{issue.key}] {issue.title}"
-        context["children"] = issue.get_children_issues()
         context["parent"] = issue.get_parent_issue()
 
-        # Set appropriate label for children based on issue type
         issue_type = issue.get_issue_type()
         if issue_type == "epic":
+            context["children"] = issue.get_children_issues()
             context["children_label"] = _("Issues")
-            # Show linked milestone if any
             context["milestone"] = issue.milestone
-            # Calculate progress from children
-            context["progress"] = issue.get_progress()
+            context["progress"] = build_progress_dict(
+                issue.total_done_points,
+                issue.total_in_progress_points,
+                issue.total_todo_points,
+                issue.total_estimated_points,
+            )
         else:
-            context["children_label"] = _("Children")
             # Needed for inline editing to show severity field for bugs
             context["is_bug"] = isinstance(issue, Bug)
 
@@ -488,10 +497,6 @@ class IssueDeleteView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, IssueSingl
             "title": self.object.title,
         }
         context["descendant_count"] = self.object.get_descendant_count()
-        # Collect all issue IDs (self + descendants) for subtask count
-        descendant_ids = list(self.object.get_descendants().values_list("pk", flat=True))
-        all_ids = [self.object.pk] + descendant_ids
-        context["subtask_count"] = count_subtasks_for_issue_ids(all_ids)
         return context
 
     def get_success_url(self):
@@ -520,11 +525,17 @@ class IssueDeleteView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, IssueSingl
         deleted_url = self.object.get_absolute_url()
         redirect_url = self._get_htmx_redirect_url()
 
-        # Delete subtasks before issue deletion (GenericFK won't cascade)
-        descendant_ids = list(self.object.get_descendants().values_list("pk", flat=True))
-        all_ids = [self.object.pk] + descendant_ids
-        delete_subtasks_for_issue_ids(all_ids)
-        self.object.delete()
+        with transaction.atomic():
+            try:
+                # Delete descendants using treebeard (non_polymorphic avoids ContentType lookups)
+                self.object.get_descendants().non_polymorphic().delete()
+                self.object.delete()
+            except Exception as e:
+                messages.error(self.request, _("Failed to delete: %(error)s") % {"error": str(e)})
+                if self.request.htmx:
+                    return HttpResponse(status=400)
+                return redirect(deleted_url)
+
         messages.success(self.request, _("%(type)s deleted successfully.") % {"type": issue_type})
 
         if self.request.htmx:
@@ -576,6 +587,8 @@ class IssueCloneView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View):
             clone_data["estimated_points"] = original.estimated_points
         if hasattr(original, "severity"):
             clone_data["severity"] = original.severity
+        if hasattr(original, "milestone"):
+            clone_data["milestone"] = original.milestone
 
         # Create the clone using the same model class
         model_class = type(original)
@@ -589,9 +602,11 @@ class IssueCloneView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View):
             _("%(type)s cloned successfully.") % {"type": saved_clone.get_issue_type_display()},
         )
 
-        # For HTMX requests, return HX-Refresh to reload the page
+        # For HTMX requests, trigger issueChanged event to refresh embedded lists
         if request.htmx:
-            return HttpResponseClientRefresh()
+            response = HttpResponse()
+            response["HX-Trigger"] = "issueChanged"
+            return response
 
         return redirect(saved_clone.get_absolute_url())
 
@@ -601,8 +616,6 @@ class IssueConvertTypeView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View)
 
     def get(self, request, *args, **kwargs):
         """Return the modal content with type selection."""
-        from django.shortcuts import render
-
         issue = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["key"])
         real_issue = issue.get_real_instance()
         current_type = real_issue.get_issue_type()
@@ -629,10 +642,6 @@ class IssueConvertTypeView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View)
 
     def post(self, request, *args, **kwargs):
         """Perform the type conversion."""
-
-        from django.shortcuts import render
-
-        from apps.issues.services import IssueConversionError, convert_issue_type
 
         issue = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["key"])
         real_issue = issue.get_real_instance()
@@ -697,10 +706,6 @@ class IssuePromoteToEpicView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
 
     def get(self, request, *args, **kwargs):
         """Return the modal content with promotion options."""
-        from django.shortcuts import render
-
-        from apps.issues.models import Subtask
-
         issue = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["key"])
         real_issue = issue.get_real_instance()
         current_type = real_issue.get_issue_type()
@@ -723,8 +728,7 @@ class IssuePromoteToEpicView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
         form = IssuePromoteToEpicForm(initial=initial, project=self.project)
 
         # Get subtask count for display
-        content_type = get_cached_content_type(type(real_issue))
-        subtask_count = Subtask.objects.filter(content_type=content_type, object_id=real_issue.pk).count()
+        subtask_count = real_issue.get_children().instance_of(Subtask).count()
 
         source = request.GET.get("source", "")
         context = {
@@ -743,10 +747,6 @@ class IssuePromoteToEpicView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
 
     def post(self, request, *args, **kwargs):
         """Perform the promotion to Epic."""
-
-        from django.shortcuts import render
-
-        from apps.issues.services import PromotionError, promote_to_epic
 
         issue = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["key"])
         real_issue = issue.get_real_instance()
@@ -793,10 +793,7 @@ class IssuePromoteToEpicView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
                 return redirect(real_issue.get_absolute_url())
 
         # Form validation failed - re-render modal content
-        from apps.issues.models import Subtask
-
-        content_type = get_cached_content_type(type(real_issue))
-        subtask_count = Subtask.objects.filter(content_type=content_type, object_id=real_issue.pk).count()
+        subtask_count = real_issue.get_children().instance_of(Subtask).count()
 
         context = {
             "issue": real_issue,
@@ -1101,8 +1098,6 @@ class IssueRowInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
 
     def get(self, request, *args, **kwargs):
         """Return display mode (cancel=1) or edit mode for the issue row."""
-        from django.shortcuts import render
-
         issue = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["key"])
         context, real_issue = self._get_context(request, issue)
 
@@ -1146,8 +1141,6 @@ class IssueRowInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
 
     def post(self, request, *args, **kwargs):
         """Save inline edits and return display mode."""
-        from django.shortcuts import render
-
         issue = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["key"])
         form = IssueRowInlineEditForm(request.POST, workspace_members=request.workspace_members)
         context, real_issue = self._get_context(request, issue, form)
@@ -1227,8 +1220,6 @@ class EpicDetailInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, V
 
     def get(self, request, *args, **kwargs):
         """Return display mode (cancel=1) or edit mode for the epic detail header."""
-        from django.shortcuts import render
-
         epic = get_object_or_404(
             Epic.objects.for_project(self.project).select_related("assignee", "milestone"),
             key=kwargs["key"],
@@ -1262,8 +1253,6 @@ class EpicDetailInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, V
 
     def post(self, request, *args, **kwargs):
         """Save inline edits and return display mode."""
-        from django.shortcuts import render
-
         epic = get_object_or_404(
             Epic.objects.for_project(self.project).select_related("assignee", "milestone"),
             key=kwargs["key"],
@@ -1337,8 +1326,6 @@ class IssueDetailInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, 
 
     def get(self, request, *args, **kwargs):
         """Return display mode (cancel=1) or edit mode for the issue detail header."""
-        from django.shortcuts import render
-
         issue = get_object_or_404(
             BaseIssue.objects.for_project(self.project).select_related("assignee"),
             key=kwargs["key"],
@@ -1376,8 +1363,6 @@ class IssueDetailInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, 
 
     def post(self, request, *args, **kwargs):
         """Save inline edits and return display mode."""
-        from django.shortcuts import render
-
         issue = get_object_or_404(
             BaseIssue.objects.for_project(self.project).select_related("assignee"),
             key=kwargs["key"],

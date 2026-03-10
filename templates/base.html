@@ -6,10 +6,30 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {% block meta %}
-          <title>{% block page_title %}{% if page_title %}{{ page_title }} | {{ site.name }}{% else %}{{ site.name }}{% endif %}{% endblock %}</title>
-          <meta name="description" content="{{ site_description }}">
-          <meta name="keywords" content="{{ site_keywords }}">
-          <link rel="canonical" href="{% if page_canonical_url %}{{ page_canonical_url }}{% else %}{{ page_url }}{% endif %}">
+        {% block meta_base %}
+            <title>{% block page_title_full %}{% if page_title %}{{ page_title }} | {% endif %}{{ site.name }}{% endblock %}</title>
+            <meta name="description" content="{% if page_description %}{{ page_description }}{% else %}{{ site_description }}{% endif %}">
+            <meta name="keywords" content="{% if page_keywords %}{{ page_keywords }}{% else %}{{ site_keywords }}{% endif %}">
+            <link rel="canonical" href="{% if page_canonical_url %}{{ page_canonical_url }}{% else %}{{ page_url }}{% endif %}">
+
+            <!-- Open Graph -->
+            <meta property="og:title" content="{% if page_title %}{{ page_title }} | {% endif %}{{ site.name }}">
+            <meta property="og:description" content="{% if page_description %}{{ page_description }}{% else %}{{ site_description }}{% endif %}">
+            <meta property="og:url" content="{% if page_canonical_url %}{{ page_canonical_url }}{% else %}{{ page_url }}{% endif %}">
+            <meta property="og:type" content="{% if og_type %}{{ og_type }}{% else %}website{% endif %}">
+            <meta property="og:site_name" content="{{ site.name }}">
+            {% if og_image %}
+            <meta property="og:image" content="{{ og_image }}">
+            {% endif %}
+
+            <!-- Twitter Cards -->
+            <meta name="twitter:card" content="{% if twitter_card %}{{ twitter_card }}{% else %}summary_large_image{% endif %}">
+            <meta name="twitter:title" content="{% if page_title %}{{ page_title }} | {% endif %}{{ site.name }}">
+            <meta name="twitter:description" content="{% if page_description %}{{ page_description }}{% else %}{{ site_description }}{% endif %}">
+            {% if og_image %}
+            <meta name="twitter:image" content="{{ og_image }}">
+            {% endif %}
+        {% endblock meta_base %}
     {% endblock meta %}
     {% include 'includes/favicon.html' %}
     <link rel="stylesheet" href="{% vite_asset_url 'assets/css/site-base.css' %}">
@@ -21,6 +41,7 @@
         {% include 'includes/google_analytics.html' %}
     {% endif %}
     {% vite_asset 'assets/js/site.js' %}
+    {% vite_asset 'assets/js/app.js' %}
     {% vite_hmr_client %}
     <script src="{% url 'javascript-catalog' %}" defer></script>
     {% block page_head %}

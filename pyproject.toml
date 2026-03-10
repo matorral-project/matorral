@@ -5,7 +5,7 @@ description = "The project management tool that doesn't get in your way."
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "Django>=6.0.2",
+    "Django==6.0.3",
     "boto3",
     "celery",
     "celery-progress",
@@ -23,7 +23,7 @@ dependencies = [
     "django-health-check",
     "django-hijack",
     "django-htmx",
-    "django-polymorphic>=4.10.4",
+    "django-polymorphic>=4.11.1",
     "django-storages",
     "django-treebeard>=4.8.0",
     "django-vite>=3.1.0",
@@ -69,7 +69,7 @@ fixable = [
     "ALL",
 ]
 unfixable = []
-select = ["E", "F", "UP", "B", "SIM"]
+select = ["E", "F", "UP", "B", "SIM", "PLC0415"]
 
 [tool.ruff.format]
 quote-style = "double"

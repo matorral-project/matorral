@@ -2,18 +2,21 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib import messages
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from apps.issues.helpers import build_grouped_issues, build_progress_dict, calculate_progress
+from apps.issues.helpers import build_grouped_issues, build_htmx_delete_response
 from apps.issues.models import BaseIssue, Bug, Chore, Story
 from apps.issues.views.mixins import IssueListContextMixin
 from apps.sprints.forms import SprintDetailInlineEditForm, SprintForm, SprintRowInlineEditForm
 from apps.sprints.models import Sprint, SprintStatus
 from apps.sprints.views.mixins import SprintFormMixin, SprintListContextMixin, SprintSingleObjectMixin, SprintViewMixin
+from apps.utils.progress import build_progress_dict, calculate_progress
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
 
@@ -73,11 +76,12 @@ class SprintListView(SprintViewMixin, SprintListContextMixin, LoginAndWorkspaceR
 
         # Build progress dicts from the annotated weights
         for sprint in context["sprints"]:
-            total = getattr(sprint, "progress_total_weight", 0)
+            total = getattr(sprint, "total_estimated_points", 0) or 0
             if total:
-                done = getattr(sprint, "progress_done_weight", 0)
-                in_progress = getattr(sprint, "progress_in_progress_weight", 0)
-                sprint.progress = build_progress_dict(done, in_progress, total - done - in_progress)
+                done = getattr(sprint, "total_done_points", 0) or 0
+                in_progress = getattr(sprint, "total_in_progress_points", 0) or 0
+                todo = getattr(sprint, "total_todo_points", 0) or 0
+                sprint.progress = build_progress_dict(done, in_progress, todo, total)
             else:
                 sprint.progress = None
 
@@ -133,10 +137,46 @@ class SprintCreateView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintFo
     template_name = "sprints/sprint_form.html"
     form_class = SprintForm
 
+    def is_modal(self):
+        return self.request.GET.get("modal") == "1"
+
+    def get_template_names(self):
+        if self.is_modal():
+            return ["sprints/includes/sprint_form_modal.html"]
+        if self.request.htmx and not self.request.htmx.history_restore_request:
+            return [f"{self.template_name}#page-content"]
+        return [self.template_name]
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["page_title"] = _("New Sprint")
         return context
+
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.workspace = self.workspace
+        self.object.created_by = self.request.user
+        self.object.save()
+
+        messages.success(self.request, _("Sprint created successfully."))
+
+        if self.is_modal():
+            list_url = reverse("sprints:sprint_list", kwargs={"workspace_slug": self.workspace.slug})
+            messages_html = render_to_string(
+                "includes/messages.html",
+                {"messages": messages.get_messages(self.request)},
+                request=self.request,
+            )
+            messages_div = (
+                f'<div id="messages" class="toast toast-end toast-bottom z-50" hx-swap-oob="true">{messages_html}</div>'
+            )
+            script = (
+                "<script>window.dispatchEvent(new CustomEvent('sprint-created', "
+                "{ detail: { listUrl: '" + list_url + "' } }));</script>"
+            )
+            return HttpResponse(messages_div + script)
+
+        return redirect(self.object.get_absolute_url())
 
     def get_initial(self):
         initial = super().get_initial()
@@ -152,15 +192,6 @@ class SprintCreateView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintFo
 
         return initial
 
-    def form_valid(self, form):
-        self.object = form.save(commit=False)
-        self.object.workspace = self.workspace
-        self.object.created_by = self.request.user
-        self.object.save()
-
-        messages.success(self.request, _("Sprint created successfully."))
-        return redirect(self.object.get_absolute_url())
-
 
 class SprintUpdateView(
     SprintViewMixin,
@@ -174,6 +205,16 @@ class SprintUpdateView(
     template_name = "sprints/sprint_form.html"
     form_class = SprintForm
 
+    def is_modal(self):
+        return self.request.GET.get("modal") == "1"
+
+    def get_template_names(self):
+        if self.is_modal():
+            return ["sprints/includes/sprint_form_modal.html"]
+        if self.request.htmx and not self.request.htmx.history_restore_request:
+            return [f"{self.template_name}#page-content"]
+        return [self.template_name]
+
     def get_queryset(self):
         return Sprint.objects.for_workspace(self.workspace)
 
@@ -185,6 +226,23 @@ class SprintUpdateView(
     def form_valid(self, form):
         self.object = form.save()
         messages.success(self.request, _("Sprint updated successfully."))
+
+        if self.is_modal():
+            list_url = reverse("sprints:sprint_list", kwargs={"workspace_slug": self.workspace.slug})
+            messages_html = render_to_string(
+                "includes/messages.html",
+                {"messages": messages.get_messages(self.request)},
+                request=self.request,
+            )
+            messages_div = (
+                f'<div id="messages" class="toast toast-end toast-bottom z-50" hx-swap-oob="true">{messages_html}</div>'
+            )
+            script = (
+                "<script>window.dispatchEvent(new CustomEvent('sprint-updated', "
+                "{ detail: { listUrl: '" + list_url + "' } }));</script>"
+            )
+            return HttpResponse(messages_div + script)
+
         return redirect(self.object.get_absolute_url())
 
 
@@ -220,8 +278,16 @@ class SprintDeleteView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSi
         )
 
     def form_valid(self, form):
+        deleted_url = self.object.get_absolute_url()
+        redirect_url = self.get_success_url()
+
+        self.object.delete()
         messages.success(self.request, _("Sprint deleted successfully."))
-        return super().form_valid(form)
+
+        if self.request.htmx:
+            return build_htmx_delete_response(self.request, deleted_url, redirect_url)
+
+        return redirect(redirect_url)
 
 
 class SprintIssueListEmbedView(SprintViewMixin, IssueListContextMixin, LoginAndWorkspaceRequiredMixin, ListView):
@@ -244,8 +310,10 @@ class SprintIssueListEmbedView(SprintViewMixin, IssueListContextMixin, LoginAndW
         # Sort by is only available when not grouping
         self.sort_by = self.request.GET.get("sort_by", "").strip() if not self.group_by else ""
 
-        queryset = BaseIssue.objects.for_sprint(self.sprint).select_related(
-            "project", "project__workspace", "assignee", "polymorphic_ctype"
+        queryset = (
+            BaseIssue.objects.work_items()
+            .for_sprint(self.sprint)
+            .select_related("project", "project__workspace", "assignee", "polymorphic_ctype")
         )
 
         # Apply filters

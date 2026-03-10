@@ -8,19 +8,6 @@ a[hx-get] {
   cursor: pointer;
 }
 
-.h-100 {
-  height: 100%;
-}
-
-.muted-link {
-  color: color-mix(in oklch, var(--color-base-content) 50%, transparent);
-}
-
-.muted-link:hover {
-  color: color-mix(in oklch, var(--color-base-content) 70%, transparent);
-  text-decoration: underline;
-}
-
 /* this is the default class assigned to errors by django forms */
 .errorlist {
   color: var(--danger);

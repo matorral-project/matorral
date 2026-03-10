@@ -15,9 +15,11 @@
         </p>
         <p class="pb-6 text-sm text-center">
           {% translate "Made with" %} <a href="https://www.djangoproject.com/" target="_blank" rel="noopener" class="text-primary no-underline">Django</a>, <a href="https://htmx.org/" target="_blank" rel="noopener" class="text-primary no-underline">HTMX</a>, {% translate "and" %} <a href="https://tailwindcss.com/" target="_blank" rel="noopener" class="text-primary no-underline">Tailwind CSS</a>.</p>
-        <div class="flex gap-4 justify-center">
-          <a href="{% url 'account_signup' %}" class="btn btn-primary" hx-boost="true">{% translate "Sign Up" %}</a>
-          <a href="{% url 'account_login' %}" class="btn btn-outline" hx-boost="true">{% translate "Sign In" %}</a>
+        <div class="flex gap-4 justify-center flex-wrap" x-data="{}">
+          <a href="{% url 'account_signup' %}" class="btn btn-primary" hx-boost="true" @click="trackGAEvent('click', { event_category: 'signup', event_label: 'button' })">{% translate "Sign Up" %}</a>
+          <a href="{% url 'account_login' %}" class="btn btn-outline" hx-boost="true" @click="trackGAEvent('click', { event_category: 'signin', event_label: 'button' })">{% translate "Sign In" %}</a>
+          <a href="https://github.com/matorral-project/matorral" target="_blank" rel="noopener" class="btn btn-outline" @click="trackGAEvent('click', { event_category: 'get-it-free', event_label: 'button' })">{% translate "Get it for Free" %}</a>
+          <a href="#live-demo" class="btn btn-secondary" hx-boost="true" @click="trackGAEvent('click', { event_category: 'live-demo', event_label: 'button' })">{% translate "Live Demo" %}</a>
         </div>
       </div>
     </div>
@@ -155,7 +157,37 @@
   <section class="py-16 px-4 bg-base-200">
     <div class="max-w-2xl mx-auto text-center">
       <h2 class="text-3xl font-bold mb-4">{% translate "Ready to get started?" %}</h2>
-      <a href="{% url 'account_signup' %}" class="btn btn-primary btn-lg" hx-boost="true">{% translate "Sign Up for Free" %}</a>
+      <div class="flex gap-4 justify-center">
+        <a href="{% url 'account_signup' %}" class="btn btn-primary btn-lg" hx-boost="true">{% translate "Sign Up for Free" %}</a>
+        <a href="https://github.com/matorral-project/matorral" target="_blank" rel="noopener" class="btn btn-outline btn-lg">{% translate "View on GitHub" %}</a>
+      </div>
+    </div>
+  </section>
+
+  {# Demo Credentials Section #}
+  <section id="live-demo" class="py-12 px-4 bg-base-200">
+    <div class="max-w-2xl mx-auto text-center">
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body items-center text-center">
+          <h2 class="card-title text-2xl">{% translate "Live Demo" %}</h2>
+          <p class="text-gray-600">
+            {% translate "Try Matorral instantly with a pre-configured demo account." %}
+          </p>
+
+          <button
+            class="btn btn-primary btn-lg mt-4"
+            hx-get="{% url 'landing_pages:demo_credentials' %}"
+            hx-target="#demo-credentials-container"
+            hx-swap="innerHTML"
+            @click="trackGAEvent('click', { event_category: 'reveal-creds', event_label: 'button' })">
+            {% translate "Reveal Demo Credentials" %}
+          </button>
+
+          <div id="demo-credentials-container" class="w-full">
+            <!-- Credentials will appear here -->
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 </main>

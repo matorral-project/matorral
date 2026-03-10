@@ -3,6 +3,8 @@ from contextlib import contextmanager
 from contextvars import ContextVar, Token
 from typing import TYPE_CHECKING
 
+from django.utils.functional import LazyObject, empty
+
 import sentry_sdk
 
 if TYPE_CHECKING:
@@ -66,8 +68,6 @@ def current_workspace(workspace: Workspace | None):
 
 def _unwrap_lazy(obj):
     """Unwraps a lazy object if it is one, otherwise returns the object itself."""
-    from django.utils.functional import LazyObject, empty
-
     if isinstance(obj, LazyObject):
         if obj._wrapped is empty:
             obj._setup()

@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
@@ -20,15 +21,13 @@ from apps.issues.forms import (
 from apps.issues.helpers import (
     build_grouped_issues,
     build_htmx_delete_response,
-    calculate_progress,
-    count_subtasks_for_issue_ids,
-    delete_subtasks_for_issue_ids,
 )
 from apps.issues.models import BaseIssue, IssuePriority, IssueStatus, Milestone
 from apps.issues.views.mixins import ISSUE_TYPE_CHOICES
 from apps.projects.models import Project
 from apps.sprints.models import Sprint, SprintStatus
-from apps.utils.audit import bulk_create_delete_audit_logs
+from apps.utils.models import AuditLog
+from apps.utils.progress import build_progress_dict
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 from apps.workspaces.models import Workspace
 
@@ -117,24 +116,27 @@ class MilestoneDetailView(
         return [self.template_name]
 
     def get_queryset(self):
-        return Milestone.objects.for_project(self.project).select_related("project", "project__workspace", "owner")
+        return (
+            Milestone.objects.for_project(self.project)
+            .with_progress()
+            .select_related("project", "project__workspace", "owner")
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["page_title"] = f"[{self.object.key}] {self.object.title}"
-        # Calculate overall milestone progress from all descendants of linked epics
-        epic_paths = list(self.object.epics.values_list("path", flat=True))
-        if epic_paths:
-            all_children = (
-                BaseIssue.objects.filter(path__regex=r"^(" + "|".join(epic_paths) + r")")
-                .filter(depth__gt=1)  # Exclude the epics themselves
-                .non_polymorphic()
-                .only("status", "estimated_points")
+
+        total = self.object.total_estimated_points
+        if total > 0:
+            context["progress"] = build_progress_dict(
+                self.object.total_done_points,
+                self.object.total_in_progress_points,
+                self.object.total_todo_points,
+                total,
             )
         else:
-            all_children = []
+            context["progress"] = None
 
-        context["progress"] = calculate_progress(all_children)
         return context
 
 
@@ -345,7 +347,7 @@ class MilestoneDeleteView(
         return [self.template_name]
 
     def _get_cascade_counts(self):
-        """Compute epic, work item, and subtask counts for the cascade deletion."""
+        """Compute epic and work item counts for the cascade deletion."""
         epics = list(self.object.epics.all())
         epic_count = len(epics)
         all_descendant_ids = []
@@ -353,8 +355,7 @@ class MilestoneDeleteView(
             all_descendant_ids.extend(epic.get_descendants().values_list("pk", flat=True))
         work_item_count = len(all_descendant_ids)
         all_issue_ids = [e.pk for e in epics] + all_descendant_ids
-        subtask_count = count_subtasks_for_issue_ids(all_issue_ids) if all_issue_ids else 0
-        return epic_count, work_item_count, subtask_count, epics, all_issue_ids
+        return epic_count, work_item_count, epics, all_issue_ids
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -362,39 +363,42 @@ class MilestoneDeleteView(
             "key": self.object.key,
             "title": self.object.title,
         }
-        epic_count, work_item_count, subtask_count, _epics, _ids = self._get_cascade_counts()
+        epic_count, work_item_count, _epics, _ids = self._get_cascade_counts()
         context["epic_count"] = epic_count
         context["work_item_count"] = work_item_count
-        context["subtask_count"] = subtask_count
         return context
 
     def get_success_url(self):
         return self.project.get_absolute_url()
 
     def form_valid(self, form):
-        # Cascade: delete subtasks, audit log descendants, delete epics, then milestone
         deleted_url = self.object.get_absolute_url()
         redirect_url = self.object.project.get_absolute_url()
 
-        epics = list(self.object.epics.all())
-        all_descendants = []
-        for epic in epics:
-            all_descendants.extend(list(epic.get_descendants()))
+        with transaction.atomic():
+            try:
+                epics = self.object.epics.all()
 
-        # Delete subtasks for all affected issues
-        all_issue_ids = [e.pk for e in epics] + [d.pk for d in all_descendants]
-        delete_subtasks_for_issue_ids(all_issue_ids)
+                # Audit log ALL deleted items (epics + all descendants)
+                all_deleted = []
+                for epic in epics:
+                    all_deleted.extend(list(epic.get_descendants()))
+                all_deleted.extend(epics)  # Include epics themselves
 
-        # Audit log descendants before bulk delete (treebeard may not fire signals)
-        if all_descendants:
-            bulk_create_delete_audit_logs(all_descendants, actor=self.request.user)
+                if all_deleted:
+                    AuditLog.objects.bulk_create_for(all_deleted, actor=self.request.user)
 
-        # Delete each epic (treebeard handles tree descendants)
-        for epic in epics:
-            epic.delete()
+                # Delete epics and all their descendants via treebeard
+                epics.non_polymorphic().delete()
 
-        # Delete the milestone itself
-        self.object.delete()
+                # Delete the milestone itself
+                self.object.delete()
+            except Exception as e:
+                messages.error(self.request, _("Failed to delete milestone: %(error)s") % {"error": str(e)})
+                if self.request.htmx:
+                    return HttpResponse(status=400)
+                return redirect(deleted_url)
+
         messages.success(self.request, _("Milestone deleted successfully."))
 
         if self.request.htmx:

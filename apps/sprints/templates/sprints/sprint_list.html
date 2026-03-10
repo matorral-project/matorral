@@ -5,6 +5,8 @@
   {% partialdef page-content inline %}
   <section class="app-card relative"
            x-data="sprintList()"
+           @sprint-created.window="showNewSprintModal = false; htmx.ajax('GET', $event.detail.listUrl, {target: '#list-content', swap: 'innerHTML'})"
+           @sprint-updated.window="showNewSprintModal = false; htmx.ajax('GET', $event.detail.listUrl, {target: '#list-content', swap: 'innerHTML'})"
            @filters-apply-page.window="
              let u = '{% url 'sprints:sprint_list' workspace.slug %}?' + new URLSearchParams({
                status: $event.detail.status || '',
@@ -98,13 +100,15 @@
             </ul>
           </div>
         </div>
-        <a href="{% url 'sprints:sprint_create' workspace.slug %}"
-           hx-get="{% url 'sprints:sprint_create' workspace.slug %}"
-           hx-push-url="true"
-           class="mt-button-primary">
+        <button type="button"
+                class="mt-button-primary"
+                hx-get="{% url 'sprints:sprint_create' workspace.slug %}?modal=1"
+                hx-target="#new-sprint-modal-content"
+                hx-swap="innerHTML"
+                @click="showNewSprintModal = true">
           <span class="mt-icon"><i class="fa fa-plus"></i></span>
           <span>{% translate "New Sprint" %}</span>
-        </a>
+        </button>
       </div>
     </div>
     {% include "includes/loading_indicator.html" with indicator_id="list-loading" %}
@@ -199,6 +203,7 @@
     {% json_vals page=page_obj.number search=search_query status_filter=status_filter owner_filter=owner_filter as owner_hx_vals %}
     {% include "includes/bulk_person_modal.html" with show_var="showBulkOwnerModal" confirm_step_var="ownerConfirmStep" selected_name_var="selectedOwnerName" selected_value_var="selectedOwnerValue" hidden_input_id="bulk-owner-value" hidden_input_name="owner" radio_name_prefix="owner" modal_title=owner_modal_title prompt_text=owner_prompt_text confirm_text=owner_confirm_text none_label=owner_none_label post_url=owner_post_url hx_vals=owner_hx_vals hx_include="[name='sprints']:checked, #bulk-owner-value" hx_target="#page-content" hx_indicator="#list-loading" current_user_id=request.user.pk current_user_name=request.user.get_display_name %}
     {% include "includes/filters_modal.html" with dispatch_event="filters-apply-page" %}
+    {% include "sprints/includes/new_sprint_modal.html" %}
   </section>
   <div id="messages" class="toast toast-end toast-bottom z-50" hx-swap-oob="true">
     {% include "includes/messages.html" %}

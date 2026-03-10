@@ -7,5 +7,6 @@ export default function sprintList() {
     selectedOwnerName: '',
     selectedOwnerValue: '',
     showFiltersModal: false,
+    showNewSprintModal: false,
   };
 }
