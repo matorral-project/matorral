@@ -338,8 +338,7 @@ class BaseIssue(MP_Node, PolymorphicModel):
 
     def get_parent_issue(self):
         """Return the parent issue, or None if this is a root issue."""
-        parent = self.get_parent()
-        return parent
+        return self.get_parent()
 
     def get_children_issues(self):
         """Return all direct children of this issue, ordered by key."""

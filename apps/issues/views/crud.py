@@ -587,6 +587,8 @@ class IssueCloneView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View):
             clone_data["estimated_points"] = original.estimated_points
         if hasattr(original, "severity"):
             clone_data["severity"] = original.severity
+        if hasattr(original, "milestone"):
+            clone_data["milestone"] = original.milestone
 
         # Create the clone using the same model class
         model_class = type(original)

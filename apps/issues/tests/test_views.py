@@ -351,34 +351,56 @@ class IssueDeleteViewTest(IssueViewTestBase):
         self.assertFalse(BaseIssue.objects.filter(pk=bug_id).exists())
 
 
-class IssueCloneViewTest(IssueViewTestBase):
-    """Tests for the issue clone view."""
+class EpicCloneViewTest(IssueViewTestBase):
+    """Tests for the epic clone view."""
 
-    def test_clone_creates_copy(self):
-        """Clone creates a copy of the issue."""
-        epic = EpicFactory(project=self.project, title="Original Epic")
-
-        response = self.client.post(self._get_clone_url(epic))
-
-        self.assertEqual(302, response.status_code)
-        self.assertEqual(2, BaseIssue.objects.for_project(self.project).count())
-        self.assertTrue(BaseIssue.objects.filter(title__contains="(Copy)").exists())
-
-    def test_clone_preserves_fields(self):
+    def test_clone_orphan_preserves_fields(self):
         """Clone preserves all fields except title and key."""
         epic = EpicFactory(
             project=self.project,
             title="Original",
             description="Test description",
             status=IssueStatus.IN_PROGRESS,
+            created_by=self.user,
         )
 
         self.client.post(self._get_clone_url(epic))
 
-        cloned = BaseIssue.objects.filter(title__contains="(Copy)").first()
+        cloned = BaseIssue.objects.filter(title__contains="(Copy)").get()
         self.assertEqual("Test description", cloned.description)
         self.assertEqual(IssueStatus.IN_PROGRESS, cloned.status)
+        self.assertEqual(epic.assignee, cloned.assignee)
+        self.assertEqual(epic.priority, cloned.priority)
+        self.assertEqual(epic.project, cloned.project)
+        self.assertEqual(epic.created_by, cloned.created_by)
+        self.assertEqual(f"{epic.title} (Copy)", cloned.title)
         self.assertNotEqual(epic.key, cloned.key)
+        self.assertIsNone(cloned.milestone)
+
+    def test_clone_epic_under_milestone_preserves_milestone_and_other_fields(self):
+        """Clone preserves milestone for epics under milestones."""
+        milestone = MilestoneFactory(project=self.project, title="Release 1.0")
+        epic = EpicFactory(
+            project=self.project,
+            title="Original Epic",
+            description="Test description",
+            status=IssueStatus.IN_PROGRESS,
+            created_by=self.user,
+            milestone=milestone,
+        )
+
+        self.client.post(self._get_clone_url(epic))
+
+        cloned = BaseIssue.objects.filter(title__contains="(Copy)").get()
+        self.assertEqual("Test description", cloned.description)
+        self.assertEqual(IssueStatus.IN_PROGRESS, cloned.status)
+        self.assertEqual(epic.assignee, cloned.assignee)
+        self.assertEqual(epic.priority, cloned.priority)
+        self.assertEqual(epic.project, cloned.project)
+        self.assertEqual(epic.created_by, cloned.created_by)
+        self.assertEqual(f"{epic.title} (Copy)", cloned.title)
+        self.assertNotEqual(epic.key, cloned.key)
+        self.assertEqual(milestone, cloned.milestone)
 
 
 class IssueMoveViewTest(IssueViewTestBase):
