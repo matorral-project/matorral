@@ -29,6 +29,26 @@ def _work_item_weight(model, statuses: list[str] | None = None) -> Coalesce:
     )
 
 
+def _work_item_points(model, statuses: list[str] | None = None) -> Coalesce:
+    """Build a Subquery expression that sums estimated_points for a sprint.
+
+    Unlike _work_item_weight, this uses raw estimated_points without
+    defaulting unset values to 1.
+    Optionally filters by status values.
+    """
+    qs = model.objects.filter(sprint_id=OuterRef("pk"))
+    if statuses:
+        qs = qs.filter(status__in=statuses)
+    return Coalesce(
+        Subquery(
+            qs.values("sprint_id").annotate(total=Sum("estimated_points")).values("total")[:1],
+            output_field=IntegerField(),
+        ),
+        Value(0),
+        output_field=IntegerField(),
+    )
+
+
 class SprintQuerySet(models.QuerySet):
     """Custom QuerySet for Sprint model."""
 
@@ -78,6 +98,30 @@ class SprintQuerySet(models.QuerySet):
         if exclude:
             qs = qs.exclude(pk=exclude.pk)
         return qs
+
+    def with_committed_points(self) -> SprintQuerySet:
+        """Annotate sprints with committed points (sum of estimated_points across all work items)."""
+        Story = apps.get_model("issues", "Story")
+        Bug = apps.get_model("issues", "Bug")
+        Chore = apps.get_model("issues", "Chore")
+
+        total = sum((_work_item_points(m) for m in [Story, Bug, Chore]), Value(0))
+        return self.annotate(computed_committed_points=total)
+
+    def with_completed_points(self) -> SprintQuerySet:
+        """Annotate sprints with completed points (sum of estimated_points for done work items)."""
+        BaseIssue = apps.get_model("issues", "BaseIssue")
+        Story = apps.get_model("issues", "Story")
+        Bug = apps.get_model("issues", "Bug")
+        Chore = apps.get_model("issues", "Chore")
+
+        done_statuses = [s for s, cat in BaseIssue.status_categories.items() if cat == "done"]
+        total = sum((_work_item_points(m, done_statuses) for m in [Story, Bug, Chore]), Value(0))
+        return self.annotate(computed_completed_points=total)
+
+    def with_velocity(self) -> SprintQuerySet:
+        """Annotate sprints with both committed and completed points."""
+        return self.with_committed_points().with_completed_points()
 
     def with_progress(self) -> SprintQuerySet:
         """Annotate sprints with progress weights computed at the database level.

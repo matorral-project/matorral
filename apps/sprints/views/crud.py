@@ -11,7 +11,7 @@ from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from apps.issues.helpers import build_grouped_issues, build_htmx_delete_response
-from apps.issues.models import BaseIssue, Bug, Chore, Story
+from apps.issues.models import BaseIssue
 from apps.issues.views.mixins import IssueListContextMixin
 from apps.sprints.forms import SprintDetailInlineEditForm, SprintForm, SprintRowInlineEditForm
 from apps.sprints.models import Sprint, SprintStatus
@@ -95,41 +95,37 @@ class SprintDetailView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSi
     template_name = "sprints/sprint_detail.html"
 
     def get_queryset(self):
-        return Sprint.objects.for_workspace(self.workspace).select_related("workspace", "owner")
+        return (
+            Sprint.objects.for_workspace(self.workspace)
+            .select_related("workspace", "owner")
+            .with_progress()
+            .with_velocity()
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         sprint = self.object
         context["page_title"] = sprint.name
 
-        # For active sprints, compute completed_points in real-time
+        # For active sprints, use real-time completed_points from annotation
         if sprint.status == SprintStatus.ACTIVE:
-            sprint.completed_points = sprint.calculate_completed_points()
+            sprint.completed_points = sprint.computed_completed_points
 
-        # Get all work items in this sprint
-        work_items = self._get_sprint_work_items()
+        # Build progress from annotated weights
+        total = getattr(sprint, "total_estimated_points", 0) or 0
+        if total:
+            done = getattr(sprint, "total_done_points", 0) or 0
+            in_progress = getattr(sprint, "total_in_progress_points", 0) or 0
+            todo = getattr(sprint, "total_todo_points", 0) or 0
+            context["progress"] = build_progress_dict(done, in_progress, todo, total)
+        else:
+            context["progress"] = None
 
-        # Calculate progress
-        context["progress"] = calculate_progress(work_items)
-
-        # Count items
-        context["item_count"] = len(work_items)
-
-        # Calculate total points from work items
-        context["total_points"] = sum(item.estimated_points or 0 for item in work_items)
+        # Count items and total points from annotations
+        context["item_count"] = BaseIssue.objects.for_sprint(sprint).count()
+        context["total_points"] = sprint.computed_committed_points
 
         return context
-
-    def _get_sprint_work_items(self):
-        """Get all work items assigned to this sprint."""
-        sprint = self.object
-        work_items = []
-
-        for model in [Story, Bug, Chore]:
-            items = model.objects.filter(sprint=sprint).select_related("project", "assignee")
-            work_items.extend(items)
-
-        return work_items
 
 
 class SprintCreateView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintFormMixin, CreateView):
@@ -264,10 +260,7 @@ class SprintDeleteView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSi
         context = super().get_context_data(**kwargs)
         context["page_title"] = _("Delete %s") % self.object.name
         # Count items assigned to this sprint
-        item_count = 0
-        for model in [Story, Bug, Chore]:
-            item_count += model.objects.filter(sprint=self.object).count()
-        context["item_count"] = item_count
+        context["item_count"] = BaseIssue.objects.for_sprint(self.object).count()
         return context
 
     def get_success_url(self):
@@ -470,19 +463,16 @@ class SprintRowInlineEditView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, V
 class SprintDetailInlineEditView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, View):
     """Handle inline editing of sprint details on the detail page."""
 
+    def _get_sprint_queryset(self):
+        return Sprint.objects.for_workspace(self.workspace).select_related("owner").with_committed_points()
+
     def _get_context(self, request, sprint, form=None):
         """Build common context for GET/POST handlers."""
-        # Calculate total points from work items in the sprint
-        total_points = 0
-        for model in [Story, Bug, Chore]:
-            items = model.objects.filter(sprint=sprint)
-            total_points += sum(item.estimated_points or 0 for item in items)
-
         context = {
             "sprint": sprint,
             "workspace": self.workspace,
             "workspace_members": request.workspace_members,
-            "total_points": total_points,
+            "total_points": sprint.computed_committed_points,
             "status_choices": SprintStatus.choices,
         }
         if form:
@@ -492,7 +482,7 @@ class SprintDetailInlineEditView(SprintViewMixin, LoginAndWorkspaceRequiredMixin
     def get(self, request, *args, **kwargs):
         """Return display mode (cancel=1) or edit mode for the sprint detail header."""
         sprint = get_object_or_404(
-            Sprint.objects.for_workspace(self.workspace).select_related("owner"),
+            self._get_sprint_queryset(),
             key=kwargs["key"],
         )
         context = self._get_context(request, sprint)
@@ -523,7 +513,7 @@ class SprintDetailInlineEditView(SprintViewMixin, LoginAndWorkspaceRequiredMixin
     def post(self, request, *args, **kwargs):
         """Save inline edits and return display mode."""
         sprint = get_object_or_404(
-            Sprint.objects.for_workspace(self.workspace).select_related("owner"),
+            self._get_sprint_queryset(),
             key=kwargs["key"],
         )
         form = SprintDetailInlineEditForm(
