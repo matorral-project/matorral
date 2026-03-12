@@ -73,6 +73,7 @@ class MilestoneForm(forms.ModelForm):
             "due_date": forms.DateInput(attrs={"type": "date"}),
             "assignee": UserComboboxWidget(),
         }
+        labels = {"assignee": _("Owner")}
 
     def __init__(self, *args, project: Project | None = None, workspace_members=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -505,6 +506,7 @@ class MilestoneRowInlineEditForm(forms.Form):
     assignee = forms.ModelChoiceField(
         queryset=User.objects.none(),
         required=False,
+        label=_("Owner"),
     )
     due_date = forms.DateField(
         required=False,
