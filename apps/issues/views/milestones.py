@@ -419,6 +419,12 @@ class MilestoneCloneView(MilestoneViewMixin, LoginAndWorkspaceRequiredMixin, Vie
         cloned.key = cloned._generate_unique_key()
         BaseIssue.add_root(instance=cloned)
         messages.success(request, _("Milestone cloned successfully."))
+
+        if request.htmx:
+            response = HttpResponse()
+            response["HX-Trigger"] = "issueChanged"
+            return response
+
         return redirect(cloned.get_absolute_url())
 
 
