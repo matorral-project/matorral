@@ -1,10 +1,8 @@
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
+from django.http import Http404, HttpResponse
 from django.views import View
 
 from apps.issues.cascade import _apply_cascade_down, _apply_cascade_up
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
-from apps.workspaces.models import Workspace
 
 
 class CascadeStatusApplyView(LoginAndWorkspaceRequiredMixin, View):
@@ -14,7 +12,9 @@ class CascadeStatusApplyView(LoginAndWorkspaceRequiredMixin, View):
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
-        self.workspace = get_object_or_404(Workspace.objects, slug=kwargs["workspace_slug"])
+        if not request.workspace:
+            raise Http404
+        self.workspace = request.workspace
 
     def post(self, request, *args, **kwargs):
         cascade_down = request.POST.get("cascade_down") == "1"

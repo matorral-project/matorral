@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -29,7 +29,6 @@ from apps.sprints.models import Sprint, SprintStatus
 from apps.utils.models import AuditLog
 from apps.utils.progress import build_progress_dict
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
-from apps.workspaces.models import Workspace
 
 from django_htmx.http import HttpResponseClientRedirect
 
@@ -48,7 +47,9 @@ class MilestoneViewMixin:
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
-        self.workspace = get_object_or_404(Workspace.objects, slug=kwargs["workspace_slug"])
+        if not request.workspace:
+            raise Http404
+        self.workspace = request.workspace
         self.project = get_object_or_404(
             Project.objects.for_workspace(self.workspace).select_related("workspace"),
             key=kwargs["project_key"],

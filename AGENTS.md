@@ -278,6 +278,23 @@ Always query the model you actually need, not intermediate models. Let Django's 
 
 ### URLs and Views
 
+- **NEVER query Workspace in view setup** - always use `request.workspace` set by middleware:
+  ```python
+  # Good: uses request.workspace (no DB query)
+  class MyViewMixin:
+      def setup(self, request, *args, **kwargs):
+          super().setup(request, *args, **kwargs)
+          if not request.workspace:
+              raise Http404
+          self.workspace = request.workspace
+
+  # Bad: redundant DB query
+  class MyViewMixin:
+      def setup(self, request, *args, **kwargs):
+          super().setup(request, *args, **kwargs)
+          self.workspace = get_object_or_404(Workspace.objects, slug=kwargs["workspace_slug"])
+  ```
+
 - **Prefer meaningful identifiers over `pk` in URLs** when a model has a unique slug or key field:
   ```python
   # Good: readable, meaningful URL
