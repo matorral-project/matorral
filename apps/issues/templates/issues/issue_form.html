@@ -20,7 +20,7 @@
       {% csrf_token %}
       {% render_form_fields form %}
       <div class="flex gap-2 mt-4">
-        <button type="submit" class="mt-button-primary">
+        <button type="submit" class="btn btn-primary">
           {% if issue %}
             {% translate "Save Changes" %}
           {% else %}
@@ -31,35 +31,35 @@
         <a href="{{ issue.get_absolute_url }}"
            hx-get="{{ issue.get_absolute_url }}"
            hx-push-url="true"
-           class="mt-button-secondary">
+           class="btn btn-outline">
           {% translate "Cancel" %}
         </a>
         {% elif next_url %}
         <a href="{{ next_url }}"
            hx-get="{{ next_url }}"
            hx-push-url="true"
-           class="mt-button-secondary">
+           class="btn btn-outline">
           {% translate "Cancel" %}
         </a>
         {% elif parent_preset %}
         <a href="{{ parent_preset.get_absolute_url }}"
            hx-get="{{ parent_preset.get_absolute_url }}"
            hx-push-url="true"
-           class="mt-button-secondary">
+           class="btn btn-outline">
           {% translate "Cancel" %}
         </a>
         {% elif project_locked %}
         <a href="{{ project.get_absolute_url }}"
            hx-get="{{ project.get_absolute_url }}"
            hx-push-url="true"
-           class="mt-button-secondary">
+           class="btn btn-outline">
           {% translate "Cancel" %}
         </a>
         {% else %}
         <a href="{% url 'workspace_issue_list' workspace.slug %}?project={{ project.key }}"
            hx-get="{% url 'workspace_issue_list' workspace.slug %}?project={{ project.key }}"
            hx-push-url="true"
-           class="mt-button-secondary">
+           class="btn btn-outline">
           {% translate "Cancel" %}
         </a>
         {% endif %}

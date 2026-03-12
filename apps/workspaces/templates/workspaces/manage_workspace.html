@@ -15,7 +15,7 @@
       {% render_form_fields workspace_form %}
       {% if request.workspace_membership.is_admin %}
         <div class="mt-2 mt-inline-buttons">
-          <input class="mt-button-primary" type="submit" value="{% translate 'Save' %}">
+          <input class="btn btn-primary" type="submit" value="{% translate 'Save' %}">
         </div>
       {% endif %}
     </form>
@@ -25,7 +25,7 @@
       <h3 class="mt-subtitle">
         {% translate "Danger Zone" %}
       </h3>
-      <label for="delete-modal" class="mt-button-danger modal-button">{% translate 'Delete Workspace' %}</label>
+      <label for="delete-modal" class="btn btn-outline text-error border-error hover:bg-error hover:border-error hover:text-error-content modal-button">{% translate 'Delete Workspace' %}</label>
     </section>
     {% include 'workspaces/includes/delete_workspace_modal.html' %}
   {% endif %}

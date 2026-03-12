@@ -113,7 +113,7 @@
       {% if sprint %}
       <div class="flex items-center gap-2" x-show="selectedCount === 0" x-cloak>
         <button type="button"
-                class="mt-button-primary"
+                class="btn btn-primary"
                 hx-get="{% url 'sprints:sprint_add_issues' workspace.slug sprint.key %}"
                 hx-target="#add-issues-modal-content"
                 hx-swap="innerHTML"
@@ -126,7 +126,7 @@
       {# Epic context - show new issue dropdown that opens modal #}
       <div class="flex items-center gap-2" x-show="selectedCount === 0" x-cloak>
         <div class="dropdown dropdown-end">
-          <div tabindex="0" role="button" class="mt-button-primary">
+          <div tabindex="0" role="button" class="btn btn-primary">
             <span class="mt-icon"><i class="fa fa-plus"></i></span>
             <span>{% translate "New" %}</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
@@ -171,7 +171,7 @@
       {# Milestone context - show New Epic button that opens modal #}
       <div class="flex items-center gap-2" x-show="selectedCount === 0" x-cloak>
         <button type="button"
-                class="mt-button-primary"
+                class="btn btn-primary"
                 hx-get="{% url 'milestones:milestone_new_epic' workspace.slug milestone.project.key milestone.key %}?modal=1"
                 hx-target="#new-epic-modal-content"
                 hx-swap="innerHTML"
@@ -184,7 +184,7 @@
       {# Project orphan context - show New dropdown with Milestone, Epic, Story, Bug, Chore #}
       <div class="flex items-center gap-2" x-show="selectedCount === 0" x-cloak>
         <div class="dropdown dropdown-end">
-          <div tabindex="0" role="button" class="mt-button-primary">
+          <div tabindex="0" role="button" class="btn btn-primary">
             <span class="mt-icon"><i class="fa fa-plus"></i></span>
             <span>{% translate "New" %}</span>
             <i class="fa fa-chevron-down ml-1"></i>
@@ -226,7 +226,7 @@
       {% else %}
       <div class="flex items-center gap-2" x-show="selectedCount === 0" x-cloak>
         <div class="dropdown dropdown-end">
-          <div tabindex="0" role="button" class="mt-button-primary">
+          <div tabindex="0" role="button" class="btn btn-primary">
             <span class="mt-icon"><i class="fa fa-plus"></i></span>
             <span>{% translate "New" %}</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">

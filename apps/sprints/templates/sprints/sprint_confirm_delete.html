@@ -21,13 +21,13 @@
     <form method="post">
       {% csrf_token %}
       <div class="flex gap-2">
-        <button type="submit" class="mt-button-danger">
+        <button type="submit" class="btn btn-outline text-error border-error hover:bg-error hover:border-error hover:text-error-content">
           {% translate "Delete" %}
         </button>
         <a href="{{ sprint.get_absolute_url }}"
            hx-get="{{ sprint.get_absolute_url }}"
            hx-push-url="true"
-           class="mt-button-secondary">
+           class="btn btn-outline">
           {% translate "Cancel" %}
         </a>
       </div>

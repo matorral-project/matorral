@@ -29,7 +29,7 @@
                 <a class="link" href="{{ workspace.get_absolute_url }}">{% translate "View Workspace" %}</a>
               </td>
               <td class="mt-inline-buttons mt-justify-content-end">
-                <a class="mt-button-secondary mx-1"
+                <a class="btn btn-outline mx-1"
                    href="{% url 'workspaces:manage_workspace' workspace.slug %}"
                    hx-get="{% url 'workspaces:manage_workspace' workspace.slug %}"
                    hx-push-url="true"

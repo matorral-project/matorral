@@ -15,7 +15,7 @@
       {% csrf_token %}
       {% render_form_fields form %}
       <div class="flex gap-2 mt-4">
-        <button type="submit" class="mt-button-primary">
+        <button type="submit" class="btn btn-primary">
           {% if milestone %}
             {% translate "Save Changes" %}
           {% else %}
@@ -25,7 +25,7 @@
         <a href="{% if milestone %}{{ milestone.get_absolute_url }}{% else %}{{ project.get_absolute_url }}{% endif %}"
            hx-get="{% if milestone %}{{ milestone.get_absolute_url }}{% else %}{{ project.get_absolute_url }}{% endif %}"
            hx-push-url="true"
-           class="mt-button-secondary">
+           class="btn btn-outline">
           {% translate "Cancel" %}
         </a>
       </div>

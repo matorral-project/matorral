@@ -20,7 +20,7 @@
                   You must verify the email address before you can accept the invitation.
                   {% endblocktranslate %}
                 </p>
-                <a class="mt-button-primary" href="{% url "account_email" %}" hx-boost="true">
+                <a class="btn btn-primary" href="{% url "account_email" %}" hx-boost="true">
                   {% blocktranslate trimmed with email=invitation.email %}
                     Verify {{ email }}
                   {% endblocktranslate %}
@@ -30,7 +30,7 @@
               <form method="post">
                 {% csrf_token %}
                 {% if user_owns_email %}
-                  <input type="submit" class="mt-button-primary" value="Accept Invitation"/>
+                  <input type="submit" class="btn btn-primary" value="Accept Invitation"/>
                 {% else %}
                   <p>
                     {% blocktranslate trimmed with invite_email=invitation.email user_email=request.user.email %}
@@ -39,12 +39,12 @@
                     {% endblocktranslate %}
                   </p>
                   <p class="buttons my-3">
-                    <a class="mt-button-primary" href="{% url 'account_email' %}" hx-boost="true">
+                    <a class="btn btn-primary" href="{% url 'account_email' %}" hx-boost="true">
                       {% blocktranslate trimmed with email=invitation.email %}
                         Add '{{ email }}' to your account
                       {% endblocktranslate %}
                     </a>
-                    <a class="mt-button-secondary" href="{% url 'account_logout' %}?invitation_id={{ invitation.id }}" hx-boost="true">
+                    <a class="btn btn-outline" href="{% url 'account_logout' %}?invitation_id={{ invitation.id }}" hx-boost="true">
                       {% translate "Sign out" %}
                     </a>
                   </p>
@@ -64,11 +64,11 @@
           {% else %}
             <p class="buttons">
               {% if account_exists %}
-                <a class="mt-button-primary" href="{% url 'account_login' %}?next={% url 'workspaces:accept_invitation' invitation.id %}" hx-boost="true">
+                <a class="btn btn-primary" href="{% url 'account_login' %}?next={% url 'workspaces:accept_invitation' invitation.id %}" hx-boost="true">
                   {% translate "Log in to Accept" %}
                 </a>
               {% else %}
-                <a class="mt-button-primary" href="{% url 'workspaces:signup_after_invite' invitation.id %}" hx-boost="true">
+                <a class="btn btn-primary" href="{% url 'workspaces:signup_after_invite' invitation.id %}" hx-boost="true">
                   {% translate "Create Account to Accept" %}
                 </a>
               {% endif %}
