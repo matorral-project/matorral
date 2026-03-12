@@ -21,7 +21,7 @@ class IssueChildrenView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View):
 
     def get(self, request, *args, **kwargs):
         issue = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["key"])
-        children = issue.get_children_issues().select_related("project", "project__workspace", "assignee")
+        children = issue.get_children_issues()
         context = {
             "children": children,
             "workspace": self.workspace,

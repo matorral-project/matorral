@@ -1,3 +1,4 @@
+from django.contrib.sites.models import Site
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -104,6 +105,7 @@ class ProjectEpicChildrenViewTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.client.force_login(self.user)
+        Site.objects.get_current()  # warm up cache for stable query count
 
     def _get_url(self):
         return reverse(
@@ -125,6 +127,24 @@ class ProjectEpicChildrenViewTest(TestCase):
         self.client.logout()
         response = self.client.get(self._get_url())
         self.assertEqual(response.status_code, 302)
+
+    def test_children_query_count(self):
+        """Verify no N+1 queries when loading children with assignees.
+
+        Query breakdown (18 total, constant regardless of child count):
+          session(1) + user auth(1) + workspace(1) + project+membership(2)
+          + epic base+polymorphic(2) + onboarding ctx(5)
+          + children base query with JOINs(1) + Story polymorphic(1) + Bug polymorphic(1)
+          + session save(2) + savepoint(1)
+        django_site is pre-warmed in setUp to ensure consistent count across test orderings.
+        """
+        assignees = UserFactory.create_batch(3)
+        StoryFactory(project=self.project, parent=self.epic, assignee=assignees[0])
+        StoryFactory(project=self.project, parent=self.epic, assignee=assignees[1])
+        BugFactory(project=self.project, parent=self.epic, assignee=assignees[2])
+        with self.assertNumQueries(18):
+            response = self.client.get(self._get_url(), HTTP_HX_REQUEST="true")
+        self.assertEqual(response.status_code, 200)
 
 
 class EpicChildInlineEditTest(TestCase):

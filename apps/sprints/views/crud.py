@@ -17,6 +17,7 @@ from apps.sprints.forms import SprintDetailInlineEditForm, SprintForm, SprintRow
 from apps.sprints.models import Sprint, SprintStatus
 from apps.sprints.views.mixins import SprintFormMixin, SprintListContextMixin, SprintSingleObjectMixin, SprintViewMixin
 from apps.utils.progress import build_progress_dict, calculate_progress
+from apps.workspaces.helpers import clear_onboarding_session_cache
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
 
@@ -157,7 +158,7 @@ class SprintCreateView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintFo
         self.object.workspace = self.workspace
         self.object.created_by = self.request.user
         self.object.save()
-
+        clear_onboarding_session_cache(self.request)
         messages.success(self.request, _("Sprint created successfully."))
 
         if self.is_modal():

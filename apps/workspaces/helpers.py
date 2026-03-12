@@ -85,6 +85,16 @@ def get_user_dashboard_data(user, workspace):
     }
 
 
+def get_onboarding_session_key(workspace):
+    return f"onboarding_pending_count_{workspace.id}"
+
+
+def clear_onboarding_session_cache(request):
+    """Clear cached onboarding count from session, forcing recompute on next request."""
+    if hasattr(request, "workspace") and request.workspace:
+        request.session.pop(get_onboarding_session_key(request.workspace), None)
+
+
 def get_onboarding_status(user, workspace):
     if user.onboarding_completed:
         return {"should_show": False, "steps": [], "pending_count": 0}

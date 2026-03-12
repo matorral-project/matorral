@@ -342,7 +342,12 @@ class BaseIssue(MP_Node, PolymorphicModel):
 
     def get_children_issues(self):
         """Return all direct children of this issue, ordered by key."""
-        return self.get_children().annotate(key_number=KeyNumber("key")).order_by("key_number")
+        return (
+            self.get_children()
+            .select_related("project", "project__workspace", "assignee")
+            .annotate(key_number=KeyNumber("key"))
+            .order_by("key_number")
+        )
 
     def get_descendant_issues(self):
         """Return all descendants of this issue."""

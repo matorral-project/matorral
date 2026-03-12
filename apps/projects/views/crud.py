@@ -26,6 +26,7 @@ from apps.issues.views.mixins import ISSUE_TYPE_CHOICES, WORK_ITEM_TYPE_CHOICES,
 from apps.sprints.models import Sprint, SprintStatus
 from apps.utils.filters import build_filter_section, count_active_filters, get_status_filter_label, parse_status_filter
 from apps.utils.progress import build_progress_dict
+from apps.workspaces.helpers import clear_onboarding_session_cache
 from apps.workspaces.limits import LimitExceededError, check_work_item_limit
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 from apps.workspaces.models import Workspace
@@ -218,6 +219,7 @@ class ProjectDetailView(
         if not request.user.onboarding_progress.get("demo_explored"):
             request.user.onboarding_progress["demo_explored"] = True
             request.user.save(update_fields=["onboarding_progress"])
+            clear_onboarding_session_cache(request)
         return response
 
     def get_context_data(self, **kwargs):
@@ -263,6 +265,7 @@ class ProjectCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Projec
         self.object.workspace = self.workspace
         self.object.created_by = self.request.user
         self.object.save()
+        clear_onboarding_session_cache(self.request)
         messages.success(self.request, _("Project created successfully."))
 
         if self.is_modal():
@@ -896,7 +899,7 @@ class ProjectEpicChildrenView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, 
 
     def get(self, request, *args, **kwargs):
         epic = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["epic_key"])
-        children = epic.get_children_issues().select_related("project", "project__workspace", "assignee")
+        children = epic.get_children_issues()
         context = {
             "children": children,
             "workspace": self.workspace,
