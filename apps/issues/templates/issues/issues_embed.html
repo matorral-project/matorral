@@ -421,14 +421,6 @@
                   </div>
                   <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
                     <li>
-                      <a href="{{ group.epic.get_absolute_url }}"
-                         hx-get="{{ group.epic.get_absolute_url }}"
-                         hx-target="#page-content"
-                         hx-push-url="true">
-                        <i class="fa fa-eye"></i> {% translate "View" %}
-                      </a>
-                    </li>
-                    <li>
                       <button type="button"
                               hx-get="{{ group.epic.get_absolute_url }}?quick_view=1"
                               hx-target="#quick-view-modal-content"
@@ -476,14 +468,6 @@
                     <i class="fa fa-ellipsis-vertical"></i>
                   </div>
                   <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-32 p-2 shadow">
-                    <li>
-                      <a href="{{ group.sprint.get_absolute_url }}"
-                         hx-get="{{ group.sprint.get_absolute_url }}"
-                         hx-target="#page-content"
-                         hx-push-url="true">
-                        <i class="fa fa-eye"></i> {% translate "View" %}
-                      </a>
-                    </li>
                     <li>
                       <a href="{% url 'sprints:sprint_update' workspace.slug group.sprint.key %}"
                          hx-get="{% url 'sprints:sprint_update' workspace.slug group.sprint.key %}"
