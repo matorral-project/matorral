@@ -93,13 +93,13 @@ class IssueChildrenViewTest(TestCase):
     def test_children_query_count(self):
         """Verify no N+1 queries when loading children with assignees.
 
-        Query breakdown (17 total, constant regardless of child count):
+        Query breakdown (16 total, constant regardless of child count):
           session(1) + user auth(1) + workspace(1) + project+membership(2)
           + epic base+polymorphic(2) + onboarding ctx(5)
           + children base query with JOINs(1) + children polymorphic(1)
           + session save(2) + savepoint(1)
         django_site is pre-warmed in setUp to ensure consistent count across test orderings.
         """
-        with self.assertNumQueries(17):
+        with self.assertNumQueries(16):
             response = self.client.get(self._get_url())
         self.assertEqual(response.status_code, 200)

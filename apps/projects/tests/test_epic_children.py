@@ -131,7 +131,7 @@ class ProjectEpicChildrenViewTest(TestCase):
     def test_children_query_count(self):
         """Verify no N+1 queries when loading children with assignees.
 
-        Query breakdown (18 total, constant regardless of child count):
+        Query breakdown (17 total, constant regardless of child count):
           session(1) + user auth(1) + workspace(1) + project+membership(2)
           + epic base+polymorphic(2) + onboarding ctx(5)
           + children base query with JOINs(1) + Story polymorphic(1) + Bug polymorphic(1)
@@ -142,7 +142,7 @@ class ProjectEpicChildrenViewTest(TestCase):
         StoryFactory(project=self.project, parent=self.epic, assignee=assignees[0])
         StoryFactory(project=self.project, parent=self.epic, assignee=assignees[1])
         BugFactory(project=self.project, parent=self.epic, assignee=assignees[2])
-        with self.assertNumQueries(18):
+        with self.assertNumQueries(17):
             response = self.client.get(self._get_url(), HTTP_HX_REQUEST="true")
         self.assertEqual(response.status_code, 200)
 

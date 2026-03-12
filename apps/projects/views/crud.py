@@ -648,15 +648,12 @@ class ProjectEpicsEmbedView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Pr
                     return member.get_display_name()
         return ""
 
-    def _get_milestone_filter_label(self):
+    def _get_milestone_filter_label(self, milestone_choices_dict):
         if not self.milestone_filter:
             return ""
         if self.milestone_filter == "none":
             return _("No Milestone")
-        milestone = Milestone.objects.for_project(self.project).filter(key=self.milestone_filter).first()
-        if milestone:
-            return f"[{milestone.key}] {milestone.title}"
-        return ""
+        return milestone_choices_dict.get(self.milestone_filter, "")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -677,7 +674,6 @@ class ProjectEpicsEmbedView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Pr
         context["assignee_filter"] = self.assignee_filter
         context["assignee_filter_label"] = self._get_assignee_filter_label()
         context["milestone_filter"] = self.milestone_filter
-        context["milestone_filter_label"] = self._get_milestone_filter_label()
         context["status_choices"] = IssueStatus.choices
         context["priority_choices"] = IssuePriority.choices
 
@@ -687,12 +683,17 @@ class ProjectEpicsEmbedView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Pr
             assignee_choices.append((str(member.pk), member.get_display_name()))
         context["assignee_choices"] = assignee_choices
 
-        # Build milestone choices
-        milestones = Milestone.objects.for_project(self.project).order_by("key")
+        # Build milestone choices (single query for all milestone data)
+        project_milestones = Milestone.objects.for_project(self.project).order_by("key").only("id", "key", "title")
         milestone_choices = [("none", _("No Milestone"))]
-        for m in milestones:
-            milestone_choices.append((m.key, f"[{m.key}] {m.title}"))
+        milestone_choices_dict = {}
+        for m in project_milestones:
+            label = f"[{m.key}] {m.title}"
+            milestone_choices.append((m.key, label))
+            milestone_choices_dict[m.key] = label
         context["milestone_choices"] = milestone_choices
+        context["milestone_filter_label"] = self._get_milestone_filter_label(milestone_choices_dict)
+        context["project_milestones"] = project_milestones
 
         # Build filter sections for modal
         filter_sections = [
@@ -759,8 +760,6 @@ class ProjectEpicsEmbedView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Pr
         # Annotate epic child counts for expand/collapse UI
         all_epics = [epic for group in context["grouped_epics"] for epic in group["epics"]]
         annotate_epic_child_counts(all_epics)
-
-        context["project_milestones"] = Milestone.objects.for_project(self.project).for_choices()
 
         return context
 
