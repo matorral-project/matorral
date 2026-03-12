@@ -320,7 +320,14 @@ class IssueCreateView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, IssueFormM
         self.parent_preset = None
         parent_key = request.GET.get("parent")
         if parent_key:
-            self.parent_preset = BaseIssue.objects.for_project(self.project).filter(key=parent_key).first()
+            try:
+                self.parent_preset = (
+                    BaseIssue.objects.for_project(self.project)
+                    .select_related("project", "project__workspace")
+                    .get(key=parent_key)
+                )
+            except BaseIssue.DoesNotExist:
+                self.parent_preset = None
         # Check if project should be locked (not editable) - used when creating from project detail page
         # Supports both ?project_locked=true and ?project=<KEY> patterns
         self.project_locked = request.GET.get("project_locked") == "true" or request.GET.get("project")
