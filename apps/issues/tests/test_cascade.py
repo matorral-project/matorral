@@ -40,7 +40,6 @@ class GetChildrenForCascadeTest(TestCase):
         milestone = MilestoneFactory(project=self.project)
         epic1 = EpicFactory(project=self.project, parent=milestone)
         epic2 = EpicFactory(project=self.project, parent=milestone)
-        _other_epic = EpicFactory(project=self.project)
 
         children, child_type = get_children_for_cascade(milestone)
 
