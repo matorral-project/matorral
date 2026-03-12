@@ -43,13 +43,11 @@
     </div>
     <div>
       <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Milestone" %}</h3>
-      <select name="milestone"
-              class="select select-bordered select-sm w-full">
-        <option value="">—</option>
-        {% for m in milestones %}
-        <option value="{{ m.pk }}" {% if issue.milestone_id == m.pk %}selected{% endif %}>{{ m.key }} - {{ m.title }}</option>
-        {% endfor %}
-      </select>
+      {% if milestone %}
+      <p class="text-sm py-1">{{ milestone.key }} - {{ milestone.title }}</p>
+      {% else %}
+      <span class="text-gray-400">—</span>
+      {% endif %}
     </div>
     <div>
       <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Project" %}</h3>

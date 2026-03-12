@@ -68,21 +68,21 @@ class MilestoneForm(forms.ModelForm):
 
     class Meta:
         model = Milestone
-        fields = ["title", "description", "status", "due_date", "priority", "owner"]
+        fields = ["title", "description", "status", "due_date", "priority", "assignee"]
         widgets = {
             "due_date": forms.DateInput(attrs={"type": "date"}),
-            "owner": UserComboboxWidget(),
+            "assignee": UserComboboxWidget(),
         }
 
     def __init__(self, *args, project: Project | None = None, workspace_members=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.project = project
 
-        # Set up owner queryset - use cached workspace_members if provided
+        # Set up assignee queryset - use cached workspace_members if provided
         if workspace_members is not None:
-            self.fields["owner"].queryset = workspace_members
+            self.fields["assignee"].queryset = workspace_members
         elif self.project:
-            self.fields["owner"].queryset = User.objects.for_workspace(self.project.workspace).for_choices()
+            self.fields["assignee"].queryset = User.objects.for_workspace(self.project.workspace).for_choices()
 
     def clean_title(self):
         title = self.cleaned_data.get("title")
@@ -94,13 +94,6 @@ class MilestoneForm(forms.ModelForm):
 class EpicForm(BaseIssueForm):
     """Form for creating/editing Epics."""
 
-    milestone = forms.ModelChoiceField(
-        queryset=Milestone.objects.none(),
-        required=False,
-        label=_("Milestone"),
-        help_text=_("Optionally link this epic to a project-level milestone."),
-    )
-
     class Meta:
         model = Epic
         fields = [
@@ -111,7 +104,7 @@ class EpicForm(BaseIssueForm):
             "due_date",
             "priority",
             "assignee",
-            "milestone",
+            "parent",
         ]
         widgets = {
             "due_date": forms.DateInput(attrs={"type": "date"}),
@@ -122,15 +115,7 @@ class EpicForm(BaseIssueForm):
         self.workspace = workspace
         self.workspace_members = workspace_members
         super().__init__(*args, **kwargs)
-        # Epics don't have tree parents
-        if "parent" in self.fields:
-            del self.fields["parent"]
-        # Set up milestone queryset - milestones are project-scoped
-        if self.project:
-            self.fields["milestone"].queryset = Milestone.objects.for_project(self.project).for_choices()
-        elif self.workspace:
-            # Workspace-level epic creation - no project context yet, so no milestones available
-            # Milestone selection should happen after project is selected (handled in UI)
+        if self.workspace and not self.project:
             self.fields["project"].queryset = Project.objects.for_workspace(self.workspace).for_choices()
 
         # Set up assignee queryset - use cached workspace_members if provided
@@ -142,8 +127,11 @@ class EpicForm(BaseIssueForm):
             self.fields["assignee"].queryset = User.objects.for_workspace(self.workspace).for_choices()
 
     def _setup_parent_queryset(self):
-        """Epics don't have tree parents - milestone is a separate FK."""
-        pass
+        """Epics can optionally be placed under a Milestone."""
+        if self.project:
+            self.fields["parent"].queryset = Milestone.objects.for_project(self.project).for_choices()
+            self.fields["parent"].label = _("Milestone")
+            self.fields["parent"].help_text = _("Optionally place this epic under a milestone.")
 
 
 class WorkItemFormMixin:
@@ -180,11 +168,13 @@ class StoryForm(WorkItemFormMixin, BaseIssueForm):
         }
 
     def _setup_parent_queryset(self):
-        """Stories can optionally have an Epic parent."""
+        """Stories can optionally have an Epic or Milestone parent."""
         if self.project:
-            self.fields["parent"].queryset = Epic.objects.for_project(self.project).for_choices()
-            self.fields["parent"].label = _("Epic")
-            self.fields["parent"].help_text = _("Optionally assign this story to an epic.")
+            self.fields["parent"].queryset = (
+                BaseIssue.objects.for_project(self.project).of_type(Epic, Milestone).for_choices()
+            )
+            self.fields["parent"].label = _("Epic / Milestone")
+            self.fields["parent"].help_text = _("Optionally assign this story to an epic or milestone.")
 
 
 class ChoreForm(WorkItemFormMixin, BaseIssueForm):
@@ -209,11 +199,13 @@ class ChoreForm(WorkItemFormMixin, BaseIssueForm):
         }
 
     def _setup_parent_queryset(self):
-        """Chores can optionally have an Epic parent."""
+        """Chores can optionally have an Epic or Milestone parent."""
         if self.project:
-            self.fields["parent"].queryset = Epic.objects.for_project(self.project).for_choices()
-            self.fields["parent"].label = _("Epic")
-            self.fields["parent"].help_text = _("Optionally assign this chore to an epic.")
+            self.fields["parent"].queryset = (
+                BaseIssue.objects.for_project(self.project).of_type(Epic, Milestone).for_choices()
+            )
+            self.fields["parent"].label = _("Epic / Milestone")
+            self.fields["parent"].help_text = _("Optionally assign this chore to an epic or milestone.")
 
 
 class BugForm(WorkItemFormMixin, BaseIssueForm):
@@ -239,11 +231,13 @@ class BugForm(WorkItemFormMixin, BaseIssueForm):
         }
 
     def _setup_parent_queryset(self):
-        """Bugs can optionally have an Epic parent."""
+        """Bugs can optionally have an Epic or Milestone parent."""
         if self.project:
-            self.fields["parent"].queryset = Epic.objects.for_project(self.project).for_choices()
-            self.fields["parent"].label = _("Epic")
-            self.fields["parent"].help_text = _("Optionally assign this bug to an epic.")
+            self.fields["parent"].queryset = (
+                BaseIssue.objects.for_project(self.project).of_type(Epic, Milestone).for_choices()
+            )
+            self.fields["parent"].label = _("Epic / Milestone")
+            self.fields["parent"].help_text = _("Optionally assign this bug to an epic or milestone.")
 
 
 # Form registry for type-specific forms (milestones are workspace-scoped, not issue types)
@@ -434,7 +428,7 @@ class IssueRowInlineEditForm(forms.Form):
 
 
 class EpicDetailInlineEditForm(IssueRowInlineEditForm):
-    """Form for inline editing epic details page. Extends row form with description, due_date, milestone."""
+    """Form for inline editing epic details page. Extends row form with description and due_date."""
 
     description = forms.CharField(
         required=False,
@@ -444,15 +438,6 @@ class EpicDetailInlineEditForm(IssueRowInlineEditForm):
         required=False,
         widget=forms.DateInput(attrs={"type": "date"}),
     )
-    milestone = forms.ModelChoiceField(
-        queryset=None,
-        required=False,
-    )
-
-    def __init__(self, *args, workspace_members=None, milestones=None, **kwargs):
-        super().__init__(*args, workspace_members=workspace_members, **kwargs)
-        if milestones is not None:
-            self.fields["milestone"].queryset = milestones
 
     def clean_description(self):
         description = self.cleaned_data.get("description")
@@ -517,7 +502,7 @@ class MilestoneRowInlineEditForm(forms.Form):
         choices=IssuePriority.choices,
         required=False,
     )
-    owner = forms.ModelChoiceField(
+    assignee = forms.ModelChoiceField(
         queryset=User.objects.none(),
         required=False,
     )
@@ -529,7 +514,7 @@ class MilestoneRowInlineEditForm(forms.Form):
     def __init__(self, *args, workspace_members=None, **kwargs):
         super().__init__(*args, **kwargs)
         if workspace_members is not None:
-            self.fields["owner"].queryset = workspace_members
+            self.fields["assignee"].queryset = workspace_members
 
     def clean_title(self):
         title = self.cleaned_data.get("title")
@@ -647,12 +632,6 @@ class IssueConvertTypeForm(forms.Form):
 class IssuePromoteToEpicForm(forms.Form):
     """Form for promoting a work item to an Epic."""
 
-    milestone = forms.ModelChoiceField(
-        queryset=Milestone.objects.none(),
-        required=False,
-        label=_("Milestone"),
-        help_text=_("Optionally link the new Epic to a milestone."),
-    )
     convert_subtasks = forms.BooleanField(
         required=False,
         initial=True,
@@ -662,5 +641,3 @@ class IssuePromoteToEpicForm(forms.Form):
 
     def __init__(self, *args, project: Project | None = None, **kwargs):
         super().__init__(*args, **kwargs)
-        if project:
-            self.fields["milestone"].queryset = Milestone.objects.for_project(project).for_choices()

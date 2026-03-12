@@ -304,7 +304,7 @@ class ProjectOrphanIssuesEmbedTest(TestCase):
         MembershipFactory(workspace=cls.workspace, user=cls.user, role=ROLE_MEMBER)
         cls.project = ProjectFactory(workspace=cls.workspace)
         cls.milestone = MilestoneFactory(project=cls.project, title="M1")
-        cls.epic = EpicFactory(project=cls.project, title="Epic 1", milestone=cls.milestone)
+        cls.epic = EpicFactory(project=cls.project, title="Epic 1", parent=cls.milestone)
         cls.orphan = StoryFactory(project=cls.project, title="Orphan Story")
 
     def setUp(self):
@@ -367,7 +367,7 @@ class ProjectEpicsEmbedChildCountTest(TestCase):
         MembershipFactory(workspace=cls.workspace, user=cls.user, role=ROLE_MEMBER)
         cls.project = ProjectFactory(workspace=cls.workspace)
         cls.milestone = MilestoneFactory(project=cls.project, title="M1")
-        cls.epic = EpicFactory(project=cls.project, title="Epic 1", milestone=cls.milestone)
+        cls.epic = EpicFactory(project=cls.project, title="Epic 1", parent=cls.milestone)
 
     def setUp(self):
         self.client = Client()

@@ -44,33 +44,37 @@ class CreateDemoProjectTest(WorkspaceTestMixin, TestCase):
         self.assertEqual(milestones["Public Beta"].status, IssueStatus.PLANNING)
         self.assertEqual(milestones["Public Launch"].status, IssueStatus.DRAFT)
 
-    def test_milestones_have_owner_and_no_created_by(self):
+    def test_milestones_have_assignee_and_no_created_by(self):
         for milestone in Milestone.objects.filter(project=self.project):
             self.assertEqual(
-                milestone.owner,
+                milestone.assignee,
                 self.admin,
-                f"Milestone '{milestone.title}' missing owner",
+                f"Milestone '{milestone.title}' missing assignee",
             )
             self.assertIsNone(
                 milestone.created_by,
                 f"Milestone '{milestone.title}' should have no created_by",
             )
 
-    def test_milestone_keys_are_sequential(self):
-        keys = list(Milestone.objects.filter(project=self.project).order_by("key").values_list("key", flat=True))
-        self.assertEqual(keys, ["M-1", "M-2", "M-3", "M-4"])
+    def test_milestone_keys_use_project_prefix(self):
+        """Milestone keys use project key prefix, not M-N format."""
+        project_key = self.project.key
+        for milestone in Milestone.objects.filter(project=self.project):
+            self.assertTrue(
+                milestone.key.startswith(project_key + "-"),
+                f"Milestone key '{milestone.key}' does not start with '{project_key}-'",
+            )
 
     def test_creates_eleven_epics(self):
         epics = Epic.objects.filter(project=self.project)
         self.assertEqual(epics.count(), 11)
 
-    def test_epics_are_root_nodes(self):
+    def test_epics_have_milestone_parent(self):
+        """All epics in demo data should be children of a milestone in the tree."""
         for epic in Epic.objects.filter(project=self.project):
-            self.assertEqual(epic.depth, 1, f"Epic '{epic.title}' is not a root node")
-
-    def test_epics_linked_to_milestones(self):
-        for epic in Epic.objects.filter(project=self.project).select_related("milestone"):
-            self.assertIsNotNone(epic.milestone, f"Epic '{epic.title}' has no milestone")
+            parent = epic.get_parent()
+            self.assertIsNotNone(parent, f"Epic '{epic.title}' has no parent")
+            self.assertIsInstance(parent, Milestone, f"Epic '{epic.title}' parent is not a Milestone")
 
     def test_epics_have_assignee_and_no_created_by(self):
         for epic in Epic.objects.filter(project=self.project):
@@ -88,18 +92,23 @@ class CreateDemoProjectTest(WorkspaceTestMixin, TestCase):
         self.assertGreater(chores, 0)
 
     def test_work_items_are_children_of_epics(self):
-        for item in BaseIssue.objects.filter(project=self.project, depth=2):
+        # Work items are at depth=3: Milestone(1) → Epic(2) → WorkItem(3)
+        work_items = BaseIssue.objects.filter(project=self.project, depth=3)
+        self.assertGreater(work_items.count(), 0, "Expected work items at depth=3")
+        for item in work_items:
             parent = item.get_parent()
             self.assertIsNotNone(parent)
             self.assertIsInstance(parent, Epic)
 
     def test_work_items_have_estimated_points(self):
-        for item in BaseIssue.objects.filter(project=self.project, depth=2):
+        # Work items are at depth=3: Milestone(1) → Epic(2) → WorkItem(3)
+        for item in BaseIssue.objects.filter(project=self.project, depth=3):
             self.assertIsNotNone(item.estimated_points, f"Item '{item.title}' has no estimated_points")
             self.assertIn(item.estimated_points, [1, 2, 3, 5, 8])
 
     def test_work_items_have_assignee_and_no_created_by(self):
-        for item in BaseIssue.objects.filter(project=self.project, depth=2):
+        # Work items are at depth=3: Milestone(1) → Epic(2) → WorkItem(3)
+        for item in BaseIssue.objects.filter(project=self.project, depth=3):
             self.assertEqual(item.assignee, self.admin, f"Item '{item.title}' missing assignee")
             self.assertIsNone(item.created_by, f"Item '{item.title}' should have no created_by")
 

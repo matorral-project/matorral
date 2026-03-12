@@ -20,6 +20,7 @@ from apps.issues.helpers import (
     build_grouped_issues,
     build_htmx_delete_response,
     get_epic_content_type_id,
+    get_milestone_content_type_id,
 )
 from apps.issues.models import BaseIssue, Epic, IssuePriority, IssueStatus, Milestone
 from apps.issues.views.mixins import ISSUE_TYPE_CHOICES, WORK_ITEM_TYPE_CHOICES, IssueListContextMixin
@@ -338,7 +339,7 @@ class ProjectDeleteView(
         # Work items = all non-epic issues
         work_item_ids = list(
             BaseIssue.objects.for_project(project)
-            .exclude(polymorphic_ctype_id=get_epic_content_type_id())
+            .exclude(polymorphic_ctype_id__in=[get_epic_content_type_id(), get_milestone_content_type_id()])
             .values_list("pk", flat=True)
         )
         context["work_item_count"] = len(work_item_ids)
@@ -592,9 +593,7 @@ class ProjectEpicsEmbedView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Pr
         self.assignee_filter = self.request.GET.get("assignee", "").strip()
         self.milestone_filter = self.request.GET.get("milestone", "").strip()
 
-        queryset = Epic.objects.for_project(self.project).select_related(
-            "project", "project__workspace", "assignee", "milestone"
-        )
+        queryset = Epic.objects.for_project(self.project).select_related("project", "project__workspace", "assignee")
 
         # Apply search filter
         if self.search_query:
@@ -618,12 +617,17 @@ class ProjectEpicsEmbedView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Pr
             elif self.assignee_filter.isdigit():
                 queryset = queryset.filter(assignee_id=int(self.assignee_filter))
 
-        # Apply milestone filter
+        # Apply milestone filter using tree parent relationship
         if self.milestone_filter:
             if self.milestone_filter == "none":
-                queryset = queryset.filter(milestone__isnull=True)
+                # Orphan epics: depth=1 (no parent)
+                queryset = queryset.filter(depth=1)
             else:
-                queryset = queryset.filter(milestone__key=self.milestone_filter)
+                milestone = Milestone.objects.for_project(self.project).filter(key=self.milestone_filter).first()
+                if milestone:
+                    queryset = queryset.filter(path__startswith=milestone.path, depth=milestone.depth + 1)
+                else:
+                    queryset = queryset.none()
 
         return queryset.with_progress().order_by("key")
 
@@ -922,12 +926,12 @@ class ProjectEpicCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Pr
             Project.objects.for_workspace(self.workspace).select_related("workspace"),
             key=kwargs["key"],
         )
-        # Pre-select milestone if provided in query params
+        # Pre-select parent milestone if provided in query params
         milestone_key = request.GET.get("milestone")
         if milestone_key:
-            self.milestone = Milestone.objects.for_project(self.project).filter(key=milestone_key).first()
+            self.parent_milestone = Milestone.objects.for_project(self.project).filter(key=milestone_key).first()
         else:
-            self.milestone = None
+            self.parent_milestone = None
 
     def get_form_kwargs(self):
         kwargs = {
@@ -943,16 +947,16 @@ class ProjectEpicCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Pr
         # Hide project field since it's preset
         if "project" in form.fields:
             del form.fields["project"]
-        # Hide milestone field when pre-selected via query param
-        if self.milestone and "milestone" in form.fields:
-            del form.fields["milestone"]
+        # Hide parent field when pre-selected via query param
+        if self.parent_milestone and "parent" in form.fields:
+            del form.fields["parent"]
         return form
 
     def get_context_data(self, **kwargs):
         context = {
             "workspace": self.workspace,
             "project": self.project,
-            "milestone": self.milestone,
+            "milestone": self.parent_milestone,
             "form": kwargs.get("form", self.get_form()),
             "issue_type_label": _("Epic"),
         }
@@ -981,12 +985,12 @@ class ProjectEpicCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Pr
     def form_valid(self, form):
         obj = form.save(commit=False)
         obj.project = self.project
-        if self.milestone:
-            obj.milestone = self.milestone
         obj.created_by = self.request.user
         obj.key = obj._generate_unique_key()
-        # Epics are root-level issues
-        BaseIssue.add_root(instance=obj)
+        if self.parent_milestone:
+            self.parent_milestone.add_child(instance=obj)
+        else:
+            BaseIssue.add_root(instance=obj)
 
         messages.success(self.request, _("Epic created successfully."))
 
@@ -1212,7 +1216,7 @@ class ProjectMilestoneCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixi
         obj = form.save(commit=False)
         obj.project = self.project
         obj.created_by = self.request.user
-        obj.save()
+        BaseIssue.add_root(instance=obj)
 
         messages.success(self.request, _("Milestone created successfully."))
 

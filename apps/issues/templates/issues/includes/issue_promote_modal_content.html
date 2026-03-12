@@ -10,24 +10,6 @@
     {% endblocktranslate %}
   </p>
 
-  {# Milestone selection #}
-  <div class="form-control mb-4">
-    <label class="label">
-      <span class="label-text font-semibold">{{ form.milestone.label }}</span>
-    </label>
-    <select name="milestone" class="select select-bordered w-full">
-      <option value="">---------</option>
-      {% for milestone in form.milestone.field.queryset %}
-      <option value="{{ milestone.pk }}" {% if form.milestone.value|stringformat:"s" == milestone.pk|stringformat:"s" %}selected{% endif %}>
-        {{ milestone.key }} - {{ milestone.title }}
-      </option>
-      {% endfor %}
-    </select>
-    <label class="label">
-      <span class="label-text-alt">{{ form.milestone.help_text }}</span>
-    </label>
-  </div>
-
   {# Subtask conversion option (only shown if there are subtasks) #}
   {% if subtask_count > 0 %}
   <div class="form-control mb-4">

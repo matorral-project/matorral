@@ -66,7 +66,7 @@ class MilestoneCascadeDeleteTest(TestCase):
 
     def test_milestone_delete_cascades_to_epics(self):
         milestone = MilestoneFactory(project=self.project)
-        epic = EpicFactory(project=self.project, milestone=milestone)
+        epic = EpicFactory(project=self.project, parent=milestone)
         epic_pk = epic.pk
 
         self.client.post(self._get_delete_url(milestone))
@@ -76,7 +76,7 @@ class MilestoneCascadeDeleteTest(TestCase):
 
     def test_milestone_delete_cascades_to_epic_descendants(self):
         milestone = MilestoneFactory(project=self.project)
-        epic = EpicFactory(project=self.project, milestone=milestone)
+        epic = EpicFactory(project=self.project, parent=milestone)
         story = StoryFactory(project=self.project, parent=epic)
         story_pk = story.pk
 
@@ -86,7 +86,7 @@ class MilestoneCascadeDeleteTest(TestCase):
 
     def test_milestone_delete_cleans_up_subtasks(self):
         milestone = MilestoneFactory(project=self.project)
-        epic = EpicFactory(project=self.project, milestone=milestone)
+        epic = EpicFactory(project=self.project, parent=milestone)
         story = StoryFactory(project=self.project, parent=epic)
         subtask = SubtaskFactory(parent=story)
         subtask_pk = subtask.pk
@@ -97,7 +97,7 @@ class MilestoneCascadeDeleteTest(TestCase):
 
     def test_milestone_delete_get_shows_cascade_counts(self):
         milestone = MilestoneFactory(project=self.project)
-        epic = EpicFactory(project=self.project, milestone=milestone)
+        epic = EpicFactory(project=self.project, parent=milestone)
         story = StoryFactory(project=self.project, parent=epic)
         SubtaskFactory(parent=story)
 

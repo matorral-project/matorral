@@ -48,8 +48,8 @@
       </select>
     </div>
     <div>
-      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Owner" %}</h3>
-      {% include "includes/user_combobox.html" with combobox_name="owner" combobox_members=workspace_members combobox_selected_id=milestone.owner_id|default:"" combobox_selected_name=milestone.owner.get_display_name|default:"" combobox_size="sm" %}
+      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Assignee" %}</h3>
+      {% include "includes/user_combobox.html" with combobox_name="assignee" combobox_members=workspace_members combobox_selected_id=milestone.assignee_id|default:"" combobox_selected_name=milestone.assignee.get_display_name|default:"" combobox_size="sm" %}
     </div>
     <div>
       <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Due Date" %}</h3>

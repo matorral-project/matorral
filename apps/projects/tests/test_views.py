@@ -1014,18 +1014,18 @@ class ProjectWithProgressMultipleMilestonesTest(TestCase):
 
         # Milestone 1 → 2 epics
         m1 = MilestoneFactory(project=cls.project)
-        epic1 = EpicFactory(project=cls.project, milestone=m1)
-        epic2 = EpicFactory(project=cls.project, milestone=m1)
+        epic1 = EpicFactory(project=cls.project, parent=m1)
+        epic2 = EpicFactory(project=cls.project, parent=m1)
         StoryFactory(project=cls.project, parent=epic1, status=IssueStatus.DONE, estimated_points=3)
         BugFactory(project=cls.project, parent=epic2, status=IssueStatus.IN_PROGRESS, estimated_points=5)
 
         # Milestone 2 → 5 epics
         m2 = MilestoneFactory(project=cls.project)
-        epic3 = EpicFactory(project=cls.project, milestone=m2)
-        epic4 = EpicFactory(project=cls.project, milestone=m2)
-        epic5 = EpicFactory(project=cls.project, milestone=m2)
-        epic6 = EpicFactory(project=cls.project, milestone=m2)
-        epic7 = EpicFactory(project=cls.project, milestone=m2)
+        epic3 = EpicFactory(project=cls.project, parent=m2)
+        epic4 = EpicFactory(project=cls.project, parent=m2)
+        epic5 = EpicFactory(project=cls.project, parent=m2)
+        epic6 = EpicFactory(project=cls.project, parent=m2)
+        epic7 = EpicFactory(project=cls.project, parent=m2)
         ChoreFactory(project=cls.project, parent=epic3, status=IssueStatus.DRAFT, estimated_points=2)
         StoryFactory(project=cls.project, parent=epic4, status=IssueStatus.DONE, estimated_points=7)
         ChoreFactory(project=cls.project, parent=epic5, status=IssueStatus.IN_PROGRESS, estimated_points=4)

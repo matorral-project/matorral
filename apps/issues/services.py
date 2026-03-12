@@ -133,7 +133,6 @@ class PromotionError(Exception):
 
 def promote_to_epic(
     issue: BaseIssue,
-    milestone=None,
     convert_subtasks: bool = True,
 ) -> Epic:
     """
@@ -149,7 +148,6 @@ def promote_to_epic(
 
     Args:
         issue: The BaseIssue instance to promote (must be Story, Bug, or Chore)
-        milestone: Optional Milestone to link the Epic to
         convert_subtasks: If True, convert subtasks to Stories; if False, delete them
 
     Returns:
@@ -191,7 +189,6 @@ def promote_to_epic(
             real_issue.pk = base_issue_id
             Epic.objects.create_from_super(
                 BaseIssue.objects.non_polymorphic().get(pk=base_issue_id),
-                milestone_id=milestone.pk if milestone else None,
             )
 
         # Step 3: Update ContentType references in generic FKs:

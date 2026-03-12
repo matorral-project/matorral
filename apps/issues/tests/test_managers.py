@@ -388,7 +388,7 @@ class MilestoneQuerySetWithProgressTest(TestCase):
         cls.milestone = MilestoneFactory(project=cls.project)
 
         # Epic linked to the milestone with a mix of work items
-        cls.epic = EpicFactory(project=cls.project, milestone=cls.milestone)
+        cls.epic = EpicFactory(project=cls.project, parent=cls.milestone)
         cls.story_done = StoryFactory(project=cls.project, parent=cls.epic, status=IssueStatus.DONE, estimated_points=3)
         cls.story_in_progress = StoryFactory(
             project=cls.project, parent=cls.epic, status=IssueStatus.IN_PROGRESS, estimated_points=5
@@ -400,7 +400,7 @@ class MilestoneQuerySetWithProgressTest(TestCase):
 
         # Second epic on a different milestone — must not affect cls.milestone counts
         cls.other_milestone = MilestoneFactory(project=cls.project)
-        cls.other_epic = EpicFactory(project=cls.project, milestone=cls.other_milestone)
+        cls.other_epic = EpicFactory(project=cls.project, parent=cls.other_milestone)
         StoryFactory(project=cls.project, parent=cls.other_epic, status=IssueStatus.DONE, estimated_points=10)
 
         # Root-level work item (no epic parent) — must not be counted

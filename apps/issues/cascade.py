@@ -132,22 +132,11 @@ def get_children_for_cascade(obj):
     """Return children for cascade DOWN, as (queryset_or_list, model_type).
 
     Returns:
-        tuple: (children, model_type) where model_type is 'issue', 'milestone', or 'none'
+        tuple: (children, model_type) where model_type is 'issue' or 'none'
     """
     if isinstance(obj, Project):
-        # Project children = milestones + orphan epics (epics without milestone)
-        milestones = list(Milestone.objects.for_project(obj))
-        orphan_epics = list(Epic.objects.for_project(obj).filter(milestone__isnull=True))
-        return milestones + orphan_epics, "mixed_project_children"
-
-    if isinstance(obj, Milestone):
-        # Milestone children = epics assigned to it
-        epics = list(obj.epics.all())
-        return epics, "issue"
-
-    if isinstance(obj, Epic):
-        # Epic children = treebeard children (work items)
-        children = list(obj.get_children())
+        # Project children = all root-level BaseIssues (Milestones, orphan Epics, orphan work items)
+        children = list(BaseIssue.objects.for_project(obj).roots())
         return children, "issue"
 
     if isinstance(obj, Subtask):
@@ -155,8 +144,8 @@ def get_children_for_cascade(obj):
         return [], "none"
 
     if isinstance(obj, BaseIssue):
-        # Work item children = subtasks via treebeard
-        children = list(obj.get_children().instance_of(Subtask))
+        # Milestone, Epic, or work item children = treebeard direct children
+        children = list(obj.get_children())
         return children, "issue"
 
     return [], "none"
@@ -176,36 +165,30 @@ def get_parent_and_siblings(obj):
     if isinstance(obj, BaseIssue):
         real_obj = obj.get_real_instance() if hasattr(obj, "get_real_instance") else obj
 
+        if isinstance(real_obj, Milestone):
+            # Milestone -> parent is project; siblings = other root-level issues
+            project = real_obj.project
+            other_root_issues = list(BaseIssue.objects.for_project(project).roots().exclude(pk=real_obj.pk))
+            return project, other_root_issues
+
         if isinstance(real_obj, Epic):
-            if real_obj.milestone_id:
-                # Epic with milestone -> parent is milestone
-                parent = real_obj.milestone
-                siblings = parent.epics.exclude(pk=real_obj.pk)
-                return parent, siblings
-            else:
-                # Orphan epic -> parent is project
-                # Siblings = other orphan epics + milestones (ALL must be completed)
-                project = real_obj.project
-                other_orphan_epics = list(
-                    Epic.objects.for_project(project).filter(milestone__isnull=True).exclude(pk=real_obj.pk)
-                )
-                milestones = list(Milestone.objects.for_project(project))
-                return project, other_orphan_epics + milestones
-        else:
-            # Work item or Subtask -> parent is epic or work item (treebeard get_parent)
             tree_parent = real_obj.get_parent()
             if tree_parent is None:
-                return None, []
-            siblings = tree_parent.get_children().exclude(pk=real_obj.pk)
-            return tree_parent, siblings
+                # Orphan epic -> parent is project; siblings = all other root-level issues
+                project = real_obj.project
+                other_root_issues = list(BaseIssue.objects.for_project(project).roots().exclude(pk=real_obj.pk))
+                return project, other_root_issues
+            else:
+                # Epic under a Milestone -> siblings are the other children of that Milestone
+                siblings = tree_parent.get_children().exclude(pk=real_obj.pk)
+                return tree_parent.get_real_instance(), siblings
 
-    if isinstance(obj, Milestone):
-        # Milestone -> parent is project
-        # Siblings = other milestones + orphan epics
-        project = obj.project
-        other_milestones = list(Milestone.objects.for_project(project).exclude(pk=obj.pk))
-        orphan_epics = list(Epic.objects.for_project(project).filter(milestone__isnull=True))
-        return project, other_milestones + orphan_epics
+        # Work item or Subtask -> parent is epic, milestone, or work item (treebeard get_parent)
+        tree_parent = real_obj.get_parent()
+        if tree_parent is None:
+            return None, []
+        siblings = tree_parent.get_children().exclude(pk=real_obj.pk)
+        return tree_parent, siblings
 
     return None, []
 
@@ -227,8 +210,8 @@ def map_status_for_cascade_up(trigger_status, parent):
         }
         return mapping.get(trigger_status)
 
-    if isinstance(parent, (Milestone, BaseIssue)):
-        # Child -> IssueStatus parent
+    if isinstance(parent, BaseIssue):
+        # Child -> IssueStatus parent (covers Milestone, Epic, work items)
         if trigger_status == IssueStatus.DONE:
             return IssueStatus.DONE
         if trigger_status == IssueStatus.WONT_DO:
@@ -281,11 +264,11 @@ def _check_cascade_down(obj, new_status):
     if isinstance(obj, Project):
         return _check_project_cascade_down(obj, new_status)
 
-    if isinstance(obj, Milestone):
-        return _check_milestone_cascade_down(obj, new_status)
-
     if isinstance(obj, Epic):
         return _check_epic_cascade_down(obj, new_status)
+
+    if isinstance(obj, Milestone):
+        return _check_milestone_cascade_down(obj, new_status)
 
     if isinstance(obj, BaseIssue):
         return _check_work_item_cascade_down(obj, new_status)
@@ -304,38 +287,23 @@ def _check_project_cascade_down(project, new_status):
         return None
 
     issue_choices = dict(IssueStatus.choices)
-    groups = []
 
-    # 1. Milestones
-    milestones = list(Milestone.objects.for_project(project))
-    eligible_milestones = [m for m in milestones if eligible_pred(m.status)]
-    if eligible_milestones:
-        groups.append(
-            CascadeDownGroup(
-                items=eligible_milestones,
-                target_status=issue_target,
-                target_status_display=str(issue_choices.get(issue_target, issue_target)),
-                model_type="milestone",
-            )
-        )
-
-    # 2. All issues in the project (includes Subtasks as tree nodes)
+    # All BaseIssues in the project (Milestones, Epics, work items, Subtasks)
     all_issues = list(BaseIssue.objects.for_project(project).select_related("polymorphic_ctype"))
     eligible_issues = [i for i in all_issues if eligible_pred(i.status)]
-    if eligible_issues:
-        groups.append(
+    if not eligible_issues:
+        return None
+
+    return CascadeDownInfo(
+        groups=[
             CascadeDownGroup(
                 items=eligible_issues,
                 target_status=issue_target,
                 target_status_display=str(issue_choices.get(issue_target, issue_target)),
                 model_type="issue",
             )
-        )
-
-    if not groups:
-        return None
-
-    return CascadeDownInfo(groups=groups)
+        ]
+    )
 
 
 def _check_milestone_cascade_down(milestone, new_status):
@@ -345,29 +313,23 @@ def _check_milestone_cascade_down(milestone, new_status):
         return None
 
     issue_choices = dict(IssueStatus.choices)
-    groups = []
 
-    # Collect all issues: epics + their descendants (includes Subtasks as tree nodes)
-    all_issues = []
-    for epic in milestone.epics.all():
-        all_issues.append(epic)
-        all_issues.extend(epic.get_descendants())
+    # All tree descendants (Epics, work items, Subtasks)
+    all_descendants = list(milestone.get_descendants())
+    eligible_issues = [i for i in all_descendants if issue_pred(i.status)]
+    if not eligible_issues:
+        return None
 
-    eligible_issues = [i for i in all_issues if issue_pred(i.status)]
-    if eligible_issues:
-        groups.append(
+    return CascadeDownInfo(
+        groups=[
             CascadeDownGroup(
                 items=eligible_issues,
                 target_status=new_status,
                 target_status_display=str(issue_choices.get(new_status, new_status)),
                 model_type="issue",
             )
-        )
-
-    if not groups:
-        return None
-
-    return CascadeDownInfo(groups=groups)
+        ]
+    )
 
 
 def _check_epic_cascade_down(epic, new_status):
@@ -435,11 +397,11 @@ def _check_cascade_up(obj, new_status):
     For completed statuses: triggered when ALL siblings are also completed.
     For IN_PROGRESS: triggered immediately (bubbles up without checking siblings).
     """
-    in_progress_trigger = isinstance(obj, (BaseIssue, Milestone)) and new_status == IssueStatus.IN_PROGRESS
+    in_progress_trigger = isinstance(obj, BaseIssue) and new_status == IssueStatus.IN_PROGRESS
 
     if not in_progress_trigger:
         # Completed-status cascade up: check eligibility
-        if isinstance(obj, (BaseIssue, Milestone)):
+        if isinstance(obj, BaseIssue):
             if new_status not in COMPLETED_ISSUE_STATUSES:
                 return None
         else:
@@ -529,44 +491,14 @@ def apply_cascade(
 def _apply_cascade_down(pks, target_status, model_type, actor):
     """Apply cascade DOWN: update children statuses."""
     status_choices = dict(IssueStatus.choices)
-
-    if model_type == "milestone":
-        objects = list(Milestone.objects.filter(pk__in=pks))
-        old_values = {obj.pk: status_choices.get(obj.status, obj.status) for obj in objects}
-        new_display = status_choices.get(target_status, target_status)
-        Milestone.objects.filter(pk__in=pks).update(status=target_status)
-        AuditLog.objects.bulk_create_for(
-            objects, field_name="status", old_values=old_values, new_display=new_display, actor=actor
-        )
-    else:
-        # "issue" - mixed Milestone + BaseIssue possible (from Project cascade)
-        milestone_pks = []
-        issue_pks = []
-        # Separate milestone PKs from issue PKs
-        milestone_pk_set = set(Milestone.objects.filter(pk__in=pks).values_list("pk", flat=True))
-        for pk in pks:
-            if pk in milestone_pk_set:
-                milestone_pks.append(pk)
-            else:
-                issue_pks.append(pk)
-
-        if milestone_pks:
-            m_objects = list(Milestone.objects.filter(pk__in=milestone_pks))
-            old_values = {obj.pk: status_choices.get(obj.status, obj.status) for obj in m_objects}
-            new_display = status_choices.get(target_status, target_status)
-            Milestone.objects.filter(pk__in=milestone_pks).update(status=target_status)
-            AuditLog.objects.bulk_create_for(
-                m_objects, field_name="status", old_values=old_values, new_display=new_display, actor=actor
-            )
-
-        if issue_pks:
-            i_objects = list(BaseIssue.objects.filter(pk__in=issue_pks).select_related("polymorphic_ctype"))
-            old_values = {obj.pk: status_choices.get(obj.status, obj.status) for obj in i_objects}
-            new_display = status_choices.get(target_status, target_status)
-            BaseIssue.objects.filter(pk__in=issue_pks).update(status=target_status)
-            AuditLog.objects.bulk_create_for(
-                i_objects, field_name="status", old_values=old_values, new_display=new_display, actor=actor
-            )
+    # All cascade-down targets are BaseIssues (Milestones, Epics, work items, Subtasks)
+    objects = list(BaseIssue.objects.filter(pk__in=pks).select_related("polymorphic_ctype"))
+    old_values = {obj.pk: status_choices.get(obj.status, obj.status) for obj in objects}
+    new_display = status_choices.get(target_status, target_status)
+    BaseIssue.objects.filter(pk__in=pks).update(status=target_status)
+    AuditLog.objects.bulk_create_for(
+        objects, field_name="status", old_values=old_values, new_display=new_display, actor=actor
+    )
 
 
 def _apply_cascade_up(pk, target_status, model_type, actor):
@@ -582,19 +514,8 @@ def _apply_cascade_up(pk, target_status, model_type, actor):
             AuditLog.objects.create_for(
                 obj, field_name="status", old_value=old_display, new_value=new_display, actor=actor
             )
-    elif model_type == "milestone":
-        status_choices = dict(IssueStatus.choices)
-        obj = Milestone.objects.filter(pk=pk).first()
-        if obj:
-            old_display = status_choices.get(obj.status, obj.status)
-            new_display = status_choices.get(target_status, target_status)
-            obj.status = target_status
-            obj.save(update_fields=["status", "updated_at"])
-            AuditLog.objects.create_for(
-                obj, field_name="status", old_value=old_display, new_value=new_display, actor=actor
-            )
     else:
-        # "issue" - BaseIssue subclass
+        # "milestone" and "issue" are both BaseIssue now
         status_choices = dict(IssueStatus.choices)
         obj = BaseIssue.objects.filter(pk=pk).select_related("polymorphic_ctype").first()
         if obj:

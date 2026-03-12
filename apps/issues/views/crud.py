@@ -23,7 +23,7 @@ from apps.issues.helpers import (
     build_grouped_issues,
     build_htmx_delete_response,
 )
-from apps.issues.models import BaseIssue, Bug, BugSeverity, Epic, IssuePriority, IssueStatus, Milestone, Subtask
+from apps.issues.models import BaseIssue, Bug, BugSeverity, Epic, IssuePriority, IssueStatus, Subtask
 from apps.issues.services import IssueConversionError, PromotionError, convert_issue_type, promote_to_epic
 from apps.projects.models import Project
 from apps.sprints.models import Sprint, SprintStatus
@@ -295,7 +295,7 @@ class IssueDetailView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, IssueSingl
         if issue_type == "epic":
             context["children"] = issue.get_children_issues()
             context["children_label"] = _("Issues")
-            context["milestone"] = issue.milestone
+            context["milestone"] = issue.get_parent()
             context["progress"] = build_progress_dict(
                 issue.total_done_points,
                 issue.total_in_progress_points,
@@ -594,8 +594,6 @@ class IssueCloneView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View):
             clone_data["estimated_points"] = original.estimated_points
         if hasattr(original, "severity"):
             clone_data["severity"] = original.severity
-        if hasattr(original, "milestone"):
-            clone_data["milestone"] = original.milestone
 
         # Create the clone using the same model class
         model_class = type(original)
@@ -724,15 +722,7 @@ class IssuePromoteToEpicView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
                 return render(request, "includes/messages.html")
             return redirect(real_issue.get_absolute_url())
 
-        # Preselect parent epic's milestone if available
-        initial = {}
-        parent = real_issue.get_parent()
-        if parent:
-            parent_real = parent.get_real_instance()
-            if isinstance(parent_real, Epic) and parent_real.milestone_id:
-                initial["milestone"] = parent_real.milestone_id
-
-        form = IssuePromoteToEpicForm(initial=initial, project=self.project)
+        form = IssuePromoteToEpicForm(initial={}, project=self.project)
 
         # Get subtask count for display
         subtask_count = real_issue.get_children().instance_of(Subtask).count()
@@ -770,11 +760,10 @@ class IssuePromoteToEpicView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
         form = IssuePromoteToEpicForm(request.POST, project=self.project)
 
         if form.is_valid():
-            milestone = form.cleaned_data.get("milestone")
             convert_subtasks = form.cleaned_data.get("convert_subtasks", True)
 
             try:
-                epic = promote_to_epic(real_issue, milestone=milestone, convert_subtasks=convert_subtasks)
+                epic = promote_to_epic(real_issue, convert_subtasks=convert_subtasks)
                 messages.success(
                     request,
                     _("%(key)s promoted from %(old)s to Epic.")
@@ -1210,14 +1199,12 @@ class EpicDetailInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, V
 
     def _get_context(self, request, epic, form=None):
         """Build common context for GET/POST handlers."""
-        milestones = Milestone.objects.for_project(self.project)
         context = {
             "issue": epic,
             "workspace": self.workspace,
             "project": self.project,
             "workspace_members": request.workspace_members,
-            "milestones": milestones,
-            "milestone": epic.milestone,
+            "milestone": epic.get_parent(),
             "status_choices": IssueStatus.choices,
             "priority_choices": IssuePriority.choices,
         }
@@ -1228,7 +1215,7 @@ class EpicDetailInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, V
     def get(self, request, *args, **kwargs):
         """Return display mode (cancel=1) or edit mode for the epic detail header."""
         epic = get_object_or_404(
-            Epic.objects.for_project(self.project).select_related("assignee", "milestone"),
+            Epic.objects.for_project(self.project).select_related("assignee"),
             key=kwargs["key"],
         )
         context = self._get_context(request, epic)
@@ -1241,7 +1228,6 @@ class EpicDetailInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, V
             return render(request, display_template, context)
 
         # Edit mode - return edit template with form
-        milestones = context["milestones"]
         form = EpicDetailInlineEditForm(
             initial={
                 "title": epic.title,
@@ -1250,10 +1236,8 @@ class EpicDetailInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, V
                 "priority": epic.priority,
                 "assignee": epic.assignee,
                 "due_date": epic.due_date,
-                "milestone": epic.milestone,
             },
             workspace_members=request.workspace_members,
-            milestones=milestones,
         )
         context["form"] = form
         return render(request, edit_template, context)
@@ -1261,14 +1245,12 @@ class EpicDetailInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, V
     def post(self, request, *args, **kwargs):
         """Save inline edits and return display mode."""
         epic = get_object_or_404(
-            Epic.objects.for_project(self.project).select_related("assignee", "milestone"),
+            Epic.objects.for_project(self.project).select_related("assignee"),
             key=kwargs["key"],
         )
-        milestones = Milestone.objects.for_project(self.project)
         form = EpicDetailInlineEditForm(
             request.POST,
             workspace_members=request.workspace_members,
-            milestones=milestones,
         )
         context = self._get_context(request, epic, form)
 
@@ -1285,11 +1267,7 @@ class EpicDetailInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, V
             epic.priority = form.cleaned_data.get("priority") or ""
             epic.assignee = form.cleaned_data.get("assignee")
             epic.due_date = form.cleaned_data.get("due_date")
-            epic.milestone = form.cleaned_data.get("milestone")
             epic.save()
-
-            # Refresh milestone in context after save
-            context["milestone"] = epic.milestone
 
             # Return display mode
             response = render(request, display_template, context)

@@ -25,22 +25,22 @@ class GetChildrenForCascadeTest(TestCase):
 
     def test_project_children_are_milestones_and_orphan_epics(self):
         milestone = MilestoneFactory(project=self.project)
-        epic_with_milestone = EpicFactory(project=self.project, milestone=milestone)
-        orphan_epic = EpicFactory(project=self.project, milestone=None)
+        epic_with_milestone = EpicFactory(project=self.project, parent=milestone)
+        orphan_epic = EpicFactory(project=self.project)
 
         children, child_type = get_children_for_cascade(self.project)
 
         child_pks = {c.pk for c in children}
         self.assertIn(milestone.pk, child_pks)
         self.assertIn(orphan_epic.pk, child_pks)
-        # Epic with milestone is NOT an orphan, so it should NOT be in project children
+        # Epic with milestone parent is at depth=2, NOT a root node
         self.assertNotIn(epic_with_milestone.pk, child_pks)
 
     def test_milestone_children_are_its_epics(self):
         milestone = MilestoneFactory(project=self.project)
-        epic1 = EpicFactory(project=self.project, milestone=milestone)
-        epic2 = EpicFactory(project=self.project, milestone=milestone)
-        _other_epic = EpicFactory(project=self.project, milestone=None)
+        epic1 = EpicFactory(project=self.project, parent=milestone)
+        epic2 = EpicFactory(project=self.project, parent=milestone)
+        _other_epic = EpicFactory(project=self.project)
 
         children, child_type = get_children_for_cascade(milestone)
 
@@ -114,8 +114,8 @@ class GetParentAndSiblingsTest(TestCase):
 
     def test_epic_with_milestone_parent_is_milestone(self):
         milestone = MilestoneFactory(project=self.project)
-        epic1 = EpicFactory(project=self.project, milestone=milestone)
-        epic2 = EpicFactory(project=self.project, milestone=milestone)
+        epic1 = EpicFactory(project=self.project, parent=milestone)
+        epic2 = EpicFactory(project=self.project, parent=milestone)
 
         parent, siblings = get_parent_and_siblings(epic1)
 
@@ -124,7 +124,7 @@ class GetParentAndSiblingsTest(TestCase):
         self.assertIn(epic2.pk, sibling_pks)
 
     def test_orphan_epic_parent_is_project(self):
-        orphan = EpicFactory(project=self.project, milestone=None)
+        orphan = EpicFactory(project=self.project)
         milestone = MilestoneFactory(project=self.project)
 
         parent, siblings = get_parent_and_siblings(orphan)
@@ -137,7 +137,7 @@ class GetParentAndSiblingsTest(TestCase):
     def test_milestone_parent_is_project(self):
         milestone1 = MilestoneFactory(project=self.project)
         milestone2 = MilestoneFactory(project=self.project)
-        orphan_epic = EpicFactory(project=self.project, milestone=None)
+        orphan_epic = EpicFactory(project=self.project)
 
         parent, siblings = get_parent_and_siblings(milestone1)
 
@@ -282,7 +282,7 @@ class CheckCascadeDownTest(TestCase):
 
     def test_project_completed_cascades_to_milestones_and_orphan_epics(self):
         milestone = MilestoneFactory(project=self.project, status=IssueStatus.DRAFT)
-        orphan_epic = EpicFactory(project=self.project, milestone=None, status=IssueStatus.DRAFT)
+        orphan_epic = EpicFactory(project=self.project, status=IssueStatus.DRAFT)
 
         info = check_cascade_opportunities(self.project, ProjectStatus.COMPLETED)
 
@@ -399,7 +399,7 @@ class CheckCascadeUpTest(TestCase):
 
     def test_all_milestones_and_orphan_epics_done_offers_project_completion(self):
         milestone = MilestoneFactory(project=self.project, status=IssueStatus.DONE)
-        EpicFactory(project=self.project, milestone=None, status=IssueStatus.DONE)
+        EpicFactory(project=self.project, status=IssueStatus.DONE)
 
         info = check_cascade_opportunities(milestone, IssueStatus.DONE)
 
@@ -422,8 +422,8 @@ class CheckCascadeUpTest(TestCase):
     def test_both_cascade_down_and_up(self):
         """An epic set to DONE can cascade both down to children and up to milestone."""
         milestone = MilestoneFactory(project=self.project, status=IssueStatus.IN_PROGRESS)
-        EpicFactory(project=self.project, milestone=milestone, status=IssueStatus.DONE)
-        epic2 = EpicFactory(project=self.project, milestone=milestone, status=IssueStatus.DONE)
+        EpicFactory(project=self.project, parent=milestone, status=IssueStatus.DONE)
+        epic2 = EpicFactory(project=self.project, parent=milestone, status=IssueStatus.DONE)
         # epic2 has a draft child (cascade down) and all epics under milestone are done (cascade up)
         StoryFactory(project=self.project, parent=epic2, status=IssueStatus.DRAFT)
 
@@ -562,7 +562,7 @@ class ApplyCascadeTest(TestCase):
     def test_apply_cascade_down_mixed_milestones_and_issues(self):
         """Project cascade DOWN updates both milestones and epics."""
         milestone = MilestoneFactory(project=self.project, status=IssueStatus.DRAFT)
-        orphan_epic = EpicFactory(project=self.project, milestone=None, status=IssueStatus.DRAFT)
+        orphan_epic = EpicFactory(project=self.project, status=IssueStatus.DRAFT)
 
         apply_cascade(
             cascade_down_pks=[milestone.pk, orphan_epic.pk],
@@ -591,25 +591,20 @@ class DeepCascadeDownTest(TestCase):
     def test_project_completed_cascades_to_all_descendants(self):
         """Project COMPLETED cascades to milestones, epics, stories, and subtasks."""
         milestone = MilestoneFactory(project=self.project, status=IssueStatus.DRAFT)
-        epic = EpicFactory(project=self.project, milestone=milestone, status=IssueStatus.IN_PROGRESS)
+        epic = EpicFactory(project=self.project, parent=milestone, status=IssueStatus.IN_PROGRESS)
         story = StoryFactory(project=self.project, parent=epic, status=IssueStatus.DRAFT)
         subtask = SubtaskFactory(parent=story, status=IssueStatus.DRAFT)
 
         info = check_cascade_opportunities(self.project, ProjectStatus.COMPLETED)
 
         self.assertIsNotNone(info.cascade_down)
-        # Should have 2 groups: milestone, issue (subtasks now included in issue group)
-        self.assertEqual(len(info.cascade_down.groups), 2)
+        # Single "issue" group — Milestone is now a BaseIssue, so all nodes are in one group
+        self.assertEqual(len(info.cascade_down.groups), 1)
 
-        milestone_group = info.cascade_down.groups[0]
-        self.assertEqual(milestone_group.model_type, "milestone")
-        self.assertEqual(len(milestone_group.items), 1)
-        self.assertEqual(milestone_group.items[0].pk, milestone.pk)
-        self.assertEqual(milestone_group.target_status, IssueStatus.DONE)
-
-        issue_group = info.cascade_down.groups[1]
+        issue_group = info.cascade_down.groups[0]
         self.assertEqual(issue_group.model_type, "issue")
         issue_pks = {i.pk for i in issue_group.items}
+        self.assertIn(milestone.pk, issue_pks)
         self.assertIn(epic.pk, issue_pks)
         self.assertIn(story.pk, issue_pks)
         self.assertIn(subtask.pk, issue_pks)
@@ -621,7 +616,7 @@ class DeepCascadeDownTest(TestCase):
     def test_milestone_done_cascades_to_epics_and_their_descendants(self):
         """Milestone DONE cascades to its epics, their work items, and subtasks."""
         milestone = MilestoneFactory(project=self.project, status=IssueStatus.IN_PROGRESS)
-        epic = EpicFactory(project=self.project, milestone=milestone, status=IssueStatus.PLANNING)
+        epic = EpicFactory(project=self.project, parent=milestone, status=IssueStatus.PLANNING)
         story = StoryFactory(project=self.project, parent=epic, status=IssueStatus.DRAFT)
         subtask = SubtaskFactory(parent=story, status=IssueStatus.DRAFT)
 
@@ -659,7 +654,7 @@ class DeepCascadeDownTest(TestCase):
     def test_deep_cascade_respects_eligibility(self):
         """Items already completed are excluded at each level."""
         milestone = MilestoneFactory(project=self.project, status=IssueStatus.DONE)
-        epic = EpicFactory(project=self.project, milestone=milestone, status=IssueStatus.DONE)
+        epic = EpicFactory(project=self.project, parent=milestone, status=IssueStatus.DONE)
         story = StoryFactory(project=self.project, parent=epic, status=IssueStatus.DRAFT)
         subtask = SubtaskFactory(parent=story, status=IssueStatus.DRAFT)
 
@@ -688,17 +683,13 @@ class DeepCascadeDownTest(TestCase):
     def test_project_archived_cascades_deeply(self):
         """Project ARCHIVED cascades to all descendants with ARCHIVED target."""
         milestone = MilestoneFactory(project=self.project, status=IssueStatus.IN_PROGRESS)
-        epic = EpicFactory(project=self.project, milestone=milestone, status=IssueStatus.PLANNING)
+        epic = EpicFactory(project=self.project, parent=milestone, status=IssueStatus.PLANNING)
         story = StoryFactory(project=self.project, parent=epic, status=IssueStatus.DRAFT)
         SubtaskFactory(parent=story, status=IssueStatus.DRAFT)
 
         info = check_cascade_opportunities(self.project, ProjectStatus.ARCHIVED)
 
         self.assertIsNotNone(info.cascade_down)
-        # 2 groups: milestone + issue (subtasks now use IssueStatus so included in issue group)
-        self.assertEqual(len(info.cascade_down.groups), 2)
-
-        # Milestones get ARCHIVED target
+        # Single "issue" group — all BaseIssues (milestone + epic + story + subtask)
+        self.assertEqual(len(info.cascade_down.groups), 1)
         self.assertEqual(info.cascade_down.groups[0].target_status, IssueStatus.ARCHIVED)
-        # Issues (including subtasks) get ARCHIVED target
-        self.assertEqual(info.cascade_down.groups[1].target_status, IssueStatus.ARCHIVED)

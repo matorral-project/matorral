@@ -117,7 +117,7 @@ class WorkspaceBulkActionMixin(IssueListContextMixin, WorkspaceIssueViewMixin):
             queryset = (
                 Epic.objects.for_project(project)
                 .with_progress()
-                .select_related("project", "project__workspace", "assignee", "milestone")
+                .select_related("project", "project__workspace", "assignee")
             )
         elif is_sprint_embed and sprint_filter:
             sprint = get_object_or_404(Sprint.objects.for_workspace(self.workspace), key=sprint_filter)
@@ -603,13 +603,37 @@ class WorkspaceIssueBulkMilestoneView(WorkspaceBulkActionMixin, LoginAndWorkspac
         selected_qs = self.get_selected_queryset()
         selected_pks = list(selected_qs.values_list("pk", flat=True))
 
-        # milestone is Epic-only, so query Epic directly for audit log data
-        epic_qs = Epic.objects.filter(pk__in=selected_pks).select_related("polymorphic_ctype", "milestone")
+        # Batch-load tree parents for audit log old values
+        epic_qs = Epic.objects.filter(pk__in=selected_pks).select_related("polymorphic_ctype")
         objects = list(epic_qs)
-        old_values = {obj.pk: str(obj.milestone) if obj.milestone else None for obj in objects}
+        steplen = BaseIssue.steplen
+        parent_paths = {e.path[:-steplen] for e in objects if len(e.path) > steplen}
+        parents_by_path = {}
+        if parent_paths:
+            for m in Milestone.objects.filter(path__in=parent_paths):
+                parents_by_path[m.path] = m
+        old_values = {
+            obj.pk: (
+                str(parents_by_path[obj.path[:-steplen]])
+                if parents_by_path.get(obj.path[:-steplen] if len(obj.path) > steplen else "")
+                else None
+            )
+            for obj in objects
+        }
         new_display = str(milestone) if milestone else None
 
-        updated_count = Epic.objects.filter(pk__in=selected_pks).move_to_milestone(milestone)
+        # Move each epic in the tree (one move per epic)
+        updated_count = 0
+        for epic in objects:
+            if milestone:
+                epic.move(milestone, pos="last-child")
+            else:
+                # Move to root (make orphan)
+                any_root = BaseIssue.get_first_root_node()
+                if any_root and any_root.pk != epic.pk:
+                    epic.move(any_root, pos="last-sibling")
+            updated_count += 1
+
         AuditLog.objects.bulk_create_for(
             objects, field_name="milestone", old_values=old_values, new_display=new_display, actor=self.request.user
         )

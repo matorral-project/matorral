@@ -153,15 +153,14 @@ class EpicDetailInlineEditCascadeTest(CascadeViewTestBase):
     def test_epic_done_all_children_completed_offers_cascade_up(self):
         """Setting last epic to DONE under milestone offers cascade UP."""
         milestone = MilestoneFactory(project=self.project, status=IssueStatus.IN_PROGRESS)
-        EpicFactory(project=self.project, milestone=milestone, status=IssueStatus.DONE)
-        epic2 = EpicFactory(project=self.project, milestone=milestone, status=IssueStatus.DRAFT)
+        EpicFactory(project=self.project, parent=milestone, status=IssueStatus.DONE)
+        epic2 = EpicFactory(project=self.project, parent=milestone, status=IssueStatus.DRAFT)
 
         response = self.client.post(
             self._get_epic_detail_inline_edit_url(epic2),
             {
                 "title": epic2.title,
                 "status": IssueStatus.DONE,
-                "milestone": milestone.pk,
             },
             HTTP_HX_REQUEST="true",
         )
@@ -310,9 +309,9 @@ class CascadeApplyViewTest(CascadeViewTestBase):
         self.assertEqual(self.project.status, ProjectStatus.COMPLETED)
 
     def test_apply_cascade_down_multiple_groups(self):
-        """POST with multiple groups updates all model types (subtasks now in issue group)."""
+        """POST updates all BaseIssue nodes (milestone, epic, story, subtask) as one group."""
         milestone = MilestoneFactory(project=self.project, status=IssueStatus.DRAFT)
-        epic = EpicFactory(project=self.project, milestone=milestone, status=IssueStatus.DRAFT)
+        epic = EpicFactory(project=self.project, parent=milestone, status=IssueStatus.DRAFT)
         story = StoryFactory(project=self.project, parent=epic, status=IssueStatus.DRAFT)
         subtask = SubtaskFactory(parent=story, status=IssueStatus.DRAFT)
 
@@ -320,13 +319,10 @@ class CascadeApplyViewTest(CascadeViewTestBase):
             self._get_cascade_apply_url(),
             {
                 "cascade_down": "1",
-                "down_group_count": "2",
-                "down_ids_0": str(milestone.pk),
+                "down_group_count": "1",
+                "down_ids_0": f"{milestone.pk},{epic.pk},{story.pk},{subtask.pk}",
                 "down_status_0": IssueStatus.DONE,
-                "down_model_type_0": "milestone",
-                "down_ids_1": f"{epic.pk},{story.pk},{subtask.pk}",
-                "down_status_1": IssueStatus.DONE,
-                "down_model_type_1": "issue",
+                "down_model_type_0": "issue",
             },
         )
 

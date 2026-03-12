@@ -22,6 +22,12 @@ def get_epic_content_type_id():
     return ContentType.objects.get_for_model(models.Epic).id
 
 
+@lru_cache(maxsize=1)
+def get_milestone_content_type_id():
+    """Get the ContentType ID for Milestone model (cached)."""
+    return ContentType.objects.get_for_model(models.Milestone).id
+
+
 def calculate_valid_page(total_count: int, current_page: int, per_page: int = settings.DEFAULT_PAGE_SIZE) -> int | None:
     """Calculate the valid page to redirect to after items are removed."""
     if total_count == 0:
@@ -32,7 +38,7 @@ def calculate_valid_page(total_count: int, current_page: int, per_page: int = se
 
 
 def build_grouped_epics_by_milestone(epics, project, include_empty_milestones: bool = True) -> list[dict]:
-    """Build a list of epic groups organized by milestone.
+    """Build a list of epic groups organized by milestone (tree parent).
 
     Args:
         epics: Iterable of Epic objects
@@ -44,6 +50,16 @@ def build_grouped_epics_by_milestone(epics, project, include_empty_milestones: b
         List of dicts with keys: milestone (Milestone|None), name (str), epics (list),
         progress (dict|None)
     """
+    epics = list(epics)
+    steplen = models.BaseIssue.steplen
+
+    # Batch-load parent milestones to avoid N+1 queries
+    parent_paths = {e.path[:-steplen] for e in epics if len(e.path) > steplen}
+    milestones_by_path = {}
+    if parent_paths:
+        for m in models.Milestone.objects.filter(path__in=parent_paths):
+            milestones_by_path[m.path] = m
+
     grouped = OrderedDict()
 
     # If include_empty_milestones, pre-populate with all project milestones
@@ -58,14 +74,18 @@ def build_grouped_epics_by_milestone(epics, project, include_empty_milestones: b
                 "progress": None,
             }
 
-    # Group epics by milestone
+    # Group epics by tree parent milestone
     for epic in epics:
-        if epic.milestone:
-            group_name = f"[{epic.milestone.key}] {epic.milestone.title}"
+        parent_milestone = None
+        if len(epic.path) > steplen:
+            parent_milestone = milestones_by_path.get(epic.path[:-steplen])
+
+        if parent_milestone:
+            group_name = f"[{parent_milestone.key}] {parent_milestone.title}"
             if group_name not in grouped:
                 grouped[group_name] = {
                     "name": group_name,
-                    "milestone": epic.milestone,
+                    "milestone": parent_milestone,
                     "epics": [],
                     "progress": None,
                 }
@@ -104,8 +124,8 @@ def build_grouped_epics_by_milestone(epics, project, include_empty_milestones: b
 def annotate_epic_child_counts(epics):
     """Batch-compute child counts for a list of epics using a single query.
 
-    Sets `epic.child_count` on each epic in-place. Uses path-regex matching
-    on BaseIssue to count direct children (depth == epic.depth + 1).
+    Sets `epic.child_count` on each epic in-place. Uses path-prefix matching
+    on BaseIssue to count direct children at any depth.
     """
     if not epics:
         return
@@ -114,20 +134,20 @@ def annotate_epic_child_counts(epics):
     if not epic_paths:
         return
 
-    # Query all direct children of all epics at once
-    all_children = (
-        models.BaseIssue.objects.filter(path__regex=r"^(" + "|".join(epic_paths) + r")")
-        .filter(depth=2)  # Direct children of root epics (depth=1)
-        .non_polymorphic()
-        .only("path")
+    epic_paths_set = set(epic_paths)
+    steplen = models.BaseIssue.steplen
+
+    # Query all descendants of all epics at once (no depth filter — epics can be at any depth)
+    all_descendants = (
+        models.BaseIssue.objects.filter(path__regex=r"^(" + "|".join(epic_paths) + r")").non_polymorphic().only("path")
     )
 
-    # Count children per epic by matching path prefix
-    steplen = models.BaseIssue.steplen
+    # Count only direct children (parent path is exactly epic.path)
     counts = {}
-    for child in all_children:
-        parent_path = child.path[:steplen]
-        counts[parent_path] = counts.get(parent_path, 0) + 1
+    for descendant in all_descendants:
+        parent_path = descendant.path[:-steplen]
+        if parent_path in epic_paths_set:
+            counts[parent_path] = counts.get(parent_path, 0) + 1
 
     for epic in epics:
         epic.child_count = counts.get(epic.path, 0)
@@ -196,9 +216,9 @@ def build_grouped_issues(
         parent_paths = {issue.path[:-steplen] for issue in issues if len(issue.path) > steplen}
         epics_by_path = {epic.path: epic for epic in models.Epic.objects.filter(path__in=parent_paths)}
 
-        # If milestone is provided and include_empty_epics is True, include only epics linked to that milestone
+        # If milestone is provided and include_empty_epics is True, include only epics that are direct children
         if milestone and include_empty_epics:
-            all_epics = milestone.epics.order_by("key")
+            all_epics = milestone.get_children().instance_of(models.Epic).order_by("key")
             for epic in all_epics:
                 epics_by_path[epic.path] = epic
                 group_name = f"[{epic.key}] {epic.title}"
