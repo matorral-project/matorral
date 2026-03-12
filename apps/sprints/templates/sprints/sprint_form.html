@@ -24,7 +24,7 @@
       {% endif %}
       {% render_form_fields form %}
       <div class="flex gap-2 mt-4">
-        <button type="submit" class="mt-button-primary">
+        <button type="submit" class="btn btn-primary">
           {% if sprint %}
             {% translate "Save Changes" %}
           {% else %}
@@ -34,7 +34,7 @@
         <a href="{% if sprint %}{{ sprint.get_absolute_url }}{% else %}{% url 'sprints:sprint_list' workspace.slug %}{% endif %}"
            hx-get="{% if sprint %}{{ sprint.get_absolute_url }}{% else %}{% url 'sprints:sprint_list' workspace.slug %}{% endif %}"
            hx-push-url="true"
-           class="mt-button-secondary">
+           class="btn btn-outline">
           {% translate "Cancel" %}
         </a>
       </div>

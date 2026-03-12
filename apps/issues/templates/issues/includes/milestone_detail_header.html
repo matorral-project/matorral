@@ -82,8 +82,8 @@
     </div>
     <div>
       <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Owner" %}</h3>
-      {% if milestone.owner %}
-      <p class="text-sm">{{ milestone.owner.get_display_name }}</p>
+      {% if milestone.assignee %}
+      <p class="text-sm">{{ milestone.assignee.get_display_name }}</p>
       {% else %}
       <span class="text-gray-400">—</span>
       {% endif %}

@@ -1,7 +1,5 @@
-from django.shortcuts import get_object_or_404
+from django.http import Http404
 from django.utils.cache import patch_vary_headers
-
-from apps.workspaces.models import Workspace
 
 from ..forms import ProjectForm
 from ..models import Project
@@ -14,7 +12,9 @@ class ProjectViewMixin:
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
-        self.workspace = get_object_or_404(Workspace.objects, slug=kwargs["workspace_slug"])
+        if not request.workspace:
+            raise Http404
+        self.workspace = request.workspace
 
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)

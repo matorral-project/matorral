@@ -5,25 +5,6 @@ from apps.issues.models import BaseIssue, Bug, Chore, Epic, Milestone, Story, Su
 from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicChildModelFilter, PolymorphicParentModelAdmin
 
 
-@admin.register(Milestone)
-class MilestoneAdmin(admin.ModelAdmin):
-    """Admin for project-scoped Milestones."""
-
-    list_display = [
-        "key",
-        "title",
-        "project",
-        "status",
-        "priority",
-        "owner",
-        "due_date",
-    ]
-    list_filter = ["status", "priority", "project"]
-    search_fields = ["key", "title"]
-    readonly_fields = ["key", "created_at", "updated_at"]
-    raw_id_fields = ["project", "owner"]
-
-
 class BaseIssueChildAdmin(PolymorphicChildModelAdmin):
     """Base admin for all issue child models."""
 
@@ -31,13 +12,22 @@ class BaseIssueChildAdmin(PolymorphicChildModelAdmin):
     readonly_fields = ["key", "path", "depth", "created_at", "updated_at"]
 
 
+@admin.register(Milestone)
+class MilestoneAdmin(BaseIssueChildAdmin):
+    """Admin for project-scoped Milestones."""
+
+    base_model = Milestone
+    list_display = ["key", "title", "project", "status", "priority", "assignee", "due_date"]
+    list_filter = ["status", "priority", "project"]
+    search_fields = ["key", "title"]
+
+
 @admin.register(Epic)
 class EpicAdmin(BaseIssueChildAdmin):
     base_model = Epic
-    list_display = ["key", "title", "project", "status", "milestone", "due_date"]
-    list_filter = ["status", "project", "milestone"]
+    list_display = ["key", "title", "project", "status", "due_date"]
+    list_filter = ["status", "project"]
     search_fields = ["key", "title"]
-    raw_id_fields = ["milestone"]
 
 
 @admin.register(Story)
@@ -93,7 +83,7 @@ class BaseIssueParentAdmin(PolymorphicParentModelAdmin):
     """Parent admin for browsing all issue types."""
 
     base_model = BaseIssue
-    child_models = (Epic, Story, Bug, Chore, Subtask)
+    child_models = (Milestone, Epic, Story, Bug, Chore, Subtask)
     list_display = [
         "key",
         "title",

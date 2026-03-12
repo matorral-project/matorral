@@ -6,8 +6,7 @@ from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
-from apps.issues.managers import IssueManager, KeyNumber, MilestoneManager
-from apps.utils.models import BaseModel
+from apps.issues.managers import IssueManager, KeyNumber
 
 from auditlog.registry import auditlog
 from polymorphic.models import PolymorphicModel
@@ -54,132 +53,6 @@ class BugSeverity(models.TextChoices):
     MAJOR = "major", _("Major")
     CRITICAL = "critical", _("Critical")
     BLOCKER = "blocker", _("Blocker")
-
-
-@auditlog.register(
-    include_fields=[
-        "key",
-        "title",
-        "description",
-        "status",
-        "due_date",
-        "owner",
-        "priority",
-    ]
-)
-class Milestone(BaseModel):
-    """
-    A milestone marks a significant project-level checkpoint.
-    Milestones belong to a project and epics within that project can be linked to them.
-    """
-
-    project = models.ForeignKey(
-        "projects.Project",
-        verbose_name=_("Project"),
-        on_delete=models.CASCADE,
-        related_name="milestones",
-    )
-    key = models.CharField(
-        _("Key"),
-        max_length=50,
-        db_index=True,
-        blank=True,
-        help_text=_("Auto-generated unique identifier (e.g., M-1)."),
-    )
-    title = models.CharField(_("Title"), max_length=255, db_index=True)
-    description = models.TextField(_("Description"), blank=True)
-    status = models.CharField(
-        _("Status"),
-        max_length=20,
-        choices=IssueStatus.choices,
-        default=IssueStatus.DRAFT,
-        db_index=True,
-    )
-    due_date = models.DateField(_("Due Date"), null=True, blank=True, db_index=True)
-    owner = models.ForeignKey(
-        User,
-        verbose_name=_("Owner"),
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="owned_milestones",
-    )
-    created_by = models.ForeignKey(
-        User,
-        verbose_name=_("Creator"),
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="created_milestones",
-    )
-    priority = models.CharField(
-        _("Priority"),
-        max_length=20,
-        choices=IssuePriority.choices,
-        default=IssuePriority.MEDIUM,
-        db_index=True,
-    )
-
-    objects = MilestoneManager()
-    status_model = IssueStatus
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["project", "key"],
-                name="unique_milestone_key_per_project",
-            ),
-        ]
-        ordering = ["due_date", "title"]
-        verbose_name = _("Milestone")
-        verbose_name_plural = _("Milestones")
-
-    def __str__(self):
-        return f"[{self.key}] {self.title}"
-
-    def save(self, *args, **kwargs):
-        if self.key:
-            self.key = self.key.strip().upper()
-        else:
-            self.key = self._generate_unique_key()
-        super().save(*args, **kwargs)
-
-    def _generate_unique_key(self) -> str:
-        """
-        Generate a unique key for this milestone within its project.
-        Format: M-{NUMBER} (e.g., M-1, M-2)
-        """
-        prefix = "M-"
-        existing_keys = (
-            Milestone.objects.for_project(self.project)
-            .with_key_prefix(prefix, exclude=self if self.pk else None)
-            .values_list("key", flat=True)
-        )
-
-        # Extract numeric suffixes and find max
-        max_num = 0
-        pattern = re.compile(r"^M-(\d+)$")
-
-        for key in existing_keys:
-            match = pattern.match(key)
-            if match:
-                max_num = max(max_num, int(match.group(1)))
-
-        return f"M-{max_num + 1}"
-
-    def get_absolute_url(self):
-        return reverse(
-            "milestones:milestone_detail",
-            kwargs={
-                "workspace_slug": self.project.workspace.slug,
-                "project_key": self.project.key,
-                "key": self.key,
-            },
-        )
-
-    @classmethod
-    def get_priority_choices(cls):
-        return IssuePriority.choices
 
 
 class BaseIssue(MP_Node, PolymorphicModel):
@@ -278,6 +151,8 @@ class BaseIssue(MP_Node, PolymorphicModel):
             self.key = self.key.strip().upper()
         else:
             self.key = self._generate_unique_key()
+        if self.path:
+            self._validate_parent_type()
         super().save(*args, **kwargs)
 
     def clean(self):
@@ -342,7 +217,12 @@ class BaseIssue(MP_Node, PolymorphicModel):
 
     def get_children_issues(self):
         """Return all direct children of this issue, ordered by key."""
-        return self.get_children().annotate(key_number=KeyNumber("key")).order_by("key_number")
+        return (
+            self.get_children()
+            .select_related("project", "project__workspace", "assignee")
+            .annotate(key_number=KeyNumber("key"))
+            .order_by("key_number")
+        )
 
     def get_descendant_issues(self):
         """Return all descendants of this issue."""
@@ -369,40 +249,61 @@ class BaseIssue(MP_Node, PolymorphicModel):
         "due_date",
         "assignee",
         "priority",
-        "milestone",
+    ]
+)
+class Milestone(BaseIssue):
+    """
+    A milestone marks a significant project-level checkpoint.
+    Milestones are root-level issues that can contain Epics and work items.
+    """
+
+    class Meta:
+        verbose_name = _("Milestone")
+        verbose_name_plural = _("Milestones")
+
+    def _validate_parent_type(self):
+        """Milestones must be root-level issues (no tree parent allowed)."""
+        parent = self.get_parent()
+        if parent is not None:
+            raise ValidationError(_("Milestones cannot have a parent issue."))
+
+    def get_absolute_url(self):
+        return reverse(
+            "milestones:milestone_detail",
+            kwargs={
+                "workspace_slug": self.project.workspace.slug,
+                "project_key": self.project.key,
+                "key": self.key,
+            },
+        )
+
+
+@auditlog.register(
+    include_fields=[
+        "key",
+        "title",
+        "description",
+        "status",
+        "due_date",
+        "assignee",
+        "priority",
     ]
 )
 class Epic(BaseIssue):
     """
     An epic is a large body of work that can be broken down into stories.
-    Epics are root-level issues and can be linked to a project-level milestone.
+    Epics can be root-level or children of a Milestone.
     """
-
-    milestone = models.ForeignKey(
-        Milestone,
-        verbose_name=_("Milestone"),
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="epics",
-        help_text=_("Optionally link this epic to a project-level milestone."),
-    )
 
     class Meta:
         verbose_name = _("Epic")
         verbose_name_plural = _("Epics")
 
-    def clean(self):
-        """Validate that milestone belongs to the same project as this epic."""
-        super().clean()
-        if self.milestone and self.milestone.project_id != self.project_id:
-            raise ValidationError(_("Milestone must belong to the same project as the Epic."))
-
     def _validate_parent_type(self):
-        """Epics must be root-level issues (no tree parent allowed)."""
+        """Epics can only have Milestone parents or be root."""
         parent = self.get_parent()
-        if parent is not None:
-            raise ValidationError(_("Epics cannot have a parent issue."))
+        if parent is not None and not isinstance(parent, Milestone):
+            raise ValidationError(_("Epics can only be children of Milestones."))
 
 
 class WorkItemMixin(models.Model):
@@ -448,10 +349,10 @@ class Story(WorkItemMixin, BaseIssue):
         verbose_name_plural = _("Stories")
 
     def _validate_parent_type(self):
-        """Stories can only have Epic parents or be root."""
+        """Stories can only have Epic or Milestone parents or be root."""
         parent = self.get_parent()
-        if parent is not None and not isinstance(parent, Epic):
-            raise ValidationError(_("Stories can only be children of Epics."))
+        if parent is not None and not isinstance(parent, (Epic, Milestone)):
+            raise ValidationError(_("Stories can only be children of Epics or Milestones."))
 
 
 @auditlog.register(
@@ -487,10 +388,10 @@ class Bug(WorkItemMixin, BaseIssue):
         verbose_name_plural = _("Bugs")
 
     def _validate_parent_type(self):
-        """Bugs can only have Epic parents or be root."""
+        """Bugs can only have Epic or Milestone parents or be root."""
         parent = self.get_parent()
-        if parent is not None and not isinstance(parent, Epic):
-            raise ValidationError(_("Bugs can only be children of Epics."))
+        if parent is not None and not isinstance(parent, (Epic, Milestone)):
+            raise ValidationError(_("Bugs can only be children of Epics or Milestones."))
 
 
 @auditlog.register(
@@ -517,10 +418,10 @@ class Chore(WorkItemMixin, BaseIssue):
         verbose_name_plural = _("Chores")
 
     def _validate_parent_type(self):
-        """Chores can only have Epic parents or be root."""
+        """Chores can only have Epic or Milestone parents or be root."""
         parent = self.get_parent()
-        if parent is not None and not isinstance(parent, Epic):
-            raise ValidationError(_("Chores can only be children of Epics."))
+        if parent is not None and not isinstance(parent, (Epic, Milestone)):
+            raise ValidationError(_("Chores can only be children of Epics or Milestones."))
 
 
 @auditlog.register(

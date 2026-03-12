@@ -2,8 +2,8 @@ from typing import TYPE_CHECKING
 
 from django.apps import apps
 from django.db import models
-from django.db.models import Case, F, Func, IntegerField, OuterRef, Q, QuerySet, Subquery, Sum, Value, When
-from django.db.models.functions import Coalesce, Substr
+from django.db.models import Case, F, Func, IntegerField, OuterRef, Q, Subquery, Sum, Value, When
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from apps.issues.utils import get_work_item_ctype_ids
@@ -145,19 +145,14 @@ class IssueQuerySet(MP_NodeQuerySet, PolymorphicQuerySet):
             qs = qs.exclude(pk=exclude.pk)
         return qs
 
+    def milestones(self) -> IssueQuerySet:
+        """Filter to Milestone issues only."""
+        Milestone = apps.get_model("issues", "Milestone")
+        return self.instance_of(Milestone)
+
     def for_milestone(self, milestone: Milestone) -> IssueQuerySet:
-        """Filter to epics linked to milestone plus all their descendants.
-
-        Uses the reverse relation (milestone.epics) to avoid circular imports.
-        Returns issues whose path matches any epic's path as a prefix.
-        """
-        epic_paths = list(milestone.epics.values_list("path", flat=True))
-        if not epic_paths:
-            return self.none()
-
-        # Match epics and all their descendants using path prefix
-        path_regex = r"^(" + "|".join(epic_paths) + r")"
-        return self.filter(path__regex=path_regex)
+        """Filter to all descendant issues of a milestone (excludes the milestone itself)."""
+        return self.filter(path__startswith=milestone.path).exclude(pk=milestone.pk)
 
     def ordered_by_key(self) -> IssueQuerySet:
         """
@@ -169,10 +164,6 @@ class IssueQuerySet(MP_NodeQuerySet, PolymorphicQuerySet):
     def set_status(self, status: IssueStatus) -> int:
         """Bulk update status for all issues in queryset. Returns count of updated rows."""
         return self.update(status=status)
-
-    def move_to_milestone(self, milestone: Milestone | None) -> int:
-        """Bulk update milestone for all epics in queryset. Returns count of updated rows."""
-        return self.update(milestone=milestone)
 
     def ordered_by_priority(self) -> IssueQuerySet:
         """Order by priority: critical > high > medium > low, then by key.
@@ -192,43 +183,34 @@ class IssueQuerySet(MP_NodeQuerySet, PolymorphicQuerySet):
         ).order_by("-priority_order", "key_number")
 
     def with_progress(self):
-        """Annotate issues with progress weights from work item children.
+        """Annotate issues with progress weights from descendant work items.
 
         Adds total_estimated_points, total_done_points, total_in_progress_points,
-        and total_todo_points annotations by summing work item weights (estimated_points
-        or 1) from direct-child Story, Bug, and Chore items.
+        and total_todo_points annotations by summing estimated_points across all
+        descendants that have it set. Only Story, Bug, and Chore ever have
+        estimated_points set — Epics, Milestones, and Subtasks always have it as
+        None — so no further type filtering is needed.
 
-        Uses path-prefix matching (Substr) to identify children without relying on
-        the depth field, which cannot be trusted for work items at varying levels.
+        Works for both Epics (direct work item children) and Milestones (work items
+        at any depth beneath them).
         """
-
-        # Get the status categories for filtering
+        BaseIssue = apps.get_model("issues", "BaseIssue")
         status_categories = self.model.status_categories
 
         done_statuses = [s for s, cat in status_categories.items() if cat == "done"]
         in_progress_statuses = [s for s, cat in status_categories.items() if cat == "in_progress"]
         todo_statuses = [s for s, cat in status_categories.items() if cat == "todo"]
 
-        # Sum direct-child work items using a single BaseIssue query filtered by
-        # polymorphic_ctype_id — avoids unnecessary JOINs to subclass tables and
-        # uses the (project, polymorphic_ctype) index.
-        BaseIssue = apps.get_model("issues", "BaseIssue")
-        steplen = BaseIssue.steplen
-
         def descendants_sum(statuses=None):
-            """Sum work item children of each issue in the queryset.
+            """Sum estimated_points across all descendant work items (Story, Bug, Chore).
 
-            Uses Substr to extract each child's parent path and matches it against
-            the outer issue's path. Subtasks are excluded by the ctype filter.
+            Work items with null estimated_points count as 1 point.
+            Filters by polymorphic content type to exclude Epics, Milestones, and Subtasks.
             """
-            qs = (
-                BaseIssue.objects.non_polymorphic()
-                .filter(
-                    project=OuterRef("project"),
-                    polymorphic_ctype_id__in=get_work_item_ctype_ids(),
-                )
-                .annotate(_parent_path=Substr("path", 1, steplen))
-                .filter(_parent_path=OuterRef("path"))
+            qs = BaseIssue.objects.non_polymorphic().filter(
+                project=OuterRef("project"),
+                path__startswith=OuterRef("path"),
+                polymorphic_ctype_id__in=get_work_item_ctype_ids(),
             )
             if statuses:
                 qs = qs.filter(status__in=statuses)
@@ -249,7 +231,6 @@ class IssueQuerySet(MP_NodeQuerySet, PolymorphicQuerySet):
             total_todo_points=descendants_sum(todo_statuses),
         )
 
-        # total_estimated_points = done + in_progress + todo
         return qs.annotate(
             total_estimated_points=F("total_done_points") + F("total_in_progress_points") + F("total_todo_points")
         )
@@ -273,148 +254,14 @@ class IssueManager(PolymorphicManager):
     def for_milestone(self, milestone: Milestone) -> IssueQuerySet:
         return self.get_queryset().for_milestone(milestone)
 
+    def milestones(self) -> IssueQuerySet:
+        return self.get_queryset().milestones()
+
     def work_items(self) -> IssueQuerySet:
         return self.get_queryset().work_items()
 
+    def with_progress(self) -> IssueQuerySet:
+        return self.get_queryset().with_progress()
+
     def done(self) -> IssueQuerySet:
         return self.get_queryset().done()
-
-
-class MilestoneQuerySet(QuerySet):
-    """Custom QuerySet for Milestone model."""
-
-    def for_project(self, project: Project) -> MilestoneQuerySet:
-        """Filter milestones by project."""
-        return self.filter(project=project)
-
-    def for_workspace(self, workspace: Workspace) -> MilestoneQuerySet:
-        """Filter milestones by workspace (through project)."""
-        return self.filter(project__workspace=workspace)
-
-    def for_choices(self) -> MilestoneQuerySet:
-        """
-        Return only the fields needed for form choice fields.
-        Use this when populating ModelChoiceField/ModelMultipleChoiceField querysets.
-        """
-        return self.only("id", "key", "title")
-
-    def with_status(self, status: IssueStatus) -> MilestoneQuerySet:
-        """Filter by status."""
-        return self.filter(status=status)
-
-    def active(self) -> MilestoneQuerySet:
-        """Filter to active milestones (not archived, done, or won't do)."""
-        return self.exclude(
-            status__in=[self.model.status_model.ARCHIVED, self.model.status_model.DONE, self.model.status_model.WONT_DO]
-        )
-
-    def search(self, query: str) -> MilestoneQuerySet:
-        """Search milestones by title or key (case-insensitive)."""
-        if not query:
-            return self
-        return self.filter(models.Q(title__icontains=query) | models.Q(key__icontains=query))
-
-    def overdue(self) -> MilestoneQuerySet:
-        """Filter to overdue milestones (due_date in the past and not done/archived/won't do)."""
-        return self.filter(due_date__lt=timezone.now().date()).exclude(
-            status__in=[self.model.status_model.DONE, self.model.status_model.ARCHIVED, self.model.status_model.WONT_DO]
-        )
-
-    def with_key(self, key: str, exclude: Milestone | None = None) -> MilestoneQuerySet:
-        """Filter by key, optionally excluding a specific instance."""
-        qs = self.filter(key=key)
-        if exclude:
-            qs = qs.exclude(pk=exclude.pk)
-        return qs
-
-    def with_key_prefix(self, prefix: str, exclude: Milestone | None = None) -> MilestoneQuerySet:
-        """Filter by key prefix, optionally excluding a specific instance."""
-        qs = self.filter(key__startswith=prefix)
-        if exclude:
-            qs = qs.exclude(pk=exclude.pk)
-        return qs
-
-    def with_progress(self) -> MilestoneQuerySet:
-        """Annotate milestones with progress from linked epics' work items.
-
-        Only Story, Bug, and Chore (working items) have estimated points --the rest of the models that inherit from
-        BaseIssue (Epic and Subtask) don't have estimated points set ever!
-
-        Adds total_estimated_points, total_done_points, total_in_progress_points, and total_todo_points annotations
-        by summing work item weights from all epics linked to each milestone.
-
-        The progress is computed from the work items (Story, Bug, Chore) that are children of the epics linked to
-        the milestone. Uses path-prefix matching without relying on the depth field.
-        """
-        BaseIssue = apps.get_model("issues", "BaseIssue")
-        Epic = apps.get_model("issues", "Epic")
-
-        steplen = BaseIssue.steplen
-        status_categories = BaseIssue.status_categories
-        done_statuses = [s for s, cat in status_categories.items() if cat == "done"]
-        in_progress_statuses = [s for s, cat in status_categories.items() if cat == "in_progress"]
-        todo_statuses = [s for s, cat in status_categories.items() if cat == "todo"]
-
-        def milestone_work_items_sum(statuses=None):
-            """Sum work items that are children of epics linked to this milestone.
-
-            Queries BaseIssue directly (non_polymorphic) filtered by polymorphic_ctype_id
-            to avoid unnecessary JOINs to subclass tables. Uses path-prefix matching
-            (Substr) to identify children without relying on the depth field.
-            """
-            epic_paths = Epic.objects.filter(
-                milestone_id=OuterRef(OuterRef("pk")),
-            ).values("path")
-
-            qs = (
-                BaseIssue.objects.non_polymorphic()
-                .filter(
-                    project=OuterRef("project"),
-                    polymorphic_ctype_id__in=get_work_item_ctype_ids(),
-                )
-                .annotate(
-                    _parent_path=Substr("path", 1, steplen),
-                )
-                .filter(
-                    _parent_path__in=epic_paths,
-                )
-            )
-
-            if statuses:
-                qs = qs.filter(status__in=statuses)
-
-            return Coalesce(
-                Subquery(
-                    qs.values("project")
-                    .annotate(total=Sum(Coalesce("estimated_points", Value(1))))
-                    .values("total")[:1],
-                    output_field=IntegerField(),
-                ),
-                Value(0),
-            )
-
-        qs = self.annotate(
-            total_done_points=milestone_work_items_sum(done_statuses),
-            total_in_progress_points=milestone_work_items_sum(in_progress_statuses),
-            total_todo_points=milestone_work_items_sum(todo_statuses),
-        )
-
-        return qs.annotate(
-            total_estimated_points=F("total_done_points") + F("total_in_progress_points") + F("total_todo_points")
-        )
-
-
-class MilestoneManager(models.Manager):
-    """Custom Manager for Milestone model."""
-
-    def get_queryset(self) -> MilestoneQuerySet:
-        return MilestoneQuerySet(self.model, using=self._db)
-
-    def for_project(self, project: Project) -> MilestoneQuerySet:
-        return self.get_queryset().for_project(project)
-
-    def for_workspace(self, workspace: Workspace) -> MilestoneQuerySet:
-        return self.get_queryset().for_workspace(workspace)
-
-    def with_progress(self) -> MilestoneQuerySet:
-        return self.get_queryset().with_progress()

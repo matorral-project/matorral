@@ -21,7 +21,7 @@ from django_htmx.http import HttpResponseClientRedirect
 
 from .decorators import login_and_workspace_membership_required, workspace_admin_required
 from .forms import InvitationForm, MembershipForm, WorkspaceChangeForm
-from .helpers import get_onboarding_status, get_user_dashboard_data
+from .helpers import clear_onboarding_session_cache, get_onboarding_status, get_user_dashboard_data
 from .invitations import clear_invite_from_session, process_invitation, send_invitation
 from .limits import LimitExceededError, check_invitation_limit, check_member_limit
 from .models import Invitation, Membership, Workspace
@@ -91,6 +91,7 @@ def dismiss_onboarding(request, workspace_slug):
     if request.method == "POST":
         request.user.onboarding_completed = True
         request.user.save(update_fields=["onboarding_completed"])
+        clear_onboarding_session_cache(request)
         return HttpResponseClientRedirect(reverse("workspaces:home", kwargs={"workspace_slug": workspace_slug}))
     return HttpResponseNotAllowed(["POST"])
 
@@ -353,6 +354,7 @@ def send_invitation_view(request, workspace_slug):
         else:
             invitation.save()
             send_invitation(invitation)
+            clear_onboarding_session_cache(request)
             pending_invitations = Invitation.objects.filter(workspace=request.workspace, is_accepted=False).order_by(
                 "-created_at"
             )

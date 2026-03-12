@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -22,18 +22,17 @@ from apps.issues.helpers import (
     build_grouped_issues,
     build_htmx_delete_response,
 )
-from apps.issues.models import BaseIssue, IssuePriority, IssueStatus, Milestone
+from apps.issues.models import BaseIssue, Epic, IssuePriority, IssueStatus, Milestone
 from apps.issues.views.mixins import ISSUE_TYPE_CHOICES
 from apps.projects.models import Project
 from apps.sprints.models import Sprint, SprintStatus
 from apps.utils.models import AuditLog
 from apps.utils.progress import build_progress_dict
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
-from apps.workspaces.models import Workspace
 
 from django_htmx.http import HttpResponseClientRedirect
 
-from .mixins import IssueListContextMixin
+from .mixins import WORK_ITEM_TYPE_CHOICES, IssueListContextMixin
 
 User = get_user_model()
 
@@ -48,7 +47,9 @@ class MilestoneViewMixin:
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
-        self.workspace = get_object_or_404(Workspace.objects, slug=kwargs["workspace_slug"])
+        if not request.workspace:
+            raise Http404
+        self.workspace = request.workspace
         self.project = get_object_or_404(
             Project.objects.for_workspace(self.workspace).select_related("workspace"),
             key=kwargs["project_key"],
@@ -119,7 +120,7 @@ class MilestoneDetailView(
         return (
             Milestone.objects.for_project(self.project)
             .with_progress()
-            .select_related("project", "project__workspace", "owner")
+            .select_related("project", "project__workspace", "assignee")
         )
 
     def get_context_data(self, **kwargs):
@@ -154,6 +155,7 @@ class MilestoneIssueListEmbedView(MilestoneViewMixin, LoginAndWorkspaceRequiredM
     def get_queryset(self):
         self.search_query = self.request.GET.get("search", "").strip()
         self.status_filter = self.request.GET.get("status", "").strip()
+        self.type_filter = self.request.GET.get("type", "").strip()
         self.assignee_filter = self.request.GET.get("assignee", "").strip()
         self.sprint_filter = self.request.GET.get("sprint", "").strip()
         self.priority_filter = self.request.GET.get("priority", "").strip()
@@ -161,15 +163,17 @@ class MilestoneIssueListEmbedView(MilestoneViewMixin, LoginAndWorkspaceRequiredM
         # Sort by is only available when not grouping; default to priority descending
         self.sort_by = self.request.GET.get("sort_by", "priority_desc").strip() if not self.group_by else ""
 
-        # Get all issues belonging to epics linked to this milestone
-        queryset = BaseIssue.objects.for_milestone(self.milestone).select_related(
-            "project", "project__workspace", "assignee", "polymorphic_ctype"
+        # Get work items (Story, Bug, Chore) belonging to this milestone
+        queryset = (
+            BaseIssue.objects.for_milestone(self.milestone)
+            .work_items()
+            .select_related("project", "project__workspace", "assignee", "polymorphic_ctype")
         )
 
-        # Apply filters and ordering using mixin methods (no type filter for milestone - shows epics only)
+        # Apply filters and ordering using mixin methods
         queryset = self.apply_issue_filters(
             queryset,
-            type_filter="",
+            type_filter=self.type_filter,
             search_query=self.search_query,
             status_filter=self.status_filter,
             assignee_filter=self.assignee_filter,
@@ -211,7 +215,7 @@ class MilestoneIssueListEmbedView(MilestoneViewMixin, LoginAndWorkspaceRequiredM
             self.get_issue_list_context(
                 self.search_query,
                 self.status_filter,
-                type_filter="",
+                type_filter=self.type_filter,
                 assignee_filter=self.assignee_filter,
                 project_filter=self.project.key,
                 group_by=self.group_by,
@@ -222,7 +226,8 @@ class MilestoneIssueListEmbedView(MilestoneViewMixin, LoginAndWorkspaceRequiredM
                 sort_by=self.sort_by,
                 priority_filter=self.priority_filter,
                 include_priority_filter=True,
-                include_type_filter=False,
+                type_filter_type="multi_select",
+                type_filter_choices=WORK_ITEM_TYPE_CHOICES,
             )
         )
         context["available_sprints"] = (
@@ -267,7 +272,8 @@ class MilestoneCreateView(MilestoneViewMixin, LoginAndWorkspaceRequiredMixin, Mi
         self.object = form.save(commit=False)
         self.object.project = self.project
         self.object.created_by = self.request.user
-        self.object.save()
+        self.object.key = self.object._generate_unique_key()
+        BaseIssue.add_root(instance=self.object)
 
         messages.success(self.request, _("Milestone created successfully."))
         return redirect(self.object.get_absolute_url())
@@ -347,15 +353,11 @@ class MilestoneDeleteView(
         return [self.template_name]
 
     def _get_cascade_counts(self):
-        """Compute epic and work item counts for the cascade deletion."""
-        epics = list(self.object.epics.all())
-        epic_count = len(epics)
-        all_descendant_ids = []
-        for epic in epics:
-            all_descendant_ids.extend(epic.get_descendants().values_list("pk", flat=True))
-        work_item_count = len(all_descendant_ids)
-        all_issue_ids = [e.pk for e in epics] + all_descendant_ids
-        return epic_count, work_item_count, epics, all_issue_ids
+        """Compute descendant counts for the cascade deletion confirmation."""
+        descendants = list(self.object.get_descendants())
+        epic_count = sum(1 for d in descendants if isinstance(d, Epic))
+        work_item_count = sum(1 for d in descendants if not isinstance(d, Epic))
+        return epic_count, work_item_count, descendants, [d.pk for d in descendants]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -377,21 +379,13 @@ class MilestoneDeleteView(
 
         with transaction.atomic():
             try:
-                epics = self.object.epics.all()
+                # Audit log all descendants before deletion
+                descendants = list(self.object.get_descendants())
+                if descendants:
+                    AuditLog.objects.bulk_create_for(descendants, actor=self.request.user)
 
-                # Audit log ALL deleted items (epics + all descendants)
-                all_deleted = []
-                for epic in epics:
-                    all_deleted.extend(list(epic.get_descendants()))
-                all_deleted.extend(epics)  # Include epics themselves
-
-                if all_deleted:
-                    AuditLog.objects.bulk_create_for(all_deleted, actor=self.request.user)
-
-                # Delete epics and all their descendants via treebeard
-                epics.non_polymorphic().delete()
-
-                # Delete the milestone itself
+                # Delete all descendants and the milestone itself via treebeard
+                self.object.get_descendants().non_polymorphic().delete()
                 self.object.delete()
             except Exception as e:
                 messages.error(self.request, _("Failed to delete milestone: %(error)s") % {"error": str(e)})
@@ -412,17 +406,25 @@ class MilestoneCloneView(MilestoneViewMixin, LoginAndWorkspaceRequiredMixin, Vie
 
     def post(self, request, *args, **kwargs):
         original = get_object_or_404(Milestone.objects.for_project(self.project), key=kwargs["key"])
-        cloned = Milestone.objects.create(
+        cloned = Milestone(
             project=original.project,
             title=_("%(title)s (Copy)") % {"title": original.title},
             description=original.description,
             status=original.status,
             due_date=original.due_date,
-            owner=original.owner,
+            assignee=original.assignee,
             priority=original.priority,
             created_by=request.user,
         )
+        cloned.key = cloned._generate_unique_key()
+        BaseIssue.add_root(instance=cloned)
         messages.success(request, _("Milestone cloned successfully."))
+
+        if request.htmx:
+            response = HttpResponse()
+            response["HX-Trigger"] = "issueChanged"
+            return response
+
         return redirect(cloned.get_absolute_url())
 
 
@@ -449,15 +451,15 @@ class MilestoneEpicCreateView(MilestoneViewMixin, LoginAndWorkspaceRequiredMixin
 
     def get_form(self):
         form = EpicForm(**self.get_form_kwargs())
-        # Hide milestone and project fields since they're preset
-        if "milestone" in form.fields:
-            del form.fields["milestone"]
+        # Hide parent and project fields since they're preset
+        if "parent" in form.fields:
+            del form.fields["parent"]
         if "project" in form.fields:
             del form.fields["project"]
         return form
 
     def get_initial(self):
-        return {"milestone": self.milestone, "project": self.project}
+        return {"project": self.project}
 
     def get_context_data(self, **kwargs):
         context = {
@@ -492,11 +494,10 @@ class MilestoneEpicCreateView(MilestoneViewMixin, LoginAndWorkspaceRequiredMixin
     def form_valid(self, form):
         obj = form.save(commit=False)
         obj.project = self.project
-        obj.milestone = self.milestone
         obj.created_by = self.request.user
         obj.key = obj._generate_unique_key()
-        # Epics are root-level issues
-        BaseIssue.add_root(instance=obj)
+        # Add epic as a child of the milestone
+        self.milestone.add_child(instance=obj)
 
         messages.success(self.request, _("Epic created successfully."))
 
@@ -684,7 +685,7 @@ class MilestoneRowInlineEditView(MilestoneViewMixin, LoginAndWorkspaceRequiredMi
     def get(self, request, *args, **kwargs):
         """Return display mode (cancel=1) or edit mode for the milestone row."""
         milestone = get_object_or_404(
-            Milestone.objects.for_project(self.project).select_related("owner"),
+            Milestone.objects.for_project(self.project).select_related("assignee"),
             key=kwargs["key"],
         )
         context = self._get_context(request, milestone)
@@ -702,7 +703,7 @@ class MilestoneRowInlineEditView(MilestoneViewMixin, LoginAndWorkspaceRequiredMi
                 "title": milestone.title,
                 "status": milestone.status,
                 "priority": milestone.priority,
-                "owner": milestone.owner,
+                "assignee": milestone.assignee,
                 "due_date": milestone.due_date,
             },
             workspace_members=request.workspace_members,
@@ -713,7 +714,7 @@ class MilestoneRowInlineEditView(MilestoneViewMixin, LoginAndWorkspaceRequiredMi
     def post(self, request, *args, **kwargs):
         """Save inline edits and return display mode."""
         milestone = get_object_or_404(
-            Milestone.objects.for_project(self.project).select_related("owner"),
+            Milestone.objects.for_project(self.project).select_related("assignee"),
             key=kwargs["key"],
         )
         form = MilestoneRowInlineEditForm(request.POST, workspace_members=request.workspace_members)
@@ -729,7 +730,7 @@ class MilestoneRowInlineEditView(MilestoneViewMixin, LoginAndWorkspaceRequiredMi
             milestone.title = form.cleaned_data["title"]
             milestone.status = form.cleaned_data["status"]
             milestone.priority = form.cleaned_data.get("priority") or ""
-            milestone.owner = form.cleaned_data.get("owner")
+            milestone.assignee = form.cleaned_data.get("assignee")
             milestone.due_date = form.cleaned_data.get("due_date")
             milestone.save()
 
@@ -767,7 +768,7 @@ class MilestoneDetailInlineEditView(MilestoneViewMixin, LoginAndWorkspaceRequire
     def get(self, request, *args, **kwargs):
         """Return display mode (cancel=1) or edit mode for the milestone detail header."""
         milestone = get_object_or_404(
-            Milestone.objects.for_project(self.project).select_related("owner"),
+            Milestone.objects.for_project(self.project).select_related("assignee"),
             key=kwargs["key"],
         )
         context = self._get_context(request, milestone)
@@ -786,7 +787,7 @@ class MilestoneDetailInlineEditView(MilestoneViewMixin, LoginAndWorkspaceRequire
                 "description": milestone.description,
                 "status": milestone.status,
                 "priority": milestone.priority,
-                "owner": milestone.owner,
+                "assignee": milestone.assignee,
                 "due_date": milestone.due_date,
             },
             workspace_members=request.workspace_members,
@@ -797,7 +798,7 @@ class MilestoneDetailInlineEditView(MilestoneViewMixin, LoginAndWorkspaceRequire
     def post(self, request, *args, **kwargs):
         """Save inline edits and return display mode."""
         milestone = get_object_or_404(
-            Milestone.objects.for_project(self.project).select_related("owner"),
+            Milestone.objects.for_project(self.project).select_related("assignee"),
             key=kwargs["key"],
         )
         form = MilestoneDetailInlineEditForm(request.POST, workspace_members=request.workspace_members)
@@ -814,7 +815,7 @@ class MilestoneDetailInlineEditView(MilestoneViewMixin, LoginAndWorkspaceRequire
             milestone.description = form.cleaned_data.get("description") or ""
             milestone.status = form.cleaned_data["status"]
             milestone.priority = form.cleaned_data.get("priority") or ""
-            milestone.owner = form.cleaned_data.get("owner")
+            milestone.assignee = form.cleaned_data.get("assignee")
             milestone.due_date = form.cleaned_data.get("due_date")
             milestone.save()
 

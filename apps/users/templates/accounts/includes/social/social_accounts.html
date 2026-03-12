@@ -28,5 +28,5 @@
 {% empty %}
   <p class="mb-3">{% translate "You haven't linked any social accounts yet. Create one below." %}</p>
 {% endfor %}
-<a class="mt-button-secondary" href="{% url 'socialaccount_connections' %}">Manage Accounts</a>
-{% if not user.has_usable_password %}<a class="mx-2 mt-button-secondary" href="{% url 'account_set_password' %}">Add a Password</a>{% endif %}
+<a class="btn btn-outline" href="{% url 'socialaccount_connections' %}">Manage Accounts</a>
+{% if not user.has_usable_password %}<a class="mx-2 btn btn-outline" href="{% url 'account_set_password' %}">Add a Password</a>{% endif %}

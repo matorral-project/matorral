@@ -16,18 +16,25 @@ import factory
 
 
 class MilestoneFactory(factory.django.DjangoModelFactory):
-    """Factory for creating project-scoped Milestone instances."""
+    """Factory for creating project-scoped Milestone instances (treebeard root nodes)."""
 
     class Meta:
         model = Milestone
 
     project = factory.SubFactory(ProjectFactory)
     title = factory.Sequence(lambda n: f"Milestone {n}")
-    key = ""  # Let the model auto-generate
+    key = ""
     description = ""
     status = IssueStatus.DRAFT
     priority = IssuePriority.MEDIUM
-    owner = None
+    assignee = None
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        """Override to use treebeard's add_root method (milestones are always root-level)."""
+        obj = model_class(**kwargs)
+        obj.key = obj.key or obj._generate_unique_key()
+        return BaseIssue.add_root(instance=obj)
 
 
 class EpicFactory(factory.django.DjangoModelFactory):
@@ -41,13 +48,14 @@ class EpicFactory(factory.django.DjangoModelFactory):
     key = ""
     description = ""
     status = IssueStatus.DRAFT
-    milestone = None  # Optional FK to workspace-scoped Milestone
 
     @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        """Override to use treebeard's add_root method (epics are always root-level)."""
+    def _create(cls, model_class, *args, parent=None, **kwargs):
+        """Override to use treebeard's add_root or add_child method."""
         obj = model_class(**kwargs)
         obj.key = obj.key or obj._generate_unique_key()
+        if parent:
+            return parent.add_child(instance=obj)
         return BaseIssue.add_root(instance=obj)
 
 

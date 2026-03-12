@@ -2,13 +2,13 @@
 History views for issues and milestones.
 """
 
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 
 from apps.issues.models import BaseIssue, Milestone
 from apps.issues.views.mixins import IssueViewMixin
 from apps.projects.models import Project
 from apps.utils.views.history import BaseHistoryView
-from apps.workspaces.models import Workspace
 
 
 class IssueHistoryView(IssueViewMixin, BaseHistoryView):
@@ -39,7 +39,9 @@ class MilestoneHistoryView(BaseHistoryView):
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
-        self.workspace = get_object_or_404(Workspace.objects, slug=kwargs["workspace_slug"])
+        if not request.workspace:
+            raise Http404
+        self.workspace = request.workspace
         self.project = get_object_or_404(
             Project.objects.for_workspace(self.workspace).select_related("workspace"),
             key=kwargs["project_key"],

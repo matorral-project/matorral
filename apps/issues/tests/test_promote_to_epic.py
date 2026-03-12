@@ -79,15 +79,6 @@ class PromoteToEpicServiceTest(TestCase):
         with self.assertRaises(PromotionError):
             promote_to_epic(epic)
 
-    def test_promote_sets_milestone(self):
-        """Promoting with a milestone links the Epic to the milestone."""
-        story = StoryFactory(project=self.project)
-        milestone = MilestoneFactory(project=self.project)
-
-        epic = promote_to_epic(story, milestone=milestone)
-
-        self.assertEqual(milestone, epic.milestone)
-
     def test_promote_moves_to_root_when_has_parent(self):
         """Promoting an item with a parent Epic moves it to root level."""
         parent_epic = EpicFactory(project=self.project)
@@ -104,50 +95,18 @@ class PromoteToEpicServiceTest(TestCase):
         self.assertIsNone(epic.get_parent())
         self.assertEqual(1, epic.depth)
 
-    def test_promote_no_milestone_inheritance_from_parent(self):
-        """Promoting an item does NOT inherit the parent epic's milestone."""
+    def test_promote_moves_to_root_when_parent_under_milestone(self):
+        """Promoting an item under a milestone-child epic moves the new Epic to root."""
         milestone = MilestoneFactory(project=self.project)
-        parent_epic = EpicFactory(project=self.project, milestone=milestone)
+        parent_epic = EpicFactory(project=self.project, parent=milestone)
         story = StoryFactory(project=self.project, parent=parent_epic)
 
         epic = promote_to_epic(story)
 
         epic.refresh_from_db()
-        # User must explicitly select a milestone, no automatic inheritance
-        self.assertIsNone(epic.milestone)
-
-    def test_promote_with_no_milestone_creates_orphan_epic(self):
-        """Promoting with milestone=None creates an orphan epic even under parent with milestone."""
-        milestone = MilestoneFactory(project=self.project)
-        parent_epic = EpicFactory(project=self.project, milestone=milestone)
-        story = StoryFactory(project=self.project, parent=parent_epic)
-
-        epic = promote_to_epic(story, milestone=None)  # Explicitly no milestone
-
-        epic.refresh_from_db()
-        self.assertIsNone(epic.milestone)
-
-    def test_promote_inherits_parent_milestone_with_no_milestone(self):
-        """Promoting an item under a parent epic with no milestone results in no milestone."""
-        parent_epic = EpicFactory(project=self.project, milestone=None)
-        story = StoryFactory(project=self.project, parent=parent_epic)
-
-        epic = promote_to_epic(story)
-
-        epic.refresh_from_db()
-        self.assertIsNone(epic.milestone)
-
-    def test_promote_explicit_milestone_overrides_parent(self):
-        """An explicitly provided milestone takes precedence over the parent's milestone."""
-        parent_milestone = MilestoneFactory(project=self.project, title="Parent MS")
-        explicit_milestone = MilestoneFactory(project=self.project, title="Explicit MS")
-        parent_epic = EpicFactory(project=self.project, milestone=parent_milestone)
-        story = StoryFactory(project=self.project, parent=parent_epic)
-
-        epic = promote_to_epic(story, milestone=explicit_milestone)
-
-        epic.refresh_from_db()
-        self.assertEqual(explicit_milestone, epic.milestone)
+        # Promoted epic should be at root level (no parent)
+        self.assertIsNone(epic.get_parent())
+        self.assertEqual(1, epic.depth)
 
     def test_promote_preserves_comments(self):
         """Promoting preserves comments with updated ContentType."""
@@ -263,18 +222,17 @@ class PromoteToEpicServiceTest(TestCase):
         self.assertEqual(0, epic.get_children().count())
 
     def test_promote_preserves_tree_children(self):
-        """Promoting preserves existing tree children (they become Epic's children)."""
+        """Promoting preserves existing tree children (subtasks become Epic's children)."""
         story = StoryFactory(project=self.project)
-        child_story = StoryFactory(project=self.project, parent=story, title="Child Story")
+        SubtaskFactory(parent=story, title="Child Subtask")
 
         epic = promote_to_epic(story)
 
-        # Child should still exist as a child of the Epic
+        # Child subtask is converted to a Story and becomes a child of the Epic
         epic.refresh_from_db()
         children = list(epic.get_children())
         self.assertEqual(1, len(children))
-        self.assertEqual(child_story.pk, children[0].pk)
-        self.assertEqual("Child Story", children[0].title)
+        self.assertEqual("Child Subtask", children[0].title)
 
 
 class IssuePromoteToEpicViewTest(TestCase):
@@ -343,18 +301,6 @@ class IssuePromoteToEpicViewTest(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertContains(response, "Severity will be lost")
 
-    def test_get_preselects_parent_milestone(self):
-        """Modal preselects the parent epic's milestone in the form."""
-        milestone = MilestoneFactory(project=self.project)
-        parent_epic = EpicFactory(project=self.project, milestone=milestone)
-        story = StoryFactory(project=self.project, parent=parent_epic)
-
-        response = self.client.get(self._get_promote_url(story))
-
-        self.assertEqual(200, response.status_code)
-        # The milestone option should be selected
-        self.assertContains(response, f'value="{milestone.pk}" selected')
-
     def test_get_epic_shows_error(self):
         """GET request for an Epic shows an error message."""
         epic = EpicFactory(project=self.project)
@@ -376,21 +322,6 @@ class IssuePromoteToEpicViewTest(TestCase):
         # Verify the promotion
         epic = Epic.objects.get(pk=original_pk)
         self.assertEqual("Test Story", epic.title)
-
-    def test_post_with_milestone(self):
-        """POST request with milestone sets the milestone on the Epic."""
-        story = StoryFactory(project=self.project)
-        milestone = MilestoneFactory(project=self.project)
-
-        response = self.client.post(
-            self._get_promote_url(story),
-            {"milestone": milestone.pk},
-        )
-
-        self.assertEqual(302, response.status_code)
-
-        epic = Epic.objects.get(pk=story.pk)
-        self.assertEqual(milestone, epic.milestone)
 
     def test_post_with_subtask_conversion(self):
         """POST request converts subtasks when checkbox is checked."""

@@ -1,4 +1,4 @@
-from django.http import HttpResponseBadRequest, HttpResponseForbidden
+from django.http import Http404, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render
 from django.utils.translation import gettext_lazy as _
 from django.views import View
@@ -7,7 +7,6 @@ from apps.issues.models import BaseIssue
 from apps.issues.utils import get_cached_content_type
 from apps.projects.models import Project
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
-from apps.workspaces.models import Workspace
 
 from django_comments_xtd.models import XtdComment
 
@@ -17,7 +16,9 @@ class IssueCommentsViewMixin:
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
-        self.workspace = get_object_or_404(Workspace.objects, slug=kwargs["workspace_slug"])
+        if not request.workspace:
+            raise Http404
+        self.workspace = request.workspace
         self.project = get_object_or_404(
             Project.objects.for_workspace(self.workspace).select_related("workspace"),
             key=kwargs["project_key"],

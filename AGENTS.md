@@ -276,7 +276,27 @@ Always query the model you actually need, not intermediate models. Let Django's 
   ```
 - **Prefer simple JOINs over Subquery** unless you have a specific reason (like correlated subqueries or complex aggregations).
 
+- **Use `.get(...)` when the intention is to get only one object instead of `.filter(...).first()`**. Using `.get()` is
+  semantically more clear and more efficient.
+
 ### URLs and Views
+
+- **NEVER query Workspace in view setup** - always use `request.workspace` set by middleware:
+  ```python
+  # Good: uses request.workspace (no DB query)
+  class MyViewMixin:
+      def setup(self, request, *args, **kwargs):
+          super().setup(request, *args, **kwargs)
+          if not request.workspace:
+              raise Http404
+          self.workspace = request.workspace
+
+  # Bad: redundant DB query
+  class MyViewMixin:
+      def setup(self, request, *args, **kwargs):
+          super().setup(request, *args, **kwargs)
+          self.workspace = get_object_or_404(Workspace.objects, slug=kwargs["workspace_slug"])
+  ```
 
 - **Prefer meaningful identifiers over `pk` in URLs** when a model has a unique slug or key field:
   ```python

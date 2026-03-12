@@ -85,17 +85,26 @@ def get_user_dashboard_data(user, workspace):
     }
 
 
+def get_onboarding_session_key(workspace):
+    return f"onboarding_pending_count_{workspace.id}"
+
+
+def clear_onboarding_session_cache(request):
+    """Clear cached onboarding count from session, forcing recompute on next request."""
+    if hasattr(request, "workspace") and request.workspace:
+        request.session.pop(get_onboarding_session_key(request.workspace), None)
+
+
 def get_onboarding_status(user, workspace):
     if user.onboarding_completed:
         return {"should_show": False, "steps": [], "pending_count": 0}
 
     if workspace:
-        demo_project = Project.objects.filter(workspace=workspace, created_by__isnull=True).first()
-        demo_url = (
-            demo_project.get_absolute_url()
-            if demo_project
-            else reverse("projects:project_list", kwargs={"workspace_slug": workspace.slug})
-        )
+        try:
+            demo_project = Project.objects.select_related("workspace").get(workspace=workspace, created_by__isnull=True)
+            demo_url = demo_project.get_absolute_url()
+        except Project.DoesNotExist:
+            demo_url = reverse("projects:project_list", kwargs={"workspace_slug": workspace.slug})
         project_list_url = reverse("projects:project_list", kwargs={"workspace_slug": workspace.slug})
         members_url = reverse("workspaces:manage_workspace_members", kwargs={"workspace_slug": workspace.slug})
         sprint_list_url = reverse("sprints:sprint_list", kwargs={"workspace_slug": workspace.slug})

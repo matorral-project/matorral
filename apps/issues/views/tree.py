@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import View
 
-from apps.issues.models import BaseIssue, Bug, Chore, Epic, Story
+from apps.issues.models import BaseIssue, Bug, Chore, Epic, Milestone, Story
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
 from django_htmx.http import HttpResponseClientRefresh
@@ -21,7 +21,7 @@ class IssueChildrenView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View):
 
     def get(self, request, *args, **kwargs):
         issue = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["key"])
-        children = issue.get_children_issues().select_related("project", "project__workspace", "assignee")
+        children = issue.get_children_issues()
         context = {
             "children": children,
             "workspace": self.workspace,
@@ -49,17 +49,31 @@ class IssueMoveView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View):
             valid_parents = (
                 Epic.objects.for_project(self.project)
                 .exclude(pk=issue.pk)
-                .select_related("project", "project__workspace", "milestone")
+                .select_related("project", "project__workspace")
                 .ordered_by_key()
             )
-            # Group epics by milestone, milestones ordered by key asc, no-milestone last
+            # Group epics by milestone parent (tree-based), milestones ordered by key asc, no-milestone last
             epics_list = list(valid_parents)
-            with_milestone = [e for e in epics_list if e.milestone]
-            without_milestone = [e for e in epics_list if not e.milestone]
+            steplen = BaseIssue.steplen
+            parent_paths = {e.path[:-steplen] for e in epics_list if len(e.path) > steplen}
+            milestones_by_path = {}
+            if parent_paths:
+                for m in Milestone.objects.filter(path__in=parent_paths):
+                    milestones_by_path[m.path] = m
 
-            with_milestone.sort(key=lambda e: e.milestone.key)
-            for milestone, epics in groupby(with_milestone, key=lambda e: e.milestone):
-                grouped_parents.append((milestone, list(epics)))
+            # Sort by milestone key, then orphans last
+            with_milestone = [
+                (milestones_by_path[e.path[:-steplen]], e)
+                for e in epics_list
+                if milestones_by_path.get(e.path[:-steplen])
+            ]
+            without_milestone = [
+                e for e in epics_list if not milestones_by_path.get(e.path[:-steplen] if len(e.path) > steplen else "")
+            ]
+
+            with_milestone.sort(key=lambda pair: pair[0].key)
+            for milestone, group in groupby(with_milestone, key=lambda pair: pair[0]):
+                grouped_parents.append((milestone, [pair[1] for pair in group]))
 
             if without_milestone:
                 grouped_parents.append((None, without_milestone))

@@ -1,10 +1,15 @@
 from apps.workspaces.models import Workspace
 
-from .helpers import get_onboarding_status
+from .helpers import get_onboarding_session_key, get_onboarding_status
 
 
 def onboarding_context(request):
-    """Add onboarding pending count to all templates for sidebar badge."""
+    """Add onboarding pending count to all templates for sidebar badge.
+
+    Uses the session to avoid re-running DB queries on every request. The cache is
+    invalidated whenever the user completes an onboarding step (project created,
+    invitation sent, sprint created, demo explored, or onboarding dismissed).
+    """
     if (
         hasattr(request, "user")
         and request.user.is_authenticated
@@ -12,7 +17,14 @@ def onboarding_context(request):
         and request.workspace
     ):
         try:
-            return {"onboarding_pending_count": get_onboarding_status(request.user, request.workspace)["pending_count"]}
+            if request.user.onboarding_completed:
+                return {"onboarding_pending_count": 0}
+            session_key = get_onboarding_session_key(request.workspace)
+            count = request.session.get(session_key)
+            if count is None:
+                count = get_onboarding_status(request.user, request.workspace)["pending_count"]
+                request.session[session_key] = count
+            return {"onboarding_pending_count": count}
         except Exception:
             pass
     return {"onboarding_pending_count": 0}

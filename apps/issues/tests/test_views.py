@@ -375,10 +375,10 @@ class EpicCloneViewTest(IssueViewTestBase):
         self.assertEqual(epic.created_by, cloned.created_by)
         self.assertEqual(f"{epic.title} (Copy)", cloned.title)
         self.assertNotEqual(epic.key, cloned.key)
-        self.assertIsNone(cloned.milestone)
+        self.assertIsNone(cloned.get_parent())
 
-    def test_clone_epic_under_milestone_preserves_milestone_and_other_fields(self):
-        """Clone preserves milestone for epics under milestones."""
+    def test_clone_epic_under_milestone_preserves_fields(self):
+        """Clone preserves all fields for epics under milestones (parent not preserved)."""
         milestone = MilestoneFactory(project=self.project, title="Release 1.0")
         epic = EpicFactory(
             project=self.project,
@@ -386,7 +386,7 @@ class EpicCloneViewTest(IssueViewTestBase):
             description="Test description",
             status=IssueStatus.IN_PROGRESS,
             created_by=self.user,
-            milestone=milestone,
+            parent=milestone,
         )
 
         self.client.post(self._get_clone_url(epic))
@@ -400,7 +400,6 @@ class EpicCloneViewTest(IssueViewTestBase):
         self.assertEqual(epic.created_by, cloned.created_by)
         self.assertEqual(f"{epic.title} (Copy)", cloned.title)
         self.assertNotEqual(epic.key, cloned.key)
-        self.assertEqual(milestone, cloned.milestone)
 
 
 class StoryCloneViewTest(IssueViewTestBase):
@@ -886,7 +885,7 @@ class MilestoneDetailViewTest(MilestoneViewTestBase):
     def test_detail_view_loads_issues_embed(self):
         """Detail view loads the embedded issues list via HTMX."""
         milestone = MilestoneFactory(project=self.project)
-        EpicFactory(project=self.project, title="Linked Epic", milestone=milestone)
+        EpicFactory(project=self.project, title="Linked Epic", parent=milestone)
 
         response = self.client.get(self._get_detail_url(milestone))
 
@@ -897,7 +896,7 @@ class MilestoneDetailViewTest(MilestoneViewTestBase):
     def test_detail_view_shows_progress(self):
         """Detail view shows overall milestone progress."""
         milestone = MilestoneFactory(project=self.project)
-        epic = EpicFactory(project=self.project, milestone=milestone)
+        epic = EpicFactory(project=self.project, parent=milestone)
         StoryFactory(
             project=self.project,
             parent=epic,
@@ -951,7 +950,7 @@ class MilestoneIssueListEmbedViewTest(MilestoneViewTestBase):
     def test_embed_view_shows_linked_epic_issues(self):
         """Embed view shows issues from epics linked to the milestone."""
         milestone = MilestoneFactory(project=self.project)
-        epic = EpicFactory(project=self.project, title="Linked Epic", milestone=milestone)
+        epic = EpicFactory(project=self.project, title="Linked Epic", parent=milestone)
         StoryFactory(project=self.project, parent=epic, title="Story in Epic")
 
         response = self.client.get(self._get_embed_url(milestone) + "?group_by=epic")
@@ -973,7 +972,7 @@ class MilestoneIssueListEmbedViewTest(MilestoneViewTestBase):
     def test_embed_view_grouped_by_epic(self):
         """Embed view shows issues grouped by epic when group_by=epic."""
         milestone = MilestoneFactory(project=self.project)
-        epic = EpicFactory(project=self.project, milestone=milestone, title="Test Epic")
+        epic = EpicFactory(project=self.project, parent=milestone, title="Test Epic")
         StoryFactory(project=self.project, parent=epic, title="Epic Story")
 
         response = self.client.get(self._get_embed_url(milestone) + "?group_by=epic")
@@ -1091,7 +1090,7 @@ class MilestoneCloneViewTest(MilestoneViewTestBase):
             description="Original description",
             status=IssueStatus.IN_PROGRESS,
             priority=IssuePriority.HIGH,
-            owner=self.user,
+            assignee=self.user,
         )
         original_count = Milestone.objects.count()
 
@@ -1104,7 +1103,7 @@ class MilestoneCloneViewTest(MilestoneViewTestBase):
         self.assertEqual(milestone.description, cloned.description)
         self.assertEqual(milestone.status, cloned.status)
         self.assertEqual(milestone.priority, cloned.priority)
-        self.assertEqual(milestone.owner, cloned.owner)
+        self.assertEqual(milestone.assignee, cloned.assignee)
         self.assertNotEqual(milestone.key, cloned.key)
 
     def test_clone_redirects_to_cloned_milestone(self):
@@ -1199,22 +1198,22 @@ class MilestoneRowInlineEditViewTest(MilestoneViewTestBase):
         milestone.refresh_from_db()
         self.assertEqual(IssuePriority.HIGH, milestone.priority)
 
-    def test_post_updates_milestone_owner(self):
-        """POST updates the milestone owner."""
-        milestone = MilestoneFactory(project=self.project, owner=None)
+    def test_post_updates_milestone_assignee(self):
+        """POST updates the milestone assignee."""
+        milestone = MilestoneFactory(project=self.project, assignee=None)
 
         response = self.client.post(
             self._get_inline_edit_url(milestone),
             {
                 "title": milestone.title,
                 "status": milestone.status,
-                "owner": self.user.pk,
+                "assignee": self.user.pk,
             },
         )
 
         self.assertEqual(200, response.status_code)
         milestone.refresh_from_db()
-        self.assertEqual(self.user, milestone.owner)
+        self.assertEqual(self.user, milestone.assignee)
 
     def test_post_with_validation_error_returns_edit_template(self):
         """POST with validation error returns edit template with errors."""
@@ -1333,22 +1332,22 @@ class MilestoneDetailInlineEditViewTest(MilestoneViewTestBase):
         milestone.refresh_from_db()
         self.assertEqual(IssuePriority.HIGH, milestone.priority)
 
-    def test_post_updates_milestone_owner(self):
-        """POST updates the milestone owner."""
-        milestone = MilestoneFactory(project=self.project, owner=None)
+    def test_post_updates_milestone_assignee(self):
+        """POST updates the milestone assignee."""
+        milestone = MilestoneFactory(project=self.project, assignee=None)
 
         response = self.client.post(
             self._get_inline_edit_url(milestone),
             {
                 "title": milestone.title,
                 "status": milestone.status,
-                "owner": self.user.pk,
+                "assignee": self.user.pk,
             },
         )
 
         self.assertEqual(200, response.status_code)
         milestone.refresh_from_db()
-        self.assertEqual(self.user, milestone.owner)
+        self.assertEqual(self.user, milestone.assignee)
 
     def test_post_with_validation_error_returns_edit_template(self):
         """POST with validation error returns edit template with errors."""
@@ -1408,9 +1407,9 @@ class MilestoneEpicCreateViewTest(MilestoneViewTestBase):
         # Should redirect to milestone detail
         self.assertRedirects(response, milestone.get_absolute_url())
 
-        # Epic should be created and linked to milestone
+        # Epic should be created as a child of the milestone in the tree
         epic = Epic.objects.get(title="Test Epic")
-        self.assertEqual(milestone, epic.milestone)
+        self.assertEqual(milestone, epic.get_parent())
         self.assertEqual(self.project, epic.project)
 
     def test_form_project_field_hidden(self):
@@ -1422,14 +1421,14 @@ class MilestoneEpicCreateViewTest(MilestoneViewTestBase):
         form = response.context["form"]
         self.assertNotIn("project", form.fields)
 
-    def test_form_milestone_field_hidden(self):
-        """Form does not show milestone field since it's preset."""
+    def test_form_parent_field_hidden(self):
+        """Form does not show parent field since it's preset from the milestone."""
         milestone = MilestoneFactory(project=self.project)
 
         response = self.client.get(self._get_new_epic_url(milestone))
 
         form = response.context["form"]
-        self.assertNotIn("milestone", form.fields)
+        self.assertNotIn("parent", form.fields)
 
 
 class IssueRowInlineEditViewTest(IssueViewTestBase):
@@ -1895,24 +1894,6 @@ class EpicDetailInlineEditViewTest(IssueViewTestBase):
         self.assertEqual(200, response.status_code)
         epic.refresh_from_db()
         self.assertEqual(self.user, epic.assignee)
-
-    def test_post_updates_epic_milestone(self):
-        """POST updates the epic milestone."""
-        epic = EpicFactory(project=self.project, milestone=None)
-        milestone = MilestoneFactory(project=self.project)
-
-        response = self.client.post(
-            self._get_inline_edit_url(epic),
-            {
-                "title": epic.title,
-                "status": epic.status,
-                "milestone": milestone.pk,
-            },
-        )
-
-        self.assertEqual(200, response.status_code)
-        epic.refresh_from_db()
-        self.assertEqual(milestone, epic.milestone)
 
     def test_post_updates_epic_due_date(self):
         """POST updates the epic due date."""

@@ -1,11 +1,10 @@
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
+from django.http import Http404
 from django.utils.cache import patch_vary_headers
 from django.utils.translation import gettext_lazy as _
 
 from apps.sprints.models import Sprint, SprintStatus
 from apps.utils.filters import build_filter_section, count_active_filters, get_status_filter_label, parse_status_filter
-from apps.workspaces.models import Workspace
 
 User = get_user_model()
 
@@ -20,7 +19,9 @@ class SprintViewMixin:
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
-        self.workspace = get_object_or_404(Workspace.objects, slug=kwargs["workspace_slug"])
+        if not request.workspace:
+            raise Http404
+        self.workspace = request.workspace
 
     def get_queryset(self):
         """Override get_queryset() to use workspace-scoped filtering."""

@@ -6,6 +6,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.issues.models import (
+    BaseIssue,
     Bug,
     BugSeverity,
     Chore,
@@ -480,21 +481,20 @@ SUBTASKS = {
 
 
 def _create_milestones(project, user):
-    """Create milestones via bulk_create with pre-generated keys."""
-    milestones = []
-    for i, m_data in enumerate(MILESTONES, start=1):
-        milestones.append(
-            Milestone(
-                project=project,
-                key=f"M-{i}",
-                title=m_data["title"],
-                status=m_data["status"],
-                priority=m_data["priority"],
-                owner=user,
-            )
+    """Create milestones as treebeard root nodes."""
+    milestones_by_title = {}
+    for m_data in MILESTONES:
+        milestone = Milestone(
+            project=project,
+            title=m_data["title"],
+            status=m_data["status"],
+            priority=m_data["priority"],
+            assignee=user,
         )
-    created = Milestone.objects.bulk_create(milestones)
-    return {m.title: m for m in created}
+        milestone.key = milestone._generate_unique_key()
+        BaseIssue.add_root(instance=milestone)
+        milestones_by_title[milestone.title] = milestone
+    return milestones_by_title
 
 
 def _create_epics_and_items(project, user, milestones_by_title):
@@ -505,14 +505,15 @@ def _create_epics_and_items(project, user, milestones_by_title):
     for m_data in MILESTONES:
         milestone = milestones_by_title[m_data["title"]]
         for epic_data in m_data["epics"]:
-            epic = Epic.add_root(
+            epic_obj = Epic(
                 project=project,
                 title=epic_data["title"],
                 status=epic_data["status"],
                 priority=epic_data.get("priority", IssuePriority.MEDIUM),
-                milestone=milestone,
                 assignee=user,
             )
+            epic_obj.key = epic_obj._generate_unique_key()
+            epic = milestone.add_child(instance=epic_obj)
 
             for item_data in epic_data["items"]:
                 item_cls = item_type_map[item_data["type"]]

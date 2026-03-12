@@ -434,25 +434,25 @@ class BuildGroupedIssuesEpicPriorityOrderTest(TestCase):
             project=cls.project,
             title="Low Priority Epic",
             priority=IssuePriority.LOW,
-            milestone=cls.milestone,
+            parent=cls.milestone,
         )
         cls.epic_critical = EpicFactory(
             project=cls.project,
             title="Critical Priority Epic",
             priority=IssuePriority.CRITICAL,
-            milestone=cls.milestone,
+            parent=cls.milestone,
         )
         cls.epic_medium = EpicFactory(
             project=cls.project,
             title="Medium Priority Epic",
             priority=IssuePriority.MEDIUM,
-            milestone=cls.milestone,
+            parent=cls.milestone,
         )
         cls.epic_high = EpicFactory(
             project=cls.project,
             title="High Priority Epic",
             priority=IssuePriority.HIGH,
-            milestone=cls.milestone,
+            parent=cls.milestone,
         )
 
         # Add a story to each epic so they appear in non-empty grouping too

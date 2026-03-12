@@ -7,46 +7,46 @@ from apps.projects.factories import ProjectFactory
 
 
 class MilestoneKeyAutoGenerationTest(TestCase):
-    """Tests for automatic key generation for project-scoped milestones."""
+    """Tests for automatic key generation for milestones (shares project key sequence)."""
 
     @classmethod
     def setUpTestData(cls):
-        cls.project = ProjectFactory()
+        cls.project = ProjectFactory(key="PROJ-1")
 
     def test_key_auto_generated_when_blank(self):
-        """Key is auto-generated if not provided."""
+        """Key is auto-generated using the project key prefix."""
         milestone = MilestoneFactory(project=self.project, title="Test Milestone")
 
         self.assertNotEqual("", milestone.key)
-        self.assertTrue(milestone.key.startswith("M-"))
+        self.assertTrue(milestone.key.startswith("PROJ-1-"))
 
     def test_key_increments_correctly(self):
-        """Keys increment sequentially."""
+        """Keys increment sequentially within the project."""
         m1 = MilestoneFactory(project=self.project, title="Milestone 1")
         m2 = MilestoneFactory(project=self.project, title="Milestone 2")
 
-        self.assertEqual("M-1", m1.key)
-        self.assertEqual("M-2", m2.key)
+        self.assertEqual("PROJ-1-1", m1.key)
+        self.assertEqual("PROJ-1-2", m2.key)
 
     def test_key_handles_gaps(self):
         """Key generation finds max existing key and increments."""
-        MilestoneFactory(project=self.project, title="Milestone 1", key="M-1")
-        MilestoneFactory(project=self.project, title="Milestone 3", key="M-5")
+        MilestoneFactory(project=self.project, title="Milestone 1", key="PROJ-1-1")
+        MilestoneFactory(project=self.project, title="Milestone 3", key="PROJ-1-5")
         m3 = MilestoneFactory(project=self.project, title="Milestone 4")
 
-        self.assertEqual("M-6", m3.key)
+        self.assertEqual("PROJ-1-6", m3.key)
 
     def test_key_normalized_to_uppercase(self):
         """Lowercase keys are converted to uppercase."""
-        milestone = MilestoneFactory(project=self.project, title="Test", key="m-custom")
+        milestone = MilestoneFactory(project=self.project, title="Test", key="proj-1-custom")
 
-        self.assertEqual("M-CUSTOM", milestone.key)
+        self.assertEqual("PROJ-1-CUSTOM", milestone.key)
 
     def test_key_whitespace_stripped(self):
         """Whitespace is stripped from keys."""
-        milestone = MilestoneFactory(project=self.project, title="Test", key=" M-X ")
+        milestone = MilestoneFactory(project=self.project, title="Test", key=" PROJ-1-X ")
 
-        self.assertEqual("M-X", milestone.key)
+        self.assertEqual("PROJ-1-X", milestone.key)
 
 
 class IssueKeyAutoGenerationTest(TestCase):
@@ -113,7 +113,7 @@ class MilestoneCreationTest(TestCase):
 
         self.assertIsInstance(milestone, Milestone)
         self.assertEqual(self.project, milestone.project)
-        self.assertTrue(milestone.key.startswith("M-"))
+        self.assertTrue(milestone.key.startswith(self.project.key + "-"))
 
     def test_milestone_default_status(self):
         """Milestones are created with draft status by default."""
@@ -139,13 +139,13 @@ class IssueTypeCreationTest(TestCase):
         self.assertIsNone(epic.get_parent())
 
     def test_create_epic_with_milestone(self):
-        """Epics can be linked to a project-level milestone."""
+        """Epics can be created as children of a milestone."""
         milestone = MilestoneFactory(project=self.project, title="Release 1.0")
-        epic = EpicFactory(project=self.project, title="Feature Epic", milestone=milestone)
+        epic = EpicFactory(project=self.project, title="Feature Epic", parent=milestone)
 
         self.assertIsInstance(epic, Epic)
-        self.assertEqual(1, epic.depth)  # Still root in tree
-        self.assertEqual(milestone, epic.milestone)
+        self.assertEqual(2, epic.depth)  # Child of milestone
+        self.assertEqual(milestone, epic.get_parent())
 
     def test_create_story_under_epic(self):
         """Stories must be created under epics."""
@@ -174,51 +174,48 @@ class IssueTypeCreationTest(TestCase):
 
 
 class EpicMilestoneRelationshipTest(TestCase):
-    """Tests for Epic-Milestone relationship."""
+    """Tests for Epic-Milestone tree relationship."""
 
     @classmethod
     def setUpTestData(cls):
         cls.project = ProjectFactory()
 
-    def test_epic_can_access_milestone(self):
-        """Epics can access their linked milestone."""
+    def test_epic_can_access_parent_milestone(self):
+        """Epics can access their parent milestone via get_parent()."""
         milestone = MilestoneFactory(project=self.project, title="Release 1.0")
-        epic = EpicFactory(project=self.project, title="Feature Epic", milestone=milestone)
+        epic = EpicFactory(project=self.project, title="Feature Epic", parent=milestone)
 
-        self.assertEqual(milestone, epic.milestone)
-        self.assertEqual("M-1", epic.milestone.key)
+        self.assertEqual(milestone, epic.get_parent())
 
-    def test_milestone_can_access_epics(self):
-        """Milestones can access their linked epics."""
+    def test_milestone_can_access_child_epics(self):
+        """Milestones can access their child epics via get_children()."""
         milestone = MilestoneFactory(project=self.project, title="Release 1.0")
-        epic1 = EpicFactory(project=self.project, title="Epic 1", milestone=milestone)
-        epic2 = EpicFactory(project=self.project, title="Epic 2", milestone=milestone)
-        EpicFactory(project=self.project, title="Epic 3")  # Not linked
+        epic1 = EpicFactory(project=self.project, title="Epic 1", parent=milestone)
+        epic2 = EpicFactory(project=self.project, title="Epic 2", parent=milestone)
+        EpicFactory(project=self.project, title="Epic 3")  # Orphan, no milestone
 
-        linked_epics = list(milestone.epics.all())
+        child_epics = list(milestone.get_children().instance_of(Epic))
 
-        self.assertEqual(2, len(linked_epics))
-        self.assertIn(epic1, linked_epics)
-        self.assertIn(epic2, linked_epics)
+        self.assertEqual(2, len(child_epics))
+        self.assertIn(epic1, child_epics)
+        self.assertIn(epic2, child_epics)
 
-    def test_story_can_access_milestone_through_epic(self):
-        """Stories can access milestone through their parent epic."""
+    def test_story_can_access_milestone_through_tree(self):
+        """Stories can access milestone by traversing up the tree."""
         milestone = MilestoneFactory(project=self.project, title="Release 1.0")
-        epic = EpicFactory(project=self.project, title="Feature Epic", milestone=milestone)
+        epic = EpicFactory(project=self.project, title="Feature Epic", parent=milestone)
         story = StoryFactory(project=self.project, title="Story", parent=epic)
 
         parent_epic = story.get_parent()
-        self.assertEqual(milestone, parent_epic.milestone)
+        self.assertEqual(milestone, parent_epic.get_parent())
 
-    def test_epic_milestone_must_belong_to_same_project(self):
-        """Epic cannot link to milestone from a different project."""
-        other_project = ProjectFactory()
-        milestone = MilestoneFactory(project=other_project, title="Other Project Milestone")
-        epic = Epic(project=self.project, title="Feature Epic", milestone=milestone)
+    def test_epic_can_only_have_milestone_as_parent(self):
+        """Epic validates that its tree parent is a Milestone (not a work item)."""
+        story = StoryFactory(project=self.project, title="A Story")
+        epic = Epic(project=self.project, title="Feature Epic")
 
-        with self.assertRaises(ValidationError) as ctx:
-            epic.clean()
-        self.assertIn("Milestone must belong to the same project", str(ctx.exception))
+        with self.assertRaises(ValidationError):
+            story.add_child(instance=epic)
 
 
 class IssueHierarchyValidationTest(TestCase):
@@ -230,10 +227,9 @@ class IssueHierarchyValidationTest(TestCase):
         cls.epic = EpicFactory(project=cls.project, title="Epic")
         cls.story = StoryFactory(project=cls.project, title="Story", parent=cls.epic)
 
-    def test_epic_cannot_have_tree_parent(self):
-        """Epics validate that they have no tree parent."""
+    def test_epic_with_no_parent_passes_validation(self):
+        """Epics with no tree parent pass validation."""
         epic2 = Epic(project=self.project, title="Another Epic")
-        # This tests the validation method, not the tree structure
         epic2._validate_parent_type()  # Should not raise when no parent
 
 

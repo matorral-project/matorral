@@ -205,32 +205,10 @@ class Sprint(BaseModel):
             .first()
         )
 
-    def calculate_committed_points(self) -> int:
-        """Sum estimated_points from all assigned work items."""
-        Bug = apps.get_model("issues", "Bug")
-        Chore = apps.get_model("issues", "Chore")
-        Story = apps.get_model("issues", "Story")
-
-        total = 0
-        for model in [Story, Bug, Chore]:
-            result = model.objects.for_sprint(self).aggregate(total=Sum("estimated_points"))
-            total += result["total"] or 0
-        return total
-
-    def calculate_completed_points(self) -> int:
-        """Sum points from done/archived work items."""
-        Bug = apps.get_model("issues", "Bug")
-        Chore = apps.get_model("issues", "Chore")
-        Story = apps.get_model("issues", "Story")
-
-        total = 0
-        for model in [Story, Bug, Chore]:
-            result = model.objects.for_sprint(self).done().aggregate(total=Sum("estimated_points"))
-            total += result["total"] or 0
-        return total
-
     def update_velocity(self):
         """Recalculate and save committed/completed points."""
-        self.committed_points = self.calculate_committed_points()
-        self.completed_points = self.calculate_completed_points()
+        BaseIssue = apps.get_model("issues", "BaseIssue")
+        sprint_items = BaseIssue.objects.for_sprint(self)
+        self.committed_points = sprint_items.aggregate(total=Sum("estimated_points"))["total"] or 0
+        self.completed_points = sprint_items.done().aggregate(total=Sum("estimated_points"))["total"] or 0
         self.save(update_fields=["committed_points", "completed_points", "updated_at"])

@@ -18,7 +18,10 @@ class SprintStartView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSin
     """Start a sprint (change status to active)."""
 
     def post(self, request, *args, **kwargs):
-        sprint = get_object_or_404(Sprint.objects.for_workspace(self.workspace), key=kwargs["key"])
+        sprint = get_object_or_404(
+            Sprint.objects.for_workspace(self.workspace).with_committed_points(),
+            key=kwargs["key"],
+        )
 
         if not sprint.can_start():
             if sprint.status != SprintStatus.PLANNING:
@@ -28,7 +31,7 @@ class SprintStartView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSin
             return redirect(sprint.get_absolute_url())
 
         # Capture committed points at sprint start
-        sprint.committed_points = sprint.calculate_committed_points()
+        sprint.committed_points = sprint.computed_committed_points
         sprint.status = SprintStatus.ACTIVE
 
         try:
@@ -44,14 +47,17 @@ class SprintCompleteView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, Sprint
     """Complete a sprint and optionally move incomplete issues to next sprint."""
 
     def post(self, request, *args, **kwargs):
-        sprint = get_object_or_404(Sprint.objects.for_workspace(self.workspace), key=kwargs["key"])
+        sprint = get_object_or_404(
+            Sprint.objects.for_workspace(self.workspace).with_completed_points(),
+            key=kwargs["key"],
+        )
 
         if sprint.status != SprintStatus.ACTIVE:
             messages.error(request, _("Only active sprints can be completed."))
             return redirect(sprint.get_absolute_url())
 
-        # Calculate completed points
-        sprint.completed_points = sprint.calculate_completed_points()
+        # Capture completed points at sprint completion
+        sprint.completed_points = sprint.computed_completed_points
         sprint.status = SprintStatus.COMPLETED
         sprint.save(update_fields=["status", "completed_points", "updated_at"])
 
