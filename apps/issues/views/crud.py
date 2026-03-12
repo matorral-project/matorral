@@ -77,12 +77,16 @@ class WorkspaceIssueListView(
 
         # Get all issues in workspace (or filtered project)
         if self.filtered_project:
-            queryset = BaseIssue.objects.for_project(self.filtered_project).select_related(
-                "project", "project__workspace", "assignee", "polymorphic_ctype"
+            queryset = (
+                BaseIssue.objects.for_project(self.filtered_project)
+                .work_items()
+                .select_related("project", "project__workspace", "assignee", "polymorphic_ctype")
             )
         else:
-            queryset = BaseIssue.objects.for_workspace(self.workspace).select_related(
-                "project", "project__workspace", "assignee", "polymorphic_ctype"
+            queryset = (
+                BaseIssue.objects.for_workspace(self.workspace)
+                .work_items()
+                .select_related("project", "project__workspace", "assignee", "polymorphic_ctype")
             )
 
         # Apply filters and ordering using mixin methods
@@ -126,6 +130,7 @@ class WorkspaceIssueListView(
                 sprint_filter=self.sprint_filter,
                 include_sprint_filter=True,
                 sort_by=self.sort_by,
+                type_filter_choices=WORK_ITEM_TYPE_CHOICES,
             )
         )
         if self.group_by:

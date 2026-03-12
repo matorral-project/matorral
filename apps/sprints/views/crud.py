@@ -12,7 +12,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 
 from apps.issues.helpers import build_grouped_issues, build_htmx_delete_response
 from apps.issues.models import BaseIssue
-from apps.issues.views.mixins import IssueListContextMixin
+from apps.issues.views.mixins import WORK_ITEM_TYPE_CHOICES, IssueListContextMixin
 from apps.sprints.forms import SprintDetailInlineEditForm, SprintForm, SprintRowInlineEditForm
 from apps.sprints.models import Sprint, SprintStatus
 from apps.sprints.views.mixins import SprintFormMixin, SprintListContextMixin, SprintSingleObjectMixin, SprintViewMixin
@@ -362,6 +362,8 @@ class SprintIssueListEmbedView(SprintViewMixin, IssueListContextMixin, LoginAndW
                 include_group_by=True,
                 extra_group_by_choices=[("project", _("Project"))],
                 sort_by=self.sort_by,
+                type_filter_type="multi_select",
+                type_filter_choices=WORK_ITEM_TYPE_CHOICES,
             )
         )
 

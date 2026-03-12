@@ -32,7 +32,7 @@ from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
 from django_htmx.http import HttpResponseClientRedirect
 
-from .mixins import IssueListContextMixin
+from .mixins import WORK_ITEM_TYPE_CHOICES, IssueListContextMixin
 
 User = get_user_model()
 
@@ -155,6 +155,7 @@ class MilestoneIssueListEmbedView(MilestoneViewMixin, LoginAndWorkspaceRequiredM
     def get_queryset(self):
         self.search_query = self.request.GET.get("search", "").strip()
         self.status_filter = self.request.GET.get("status", "").strip()
+        self.type_filter = self.request.GET.get("type", "").strip()
         self.assignee_filter = self.request.GET.get("assignee", "").strip()
         self.sprint_filter = self.request.GET.get("sprint", "").strip()
         self.priority_filter = self.request.GET.get("priority", "").strip()
@@ -162,15 +163,17 @@ class MilestoneIssueListEmbedView(MilestoneViewMixin, LoginAndWorkspaceRequiredM
         # Sort by is only available when not grouping; default to priority descending
         self.sort_by = self.request.GET.get("sort_by", "priority_desc").strip() if not self.group_by else ""
 
-        # Get all issues belonging to epics linked to this milestone
-        queryset = BaseIssue.objects.for_milestone(self.milestone).select_related(
-            "project", "project__workspace", "assignee", "polymorphic_ctype"
+        # Get work items (Story, Bug, Chore) belonging to this milestone
+        queryset = (
+            BaseIssue.objects.for_milestone(self.milestone)
+            .work_items()
+            .select_related("project", "project__workspace", "assignee", "polymorphic_ctype")
         )
 
-        # Apply filters and ordering using mixin methods (no type filter for milestone - shows epics only)
+        # Apply filters and ordering using mixin methods
         queryset = self.apply_issue_filters(
             queryset,
-            type_filter="",
+            type_filter=self.type_filter,
             search_query=self.search_query,
             status_filter=self.status_filter,
             assignee_filter=self.assignee_filter,
@@ -212,7 +215,7 @@ class MilestoneIssueListEmbedView(MilestoneViewMixin, LoginAndWorkspaceRequiredM
             self.get_issue_list_context(
                 self.search_query,
                 self.status_filter,
-                type_filter="",
+                type_filter=self.type_filter,
                 assignee_filter=self.assignee_filter,
                 project_filter=self.project.key,
                 group_by=self.group_by,
@@ -223,7 +226,8 @@ class MilestoneIssueListEmbedView(MilestoneViewMixin, LoginAndWorkspaceRequiredM
                 sort_by=self.sort_by,
                 priority_filter=self.priority_filter,
                 include_priority_filter=True,
-                include_type_filter=False,
+                type_filter_type="multi_select",
+                type_filter_choices=WORK_ITEM_TYPE_CHOICES,
             )
         )
         context["available_sprints"] = (
