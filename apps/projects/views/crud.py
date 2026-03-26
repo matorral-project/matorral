@@ -28,7 +28,6 @@ from apps.sprints.models import Sprint, SprintStatus
 from apps.utils.filters import build_filter_section, count_active_filters, get_status_filter_label, parse_status_filter
 from apps.utils.progress import build_progress_dict
 from apps.workspaces.helpers import clear_onboarding_session_cache
-from apps.workspaces.limits import LimitExceededError, check_work_item_limit
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 from apps.workspaces.models import Workspace
 
@@ -1098,12 +1097,6 @@ class ProjectIssueCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, P
         return self.form_invalid(form)
 
     def form_valid(self, form):
-        try:
-            check_work_item_limit(self.workspace)
-        except LimitExceededError as e:
-            messages.error(self.request, str(e))
-            return self.form_invalid(form)
-
         obj = form.save(commit=False)
         obj.project = self.project
         obj.created_by = self.request.user

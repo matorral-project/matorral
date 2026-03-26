@@ -23,7 +23,6 @@ from .decorators import login_and_workspace_membership_required, workspace_admin
 from .forms import InvitationForm, MembershipForm, WorkspaceChangeForm
 from .helpers import clear_onboarding_session_cache, get_onboarding_status, get_user_dashboard_data
 from .invitations import clear_invite_from_session, process_invitation, send_invitation
-from .limits import LimitExceededError, check_invitation_limit, check_member_limit
 from .models import Invitation, Membership, Workspace
 from .roles import ROLE_ADMIN, is_admin, is_member
 
@@ -346,11 +345,8 @@ def send_invitation_view(request, workspace_slug):
         invitation.invited_by = request.user
         try:
             invitation.validate_unique()
-            check_member_limit(request.workspace)
-            check_invitation_limit(request.workspace)
-        except (ValidationError, LimitExceededError) as e:
-            error_msg = e.messages[0] if isinstance(e, ValidationError) else str(e)
-            form.add_error(None, error_msg)
+        except ValidationError as e:
+            form.add_error(None, e.messages[0])
         else:
             invitation.save()
             send_invitation(invitation)

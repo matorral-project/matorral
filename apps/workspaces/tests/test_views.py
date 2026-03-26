@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 from django.contrib.auth.models import AnonymousUser
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.urls import reverse
 
 from apps.users.factories import UserFactory
@@ -94,32 +94,6 @@ class TestInvitationViews(WorkspaceTestMixin, TestCase):
         url = reverse("workspaces:send_invitation", args=[self.workspace.slug])
         self.client.post(url, {"email": "dupe@example.com", "role": "member"})
         self.assertEqual(Invitation.objects.filter(workspace=self.workspace, email="dupe@example.com").count(), 1)
-
-    @override_settings(
-        FREE_TIER_LIMITS={
-            "MAX_MEMBERS_PER_WORKSPACE": 1,
-            "MAX_INVITATIONS_PER_WEEK": 100,
-            "MAX_WORK_ITEMS_PER_WORKSPACE": 1000,
-        }
-    )
-    def test_member_limit_prevents_invitation(self):
-        self.client.force_login(self.admin)
-        url = reverse("workspaces:send_invitation", args=[self.workspace.slug])
-        self.client.post(url, {"email": "new@example.com", "role": "member"})
-        self.assertFalse(Invitation.objects.filter(workspace=self.workspace, email="new@example.com").exists())
-
-    @override_settings(
-        FREE_TIER_LIMITS={
-            "MAX_MEMBERS_PER_WORKSPACE": 10,
-            "MAX_INVITATIONS_PER_WEEK": 0,
-            "MAX_WORK_ITEMS_PER_WORKSPACE": 1000,
-        }
-    )
-    def test_invitation_limit_prevents_invitation(self):
-        self.client.force_login(self.admin)
-        url = reverse("workspaces:send_invitation", args=[self.workspace.slug])
-        self.client.post(url, {"email": "new@example.com", "role": "member"})
-        self.assertFalse(Invitation.objects.filter(workspace=self.workspace, email="new@example.com").exists())
 
     def test_accept_invitation_redirects_existing_member(self):
         invitation = InvitationFactory(workspace=self.workspace)

@@ -28,7 +28,6 @@ from apps.issues.services import IssueConversionError, PromotionError, convert_i
 from apps.projects.models import Project
 from apps.sprints.models import Sprint, SprintStatus
 from apps.utils.progress import build_progress_dict
-from apps.workspaces.limits import LimitExceededError, check_work_item_limit
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
 from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
@@ -206,12 +205,6 @@ class WorkspaceIssueCreateView(LoginAndWorkspaceRequiredMixin, WorkspaceIssueVie
         return self.form_invalid(form)
 
     def form_valid(self, form):
-        try:
-            check_work_item_limit(self.workspace)
-        except LimitExceededError as e:
-            messages.error(self.request, str(e))
-            return self.form_invalid(form)
-
         obj = form.save(commit=False)
         obj.created_by = self.request.user
         obj.key = obj._generate_unique_key()
@@ -375,12 +368,6 @@ class IssueCreateView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, IssueFormM
         return initial
 
     def form_valid(self, form):
-        try:
-            check_work_item_limit(self.workspace)
-        except LimitExceededError as e:
-            messages.error(self.request, str(e))
-            return self.form_invalid(form)
-
         # Use preset parent if available, otherwise get from form
         parent = self.parent_preset or form.cleaned_data.get("parent")
 
@@ -564,21 +551,6 @@ class IssueCloneView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View):
     """Clone an existing issue."""
 
     def post(self, request, *args, **kwargs):
-        try:
-            check_work_item_limit(self.workspace)
-        except LimitExceededError as e:
-            messages.error(request, str(e))
-            return redirect(
-                reverse(
-                    "issues:issue_detail",
-                    kwargs={
-                        "workspace_slug": kwargs["workspace_slug"],
-                        "project_key": kwargs["project_key"],
-                        "key": kwargs["key"],
-                    },
-                )
-            )
-
         original = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["key"])
         parent = original.get_parent_issue()
 

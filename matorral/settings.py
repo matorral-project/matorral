@@ -465,12 +465,3 @@ COMMENTS_APP = "django_comments_xtd"
 COMMENTS_XTD_CONFIRM_EMAIL = False
 COMMENTS_XTD_MAX_THREAD_LEVEL = 2
 COMMENTS_XTD_SALT = env("COMMENTS_XTD_SALT", default="change-me-in-production")
-
-
-# --- Free Tier Limits ---
-
-FREE_TIER_LIMITS = {
-    "MAX_MEMBERS_PER_WORKSPACE": env.int("FREE_TIER_MAX_MEMBERS", default=10),
-    "MAX_INVITATIONS_PER_WEEK": env.int("FREE_TIER_MAX_INVITATIONS_PER_WEEK", default=10),
-    "MAX_WORK_ITEMS_PER_WORKSPACE": env.int("FREE_TIER_MAX_WORK_ITEMS", default=1000),
-}

@@ -6,7 +6,6 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.users.models import User
 
-from .limits import check_member_limit
 from .models import Invitation
 
 
@@ -27,7 +26,6 @@ def send_invitation(invitation):
 
 
 def process_invitation(invitation: Invitation, user: User):
-    check_member_limit(invitation.workspace)
     invitation.workspace.members.add(user, through_defaults={"role": invitation.role})
     invitation.is_accepted = True
     invitation.accepted_by = user
