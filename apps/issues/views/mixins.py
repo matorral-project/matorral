@@ -67,6 +67,9 @@ SORT_BY_CHOICES = [
     ("points_asc", _("Points Low-High")),
 ]
 
+# Allowed story points values for estimation
+POINTS_CHOICES = [(1, "1"), (2, "2"), (3, "3"), (5, "5"), (8, "8")]
+
 # Sprint filter choices for backlog filtering
 SPRINT_FILTER_CHOICES = [
     ("backlog", _("Backlog (not in sprint)")),
@@ -400,6 +403,7 @@ class IssueListContextMixin:
 
         return {
             "priority_choices": IssuePriority.choices,
+            "points_choices": POINTS_CHOICES,
             "status_choices": IssueStatus.choices,
             "type_choices": effective_type_choices,
             "search_query": search_query,

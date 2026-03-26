@@ -21,7 +21,7 @@ from apps.utils.filters import get_status_filter_label, parse_status_filter
 from apps.utils.models import AuditLog
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
-from .mixins import WORK_ITEM_TYPE_CHOICES, IssueListContextMixin, WorkspaceIssueViewMixin
+from .mixins import POINTS_CHOICES, WORK_ITEM_TYPE_CHOICES, IssueListContextMixin, WorkspaceIssueViewMixin
 
 # ============================================================================
 # Workspace-level bulk actions (across all projects in a workspace)
@@ -457,6 +457,49 @@ class WorkspaceIssueBulkPriorityView(WorkspaceBulkActionMixin, LoginAndWorkspace
         messages.success(
             self.request,
             _("%(count)d issue(s) updated to %(priority)s.") % {"count": updated_count, "priority": new_display},
+        )
+        return self.form.cleaned_data["page"]
+
+
+class WorkspaceIssueBulkPointsView(WorkspaceBulkActionMixin, LoginAndWorkspaceRequiredMixin, View):
+    """Update the estimated points of multiple issues at once (workspace level)."""
+
+    def post(self, request, *args, **kwargs):
+        points_str = request.POST.get("points")
+        try:
+            self.points = int(points_str)
+        except (TypeError, ValueError):
+            self.points = None
+
+        if self.points not in [choice[0] for choice in POINTS_CHOICES]:
+            messages.error(request, _("Invalid points value."))
+            self.form = self.get_form()
+            self.form.is_valid()
+            return self.render_response(self.form.cleaned_data.get("page", 1))
+
+        return super().post(request, *args, **kwargs)
+
+    def perform_action(self):
+        selected_qs = self.get_selected_queryset().select_related("polymorphic_ctype")
+        old_values = {
+            obj.pk: str(obj.estimated_points) if obj.estimated_points is not None else "" for obj in selected_qs
+        }
+        new_display = str(self.points)
+
+        # estimated_points lives on BaseIssue, so a single update covers all subtypes
+        updated_count = selected_qs.update(estimated_points=self.points)
+
+        AuditLog.objects.bulk_create_for(
+            selected_qs,
+            field_name="estimated_points",
+            old_values=old_values,
+            new_display=new_display,
+            actor=self.request.user,
+        )
+
+        messages.success(
+            self.request,
+            _("%(count)d issue(s) updated to %(points)s points.") % {"count": updated_count, "points": new_display},
         )
         return self.form.cleaned_data["page"]
 

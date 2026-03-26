@@ -39,6 +39,11 @@ workspace_urlpatterns = [
         name="workspace_issues_bulk_priority",
     ),
     path(
+        "bulk-points/",
+        views.WorkspaceIssueBulkPointsView.as_view(),
+        name="workspace_issues_bulk_points",
+    ),
+    path(
         "bulk-remove-from-sprint/",
         views.WorkspaceIssueBulkRemoveFromSprintView.as_view(),
         name="workspace_issues_bulk_remove_from_sprint",
