@@ -400,6 +400,14 @@
                  class="link link-hover">
                 {{ group.name }}
               </a>
+              {% elif group_by == "project" and group.project %}
+              <a href="{{ group.project.get_absolute_url }}"
+                 hx-get="{{ group.project.get_absolute_url }}"
+                 hx-target="#page-content"
+                 hx-push-url="true"
+                 class="link link-hover">
+                {{ group.name }}
+              </a>
               {% else %}
               <span>{{ group.name }}</span>
               {% endif %}
