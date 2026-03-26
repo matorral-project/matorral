@@ -311,6 +311,10 @@ class IssueDetailView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, IssueSingl
             # Needed for inline editing to show severity field for bugs
             context["is_bug"] = isinstance(issue, Bug)
 
+        context["other_projects_exist"] = (
+            Project.objects.for_workspace(self.workspace).exclude(pk=self.project.pk).exists()
+        )
+
         return context
 
 

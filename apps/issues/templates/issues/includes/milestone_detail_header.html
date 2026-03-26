@@ -43,6 +43,17 @@
               <i class="fa fa-clone"></i> {% translate "Clone" %}
             </button>
           </li>
+          {% if other_projects_exist %}
+          <li>
+            <button type="button"
+                    hx-get="{% url 'milestones:milestone_move_to_project' workspace.slug milestone.project.key milestone.key %}"
+                    hx-target="#move-to-project-modal-content"
+                    hx-swap="innerHTML"
+                    @click="showMoveToProjectModal = true; document.activeElement.blur()">
+              <i class="fa fa-arrow-right-arrow-left"></i> {% translate "Move to Project" %}
+            </button>
+          </li>
+          {% endif %}
           <li>
             <button type="button" class="text-error"
                     hx-get="{% url 'milestones:milestone_delete' workspace.slug milestone.project.key milestone.key %}"

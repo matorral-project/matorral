@@ -138,6 +138,10 @@ class MilestoneDetailView(
         else:
             context["progress"] = None
 
+        context["other_projects_exist"] = (
+            Project.objects.for_workspace(self.workspace).exclude(pk=self.project.pk).exists()
+        )
+
         return context
 
 

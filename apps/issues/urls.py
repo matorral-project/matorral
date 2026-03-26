@@ -100,6 +100,11 @@ project_urlpatterns = (
         ),
         path("<str:key>/move/", views.IssueMoveView.as_view(), name="issue_move"),
         path(
+            "<str:key>/move-to-project/",
+            views.IssueMoveToProjectView.as_view(),
+            name="issue_move_to_project",
+        ),
+        path(
             "<str:key>/inline-edit/",
             views.IssueRowInlineEditView.as_view(),
             name="issue_inline_edit",
@@ -189,6 +194,11 @@ milestones_urlpatterns = [
         name="milestone_delete",
     ),
     path("<str:key>/clone/", views.MilestoneCloneView.as_view(), name="milestone_clone"),
+    path(
+        "<str:key>/move-to-project/",
+        views.IssueMoveToProjectView.as_view(),
+        name="milestone_move_to_project",
+    ),
     path(
         "<str:key>/new-epic/",
         views.MilestoneEpicCreateView.as_view(),

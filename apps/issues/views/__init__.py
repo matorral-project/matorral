@@ -48,7 +48,7 @@ from .subtasks import (
     SubtaskListView,
     SubtaskStatusToggleView,
 )
-from .tree import IssueChildrenView, IssueMoveView
+from .tree import IssueChildrenView, IssueMoveToProjectView, IssueMoveView
 
 __all__ = [
     "CascadeStatusApplyView",
@@ -77,6 +77,7 @@ __all__ = [
     "WorkspaceIssueBulkMilestoneView",
     "IssueChildrenView",
     "IssueMoveView",
+    "IssueMoveToProjectView",
     "IssueCommentsView",
     "IssueCommentPostView",
     "IssueCommentEditView",
