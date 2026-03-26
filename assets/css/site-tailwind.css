@@ -4,7 +4,9 @@
 
 
 @plugin "@tailwindcss/typography";
-@plugin "daisyui";
+@plugin "daisyui" {
+  themes: dark --prefersdark;
+}
 
 /* Custom light theme - nature-inspired earthy greens palette */
 @plugin "daisyui/theme" {
