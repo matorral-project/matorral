@@ -25,6 +25,17 @@
   <ul class="menu flex-1 px-2 gap-1 overflow-y-auto overflow-x-hidden w-full" x-data="{ workspaceExpanded: false }">
     {% if default_workspace %}
     <li>
+      <a href="{% url 'workspaces:home' workspace_slug=default_workspace.slug %}"
+         hx-get="{% url 'workspaces:home' workspace_slug=default_workspace.slug %}"
+         hx-push-url="true"
+         hx-target="#page-content"
+         class="text-primary-content hover:bg-primary-content/10"
+         title="{% translate 'Dashboard' %}">
+        <i class="fa fa-home w-5 text-center shrink-0"></i>
+        <span class="is-drawer-close:hidden truncate">{% translate "Dashboard" %}</span>
+      </a>
+    </li>
+    <li>
       <a href="{% url 'projects:project_list' workspace_slug=default_workspace.slug %}"
          hx-get="{% url 'projects:project_list' workspace_slug=default_workspace.slug %}"
          hx-push-url="true"
