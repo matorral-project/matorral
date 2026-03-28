@@ -37,7 +37,16 @@
         <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square">
           <i class="fa fa-ellipsis-vertical"></i>
         </div>
-        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-32 p-2 shadow">
+        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+          <li>
+            <button type="button"
+                    hx-get="{% url 'issues:epic_detail_inline_edit' workspace.slug project.key issue.key %}"
+                    hx-target="#epic-header"
+                    hx-swap="outerHTML"
+                    @click="document.activeElement.blur()">
+              <i class="fa fa-pen"></i> {% translate "Edit" %}
+            </button>
+          </li>
           <li>
             <button type="button" @click="$refs.cloneForm.submit()">
               <i class="fa fa-clone"></i> {% translate "Clone" %}
