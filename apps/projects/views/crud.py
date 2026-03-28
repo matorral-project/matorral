@@ -260,6 +260,23 @@ class ProjectCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Projec
         context["page_title"] = _("New Project")
         return context
 
+    def get_initial(self):
+        initial = super().get_initial()
+
+        # If only one workspace member, auto-select as lead
+        workspace_members = self.request.workspace_members
+        if workspace_members is not None and len(workspace_members) == 1:
+            initial["lead"] = workspace_members[0].pk
+        else:
+            # Preset lead from the most recently created project
+            latest_project = (
+                Project.objects.for_workspace(self.workspace).order_by("-created_at").values("lead_id").first()
+            )
+            if latest_project and latest_project["lead_id"]:
+                initial["lead"] = latest_project["lead_id"]
+
+        return initial
+
     def form_valid(self, form):
         self.object = form.save(commit=False)
         self.object.workspace = self.workspace
