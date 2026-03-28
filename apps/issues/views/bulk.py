@@ -150,7 +150,9 @@ class WorkspaceBulkActionMixin(IssueListContextMixin, WorkspaceIssueViewMixin):
             )
 
         # Apply filters and ordering using mixin methods
-        queryset = self.apply_issue_filters(queryset, type_filter, search_query, status_filter, assignee_filter)
+        queryset = self.apply_issue_filters(
+            queryset, type_filter, search_query, status_filter, assignee_filter, priority_filter=priority_filter
+        )
         queryset = self.apply_issue_ordering(queryset, group_by)
 
         # Build context using mixin method
@@ -197,6 +199,8 @@ class WorkspaceBulkActionMixin(IssueListContextMixin, WorkspaceIssueViewMixin):
                     include_group_by=is_sprint_embed,
                     group_by_in_modal=False,
                     extra_group_by_choices=([("project", _("Project"))] if is_sprint_embed else None),
+                    priority_filter=priority_filter,
+                    include_priority_filter=not is_sprint_embed,
                 )
             )
 

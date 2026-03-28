@@ -60,6 +60,7 @@ class WorkspaceIssueListView(
         self.status_filter = self.request.GET.get("status", "").strip()
         self.type_filter = self.request.GET.get("type", "").strip()
         self.assignee_filter = self.request.GET.get("assignee", "").strip()
+        self.priority_filter = self.request.GET.get("priority", "").strip()
         self.project_filter = self.request.GET.get("project", "").strip()
         self.sprint_filter = self.request.GET.get("sprint", "").strip()
         # Group by is only available when filtering by project
@@ -96,6 +97,7 @@ class WorkspaceIssueListView(
             self.status_filter,
             self.assignee_filter,
             self.sprint_filter,
+            priority_filter=self.priority_filter,
         )
         queryset = self.apply_issue_ordering(queryset, self.group_by, self.sort_by)
 
@@ -129,6 +131,8 @@ class WorkspaceIssueListView(
                 sprint_filter=self.sprint_filter,
                 include_sprint_filter=True,
                 sort_by=self.sort_by,
+                priority_filter=self.priority_filter,
+                include_priority_filter=True,
                 type_filter_choices=WORK_ITEM_TYPE_CHOICES,
             )
         )
