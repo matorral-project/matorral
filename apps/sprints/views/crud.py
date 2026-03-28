@@ -388,6 +388,7 @@ class SprintIssueListEmbedView(SprintViewMixin, IssueListContextMixin, LoginAndW
                 project_filter="",
                 group_by=self.group_by,
                 include_group_by=True,
+                group_by_in_modal=False,
                 extra_group_by_choices=[("project", _("Project"))],
                 sort_by=self.sort_by,
                 type_filter_type="multi_select",
