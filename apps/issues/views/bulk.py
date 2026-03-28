@@ -17,7 +17,7 @@ from apps.issues.helpers import (
 from apps.issues.models import BaseIssue, Bug, Chore, Epic, IssuePriority, IssueStatus, Milestone, Story
 from apps.projects.models import Project
 from apps.sprints.models import Sprint, SprintStatus
-from apps.utils.filters import get_status_filter_label, parse_status_filter
+from apps.utils.filters import count_active_filters, get_status_filter_label, parse_status_filter
 from apps.utils.models import AuditLog
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
@@ -268,6 +268,16 @@ class WorkspaceBulkActionMixin(IssueListContextMixin, WorkspaceIssueViewMixin):
                 },
             )
             context["project_milestones"] = Milestone.objects.for_project(project).for_choices()
+            context["milestone_filter"] = milestone_filter
+            context["total_epic_count"] = Epic.objects.for_project(project).count()
+            context["active_filter_count"] = count_active_filters(
+                {
+                    "status": status_filter,
+                    "priority": priority_filter,
+                    "assignee": assignee_filter,
+                    "milestone": milestone_filter,
+                }
+            )
             return render(self.request, "projects/project_epics_embed.html#embed-content", context)
 
         # For sprint embed mode, render the shared embedded template with sprint context
