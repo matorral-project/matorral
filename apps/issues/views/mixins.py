@@ -12,6 +12,7 @@ from apps.issues.managers import KeyNumber
 from apps.issues.models import BaseIssue, IssuePriority, IssueStatus
 from apps.projects.models import Project
 from apps.utils.filters import (
+    build_filter_presets,
     build_filter_section,
     count_active_filters,
     get_status_filter_label,
@@ -424,6 +425,7 @@ class IssueListContextMixin:
             "sort_by_label": dict(SORT_BY_CHOICES).get(sort_by, "") if sort_by else "",
             "sort_by_choices": SORT_BY_CHOICES,
             "filter_sections": filter_sections,
+            "filter_presets": build_filter_presets(self.request.user.pk),
             "active_filter_count": active_filter_count,
         }
 
