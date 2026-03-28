@@ -21,9 +21,10 @@ from apps.issues.forms import (
 from apps.issues.helpers import (
     build_grouped_issues,
     build_htmx_delete_response,
+    get_issue_creation_defaults,
 )
 from apps.issues.models import BaseIssue, Epic, IssuePriority, IssueStatus, Milestone
-from apps.issues.views.mixins import ISSUE_TYPE_CHOICES
+from apps.issues.views.mixins import ISSUE_TYPE_CHOICES, ISSUE_TYPE_MODEL_MAP
 from apps.projects.models import Project
 from apps.sprints.models import Sprint, SprintStatus
 from apps.utils.models import AuditLog
@@ -272,6 +273,11 @@ class MilestoneCreateView(MilestoneViewMixin, LoginAndWorkspaceRequiredMixin, Mi
         context["page_title"] = _("New Milestone")
         return context
 
+    def get_initial(self):
+        initial = super().get_initial()
+        initial.update(get_issue_creation_defaults(Milestone, self.project, self.request.workspace_members))
+        return initial
+
     def form_valid(self, form):
         self.object = form.save(commit=False)
         self.object.project = self.project
@@ -444,10 +450,16 @@ class MilestoneEpicCreateView(MilestoneViewMixin, LoginAndWorkspaceRequiredMixin
         super().setup(request, *args, **kwargs)
         self.milestone = get_object_or_404(Milestone.objects.for_project(self.project), key=kwargs["key"])
 
+    def get_initial(self):
+        initial = {"project": self.project}
+        initial.update(get_issue_creation_defaults(Epic, self.project, self.request.workspace_members))
+        return initial
+
     def get_form_kwargs(self):
         kwargs = {
             "project": self.project,
             "workspace_members": self.request.workspace_members,
+            "initial": self.get_initial(),
         }
         if self.request.method == "POST":
             kwargs["data"] = self.request.POST
@@ -461,9 +473,6 @@ class MilestoneEpicCreateView(MilestoneViewMixin, LoginAndWorkspaceRequiredMixin
         if "project" in form.fields:
             del form.fields["project"]
         return form
-
-    def get_initial(self):
-        return {"project": self.project}
 
     def get_context_data(self, **kwargs):
         context = {
@@ -560,10 +569,17 @@ class MilestoneIssueCreateView(MilestoneViewMixin, LoginAndWorkspaceRequiredMixi
     def get_form_class(self):
         return get_form_class_for_type(self.issue_type)
 
+    def get_initial(self):
+        model_class = ISSUE_TYPE_MODEL_MAP.get(self.issue_type)
+        initial = {"project": self.project, "parent": self.parent}
+        initial.update(get_issue_creation_defaults(model_class, self.project, self.request.workspace_members))
+        return initial
+
     def get_form_kwargs(self):
         kwargs = {
             "project": self.project,
             "workspace_members": self.request.workspace_members,
+            "initial": self.get_initial(),
         }
         if self.request.method == "POST":
             kwargs["data"] = self.request.POST
@@ -577,9 +593,6 @@ class MilestoneIssueCreateView(MilestoneViewMixin, LoginAndWorkspaceRequiredMixi
         if "project" in form.fields:
             del form.fields["project"]
         return form
-
-    def get_initial(self):
-        return {"project": self.project, "parent": self.parent}
 
     def get_context_data(self, **kwargs):
         context = {

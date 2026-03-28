@@ -1,3 +1,4 @@
+from django.apps import apps
 from django.conf import settings
 from django.contrib import messages
 from django.db import transaction
@@ -22,6 +23,7 @@ from apps.issues.helpers import (
     annotate_epic_child_counts,
     build_grouped_issues,
     build_htmx_delete_response,
+    get_issue_creation_defaults,
 )
 from apps.issues.models import BaseIssue, Bug, BugSeverity, Epic, IssuePriority, IssueStatus, Subtask
 from apps.issues.services import IssueConversionError, PromotionError, convert_issue_type, promote_to_epic
@@ -34,6 +36,7 @@ from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefre
 
 from .mixins import (
     ISSUE_TYPE_CHOICES,
+    ISSUE_TYPE_MODEL_MAP,
     WORK_ITEM_TYPE_CHOICES,
     IssueFormMixin,
     IssueListContextMixin,
@@ -164,9 +167,11 @@ class WorkspaceIssueCreateView(LoginAndWorkspaceRequiredMixin, WorkspaceIssueVie
         return get_form_class_for_type(self.issue_type)
 
     def get_form_kwargs(self):
+        model_class = apps.get_model("issues", self.issue_type)
         kwargs = {
             "project": None,  # Project will be selected in the form
             "workspace_members": self.request.workspace_members,
+            "initial": get_issue_creation_defaults(model_class, None, self.request.workspace_members),
         }
         if self.request.method == "POST":
             kwargs["data"] = self.request.POST
@@ -366,9 +371,11 @@ class IssueCreateView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, IssueFormM
     def get_initial(self):
         initial = super().get_initial()
         initial["project"] = self.project
-        # Pre-set parent from query parameter if provided
         if self.parent_preset:
             initial["parent"] = self.parent_preset
+        model_class = ISSUE_TYPE_MODEL_MAP.get(self.kwargs.get("issue_type", "story"))
+        defaults = get_issue_creation_defaults(model_class, self.project, self.request.workspace_members)
+        initial.update(defaults)
         return initial
 
     def form_valid(self, form):
@@ -918,10 +925,15 @@ class EpicIssueCreateView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View):
     def get_form_class(self):
         return get_form_class_for_type(self.issue_type)
 
+    def get_initial(self):
+        model_class = ISSUE_TYPE_MODEL_MAP.get(self.issue_type)
+        return get_issue_creation_defaults(model_class, self.project, self.request.workspace_members)
+
     def get_form_kwargs(self):
         kwargs = {
             "project": self.project,
             "workspace_members": self.request.workspace_members,
+            "initial": self.get_initial(),
         }
         if self.request.method == "POST":
             kwargs["data"] = self.request.POST

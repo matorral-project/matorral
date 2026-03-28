@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from unittest.mock import ANY, patch
 
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -267,6 +268,89 @@ class IssueCreateViewTest(IssueViewTestBase):
 
         self.assertEqual(302, response.status_code)
         self.assertTrue(BaseIssue.objects.filter(title="New Story").exists())
+
+    def test_create_view_presets_assignee_when_single_member(self):
+        """Assignee is auto-selected when there is only one workspace member."""
+        response = self.client.get(self._get_create_url("story"))
+
+        form = response.context["form"]
+        self.assertIn("assignee", form.initial, f"form.initial = {form.initial!r}")
+        self.assertEqual(self.user.pk, form.initial["assignee"])
+
+    def test_create_view_presets_assignee_from_latest_item(self):
+        """Assignee is preset from the most recently created item of the same type."""
+        other_user = UserFactory()
+        MembershipFactory(workspace=self.workspace, user=other_user)
+        StoryFactory(project=self.project, assignee=other_user)
+
+        response = self.client.get(self._get_create_url("story"))
+
+        form = response.context["form"]
+        self.assertEqual(other_user.pk, form.initial["assignee"])
+
+    def test_create_view_presets_priority_from_latest_item(self):
+        """Priority is preset from the most recently created item of the same type."""
+        StoryFactory(project=self.project, priority=IssuePriority.HIGH)
+
+        response = self.client.get(self._get_create_url("story"))
+
+        form = response.context["form"]
+        self.assertEqual(IssuePriority.HIGH, form.initial["priority"])
+
+    def test_create_view_presets_estimated_points_from_latest_item(self):
+        """Estimated points are preset from the most recently created item."""
+        StoryFactory(project=self.project, estimated_points=8)
+
+        response = self.client.get(self._get_create_url("story"))
+
+        form = response.context["form"]
+        self.assertEqual(8, form.initial["estimated_points"])
+
+    def test_create_view_presets_bug_severity_from_latest_bug(self):
+        """Severity is preset from the most recently created bug."""
+        BugFactory(project=self.project, severity=BugSeverity.CRITICAL)
+
+        response = self.client.get(self._get_create_url("bug"))
+
+        form = response.context["form"]
+        self.assertEqual(BugSeverity.CRITICAL, form.initial["severity"])
+
+    def test_create_view_no_presets_without_existing_items(self):
+        """No assignee/priority/points presets when no items exist and multiple members."""
+        other_user = UserFactory()
+        MembershipFactory(workspace=self.workspace, user=other_user)
+
+        response = self.client.get(self._get_create_url("story"))
+
+        form = response.context["form"]
+        self.assertNotIn("assignee", form.initial)
+        self.assertNotIn("priority", form.initial)
+        self.assertNotIn("estimated_points", form.initial)
+
+    def test_create_view_presets_scoped_to_project(self):
+        """Presets only consider items from the current project, not other projects."""
+        other_project = ProjectFactory(workspace=self.workspace)
+        other_user = UserFactory()
+        MembershipFactory(workspace=self.workspace, user=other_user)
+        StoryFactory(project=other_project, assignee=other_user, priority=IssuePriority.CRITICAL)
+
+        response = self.client.get(self._get_create_url("story"))
+
+        form = response.context["form"]
+        self.assertNotIn("assignee", form.initial)
+        self.assertNotIn("priority", form.initial)
+
+    def test_create_view_presets_scoped_to_issue_type(self):
+        """Presets for stories don't bleed into bugs and vice versa."""
+        other_user = UserFactory()
+        MembershipFactory(workspace=self.workspace, user=other_user)
+        # Create a story with other_user, but we're opening a bug form
+        StoryFactory(project=self.project, assignee=other_user)
+
+        response = self.client.get(self._get_create_url("bug"))
+
+        form = response.context["form"]
+        self.assertNotIn("assignee", form.initial)
 
 
 class IssueUpdateViewTest(IssueViewTestBase):
@@ -1017,6 +1101,71 @@ class MilestoneCreateViewTest(MilestoneViewTestBase):
         self.assertEqual(302, response.status_code)
         self.assertTrue(Milestone.objects.filter(title="New Milestone").exists())
 
+    def test_create_view_calls_get_issue_creation_defaults(self):
+        """get_issue_creation_defaults is actually invoked during GET."""
+        with patch(
+            "apps.issues.views.milestones.get_issue_creation_defaults",
+            return_value={},
+        ) as mock_fn:
+            self.client.get(self._get_create_url())
+            mock_fn.assert_called_once_with(Milestone, self.project, ANY)
+
+    def test_create_view_presets_assignee_when_single_member(self):
+        """Assignee is auto-selected when there is only one workspace member."""
+        response = self.client.get(self._get_create_url())
+
+        form = response.context["form"]
+        self.assertEqual(self.user.pk, form.initial["assignee"])
+        # Verify the preset value is actually rendered in the combobox HTML
+        self.assertContains(response, f"selectedValue: '{self.user.pk}'")
+
+    def test_create_view_presets_assignee_from_latest_milestone(self):
+        """Assignee is preset from the most recently created milestone in the project."""
+        other_user = UserFactory()
+        MembershipFactory(workspace=self.workspace, user=other_user)
+        MilestoneFactory(project=self.project, assignee=other_user)
+
+        response = self.client.get(self._get_create_url())
+
+        form = response.context["form"]
+        self.assertEqual(other_user.pk, form.initial["assignee"])
+        self.assertContains(response, f"selectedValue: '{other_user.pk}'")
+
+    def test_create_view_presets_priority_from_latest_milestone(self):
+        """Priority is preset from the most recently created milestone."""
+        MilestoneFactory(project=self.project, priority=IssuePriority.HIGH)
+
+        response = self.client.get(self._get_create_url())
+
+        form = response.context["form"]
+        self.assertEqual(IssuePriority.HIGH, form.initial["priority"])
+        # Verify the priority select renders with HIGH selected
+        self.assertContains(response, '<option value="high" selected>')
+
+    def test_create_view_no_presets_without_existing_milestones(self):
+        """No presets when no milestones exist and there are multiple members."""
+        other_user = UserFactory()
+        MembershipFactory(workspace=self.workspace, user=other_user)
+
+        response = self.client.get(self._get_create_url())
+
+        form = response.context["form"]
+        self.assertNotIn("assignee", form.initial)
+        self.assertNotIn("priority", form.initial)
+
+    def test_create_view_presets_scoped_to_project(self):
+        """Presets only consider milestones from the current project."""
+        other_project = ProjectFactory(workspace=self.workspace)
+        other_user = UserFactory()
+        MembershipFactory(workspace=self.workspace, user=other_user)
+        MilestoneFactory(project=other_project, assignee=other_user, priority=IssuePriority.CRITICAL)
+
+        response = self.client.get(self._get_create_url())
+
+        form = response.context["form"]
+        self.assertNotIn("assignee", form.initial)
+        self.assertNotIn("priority", form.initial)
+
 
 class MilestoneUpdateViewTest(MilestoneViewTestBase):
     """Tests for the milestone update view."""
@@ -1429,6 +1578,50 @@ class MilestoneEpicCreateViewTest(MilestoneViewTestBase):
 
         form = response.context["form"]
         self.assertNotIn("parent", form.fields)
+
+    def test_create_epic_calls_get_issue_creation_defaults(self):
+        """get_issue_creation_defaults is actually invoked during GET."""
+        milestone = MilestoneFactory(project=self.project)
+        with patch(
+            "apps.issues.views.milestones.get_issue_creation_defaults",
+            return_value={},
+        ) as mock_fn:
+            self.client.get(self._get_new_epic_url(milestone))
+            mock_fn.assert_called_once_with(Epic, self.project, ANY)
+
+    def test_create_epic_presets_assignee_when_single_member(self):
+        """Assignee is auto-selected when there is only one workspace member."""
+        milestone = MilestoneFactory(project=self.project)
+
+        response = self.client.get(self._get_new_epic_url(milestone))
+
+        form = response.context["form"]
+        self.assertEqual(self.user.pk, form.initial["assignee"])
+        self.assertContains(response, f"selectedValue: '{self.user.pk}'")
+
+    def test_create_epic_presets_assignee_from_latest_epic(self):
+        """Assignee is preset from the most recently created epic in the project."""
+        other_user = UserFactory()
+        MembershipFactory(workspace=self.workspace, user=other_user)
+        milestone = MilestoneFactory(project=self.project)
+        EpicFactory(project=self.project, assignee=other_user)
+
+        response = self.client.get(self._get_new_epic_url(milestone))
+
+        form = response.context["form"]
+        self.assertEqual(other_user.pk, form.initial["assignee"])
+        self.assertContains(response, f"selectedValue: '{other_user.pk}'")
+
+    def test_create_epic_presets_priority_from_latest_epic(self):
+        """Priority is preset from the most recently created epic in the project."""
+        milestone = MilestoneFactory(project=self.project)
+        EpicFactory(project=self.project, priority=IssuePriority.HIGH)
+
+        response = self.client.get(self._get_new_epic_url(milestone))
+
+        form = response.context["form"]
+        self.assertEqual(IssuePriority.HIGH, form.initial["priority"])
+        self.assertContains(response, '<option value="high" selected>')
 
 
 class IssueRowInlineEditViewTest(IssueViewTestBase):

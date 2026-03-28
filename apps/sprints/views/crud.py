@@ -184,14 +184,13 @@ class SprintCreateView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintFo
             initial["owner"] = workspace_members[0].pk
 
         # Fetch latest sprint for owner/capacity defaults and potentially dates
-        latest_sprint = (
-            Sprint.objects.for_workspace(self.workspace)
-            .order_by("-created_at")
-            .values("owner_id", "capacity", "status", "end_date")
-            .first()
-        )
+        try:
+            latest_sprint = (
+                Sprint.objects.for_workspace(self.workspace)
+                .values("owner_id", "capacity", "status", "end_date")
+                .latest("created_at")
+            )
 
-        if latest_sprint:
             # Preset owner from latest sprint (only if multiple members and owner was set)
             if "owner" not in initial and latest_sprint["owner_id"]:
                 initial["owner"] = latest_sprint["owner_id"]
@@ -205,16 +204,16 @@ class SprintCreateView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintFo
                 initial["start_date"] = latest_sprint["end_date"]
                 initial["end_date"] = latest_sprint["end_date"] + timedelta(days=7)
             else:
-                latest_completed = (
-                    Sprint.objects.for_workspace(self.workspace)
-                    .completed()
-                    .order_by("-end_date")
-                    .values("end_date")
-                    .first()
-                )
-                if latest_completed:
+                try:
+                    latest_completed = (
+                        Sprint.objects.for_workspace(self.workspace).completed().values("end_date").latest("end_date")
+                    )
                     initial["start_date"] = latest_completed["end_date"]
                     initial["end_date"] = latest_completed["end_date"] + timedelta(days=7)
+                except Sprint.DoesNotExist:
+                    pass
+        except Sprint.DoesNotExist:
+            pass
 
         return initial
 

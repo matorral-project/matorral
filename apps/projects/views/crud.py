@@ -20,10 +20,16 @@ from apps.issues.helpers import (
     build_grouped_issues,
     build_htmx_delete_response,
     get_epic_content_type_id,
+    get_issue_creation_defaults,
     get_milestone_content_type_id,
 )
 from apps.issues.models import BaseIssue, Epic, IssuePriority, IssueStatus, Milestone
-from apps.issues.views.mixins import ISSUE_TYPE_CHOICES, WORK_ITEM_TYPE_CHOICES, IssueListContextMixin
+from apps.issues.views.mixins import (
+    ISSUE_TYPE_CHOICES,
+    ISSUE_TYPE_MODEL_MAP,
+    WORK_ITEM_TYPE_CHOICES,
+    IssueListContextMixin,
+)
 from apps.sprints.models import Sprint, SprintStatus
 from apps.utils.filters import build_filter_section, count_active_filters, get_status_filter_label, parse_status_filter
 from apps.utils.progress import build_progress_dict
@@ -269,11 +275,12 @@ class ProjectCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Projec
             initial["lead"] = workspace_members[0].pk
         else:
             # Preset lead from the most recently created project
-            latest_project = (
-                Project.objects.for_workspace(self.workspace).order_by("-created_at").values("lead_id").first()
-            )
-            if latest_project and latest_project["lead_id"]:
-                initial["lead"] = latest_project["lead_id"]
+            try:
+                latest_project = Project.objects.for_workspace(self.workspace).values("lead_id").latest("created_at")
+                if latest_project["lead_id"]:
+                    initial["lead"] = latest_project["lead_id"]
+            except Project.DoesNotExist:
+                pass
 
         return initial
 
@@ -949,10 +956,16 @@ class ProjectEpicCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Pr
         else:
             self.parent_milestone = None
 
+    def get_initial(self):
+        initial = {"project": self.project}
+        initial.update(get_issue_creation_defaults(Epic, self.project, self.request.workspace_members))
+        return initial
+
     def get_form_kwargs(self):
         kwargs = {
             "project": self.project,
             "workspace_members": self.request.workspace_members,
+            "initial": self.get_initial(),
         }
         if self.request.method == "POST":
             kwargs["data"] = self.request.POST
@@ -1064,10 +1077,15 @@ class ProjectIssueCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, P
     def get_form_class(self):
         return get_form_class_for_type(self.issue_type)
 
+    def get_initial(self):
+        model_class = ISSUE_TYPE_MODEL_MAP.get(self.issue_type)
+        return get_issue_creation_defaults(model_class, self.project, self.request.workspace_members)
+
     def get_form_kwargs(self):
         kwargs = {
             "project": self.project,
             "workspace_members": self.request.workspace_members,
+            "initial": self.get_initial(),
         }
         if self.request.method == "POST":
             kwargs["data"] = self.request.POST
@@ -1183,10 +1201,16 @@ class ProjectMilestoneCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixi
             key=kwargs["key"],
         )
 
+    def get_initial(self):
+        initial = {"project": self.project}
+        initial.update(get_issue_creation_defaults(Milestone, self.project, self.request.workspace_members))
+        return initial
+
     def get_form_kwargs(self):
         kwargs = {
             "project": self.project,
             "workspace_members": self.request.workspace_members,
+            "initial": self.get_initial(),
         }
         if self.request.method == "POST":
             kwargs["data"] = self.request.POST
