@@ -157,6 +157,9 @@ class IssueMoveView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View):
 class IssueMoveToProjectView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View):
     """Move a root-level issue or milestone to another project in the same workspace."""
 
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
     def get(self, request, *args, **kwargs):
         """Return the modal content with project options."""
         issue = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["key"])
