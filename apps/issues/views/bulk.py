@@ -478,6 +478,9 @@ class WorkspaceIssueBulkPriorityView(WorkspaceBulkActionMixin, LoginAndWorkspace
 class WorkspaceIssueBulkPointsView(WorkspaceBulkActionMixin, LoginAndWorkspaceRequiredMixin, View):
     """Update the estimated points of multiple issues at once (workspace level)."""
 
+    def get_queryset(self, *args, **kwargs):
+        return super().get_queryset(*args, **kwargs)
+
     def post(self, request, *args, **kwargs):
         points_str = request.POST.get("points")
         try:
