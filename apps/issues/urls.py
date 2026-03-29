@@ -39,6 +39,11 @@ workspace_urlpatterns = [
         name="workspace_issues_bulk_priority",
     ),
     path(
+        "bulk-points/",
+        views.WorkspaceIssueBulkPointsView.as_view(),
+        name="workspace_issues_bulk_points",
+    ),
+    path(
         "bulk-remove-from-sprint/",
         views.WorkspaceIssueBulkRemoveFromSprintView.as_view(),
         name="workspace_issues_bulk_remove_from_sprint",
@@ -99,6 +104,11 @@ project_urlpatterns = (
             name="issue_children",
         ),
         path("<str:key>/move/", views.IssueMoveView.as_view(), name="issue_move"),
+        path(
+            "<str:key>/move-to-project/",
+            views.IssueMoveToProjectView.as_view(),
+            name="issue_move_to_project",
+        ),
         path(
             "<str:key>/inline-edit/",
             views.IssueRowInlineEditView.as_view(),
@@ -189,6 +199,11 @@ milestones_urlpatterns = [
         name="milestone_delete",
     ),
     path("<str:key>/clone/", views.MilestoneCloneView.as_view(), name="milestone_clone"),
+    path(
+        "<str:key>/move-to-project/",
+        views.IssueMoveToProjectView.as_view(),
+        name="milestone_move_to_project",
+    ),
     path(
         "<str:key>/new-epic/",
         views.MilestoneEpicCreateView.as_view(),

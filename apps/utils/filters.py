@@ -1,3 +1,5 @@
+import json
+
 from django.utils.translation import gettext_lazy as _
 
 
@@ -83,6 +85,42 @@ def parse_status_filter(raw_value: str, valid_choices: list[tuple[str, str]]) ->
         return []
     valid_values = {choice[0] for choice in valid_choices}
     return [v.strip() for v in raw_value.split(",") if v.strip() in valid_values]
+
+
+def build_filter_presets(user_id: int) -> list[dict]:
+    """Build the list of quick filter presets for the filters modal.
+
+    Args:
+        user_id: PK of the currently logged-in user.
+
+    Returns:
+        List of preset dicts with keys: name, label, values.
+    """
+    presets = [
+        {
+            "name": "assigned_to_me",
+            "label": _("Assigned to me"),
+            "values": {"assignee": str(user_id)},
+        },
+        {
+            "name": "unassigned",
+            "label": _("Unassigned"),
+            "values": {"assignee": "none"},
+        },
+        {
+            "name": "not_completed",
+            "label": _("Not yet completed"),
+            "values": {"status": "draft,planning,ready,in_progress,blocked,in_review"},
+        },
+        {
+            "name": "urgent_unassigned",
+            "label": _("High priority + Unassigned"),
+            "values": {"priority": "high,critical", "assignee": "none"},
+        },
+    ]
+    for preset in presets:
+        preset["values_json"] = json.dumps(preset["values"])
+    return presets
 
 
 def get_status_filter_label(raw_value: str, choices: list[tuple[str, str]]) -> str:

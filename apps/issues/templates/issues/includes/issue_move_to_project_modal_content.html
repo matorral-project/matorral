@@ -1,0 +1,49 @@
+{% load i18n %}
+<form method="post"
+      action="{% url 'issues:issue_move_to_project' workspace.slug project.key issue.key %}">
+  {% csrf_token %}
+
+  <p class="mb-4">
+    {% blocktranslate with key=issue.key trimmed %}
+    Move <strong>{{ key }}</strong> and all its children to another project.
+    {% endblocktranslate %}
+  </p>
+
+  {# Project selection #}
+  <div class="form-control mb-4">
+    <label class="label">
+      <span class="label-text font-semibold">{% translate "Target Project" %}</span>
+    </label>
+    <select name="project" class="select select-bordered w-full" required>
+      <option value="">{% translate "Select a project..." %}</option>
+      {% for proj in target_projects %}
+      <option value="{{ proj.id }}">{{ proj.key }} - {{ proj.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  {# Info about key regeneration #}
+  <div class="alert alert-info mb-4">
+    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <span class="text-sm">{% translate "Issue key will be regenerated with the target project's key prefix." %}</span>
+  </div>
+
+  <p class="text-sm text-base-content/70 mb-4">
+    {% translate "Tree structure and all children will be preserved." %}
+  </p>
+
+  <div class="modal-action">
+    <button type="button" class="btn btn-ghost" @click="showMoveToProjectModal = false">
+      {% translate "Cancel" %}
+    </button>
+    <button type="submit" class="btn btn-primary"
+            hx-post="{% url 'issues:issue_move_to_project' workspace.slug project.key issue.key %}"
+            hx-include="[name='project']"
+            hx-target="#move-to-project-modal-content"
+            hx-swap="innerHTML">
+      {% translate "Move" %}
+    </button>
+  </div>
+</form>

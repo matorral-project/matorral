@@ -28,6 +28,52 @@ def get_milestone_content_type_id():
     return ContentType.objects.get_for_model(models.Milestone).id
 
 
+def get_issue_creation_defaults(model_class, project, workspace_members) -> dict:
+    """Return preset initial values for issue creation forms.
+
+    Presets assignee (single-member auto-select or latest item's assignee), priority,
+    estimated_points (work items), and severity (bugs) scoped to the given project.
+    """
+    initial = {}
+
+    # Workspace-level: auto-select assignee for single-member workspaces
+    if workspace_members and len(workspace_members) == 1:
+        initial["assignee"] = workspace_members[0].pk
+
+    if model_class:
+        fields = ["priority", "due_date", "assignee_id"]
+
+        if model_class in (models.Story, models.Bug, models.Chore):
+            # Work items: Story, Bug, and Chore
+            fields.extend(["estimated_points"])
+
+            if model_class is models.Bug:
+                fields.append("severity")
+
+        base_qs = model_class.objects
+        if project:
+            base_qs = base_qs.for_project(project)
+
+        try:
+            latest = base_qs.values(*fields).latest("created_at")
+        except model_class.DoesNotExist:
+            latest = None
+
+        if latest:
+            if "assignee" not in initial and latest["assignee_id"]:
+                initial["assignee"] = latest["assignee_id"]
+            if latest["priority"]:
+                initial["priority"] = latest["priority"]
+            if "estimated_points" in fields and latest.get("estimated_points"):
+                initial["estimated_points"] = latest["estimated_points"]
+            if "severity" in fields and latest.get("severity"):
+                initial["severity"] = latest["severity"]
+            if "due_date" in fields and latest.get("due_date"):
+                initial["due_date"] = latest["due_date"].strftime("%Y-%m-%d")
+
+    return initial
+
+
 def calculate_valid_page(total_count: int, current_page: int, per_page: int = settings.DEFAULT_PAGE_SIZE) -> int | None:
     """Calculate the valid page to redirect to after items are removed."""
     if total_count == 0:

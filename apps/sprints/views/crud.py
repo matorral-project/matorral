@@ -178,14 +178,42 @@ class SprintCreateView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintFo
     def get_initial(self):
         initial = super().get_initial()
 
-        # Find the latest completed sprint to base dates on
-        latest_completed = Sprint.objects.for_workspace(self.workspace).completed().order_by("-end_date").first()
+        # If only one workspace member, auto-select as owner
+        workspace_members = self.request.workspace_members
+        if workspace_members is not None and len(workspace_members) == 1:
+            initial["owner"] = workspace_members[0].pk
 
-        if latest_completed:
-            # Start date is the end date of the latest completed sprint
-            initial["start_date"] = latest_completed.end_date
-            # End date is start date + 7 days
-            initial["end_date"] = latest_completed.end_date + timedelta(days=7)
+        # Fetch latest sprint for owner/capacity defaults and potentially dates
+        try:
+            latest_sprint = (
+                Sprint.objects.for_workspace(self.workspace)
+                .values("owner_id", "capacity", "status", "end_date")
+                .latest("created_at")
+            )
+
+            # Preset owner from latest sprint (only if multiple members and owner was set)
+            if "owner" not in initial and latest_sprint["owner_id"]:
+                initial["owner"] = latest_sprint["owner_id"]
+
+            # Preset capacity from latest sprint
+            if latest_sprint["capacity"]:
+                initial["capacity"] = latest_sprint["capacity"]
+
+            # Preset dates from latest completed sprint
+            if latest_sprint["status"] == SprintStatus.COMPLETED:
+                initial["start_date"] = latest_sprint["end_date"]
+                initial["end_date"] = latest_sprint["end_date"] + timedelta(days=7)
+            else:
+                try:
+                    latest_completed = (
+                        Sprint.objects.for_workspace(self.workspace).completed().values("end_date").latest("end_date")
+                    )
+                    initial["start_date"] = latest_completed["end_date"]
+                    initial["end_date"] = latest_completed["end_date"] + timedelta(days=7)
+                except Sprint.DoesNotExist:
+                    pass
+        except Sprint.DoesNotExist:
+            pass
 
         return initial
 
@@ -360,6 +388,7 @@ class SprintIssueListEmbedView(SprintViewMixin, IssueListContextMixin, LoginAndW
                 project_filter="",
                 group_by=self.group_by,
                 include_group_by=True,
+                group_by_in_modal=False,
                 extra_group_by_choices=[("project", _("Project"))],
                 sort_by=self.sort_by,
                 type_filter_type="multi_select",

@@ -38,6 +38,15 @@
         </div>
         <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
           <li>
+            <button type="button"
+                    hx-get="{% url 'projects:project_detail_inline_edit' workspace.slug project.key %}"
+                    hx-target="#project-header"
+                    hx-swap="outerHTML"
+                    @click="document.activeElement.blur()">
+              <i class="fa fa-pen"></i> {% translate "Edit" %}
+            </button>
+          </li>
+          <li>
             <button type="button" @click="$refs.cloneForm.submit()">
               <i class="fa fa-clone"></i> {% translate "Clone" %}
             </button>

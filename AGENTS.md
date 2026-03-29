@@ -142,11 +142,28 @@ Epic.add_root(project=project, title="Epic title", milestone=milestone)
 epic.add_child(instance=Story(project=project, title="Story title"))
 ```
 
+**Treebeard Safety (MP_Node models):**
+- **NEVER use `obj.save()`** on treebeard models — causes null depth constraint violations
+- **Use `add_root()`** for creating new root nodes
+- **Use `add_child()`** for adding children to existing nodes
+- **Use `move()`** for repositioning nodes in the tree
+- Always verify treebeard method usage before any model save operation
+
 **ContentType caching** (use in hot paths to prevent deadlocks):
 ```python
 from apps.issues.utils import get_cached_content_type
 # NOT: ContentType.objects.get_for_model(model)
 ```
+
+**After making ORM changes:**
+- Run the full test suite immediately after modifying Django ORM querysets or model methods
+- Incremental test runs prevent late discovery of failures (e.g., milestone progress tests, subtask migration tests)
+
+**Progress Calculation Pattern:**
+- **Centralize progress logic at database level** using Django annotations, not Python computation
+- **Check existing `with_progress()` implementations** in Sprint, Epic, Milestone models before adding new ones
+- **Use database-level annotations** (`annotate()`, `Case`, `When`) for progress percentages
+- **Avoid Python-level loops** over querysets for progress calculation — push logic to SQL
 
 **FBV tests** (views with `@login_and_workspace_membership_required`):
 ```python
@@ -193,8 +210,15 @@ def form_valid(self, form):
 - **ALWAYS place imports at the top of the file**
 - **NEVER place imports inside functions or methods**
 - This is mandatory and non-negotiable
+- After modifying Python files, run `just pre-commit` to catch ruff/black/isort issues
+- After modifying Python files, run `just pre-commit` to catch ruff/black/isort issues
 
-**Circular imports**: Use `django.apps.apps.get_model()`.
+**Circular imports**: Use `django.apps.apps.get_model()` instead of restructuring imports or using late imports.
+
+**Avoid premature abstractions**:
+- Before introducing new helpers, utilities, or abstractions, exhaust possibilities with current tools
+- Do not create wrappers for one-time operations — three similar lines of code is better than a premature abstraction
+- Design for current requirements, not hypothetical future needs
 
 ## General Coding Preferences
 
@@ -319,6 +343,11 @@ Always query the model you actually need, not intermediate models. Let Django's 
 - Use `@override_settings` for configuration changes needed by tests.
 - Place tests in `apps/<app_name>/tests/` directories.
 
+**Test-First Refactoring:**
+- **Run tests immediately after each code modification**, not at session end — catches bugs before they compound across files
+- After modifying Django ORM querysets or model methods, run the full test suite before considering the task complete
+- Incremental test runs prevent late discovery of failures (milestone progress tests, subtask migration tests)
+
 Note: Build frontend before running tests (CI does `npm ci && npm run build` first).
 
 ## Template Guidelines
@@ -357,6 +386,19 @@ Note: Build frontend before running tests (CI does `npm ci && npm run build` fir
 ## Django Best Practices
 
 ### Query Optimization
+
+- **Check for existing progress logic** before implementing — Sprint, Epic, and Milestone models may already have `with_progress()` patterns to reuse
+- **Centralize progress calculation** using database-level annotations rather than Python-level computation:
+  ```python
+  # Good: database-level annotation
+  queryset = Sprint.objects.annotate(
+      progress=Coalesce(Sum('issues__progress'), 0)
+  )
+
+  # Bad: Python-level loop
+  for sprint in sprints:
+      sprint.progress = sum(i.progress for i in sprint.issues.all())
+  ```
 
 - **Use `select_related()`** for single-valued relationships (ForeignKey, OneToOne) to fetch related objects in the same query:
   ```python

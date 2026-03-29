@@ -11,6 +11,7 @@ Expects from parent context:
   - current_value: current filter value (comma-separated for multi_select)
   - empty_label: Label for "no filter" option (single_select only, defaults to "All")
 - active_filter_count: number of active filters (for badge display)
+- filter_presets: (optional) list of preset dicts from build_filter_presets(), adds a "Quick Filters" tab
 
 Parent template must include in its x-data:
 - showFiltersModal: false
@@ -88,6 +89,18 @@ Parent template must listen for the filters-apply event and trigger the HTMX req
          {% endfor %}
          return data;
        },
+       applyPreset(values) {
+         this.clearAll();
+         let multiSelectNames = new Set([{% for section in filter_sections %}{% if section.type == 'multi_select' %}'{{ section.name }}', {% endif %}{% endfor %}]);
+         for (let [key, val] of Object.entries(values)) {
+           if (multiSelectNames.has(key)) {
+             this.filterValues[key] = val.split(',').filter(s => s.trim());
+           } else {
+             this.filterValues[key] = val;
+           }
+         }
+         this.apply();
+       },
        apply() {
          $dispatch('{{ dispatch_event|default:"filters-apply" }}', this.getFilterData());
          this.showFiltersModal = false;
@@ -104,7 +117,7 @@ Parent template must listen for the filters-apply event and trigger the HTMX req
          return count;
        }
      }">
-  <div class="modal-box max-w-md">
+  <div class="modal-box max-w-2xl">
     <div class="flex justify-between items-center mb-4">
       <h3 class="font-bold text-lg">
         {% translate "Filters" %}
@@ -115,9 +128,18 @@ Parent template must listen for the filters-apply event and trigger the HTMX req
       </button>
     </div>
 
-    <div x-data="{ activeTab: '{{ filter_sections.0.name }}' }">
+    <div x-data="{ activeTab: '{% if filter_presets %}quick_filters{% else %}{{ filter_sections.0.name }}{% endif %}' }">
       {# Tab navigation #}
       <div role="tablist" class="tabs tabs-border mb-4">
+        {% if filter_presets %}
+        <button type="button"
+                role="tab"
+                class="tab"
+                :class="{ 'tab-active': activeTab === 'quick_filters' }"
+                @click="activeTab = 'quick_filters'">
+          {% translate "Quick Filters" %}
+        </button>
+        {% endif %}
         {% for section in filter_sections %}
         <button type="button"
                 role="tab"
@@ -131,6 +153,20 @@ Parent template must listen for the filters-apply event and trigger the HTMX req
 
       {# Tab content - fixed height to prevent layout shift #}
       <div class="h-72">
+      {% if filter_presets %}
+      <div x-show="activeTab === 'quick_filters'" x-cloak class="h-full flex flex-col">
+        <div class="space-y-1 flex-1 overflow-y-auto">
+          {% for preset in filter_presets %}
+          <button type="button"
+                  class="flex items-center w-full gap-2 cursor-pointer p-1.5 rounded hover:bg-base-200 text-sm text-left"
+                  data-values="{{ preset.values_json|escape }}"
+                  @click="applyPreset(JSON.parse($el.dataset.values))">
+            {{ preset.label }}
+          </button>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
       {% for section in filter_sections %}
       <div x-show="activeTab === '{{ section.name }}'" x-cloak class="h-full flex flex-col">
         {% if section.type == "multi_select" %}

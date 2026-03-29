@@ -12,6 +12,7 @@ from apps.issues.managers import KeyNumber
 from apps.issues.models import BaseIssue, IssuePriority, IssueStatus
 from apps.projects.models import Project
 from apps.utils.filters import (
+    build_filter_presets,
     build_filter_section,
     count_active_filters,
     get_status_filter_label,
@@ -49,6 +50,14 @@ ISSUE_TYPE_MODELS = {
     "chore": "Chore",
 }
 
+# Issue type → model class mapping (for preset logic in creation views)
+ISSUE_TYPE_MODEL_MAP = {
+    "epic": Epic,
+    "story": Story,
+    "bug": Bug,
+    "chore": Chore,
+}
+
 # Group by choices for issue list
 GROUP_BY_CHOICES = [
     ("epic", _("Epic")),
@@ -66,6 +75,9 @@ SORT_BY_CHOICES = [
     ("points_desc", _("Points High-Low")),
     ("points_asc", _("Points Low-High")),
 ]
+
+# Allowed story points values for estimation
+POINTS_CHOICES = [(1, "1"), (2, "2"), (3, "3"), (5, "5"), (8, "8")]
 
 # Sprint filter choices for backlog filtering
 SPRINT_FILTER_CHOICES = [
@@ -110,24 +122,16 @@ class IssueListContextMixin:
         priority_filter: str = "",
     ):
         """Apply type, search, status, assignee, sprint, and priority filters to an issue queryset."""
-        # Local model mapping
-        issue_type_models = {
-            "epic": Epic,
-            "story": Story,
-            "bug": Bug,
-            "chore": Chore,
-        }
-
         # Apply sprint filter first (backlog filters to work items only)
         if sprint_filter == "backlog":
             queryset = queryset.backlog()
 
         # Apply type filter - supports single value or comma-separated multi-select
         type_values = parse_multi_filter(type_filter, ISSUE_TYPE_CHOICES)
-        if len(type_values) == 1 and type_values[0] in issue_type_models:
-            queryset = queryset.instance_of(issue_type_models[type_values[0]])
+        if len(type_values) == 1 and type_values[0] in ISSUE_TYPE_MODEL_MAP:
+            queryset = queryset.instance_of(ISSUE_TYPE_MODEL_MAP[type_values[0]])
         elif len(type_values) > 1:
-            model_classes = [issue_type_models[v] for v in type_values if v in issue_type_models]
+            model_classes = [ISSUE_TYPE_MODEL_MAP[v] for v in type_values if v in ISSUE_TYPE_MODEL_MAP]
             if model_classes:
                 queryset = queryset.instance_of(*model_classes)
 
@@ -400,6 +404,7 @@ class IssueListContextMixin:
 
         return {
             "priority_choices": IssuePriority.choices,
+            "points_choices": POINTS_CHOICES,
             "status_choices": IssueStatus.choices,
             "type_choices": effective_type_choices,
             "search_query": search_query,
@@ -420,6 +425,7 @@ class IssueListContextMixin:
             "sort_by_label": dict(SORT_BY_CHOICES).get(sort_by, "") if sort_by else "",
             "sort_by_choices": SORT_BY_CHOICES,
             "filter_sections": filter_sections,
+            "filter_presets": build_filter_presets(self.request.user.pk),
             "active_filter_count": active_filter_count,
         }
 

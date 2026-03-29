@@ -554,6 +554,65 @@ class SprintCreateViewTest(SprintViewTestBase):
         self.assertEqual(200, response.status_code)
         self.assertFalse(Sprint.objects.filter(name="Long Sprint").exists())
 
+    def test_create_view_presets_owner_when_single_member(self):
+        """When only one workspace member exists, owner is preset to that member."""
+        response = self.client.get(self._get_create_url())
+
+        form = response.context["form"]
+        self.assertEqual(self.user.pk, form.initial["owner"])
+
+    def test_create_view_presets_owner_from_latest_sprint(self):
+        """When multiple members exist, owner is preset from the latest sprint."""
+        MembershipFactory(workspace=self.workspace, user=self.other_user)
+        SprintFactory(workspace=self.workspace, owner=self.other_user)
+
+        response = self.client.get(self._get_create_url())
+
+        form = response.context["form"]
+        self.assertEqual(self.other_user.pk, form.initial["owner"])
+
+    def test_create_view_presets_capacity_from_latest_sprint(self):
+        """Capacity is preset from the latest sprint."""
+        SprintFactory(workspace=self.workspace, capacity=42)
+
+        response = self.client.get(self._get_create_url())
+
+        form = response.context["form"]
+        self.assertEqual(42, form.initial["capacity"])
+
+    def test_create_view_no_presets_without_existing_sprint(self):
+        """Without existing sprints, owner and capacity are not preset (multi-member)."""
+        MembershipFactory(workspace=self.workspace, user=self.other_user)
+
+        response = self.client.get(self._get_create_url())
+
+        form = response.context["form"]
+        self.assertNotIn("owner", form.initial)
+        self.assertNotIn("capacity", form.initial)
+
+    def test_create_view_presets_from_latest_not_oldest_sprint(self):
+        """Presets come from the most recently created sprint, not an older one."""
+        MembershipFactory(workspace=self.workspace, user=self.other_user)
+        SprintFactory(workspace=self.workspace, owner=self.user, capacity=20)
+        SprintFactory(workspace=self.workspace, owner=self.other_user, capacity=35)
+
+        response = self.client.get(self._get_create_url())
+
+        form = response.context["form"]
+        self.assertEqual(self.other_user.pk, form.initial["owner"])
+        self.assertEqual(35, form.initial["capacity"])
+
+    def test_create_view_ignores_other_workspace_sprints_for_presets(self):
+        """Presets only consider sprints from the current workspace."""
+        MembershipFactory(workspace=self.workspace, user=self.other_user)
+        SprintFactory(workspace=self.other_workspace, owner=self.other_user, capacity=99)
+
+        response = self.client.get(self._get_create_url())
+
+        form = response.context["form"]
+        self.assertNotIn("owner", form.initial)
+        self.assertNotIn("capacity", form.initial)
+
 
 class SprintUpdateViewTest(SprintViewTestBase):
     """Tests for the sprint update view."""

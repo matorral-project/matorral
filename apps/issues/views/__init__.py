@@ -4,6 +4,7 @@ from .bulk import (
     WorkspaceIssueBulkDeletePreviewView,
     WorkspaceIssueBulkDeleteView,
     WorkspaceIssueBulkMilestoneView,
+    WorkspaceIssueBulkPointsView,
     WorkspaceIssueBulkPriorityView,
     WorkspaceIssueBulkRemoveFromSprintView,
     WorkspaceIssueBulkStatusView,
@@ -48,7 +49,7 @@ from .subtasks import (
     SubtaskListView,
     SubtaskStatusToggleView,
 )
-from .tree import IssueChildrenView, IssueMoveView
+from .tree import IssueChildrenView, IssueMoveToProjectView, IssueMoveView
 
 __all__ = [
     "CascadeStatusApplyView",
@@ -71,12 +72,14 @@ __all__ = [
     "WorkspaceIssueBulkDeletePreviewView",
     "WorkspaceIssueBulkStatusView",
     "WorkspaceIssueBulkPriorityView",
+    "WorkspaceIssueBulkPointsView",
     "WorkspaceIssueBulkRemoveFromSprintView",
     "WorkspaceIssueBulkAddToSprintView",
     "WorkspaceIssueBulkAssigneeView",
     "WorkspaceIssueBulkMilestoneView",
     "IssueChildrenView",
     "IssueMoveView",
+    "IssueMoveToProjectView",
     "IssueCommentsView",
     "IssueCommentPostView",
     "IssueCommentEditView",

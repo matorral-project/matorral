@@ -3,7 +3,7 @@
 {% block app_content_content %}
 <div id="page-content" hx-target="#page-content">
   {% partialdef page-content inline %}
-  <section class="app-card" x-data="{ showDeleteModal: false, showCascadeModal: false }">
+  <section class="app-card" x-data="{ showDeleteModal: false, showCascadeModal: false, showMoveToProjectModal: false }">
     {% include "issues/includes/milestone_detail_header.html" %}
 
     {# Issues, History, and Attachments Tabs #}
@@ -92,6 +92,7 @@
         </div>
       </div>
     </div>
+    {% include "issues/includes/issue_move_to_project_modal.html" %}
     {% include "includes/delete_confirm_modal.html" with delete_modal_id="detail-delete-modal-content" %}
     {% include "includes/cascade_status_modal.html" %}
   </section>

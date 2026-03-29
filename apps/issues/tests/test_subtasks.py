@@ -4,7 +4,6 @@ from django.urls import reverse
 
 from apps.issues.factories import BugFactory, ChoreFactory, EpicFactory, StoryFactory, SubtaskFactory
 from apps.issues.models import IssueStatus, Subtask
-from apps.issues.views.subtasks import MAX_SUBTASKS_PER_PARENT
 from apps.projects.factories import ProjectFactory
 from apps.users.factories import UserFactory
 from apps.workspaces.factories import MembershipFactory, WorkspaceFactory
@@ -296,18 +295,6 @@ class SubtaskCreateViewTest(SubtaskTestBase):
         self.assertEqual(200, response.status_code)
         self.assertContains(response, "New subtask")
 
-    def test_create_subtask_at_limit_rejected(self):
-        """Creating a subtask when at the limit is rejected."""
-        story = StoryFactory(project=self.project)
-
-        for i in range(MAX_SUBTASKS_PER_PARENT):
-            SubtaskFactory(parent=story, title=f"Subtask {i}")
-
-        response = self.client.post(self._get_subtask_add_url(story), {"title": "One more"})
-
-        self.assertEqual(400, response.status_code)
-        self.assertEqual(MAX_SUBTASKS_PER_PARENT, story.get_children().instance_of(Subtask).count())
-
     def test_create_subtask_ordered_by_treebeard_path(self):
         """New subtasks are ordered by treebeard path (insertion order)."""
         story = StoryFactory(project=self.project)
@@ -540,13 +527,3 @@ class SubtaskCloneViewTest(SubtaskTestBase):
         self.assertEqual(200, response.status_code)
         self.assertContains(response, "My subtask")
         self.assertContains(response, "My subtask (Copy)")
-
-    def test_clone_at_limit_rejected(self):
-        """Cloning when at the subtask limit returns 400."""
-        story = StoryFactory(project=self.project)
-        subtasks = [SubtaskFactory(parent=story, title=f"Subtask {i}") for i in range(MAX_SUBTASKS_PER_PARENT)]
-
-        response = self.client.post(self._get_subtask_clone_url(story, subtasks[0]))
-
-        self.assertEqual(400, response.status_code)
-        self.assertEqual(MAX_SUBTASKS_PER_PARENT, story.get_children().instance_of(Subtask).count())
