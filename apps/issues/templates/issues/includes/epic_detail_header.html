@@ -16,6 +16,14 @@
            @click.prevent>[{% translate "Edit" %}]</a>
       </div>
       <h1 class="mt-title">{{ issue.title }}</h1>
+      <div class="mt-0.5 ml-0.5 flex gap-1 no-edit">
+        <span class="text-sm text-gray-400">{% translate "Project:" %}</span>
+        <a href="{{ project.get_absolute_url }}"
+           hx-get="{{ project.get_absolute_url }}"
+           hx-push-url="true"
+           hx-target="#page-content"
+           class="text-sm link link-primary">{{ project.key }} - {{ project.name }}</a>
+      </div>
     </div>
     <div class="flex items-center gap-3 no-edit">
       {% if progress %}
@@ -113,16 +121,6 @@
       {% else %}
         <span class="text-gray-400">—</span>
       {% endif %}
-    </div>
-    <div class="no-edit">
-      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Project" %}</h3>
-      <a href="{{ project.get_absolute_url }}"
-         hx-get="{{ project.get_absolute_url }}"
-         hx-push-url="true"
-         hx-target="#page-content"
-         class="text-sm link link-primary">
-        {{ project.key }} - {{ project.name }}
-      </a>
     </div>
   </div>
 
