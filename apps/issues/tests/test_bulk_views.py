@@ -127,6 +127,47 @@ class TestBulkPriorityPolymorphicUpdate(BulkActionTestBase):
         self.assertEqual(initial_log_count + 2, LogEntry.objects.count())
 
 
+class TestBulkPointsUpdate(BulkActionTestBase):
+    """Test: Bulk points update sets estimated_points on BaseIssue and creates audit logs."""
+
+    def test_points_updated_on_story_and_bug_with_audit_logs(self):
+        """estimated_points is updated on Story and Bug (via BaseIssue); one LogEntry per issue."""
+        story = StoryFactory(project=self.project, estimated_points=None)
+        bug = BugFactory(project=self.project, estimated_points=None)
+        initial_log_count = LogEntry.objects.count()
+
+        self._post(
+            "workspace_issues_bulk_points",
+            {"issues": [story.key, bug.key], "points": 5},
+            htmx=True,
+        )
+
+        story.refresh_from_db()
+        bug.refresh_from_db()
+        self.assertEqual(5, story.estimated_points)
+        self.assertEqual(5, bug.estimated_points)
+        self.assertEqual(initial_log_count + 2, LogEntry.objects.count())
+
+    def test_invalid_points_value_returns_error_and_leaves_db_unchanged(self):
+        """An invalid points value (not in [1,2,3,5,8]) adds an error and does not update the DB."""
+        story = StoryFactory(project=self.project, estimated_points=3)
+
+        response = self._post(
+            "workspace_issues_bulk_points",
+            {"issues": story.key, "points": 99},
+            htmx=True,
+        )
+
+        self.assertEqual(200, response.status_code)
+        story.refresh_from_db()
+        self.assertEqual(3, story.estimated_points)
+        messages_list = list(get_messages(response.wsgi_request))
+        self.assertTrue(
+            any("Invalid points" in str(m) for m in messages_list),
+            f"Expected 'Invalid points' error in messages, got: {[str(m) for m in messages_list]}",
+        )
+
+
 class TestBulkAddToSprintKeyNotFound(BulkActionTestBase):
     """Test 5: Bulk add-to-sprint with a sprint key that does not exist."""
 

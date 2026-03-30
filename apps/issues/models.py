@@ -2,7 +2,7 @@ import re
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
@@ -234,6 +234,37 @@ class BaseIssue(MP_Node, PolymorphicModel):
 
     def get_status_category(self, category=None):
         return STATUS_CATEGORIES.get(self.status, category or "todo")
+
+    @transaction.atomic
+    def move_to_project(self, target_project):
+        """Move this root-level issue and all descendants to another project.
+
+        - Updates project FK on self and all descendants
+        - Regenerates keys with target project's prefix
+        - Preserves treebeard structure (parent-child relationships)
+
+        Raises ValidationError if:
+        - Issue is not root-level (depth != 1)
+        - Target is the same as current project
+        """
+        if self.depth != 1:
+            raise ValidationError(_("Only root-level items can be moved to another project."))
+        if self.project_id == target_project.pk:
+            raise ValidationError(_("Issue is already in this project."))
+
+        # Get all descendants
+        descendants = self.get_descendants().values_list("pk", flat=True)
+        all_pks = [self.pk] + list(descendants)
+
+        # Update project FK on all issues (safe: queryset.update on non-tree field)
+        BaseIssue.objects.filter(pk__in=all_pks).update(project=target_project)
+
+        # Regenerate keys sequentially (order by path so parents before children)
+        for issue in BaseIssue.objects.filter(pk__in=all_pks).order_by("path"):
+            new_key = issue._generate_unique_key()
+            BaseIssue.objects.filter(pk=issue.pk).update(key=new_key)
+
+        self.refresh_from_db()
 
     @classmethod
     def get_priority_choices(cls):

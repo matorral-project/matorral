@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://matorral.matagus.dev/">Live Demo</a> •
+  <a href="https://matorral.dev/">Live Demo</a> •
   <a href="#features">Features</a> •
   <a href="#getting-started">Getting Started</a> •
   <a href="#configuration">Configuration</a> •
@@ -30,7 +30,7 @@
 
 ## Try it out!
 
-An example demo instance is available at **[matorral.matagus.dev](https://matorral.matagus.dev/)**
+An example demo instance is available at **[matorral.dev](https://matorral.dev/)**
 
 | Credential | Value |
 |---|---|
@@ -138,7 +138,7 @@ Django · PostgreSQL · Redis · Celery · HTMX · Alpine.js · Tailwind CSS · 
 ---
 
 <p align="center">
-  <a href="https://matorral.matagus.dev/">Live Demo</a> •
+  <a href="https://matorral.dev/">Live Demo</a> •
   <a href="https://github.com/matorral-project/matorral">Star us on GitHub</a> •
   <a href="https://github.com/matorral-project/matorral/issues">Report Bug</a> •
   <a href="https://github.com/matorral-project/matorral/issues">Request Feature</a>

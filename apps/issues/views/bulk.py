@@ -17,11 +17,11 @@ from apps.issues.helpers import (
 from apps.issues.models import BaseIssue, Bug, Chore, Epic, IssuePriority, IssueStatus, Milestone, Story
 from apps.projects.models import Project
 from apps.sprints.models import Sprint, SprintStatus
-from apps.utils.filters import get_status_filter_label, parse_status_filter
+from apps.utils.filters import count_active_filters, get_status_filter_label, parse_status_filter
 from apps.utils.models import AuditLog
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
-from .mixins import WORK_ITEM_TYPE_CHOICES, IssueListContextMixin, WorkspaceIssueViewMixin
+from .mixins import POINTS_CHOICES, WORK_ITEM_TYPE_CHOICES, IssueListContextMixin, WorkspaceIssueViewMixin
 
 # ============================================================================
 # Workspace-level bulk actions (across all projects in a workspace)
@@ -150,7 +150,9 @@ class WorkspaceBulkActionMixin(IssueListContextMixin, WorkspaceIssueViewMixin):
             )
 
         # Apply filters and ordering using mixin methods
-        queryset = self.apply_issue_filters(queryset, type_filter, search_query, status_filter, assignee_filter)
+        queryset = self.apply_issue_filters(
+            queryset, type_filter, search_query, status_filter, assignee_filter, priority_filter=priority_filter
+        )
         queryset = self.apply_issue_ordering(queryset, group_by)
 
         # Build context using mixin method
@@ -197,6 +199,8 @@ class WorkspaceBulkActionMixin(IssueListContextMixin, WorkspaceIssueViewMixin):
                     include_group_by=is_sprint_embed,
                     group_by_in_modal=False,
                     extra_group_by_choices=([("project", _("Project"))] if is_sprint_embed else None),
+                    priority_filter=priority_filter,
+                    include_priority_filter=not is_sprint_embed,
                 )
             )
 
@@ -264,6 +268,16 @@ class WorkspaceBulkActionMixin(IssueListContextMixin, WorkspaceIssueViewMixin):
                 },
             )
             context["project_milestones"] = Milestone.objects.for_project(project).for_choices()
+            context["milestone_filter"] = milestone_filter
+            context["total_epic_count"] = Epic.objects.for_project(project).count()
+            context["active_filter_count"] = count_active_filters(
+                {
+                    "status": status_filter,
+                    "priority": priority_filter,
+                    "assignee": assignee_filter,
+                    "milestone": milestone_filter,
+                }
+            )
             return render(self.request, "projects/project_epics_embed.html#embed-content", context)
 
         # For sprint embed mode, render the shared embedded template with sprint context
@@ -457,6 +471,52 @@ class WorkspaceIssueBulkPriorityView(WorkspaceBulkActionMixin, LoginAndWorkspace
         messages.success(
             self.request,
             _("%(count)d issue(s) updated to %(priority)s.") % {"count": updated_count, "priority": new_display},
+        )
+        return self.form.cleaned_data["page"]
+
+
+class WorkspaceIssueBulkPointsView(WorkspaceBulkActionMixin, LoginAndWorkspaceRequiredMixin, View):
+    """Update the estimated points of multiple issues at once (workspace level)."""
+
+    def get_queryset(self, *args, **kwargs):
+        return super().get_queryset(*args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        points_str = request.POST.get("points")
+        try:
+            self.points = int(points_str)
+        except (TypeError, ValueError):
+            self.points = None
+
+        if self.points not in [choice[0] for choice in POINTS_CHOICES]:
+            messages.error(request, _("Invalid points value."))
+            self.form = self.get_form()
+            self.form.is_valid()
+            return self.render_response(self.form.cleaned_data.get("page", 1))
+
+        return super().post(request, *args, **kwargs)
+
+    def perform_action(self):
+        selected_qs = self.get_selected_queryset().select_related("polymorphic_ctype")
+        old_values = {
+            obj.pk: str(obj.estimated_points) if obj.estimated_points is not None else "" for obj in selected_qs
+        }
+        new_display = str(self.points)
+
+        # estimated_points lives on BaseIssue, so a single update covers all subtypes
+        updated_count = selected_qs.update(estimated_points=self.points)
+
+        AuditLog.objects.bulk_create_for(
+            selected_qs,
+            field_name="estimated_points",
+            old_values=old_values,
+            new_display=new_display,
+            actor=self.request.user,
+        )
+
+        messages.success(
+            self.request,
+            _("%(count)d issue(s) updated to %(points)s points.") % {"count": updated_count, "points": new_display},
         )
         return self.form.cleaned_data["page"]
 

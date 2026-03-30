@@ -3,15 +3,16 @@ from itertools import groupby
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import View
 
 from apps.issues.models import BaseIssue, Bug, Chore, Epic, Milestone, Story
+from apps.projects.models import Project
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
-from django_htmx.http import HttpResponseClientRefresh
+from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
 
 from .mixins import IssueViewMixin
 
@@ -151,3 +152,69 @@ class IssueMoveView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View):
         if request.htmx:
             return HttpResponseClientRefresh()
         return JsonResponse({"success": True})
+
+
+class IssueMoveToProjectView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View):
+    """Move a root-level issue or milestone to another project in the same workspace."""
+
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Return the modal content with project options."""
+        issue = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["key"])
+
+        # Only root-level items can be moved
+        if issue.depth != 1:
+            messages.error(request, _("Only root-level items can be moved to another project."))
+            if request.htmx:
+                return render(request, "includes/messages.html")
+            return redirect(issue.get_absolute_url())
+
+        # Get other projects in this workspace
+        target_projects = Project.objects.for_workspace(self.workspace).exclude(pk=self.project.pk).for_choices()
+
+        context = {
+            "issue": issue,
+            "target_projects": target_projects,
+            "workspace": self.workspace,
+            "project": self.project,
+        }
+        return render(request, "issues/includes/issue_move_to_project_modal_content.html", context)
+
+    def post(self, request, *args, **kwargs):
+        """Perform the move to another project."""
+        issue = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["key"])
+
+        target_project_id = request.POST.get("project")
+        if not target_project_id:
+            messages.error(request, _("Please select a target project."))
+            if request.htmx:
+                return render(request, "includes/messages.html")
+            return redirect(issue.get_absolute_url())
+
+        try:
+            target_project = Project.objects.get(workspace=self.workspace, pk=target_project_id)
+        except Project.DoesNotExist:
+            messages.error(request, _("Target project not found."))
+            if request.htmx:
+                return render(request, "includes/messages.html")
+            return redirect(issue.get_absolute_url())
+
+        try:
+            issue.move_to_project(target_project)
+            messages.success(
+                request,
+                _("%(issue)s moved to %(project)s.") % {"issue": issue.key, "project": target_project.name},
+            )
+        except ValidationError as e:
+            messages.error(request, str(e.message if hasattr(e, "message") else e))
+            if request.htmx:
+                return render(request, "includes/messages.html")
+            return redirect(issue.get_absolute_url())
+
+        # After move, the URL changes (different project_key)
+        if request.htmx:
+            return HttpResponseClientRedirect(issue.get_absolute_url())
+
+        return redirect(issue.get_absolute_url())

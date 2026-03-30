@@ -2,7 +2,6 @@
 <div id="subtasks-section">
   <div class="flex items-center justify-between mb-2 mt-6">
     <h2 class="text-lg font-semibold">{% translate "Subtasks" %} ({{ subtask_count }})</h2>
-    {% if can_add_subtask %}
     <button type="button"
             class="btn btn-sm btn-primary"
             hx-get="{% url 'issues:issue_subtasks' workspace.slug project.key issue.key %}?form=1"
@@ -11,7 +10,6 @@
             @click="showNewSubtaskModal = true; document.activeElement.blur()">
       <i class="fa fa-plus mr-1"></i> {% translate "New" %}
     </button>
-    {% endif %}
   </div>
 
   {% if subtasks %}

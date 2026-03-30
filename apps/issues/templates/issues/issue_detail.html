@@ -3,7 +3,7 @@
 {% block app_content_content %}
 <div id="page-content" hx-target="#page-content">
   {% partialdef page-content inline %}
-  <section class="app-card" x-data="{ showAddToSprintModal: false, showConvertModal: false, showPromoteModal: false, showDeleteModal: false, showCascadeModal: false, showNewSubtaskModal: false }">
+  <section class="app-card" x-data="{ showAddToSprintModal: false, showConvertModal: false, showPromoteModal: false, showDeleteModal: false, showCascadeModal: false, showNewSubtaskModal: false, showMoveToProjectModal: false }">
     {% if issue.get_issue_type == "epic" %}
     {% include "issues/includes/epic_detail_header.html" %}
 
@@ -214,6 +214,7 @@
     {% include "issues/includes/issue_promote_modal.html" %}
     {% include "issues/includes/new_subtask_modal.html" %}
     {% endif %}
+    {% include "issues/includes/issue_move_to_project_modal.html" %}
     {% include "includes/delete_confirm_modal.html" with delete_modal_id="detail-delete-modal-content" %}
     {% include "includes/cascade_status_modal.html" %}
   </section>

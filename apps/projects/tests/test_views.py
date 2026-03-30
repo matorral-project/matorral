@@ -283,6 +283,58 @@ class ProjectCreateViewTest(ProjectViewTestCase):
         self.assertContains(response, "A project with this key already exists")
         self.assertEqual(1, Project.objects.filter(workspace=self.workspace, key="EXIST").count())
 
+    def test_create_view_presets_lead_when_single_member(self):
+        """When only one workspace member exists, lead is preset to that member."""
+        response = self.client.get(self._get_create_url())
+
+        form = response.context["form"]
+        self.assertEqual(self.user.pk, form.initial["lead"])
+
+    def test_create_view_presets_lead_from_latest_project(self):
+        """When multiple members exist, lead is preset from the latest project."""
+        other_user = UserFactory()
+        MembershipFactory(workspace=self.workspace, user=other_user)
+        ProjectFactory(workspace=self.workspace, lead=other_user)
+
+        response = self.client.get(self._get_create_url())
+
+        form = response.context["form"]
+        self.assertEqual(other_user.pk, form.initial["lead"])
+
+    def test_create_view_no_lead_preset_without_existing_project(self):
+        """Without existing projects, lead is not preset (multi-member)."""
+        other_user = UserFactory()
+        MembershipFactory(workspace=self.workspace, user=other_user)
+
+        response = self.client.get(self._get_create_url())
+
+        form = response.context["form"]
+        self.assertNotIn("lead", form.initial)
+
+    def test_create_view_presets_lead_from_latest_not_oldest_project(self):
+        """Lead preset comes from the most recently created project."""
+        other_user = UserFactory()
+        MembershipFactory(workspace=self.workspace, user=other_user)
+        ProjectFactory(workspace=self.workspace, lead=self.user)
+        ProjectFactory(workspace=self.workspace, lead=other_user)
+
+        response = self.client.get(self._get_create_url())
+
+        form = response.context["form"]
+        self.assertEqual(other_user.pk, form.initial["lead"])
+
+    def test_create_view_ignores_other_workspace_projects_for_lead(self):
+        """Lead preset only considers projects from the current workspace."""
+        other_user = UserFactory()
+        other_workspace = WorkspaceFactory()
+        MembershipFactory(workspace=self.workspace, user=other_user)
+        ProjectFactory(workspace=other_workspace, lead=other_user)
+
+        response = self.client.get(self._get_create_url())
+
+        form = response.context["form"]
+        self.assertNotIn("lead", form.initial)
+
 
 class ProjectUpdateViewTest(ProjectViewTestCase):
     """Tests for ProjectUpdateView functionality."""

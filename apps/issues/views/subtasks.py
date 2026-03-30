@@ -1,4 +1,3 @@
-from django.http import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, render
 from django.utils.translation import gettext_lazy as _
 from django.views import View
@@ -9,9 +8,6 @@ from apps.issues.models import IssueStatus, Subtask
 from apps.issues.views.comments import IssueCommentsViewMixin
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
-# Maximum number of subtasks allowed per parent
-MAX_SUBTASKS_PER_PARENT = 20
-
 
 class SubtaskViewMixin(IssueCommentsViewMixin):
     """Base mixin for subtask views. Extends IssueCommentsViewMixin for workspace/project/issue setup."""
@@ -20,26 +16,15 @@ class SubtaskViewMixin(IssueCommentsViewMixin):
         """Get all subtasks for the current issue."""
         return self.issue.get_children().instance_of(Subtask)
 
-    def get_subtask_count(self):
-        """Get the count of subtasks for the current issue."""
-        return self.get_subtasks().count()
-
-    def can_add_subtask(self):
-        """Check if more subtasks can be added (under the limit)."""
-        return self.get_subtask_count() < MAX_SUBTASKS_PER_PARENT
-
     def get_subtasks_context(self):
         """Get common context for subtask templates."""
         subtasks = self.get_subtasks()
-        subtask_count = subtasks.count()
         return {
             "workspace": self.workspace,
             "project": self.project,
             "issue": self.issue,
             "subtasks": subtasks,
-            "subtask_count": subtask_count,
-            "can_add_subtask": subtask_count < MAX_SUBTASKS_PER_PARENT,
-            "max_subtasks": MAX_SUBTASKS_PER_PARENT,
+            "subtask_count": subtasks.count(),
             "status_choices": IssueStatus.choices,
         }
 
@@ -58,11 +43,6 @@ class SubtaskCreateView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, View):
     """POST to create a new subtask and return updated list."""
 
     def post(self, request, *args, **kwargs):
-        if not self.can_add_subtask():
-            return HttpResponseBadRequest(
-                _("Maximum number of subtasks reached (%(max)s).") % {"max": MAX_SUBTASKS_PER_PARENT}
-            )
-
         form = SubtaskForm(request.POST)
         if form.is_valid():
             subtask = form.save(commit=False)
@@ -201,11 +181,6 @@ class SubtaskCloneView(LoginAndWorkspaceRequiredMixin, SubtaskViewMixin, View):
         )
 
     def post(self, request, *args, **kwargs):
-        if not self.can_add_subtask():
-            return HttpResponseBadRequest(
-                _("Maximum number of subtasks reached (%(max)s).") % {"max": MAX_SUBTASKS_PER_PARENT}
-            )
-
         cloned = Subtask(
             project=self.subtask.project,
             title=_("%(title)s (Copy)") % {"title": self.subtask.title},

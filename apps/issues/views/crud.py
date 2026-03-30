@@ -1,3 +1,4 @@
+from django.apps import apps
 from django.conf import settings
 from django.contrib import messages
 from django.db import transaction
@@ -22,19 +23,20 @@ from apps.issues.helpers import (
     annotate_epic_child_counts,
     build_grouped_issues,
     build_htmx_delete_response,
+    get_issue_creation_defaults,
 )
 from apps.issues.models import BaseIssue, Bug, BugSeverity, Epic, IssuePriority, IssueStatus, Subtask
 from apps.issues.services import IssueConversionError, PromotionError, convert_issue_type, promote_to_epic
 from apps.projects.models import Project
 from apps.sprints.models import Sprint, SprintStatus
 from apps.utils.progress import build_progress_dict
-from apps.workspaces.limits import LimitExceededError, check_work_item_limit
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
 from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
 
 from .mixins import (
     ISSUE_TYPE_CHOICES,
+    ISSUE_TYPE_MODEL_MAP,
     WORK_ITEM_TYPE_CHOICES,
     IssueFormMixin,
     IssueListContextMixin,
@@ -61,6 +63,7 @@ class WorkspaceIssueListView(
         self.status_filter = self.request.GET.get("status", "").strip()
         self.type_filter = self.request.GET.get("type", "").strip()
         self.assignee_filter = self.request.GET.get("assignee", "").strip()
+        self.priority_filter = self.request.GET.get("priority", "").strip()
         self.project_filter = self.request.GET.get("project", "").strip()
         self.sprint_filter = self.request.GET.get("sprint", "").strip()
         # Group by is only available when filtering by project
@@ -97,6 +100,7 @@ class WorkspaceIssueListView(
             self.status_filter,
             self.assignee_filter,
             self.sprint_filter,
+            priority_filter=self.priority_filter,
         )
         queryset = self.apply_issue_ordering(queryset, self.group_by, self.sort_by)
 
@@ -130,6 +134,8 @@ class WorkspaceIssueListView(
                 sprint_filter=self.sprint_filter,
                 include_sprint_filter=True,
                 sort_by=self.sort_by,
+                priority_filter=self.priority_filter,
+                include_priority_filter=True,
                 type_filter_choices=WORK_ITEM_TYPE_CHOICES,
             )
         )
@@ -161,9 +167,11 @@ class WorkspaceIssueCreateView(LoginAndWorkspaceRequiredMixin, WorkspaceIssueVie
         return get_form_class_for_type(self.issue_type)
 
     def get_form_kwargs(self):
+        model_class = apps.get_model("issues", self.issue_type)
         kwargs = {
             "project": None,  # Project will be selected in the form
             "workspace_members": self.request.workspace_members,
+            "initial": get_issue_creation_defaults(model_class, None, self.request.workspace_members),
         }
         if self.request.method == "POST":
             kwargs["data"] = self.request.POST
@@ -206,12 +214,6 @@ class WorkspaceIssueCreateView(LoginAndWorkspaceRequiredMixin, WorkspaceIssueVie
         return self.form_invalid(form)
 
     def form_valid(self, form):
-        try:
-            check_work_item_limit(self.workspace)
-        except LimitExceededError as e:
-            messages.error(self.request, str(e))
-            return self.form_invalid(form)
-
         obj = form.save(commit=False)
         obj.created_by = self.request.user
         obj.key = obj._generate_unique_key()
@@ -311,6 +313,10 @@ class IssueDetailView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, IssueSingl
             # Needed for inline editing to show severity field for bugs
             context["is_bug"] = isinstance(issue, Bug)
 
+        context["other_projects_exist"] = (
+            Project.objects.for_workspace(self.workspace).exclude(pk=self.project.pk).exists()
+        )
+
         return context
 
 
@@ -365,18 +371,14 @@ class IssueCreateView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, IssueFormM
     def get_initial(self):
         initial = super().get_initial()
         initial["project"] = self.project
-        # Pre-set parent from query parameter if provided
         if self.parent_preset:
             initial["parent"] = self.parent_preset
+        model_class = ISSUE_TYPE_MODEL_MAP.get(self.kwargs.get("issue_type", "story"))
+        defaults = get_issue_creation_defaults(model_class, self.project, self.request.workspace_members)
+        initial.update(defaults)
         return initial
 
     def form_valid(self, form):
-        try:
-            check_work_item_limit(self.workspace)
-        except LimitExceededError as e:
-            messages.error(self.request, str(e))
-            return self.form_invalid(form)
-
         # Use preset parent if available, otherwise get from form
         parent = self.parent_preset or form.cleaned_data.get("parent")
 
@@ -560,21 +562,6 @@ class IssueCloneView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View):
     """Clone an existing issue."""
 
     def post(self, request, *args, **kwargs):
-        try:
-            check_work_item_limit(self.workspace)
-        except LimitExceededError as e:
-            messages.error(request, str(e))
-            return redirect(
-                reverse(
-                    "issues:issue_detail",
-                    kwargs={
-                        "workspace_slug": kwargs["workspace_slug"],
-                        "project_key": kwargs["project_key"],
-                        "key": kwargs["key"],
-                    },
-                )
-            )
-
         original = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["key"])
         parent = original.get_parent_issue()
 
@@ -938,10 +925,15 @@ class EpicIssueCreateView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View):
     def get_form_class(self):
         return get_form_class_for_type(self.issue_type)
 
+    def get_initial(self):
+        model_class = ISSUE_TYPE_MODEL_MAP.get(self.issue_type)
+        return get_issue_creation_defaults(model_class, self.project, self.request.workspace_members)
+
     def get_form_kwargs(self):
         kwargs = {
             "project": self.project,
             "workspace_members": self.request.workspace_members,
+            "initial": self.get_initial(),
         }
         if self.request.method == "POST":
             kwargs["data"] = self.request.POST

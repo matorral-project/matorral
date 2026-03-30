@@ -16,6 +16,14 @@
            @click.prevent>[{% translate "Edit" %}]</a>
       </div>
       <h1 class="mt-title">{{ milestone.title }}</h1>
+      <div class="mt-0.5 ml-0.5 flex gap-1 no-edit">
+        <span class="text-sm text-gray-400">{% translate "Project:" %}</span>
+        <a href="{{ milestone.project.get_absolute_url }}"
+           hx-get="{{ milestone.project.get_absolute_url }}"
+           hx-push-url="true"
+           hx-target="#page-content"
+           class="text-sm link link-primary">{{ milestone.project.key }} - {{ milestone.project.name }}</a>
+      </div>
     </div>
     <div class="flex items-center gap-3 no-edit">
       {% if progress %}
@@ -37,12 +45,32 @@
         <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square">
           <i class="fa fa-ellipsis-vertical"></i>
         </div>
-        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-32 p-2 shadow">
+        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+          <li>
+            <button type="button"
+                    hx-get="{% url 'milestones:milestone_detail_inline_edit' workspace.slug milestone.project.key milestone.key %}"
+                    hx-target="#milestone-header"
+                    hx-swap="outerHTML"
+                    @click="document.activeElement.blur()">
+              <i class="fa fa-pen"></i> {% translate "Edit" %}
+            </button>
+          </li>
           <li>
             <button type="button" @click="$refs.cloneForm.submit()">
               <i class="fa fa-clone"></i> {% translate "Clone" %}
             </button>
           </li>
+          {% if other_projects_exist %}
+          <li>
+            <button type="button"
+                    hx-get="{% url 'milestones:milestone_move_to_project' workspace.slug milestone.project.key milestone.key %}"
+                    hx-target="#move-to-project-modal-content"
+                    hx-swap="innerHTML"
+                    @click="showMoveToProjectModal = true; document.activeElement.blur()">
+              <i class="fa fa-arrow-right-arrow-left"></i> {% translate "Move to Project" %}
+            </button>
+          </li>
+          {% endif %}
           <li>
             <button type="button" class="text-error"
                     hx-get="{% url 'milestones:milestone_delete' workspace.slug milestone.project.key milestone.key %}"
@@ -99,13 +127,6 @@
     <div>
       <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Status" %}</h3>
       {% include "issues/includes/issue_status_badge.html" with status=milestone.status status_display=milestone.get_status_display %}
-    </div>
-    <div class="no-edit">
-      <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Project" %}</h3>
-      <a href="{{ milestone.project.get_absolute_url }}" class="text-sm link link-primary"
-         hx-get="{{ milestone.project.get_absolute_url }}" hx-push-url="true" hx-target="#page-content">
-        {{ milestone.project.name }}
-      </a>
     </div>
     <div class="no-edit">
       <h3 class="font-semibold mb-1 text-sm text-gray-500">{% translate "Creator" %}</h3>
