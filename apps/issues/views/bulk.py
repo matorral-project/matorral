@@ -647,20 +647,8 @@ class WorkspaceIssueBulkMilestoneView(WorkspaceBulkActionMixin, LoginAndWorkspac
         # Batch-load tree parents for audit log old values
         epic_qs = Epic.objects.filter(pk__in=selected_pks).select_related("polymorphic_ctype")
         objects = list(epic_qs)
-        steplen = BaseIssue.steplen
-        parent_paths = {e.path[:-steplen] for e in objects if len(e.path) > steplen}
-        parents_by_path = {}
-        if parent_paths:
-            for m in Milestone.objects.filter(path__in=parent_paths):
-                parents_by_path[m.path] = m
-        old_values = {
-            obj.pk: (
-                str(parents_by_path[obj.path[:-steplen]])
-                if parents_by_path.get(obj.path[:-steplen] if len(obj.path) > steplen else "")
-                else None
-            )
-            for obj in objects
-        }
+        parents_by_pk = BaseIssue.batch_load_parents(objects)
+        old_values = {obj.pk: str(parents_by_pk[obj.pk]) if parents_by_pk.get(obj.pk) else None for obj in objects}
         new_display = str(milestone) if milestone else None
 
         # Move each epic in the tree (one move per epic)

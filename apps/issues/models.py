@@ -285,6 +285,21 @@ class BaseIssue(MP_Node, PolymorphicModel):
     def get_priority_choices(cls):
         return IssuePriority.choices
 
+    @classmethod
+    def batch_load_parents(cls, issues: list) -> dict:
+        """Return a dict mapping issue.pk -> parent instance for a list of issues.
+
+        Fetches all parents in a single query. Issues without a parent are omitted.
+        """
+        steplen = cls.steplen
+        parent_paths = {i.path[:-steplen] for i in issues if len(i.path) > steplen}
+        if not parent_paths:
+            return {}
+        parents = {node.path: node for node in cls.objects.filter(path__in=parent_paths)}
+        return {
+            i.pk: parents[i.path[:-steplen]] for i in issues if len(i.path) > steplen and i.path[:-steplen] in parents
+        }
+
 
 @auditlog.register(
     include_fields=[
