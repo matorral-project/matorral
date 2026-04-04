@@ -6,7 +6,6 @@ from apps.issues.models import BaseIssue, IssueStatus
 from apps.projects.models import Project
 from apps.sprints.models import Sprint
 from apps.users.models import User
-from apps.utils.progress import build_progress_dict
 
 from allauth.account.models import EmailAddress
 
@@ -60,20 +59,8 @@ def get_user_dashboard_data(user, workspace):
 
     sprint_progress = None
     if active_sprint:
-        # Calculate progress using database-level annotation (following sprint view pattern)
-        annotated_issues = base_qs.with_progress().first()
-        if annotated_issues:
-            total = getattr(annotated_issues, "total_estimated_points", 0) or 0
-            if total:
-                done = getattr(annotated_issues, "total_done_points", 0) or 0
-                in_progress = getattr(annotated_issues, "total_in_progress_points", 0) or 0
-                todo = getattr(annotated_issues, "total_todo_points", 0) or 0
-
-                sprint_progress = build_progress_dict(done, in_progress, todo, total)
-            else:
-                sprint_progress = None
-        else:
-            sprint_progress = None
+        annotated_issue = base_qs.with_progress().first()
+        sprint_progress = annotated_issue.get_progress() if annotated_issue else None
 
     return {
         "active_sprint": active_sprint,

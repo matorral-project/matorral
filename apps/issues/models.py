@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from apps.issues.managers import IssueManager, KeyNumber
+from apps.utils.progress import build_progress_dict
 
 from auditlog.registry import auditlog
 from polymorphic.models import PolymorphicModel
@@ -265,6 +266,20 @@ class BaseIssue(MP_Node, PolymorphicModel):
             BaseIssue.objects.filter(pk=issue.pk).update(key=new_key)
 
         self.refresh_from_db()
+
+    def get_progress(self):
+        """Return progress dict from annotated weights. Requires with_progress() on queryset."""
+
+        total = getattr(self, "total_estimated_points", 0) or 0
+        if not total:
+            return None
+
+        return build_progress_dict(
+            getattr(self, "total_done_points", 0) or 0,
+            getattr(self, "total_in_progress_points", 0) or 0,
+            getattr(self, "total_todo_points", 0) or 0,
+            total,
+        )
 
     @classmethod
     def get_priority_choices(cls):

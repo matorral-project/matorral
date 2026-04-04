@@ -16,7 +16,7 @@ from apps.issues.views.mixins import WORK_ITEM_TYPE_CHOICES, IssueListContextMix
 from apps.sprints.forms import SprintDetailInlineEditForm, SprintForm, SprintRowInlineEditForm
 from apps.sprints.models import Sprint, SprintStatus
 from apps.sprints.views.mixins import SprintFormMixin, SprintListContextMixin, SprintSingleObjectMixin, SprintViewMixin
-from apps.utils.progress import build_progress_dict, calculate_progress
+from apps.utils.progress import calculate_progress
 from apps.workspaces.helpers import clear_onboarding_session_cache
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
@@ -77,14 +77,7 @@ class SprintListView(SprintViewMixin, SprintListContextMixin, LoginAndWorkspaceR
 
         # Build progress dicts from the annotated weights
         for sprint in context["sprints"]:
-            total = getattr(sprint, "total_estimated_points", 0) or 0
-            if total:
-                done = getattr(sprint, "total_done_points", 0) or 0
-                in_progress = getattr(sprint, "total_in_progress_points", 0) or 0
-                todo = getattr(sprint, "total_todo_points", 0) or 0
-                sprint.progress = build_progress_dict(done, in_progress, todo, total)
-            else:
-                sprint.progress = None
+            sprint.progress = sprint.get_progress()
 
         return context
 
@@ -111,15 +104,7 @@ class SprintDetailView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSi
         if sprint.status == SprintStatus.ACTIVE:
             sprint.completed_points = sprint.computed_completed_points
 
-        # Build progress from annotated weights
-        total = getattr(sprint, "total_estimated_points", 0) or 0
-        if total:
-            done = getattr(sprint, "total_done_points", 0) or 0
-            in_progress = getattr(sprint, "total_in_progress_points", 0) or 0
-            todo = getattr(sprint, "total_todo_points", 0) or 0
-            context["progress"] = build_progress_dict(done, in_progress, todo, total)
-        else:
-            context["progress"] = None
+        context["progress"] = sprint.get_progress()
 
         # Count items and total points from annotations
         context["item_count"] = BaseIssue.objects.for_sprint(sprint).count()
