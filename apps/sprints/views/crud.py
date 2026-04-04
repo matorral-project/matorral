@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 from django.conf import settings
 from django.contrib import messages
 from django.http import HttpResponse
@@ -161,46 +159,7 @@ class SprintCreateView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintFo
         return redirect(self.object.get_absolute_url())
 
     def get_initial(self):
-        initial = super().get_initial()
-
-        # If only one workspace member, auto-select as owner
-        workspace_members = self.request.workspace_members
-        if workspace_members is not None and len(workspace_members) == 1:
-            initial["owner"] = workspace_members[0].pk
-
-        # Fetch latest sprint for owner/capacity defaults and potentially dates
-        try:
-            latest_sprint = (
-                Sprint.objects.for_workspace(self.workspace)
-                .values("owner_id", "capacity", "status", "end_date")
-                .latest("created_at")
-            )
-
-            # Preset owner from latest sprint (only if multiple members and owner was set)
-            if "owner" not in initial and latest_sprint["owner_id"]:
-                initial["owner"] = latest_sprint["owner_id"]
-
-            # Preset capacity from latest sprint
-            if latest_sprint["capacity"]:
-                initial["capacity"] = latest_sprint["capacity"]
-
-            # Preset dates from latest completed sprint
-            if latest_sprint["status"] == SprintStatus.COMPLETED:
-                initial["start_date"] = latest_sprint["end_date"]
-                initial["end_date"] = latest_sprint["end_date"] + timedelta(days=7)
-            else:
-                try:
-                    latest_completed = (
-                        Sprint.objects.for_workspace(self.workspace).completed().values("end_date").latest("end_date")
-                    )
-                    initial["start_date"] = latest_completed["end_date"]
-                    initial["end_date"] = latest_completed["end_date"] + timedelta(days=7)
-                except Sprint.DoesNotExist:
-                    pass
-        except Sprint.DoesNotExist:
-            pass
-
-        return initial
+        return Sprint.objects.get_creation_defaults(self.workspace, self.request.workspace_members)
 
 
 class SprintUpdateView(
