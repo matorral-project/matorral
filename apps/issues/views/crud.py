@@ -28,7 +28,7 @@ from apps.issues.helpers import (
 from apps.issues.models import BaseIssue, Bug, BugSeverity, Epic, IssuePriority, IssueStatus, Subtask
 from apps.issues.services import IssueConversionError, PromotionError, convert_issue_type, promote_to_epic
 from apps.projects.models import Project
-from apps.sprints.models import Sprint, SprintStatus
+from apps.sprints.models import Sprint
 from apps.utils.progress import build_progress_dict
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
@@ -900,11 +900,7 @@ class EpicIssueListEmbedView(LoginAndWorkspaceRequiredMixin, IssueListContextMix
             )
         )
         # Get available sprints for bulk add-to-sprint action
-        context["available_sprints"] = (
-            Sprint.objects.for_workspace(self.workspace)
-            .filter(status__in=[SprintStatus.PLANNING, SprintStatus.ACTIVE])
-            .order_by("-status", "-start_date")
-        )
+        context["available_sprints"] = Sprint.objects.for_workspace(self.workspace).available()
         if self.group_by:
             context["grouped_issues"] = build_grouped_issues(context["issues"], self.group_by)
         if context.get("is_paginated"):

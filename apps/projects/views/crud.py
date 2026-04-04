@@ -30,7 +30,7 @@ from apps.issues.views.mixins import (
     WORK_ITEM_TYPE_CHOICES,
     IssueListContextMixin,
 )
-from apps.sprints.models import Sprint, SprintStatus
+from apps.sprints.models import Sprint
 from apps.utils.filters import build_filter_section, count_active_filters, get_status_filter_label, parse_status_filter
 from apps.utils.progress import build_progress_dict
 from apps.workspaces.helpers import clear_onboarding_session_cache
@@ -899,11 +899,7 @@ class ProjectOrphanIssuesEmbedView(
                 type_filter_choices=WORK_ITEM_TYPE_CHOICES,
             )
         )
-        context["available_sprints"] = (
-            Sprint.objects.for_workspace(self.workspace)
-            .filter(status__in=[SprintStatus.PLANNING, SprintStatus.ACTIVE])
-            .order_by("-status", "-start_date")
-        )
+        context["available_sprints"] = Sprint.objects.for_workspace(self.workspace).available()
         if self.group_by:
             context["grouped_issues"] = build_grouped_issues(context["issues"], self.group_by)
         if context.get("is_paginated"):

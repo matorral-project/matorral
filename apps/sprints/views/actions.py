@@ -251,11 +251,7 @@ class IssueAddToSprintView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, View
             )
 
         # Get available sprints (planning or active only)
-        sprints = list(
-            Sprint.objects.for_workspace(self.workspace)
-            .filter(status__in=[SprintStatus.PLANNING, SprintStatus.ACTIVE])
-            .order_by("-status", "-start_date")
-        )
+        sprints = list(Sprint.objects.for_workspace(self.workspace).available())
 
         # Determine the sprint to pre-select: current sprint > active sprint > first sprint
         if issue.sprint:

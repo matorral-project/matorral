@@ -26,7 +26,7 @@ from apps.issues.helpers import (
 from apps.issues.models import BaseIssue, Epic, IssuePriority, IssueStatus, Milestone
 from apps.issues.views.mixins import ISSUE_TYPE_CHOICES, ISSUE_TYPE_MODEL_MAP
 from apps.projects.models import Project
-from apps.sprints.models import Sprint, SprintStatus
+from apps.sprints.models import Sprint
 from apps.utils.models import AuditLog
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
@@ -225,11 +225,7 @@ class MilestoneIssueListEmbedView(MilestoneViewMixin, LoginAndWorkspaceRequiredM
                 type_filter_choices=WORK_ITEM_TYPE_CHOICES,
             )
         )
-        context["available_sprints"] = (
-            Sprint.objects.for_workspace(self.workspace)
-            .filter(status__in=[SprintStatus.PLANNING, SprintStatus.ACTIVE])
-            .order_by("-status", "-start_date")
-        )
+        context["available_sprints"] = Sprint.objects.for_workspace(self.workspace).available()
         if self.group_by:
             # Only include empty epic groups when there are no active filters
             has_active_filters = bool(

@@ -79,6 +79,12 @@ class SprintQuerySet(models.QuerySet):
         """Exclude archived sprints."""
         return self.exclude(status=self.model.status_model.ARCHIVED)
 
+    def available(self) -> SprintQuerySet:
+        """Sprints that can receive work items (planning or active), newest first."""
+        return self.filter(status__in=[self.model.status_model.PLANNING, self.model.status_model.ACTIVE]).order_by(
+            "-status", "-start_date"
+        )
+
     def search(self, query: str) -> SprintQuerySet:
         """Search sprints by name or key (case-insensitive)."""
         if not query:
