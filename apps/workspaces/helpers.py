@@ -160,13 +160,8 @@ def get_open_invitations_for_user(user: User) -> list[dict]:
     if not user_emails:
         return []
 
-    emails = {e.email for e in user_emails}
-    open_invitations = (
-        Invitation.objects.filter(email__in=list(emails), is_accepted=False)
-        .exclude(workspace__membership__user=user)
-        .values("id", "workspace__name", "email")
-    )
-    verified_emails = {email.email for email in user_emails if email.verified}
+    verified_emails = {e.email for e in user_emails if e.verified}
+    open_invitations = Invitation.objects.pending_for_user(user).values("id", "workspace__name", "email")
     return [
         {
             **inv,
