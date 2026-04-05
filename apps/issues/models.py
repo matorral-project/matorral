@@ -281,6 +281,22 @@ class BaseIssue(MP_Node, PolymorphicModel):
             total,
         )
 
+    def get_valid_parents(self):
+        """Return queryset of valid parent issues for this issue type."""
+        if isinstance(self, Epic):
+            return Epic.objects.none()
+
+        elif isinstance(self, (Story, Bug, Chore)):
+            return Epic.objects.for_project(self.project).exclude(pk=self.pk).ordered_by_key()
+
+        else:
+            return (
+                BaseIssue.objects.for_project(self.project)
+                .exclude(pk=self.pk)
+                .exclude(pk__in=self.get_descendants().values_list("pk", flat=True))
+                .ordered_by_key()
+            )
+
     @classmethod
     def get_priority_choices(cls):
         return IssuePriority.choices
