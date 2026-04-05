@@ -40,17 +40,7 @@ def create_default_workspace_for_user(user: User, workspace_name: str | None = N
 
 def get_user_dashboard_data(user, workspace):
     active_sprint = Sprint.objects.for_workspace(workspace).active().first()
-
-    if active_sprint:
-        base_qs = BaseIssue.objects.for_sprint(active_sprint).work_items().with_assignee(user).select_related("project")
-    else:
-        base_qs = (
-            BaseIssue.objects.for_workspace(workspace)
-            .work_items()
-            .with_assignee(user)
-            .active()
-            .select_related("project")
-        )
+    base_qs = BaseIssue.objects.for_user_dashboard(user, workspace).select_related("project")
 
     in_progress = list(base_qs.with_status(IssueStatus.IN_PROGRESS))
     in_review = list(base_qs.with_status(IssueStatus.IN_REVIEW))

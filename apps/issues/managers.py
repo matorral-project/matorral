@@ -161,6 +161,16 @@ class IssueQuerySet(MP_NodeQuerySet, PolymorphicQuerySet):
         """
         return self.annotate(key_number=KeyNumber("key")).order_by("key_number")
 
+    def for_user_dashboard(self, user: User, workspace: Workspace) -> IssueQuerySet:
+        """Return work items assigned to user in active sprint (or workspace if no sprint)."""
+        Sprint = apps.get_model("sprints", "Sprint")
+
+        try:
+            active_sprint = Sprint.objects.for_workspace(workspace).active().get()
+            return self.for_sprint(active_sprint).work_items().with_assignee(user)
+        except Sprint.DoesNotExist:
+            return self.for_workspace(workspace).work_items().with_assignee(user).active()
+
     def set_status(self, status: IssueStatus) -> int:
         """Bulk update status for all issues in queryset. Returns count of updated rows."""
         return self.update(status=status)
@@ -259,6 +269,9 @@ class IssueManager(PolymorphicManager):
 
     def work_items(self) -> IssueQuerySet:
         return self.get_queryset().work_items()
+
+    def for_user_dashboard(self, user: User, workspace: Workspace) -> IssueQuerySet:
+        return self.get_queryset().for_user_dashboard(user, workspace)
 
     def with_progress(self) -> IssueQuerySet:
         return self.get_queryset().with_progress()
