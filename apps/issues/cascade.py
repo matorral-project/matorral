@@ -459,35 +459,6 @@ def _check_cascade_up(obj, new_status):
 # ============================================================================
 
 
-def apply_cascade(
-    cascade_down_pks,
-    cascade_down_status,
-    cascade_down_model_type,
-    cascade_up_pk,
-    cascade_up_status,
-    cascade_up_model_type,
-    actor=None,
-):
-    """Apply cascade status changes.
-
-    Args:
-        cascade_down_pks: list of PKs to update for cascade DOWN
-        cascade_down_status: target status for cascade DOWN
-        cascade_down_model_type: 'issue', 'milestone', or 'project'
-        cascade_up_pk: PK of parent to update for cascade UP (or None)
-        cascade_up_status: target status for cascade UP
-        cascade_up_model_type: 'project', 'milestone', or 'issue'
-        actor: User performing the action
-    """
-    # Apply CASCADE DOWN
-    if cascade_down_pks and cascade_down_status:
-        _apply_cascade_down(cascade_down_pks, cascade_down_status, cascade_down_model_type, actor)
-
-    # Apply CASCADE UP
-    if cascade_up_pk and cascade_up_status:
-        _apply_cascade_up(cascade_up_pk, cascade_up_status, cascade_up_model_type, actor)
-
-
 def _apply_cascade_down(pks, target_status, model_type, actor):
     """Apply cascade DOWN: update children statuses."""
     status_choices = dict(IssueStatus.choices)

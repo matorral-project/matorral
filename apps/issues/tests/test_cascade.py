@@ -3,7 +3,8 @@
 from django.test import TestCase
 
 from apps.issues.cascade import (
-    apply_cascade,
+    _apply_cascade_down,
+    _apply_cascade_up,
     check_cascade_opportunities,
     get_children_for_cascade,
     get_parent_and_siblings,
@@ -445,15 +446,7 @@ class ApplyCascadeTest(TestCase):
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic, status=IssueStatus.DRAFT)
 
-        apply_cascade(
-            cascade_down_pks=[story.pk],
-            cascade_down_status=IssueStatus.DONE,
-            cascade_down_model_type="issue",
-            cascade_up_pk=None,
-            cascade_up_status="",
-            cascade_up_model_type="",
-            actor=self.actor,
-        )
+        _apply_cascade_down([story.pk], IssueStatus.DONE, "issue", self.actor)
 
         story.refresh_from_db()
         self.assertEqual(story.status, IssueStatus.DONE)
@@ -463,15 +456,7 @@ class ApplyCascadeTest(TestCase):
         story = StoryFactory(project=self.project, parent=epic)
         subtask = SubtaskFactory(parent=story, status=IssueStatus.DRAFT)
 
-        apply_cascade(
-            cascade_down_pks=[subtask.pk],
-            cascade_down_status=IssueStatus.DONE,
-            cascade_down_model_type="issue",
-            cascade_up_pk=None,
-            cascade_up_status="",
-            cascade_up_model_type="",
-            actor=self.actor,
-        )
+        _apply_cascade_down([subtask.pk], IssueStatus.DONE, "issue", self.actor)
 
         subtask.refresh_from_db()
         self.assertEqual(subtask.status, IssueStatus.DONE)
@@ -479,29 +464,13 @@ class ApplyCascadeTest(TestCase):
     def test_apply_cascade_down_milestones(self):
         milestone = MilestoneFactory(project=self.project, status=IssueStatus.DRAFT)
 
-        apply_cascade(
-            cascade_down_pks=[milestone.pk],
-            cascade_down_status=IssueStatus.DONE,
-            cascade_down_model_type="milestone",
-            cascade_up_pk=None,
-            cascade_up_status="",
-            cascade_up_model_type="",
-            actor=self.actor,
-        )
+        _apply_cascade_down([milestone.pk], IssueStatus.DONE, "milestone", self.actor)
 
         milestone.refresh_from_db()
         self.assertEqual(milestone.status, IssueStatus.DONE)
 
     def test_apply_cascade_up_project(self):
-        apply_cascade(
-            cascade_down_pks=[],
-            cascade_down_status="",
-            cascade_down_model_type="",
-            cascade_up_pk=self.project.pk,
-            cascade_up_status=ProjectStatus.COMPLETED,
-            cascade_up_model_type="project",
-            actor=self.actor,
-        )
+        _apply_cascade_up(self.project.pk, ProjectStatus.COMPLETED, "project", self.actor)
 
         self.project.refresh_from_db()
         self.assertEqual(self.project.status, ProjectStatus.COMPLETED)
@@ -509,15 +478,7 @@ class ApplyCascadeTest(TestCase):
     def test_apply_cascade_up_milestone(self):
         milestone = MilestoneFactory(project=self.project, status=IssueStatus.IN_PROGRESS)
 
-        apply_cascade(
-            cascade_down_pks=[],
-            cascade_down_status="",
-            cascade_down_model_type="",
-            cascade_up_pk=milestone.pk,
-            cascade_up_status=IssueStatus.DONE,
-            cascade_up_model_type="milestone",
-            actor=self.actor,
-        )
+        _apply_cascade_up(milestone.pk, IssueStatus.DONE, "milestone", self.actor)
 
         milestone.refresh_from_db()
         self.assertEqual(milestone.status, IssueStatus.DONE)
@@ -525,15 +486,7 @@ class ApplyCascadeTest(TestCase):
     def test_apply_cascade_up_issue(self):
         epic = EpicFactory(project=self.project, status=IssueStatus.IN_PROGRESS)
 
-        apply_cascade(
-            cascade_down_pks=[],
-            cascade_down_status="",
-            cascade_down_model_type="",
-            cascade_up_pk=epic.pk,
-            cascade_up_status=IssueStatus.DONE,
-            cascade_up_model_type="issue",
-            actor=self.actor,
-        )
+        _apply_cascade_up(epic.pk, IssueStatus.DONE, "issue", self.actor)
 
         epic.refresh_from_db()
         self.assertEqual(epic.status, IssueStatus.DONE)
@@ -543,15 +496,8 @@ class ApplyCascadeTest(TestCase):
         story = StoryFactory(project=self.project, parent=epic, status=IssueStatus.DRAFT)
         milestone = MilestoneFactory(project=self.project, status=IssueStatus.IN_PROGRESS)
 
-        apply_cascade(
-            cascade_down_pks=[story.pk],
-            cascade_down_status=IssueStatus.DONE,
-            cascade_down_model_type="issue",
-            cascade_up_pk=milestone.pk,
-            cascade_up_status=IssueStatus.DONE,
-            cascade_up_model_type="milestone",
-            actor=self.actor,
-        )
+        _apply_cascade_down([story.pk], IssueStatus.DONE, "issue", self.actor)
+        _apply_cascade_up(milestone.pk, IssueStatus.DONE, "milestone", self.actor)
 
         story.refresh_from_db()
         milestone.refresh_from_db()
@@ -563,15 +509,7 @@ class ApplyCascadeTest(TestCase):
         milestone = MilestoneFactory(project=self.project, status=IssueStatus.DRAFT)
         orphan_epic = EpicFactory(project=self.project, status=IssueStatus.DRAFT)
 
-        apply_cascade(
-            cascade_down_pks=[milestone.pk, orphan_epic.pk],
-            cascade_down_status=IssueStatus.DONE,
-            cascade_down_model_type="issue",
-            cascade_up_pk=None,
-            cascade_up_status="",
-            cascade_up_model_type="",
-            actor=self.actor,
-        )
+        _apply_cascade_down([milestone.pk, orphan_epic.pk], IssueStatus.DONE, "issue", self.actor)
 
         milestone.refresh_from_db()
         orphan_epic.refresh_from_db()
