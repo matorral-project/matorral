@@ -118,19 +118,17 @@ class SprintAddIssuesView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, Sprin
 
     def get_unassigned_issues(self, search_query: str = ""):
         """Get work items in workspace not assigned to any sprint (excludes archived and done)."""
-        # Get active work items without a sprint assignment
-        unassigned = []
-        for model in [Story, Bug, Chore]:
-            qs = (
-                model.objects.filter(project__workspace=self.workspace, sprint__isnull=True)
-                .exclude(status__in=[IssueStatus.ARCHIVED, IssueStatus.DONE])
-                .select_related("project", "assignee")
-            )
-            if search_query:
-                qs = qs.filter(title__icontains=search_query) | qs.filter(key__icontains=search_query)
-            unassigned.extend(qs[:50])  # Limit results
+        qs = (
+            BaseIssue.objects.for_workspace(self.workspace)
+            .backlog()
+            .exclude(status__in=[IssueStatus.ARCHIVED, IssueStatus.DONE])
+            .select_related("project", "assignee")
+        )
 
-        return unassigned
+        if search_query:
+            qs = qs.filter(title__icontains=search_query) | qs.filter(key__icontains=search_query)
+
+        return qs[:50]
 
     def get(self, request, *args, **kwargs):
         search_query = request.GET.get("search", "").strip()
