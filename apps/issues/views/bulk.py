@@ -699,12 +699,7 @@ class WorkspaceIssueBulkDeletePreviewView(WorkspaceBulkActionMixin, LoginAndWork
         selected_keys = list(selected_queryset.values_list("key", flat=True))
         selected_count = len(selected_keys)
 
-        # Compute cascade counts
-        list(selected_queryset.values_list("pk", flat=True))
-        descendant_ids = []
-        for issue in selected_queryset:
-            descendant_ids.extend(issue.get_descendants().values_list("pk", flat=True))
-        descendant_count = len(descendant_ids)
+        descendant_count = BaseIssue.get_bulk_cascade_count(selected_queryset)
 
         # Determine context: embed type, checkbox name, hx-target, hx-indicator
         embed_value = request.POST.get("embed", "")

@@ -297,6 +297,19 @@ class BaseIssue(MP_Node, PolymorphicModel):
                 .ordered_by_key()
             )
 
+    def get_cascade_count(self):
+        """Return count of all descendants that would be deleted with this issue."""
+        return self.get_descendants().count()
+
+    @classmethod
+    def get_bulk_cascade_count(cls, queryset):
+        """Return total descendant count for a set of issues."""
+        count = 0
+        for issue in queryset:
+            count += issue.get_descendants().count()
+
+        return count
+
     @classmethod
     def get_priority_choices(cls):
         return IssuePriority.choices
