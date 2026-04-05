@@ -13,15 +13,7 @@
     </h1>
     <form method="post" action="" novalidate>
       {% csrf_token %}
-      {% if form.non_field_errors %}
-      <div class="alert alert-error mb-4">
-        <ul class="list-disc list-inside">
-          {% for error in form.non_field_errors %}
-          <li>{{ error }}</li>
-          {% endfor %}
-        </ul>
-      </div>
-      {% endif %}
+      {% include "includes/non_field_errors.html" %}
       {% render_form_fields form %}
       <div class="flex gap-2 mt-4">
         <button type="submit" class="btn btn-primary">

@@ -10,6 +10,7 @@
       hx-target="#new-epic-modal-content"
       hx-swap="innerHTML">
   {% csrf_token %}
+  {% include "includes/non_field_errors.html" %}
   {% render_form_fields form %}
   <div class="modal-action mt-4">
     <button type="button" class="btn btn-ghost" @click="showNewEpicModal = false">
