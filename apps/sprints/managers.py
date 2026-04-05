@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from django.apps import apps
 from django.db import models
-from django.db.models import Case, IntegerField, OuterRef, Subquery, Sum, Value, When
+from django.db.models import Case, Exists, IntegerField, OuterRef, Subquery, Sum, Value, When
 from django.db.models.functions import Coalesce
 
 if TYPE_CHECKING:
@@ -94,17 +94,33 @@ class SprintQuerySet(models.QuerySet):
             .order_by("status_order", "-start_date")
         )
 
-    def latest_active_or_completed(self) -> Sprint | None:
-        """Return the most recent active or completed sprint."""
-        return (
-            self.filter(status__in=[self.model.status_model.ACTIVE, self.model.status_model.COMPLETED])
-            .order_by("-end_date")
-            .first()
-        )
-
     def has_next_planning(self, after_date) -> bool:
         """Check if a planning sprint exists after the given date."""
         return self.filter(start_date__gt=after_date, status=self.model.status_model.PLANNING).exists()
+
+    def needing_next_sprint(self) -> SprintQuerySet:
+        """Return the latest active/completed sprint per workspace that has no planning sprint after it.
+
+        A sprint qualifies if:
+        - It is active or completed
+        - No other active/completed sprint for the same workspace has a later end_date
+        - No planning sprint for the same workspace starts after this sprint's end_date
+        """
+        has_later_active_or_completed = self.model.objects.filter(
+            workspace_id=OuterRef("workspace_id"),
+            status__in=[self.model.status_model.ACTIVE, self.model.status_model.COMPLETED],
+            end_date__gt=OuterRef("end_date"),
+        )
+        has_planning_after = self.model.objects.filter(
+            workspace_id=OuterRef("workspace_id"),
+            status=self.model.status_model.PLANNING,
+            start_date__gt=OuterRef("end_date"),
+        )
+        return (
+            self.filter(status__in=[self.model.status_model.ACTIVE, self.model.status_model.COMPLETED])
+            .exclude(Exists(has_later_active_or_completed))
+            .exclude(Exists(has_planning_after))
+        )
 
     def search(self, query: str) -> SprintQuerySet:
         """Search sprints by name or key (case-insensitive)."""
@@ -188,6 +204,9 @@ class SprintManager(models.Manager):
 
     def for_workspace(self, workspace: Workspace) -> SprintQuerySet:
         return self.get_queryset().for_workspace(workspace)
+
+    def needing_next_sprint(self) -> SprintQuerySet:
+        return self.get_queryset().needing_next_sprint()
 
     def create_next_from(self, previous: Sprint) -> Sprint:
         """Create the next sprint based on a previous sprint's settings."""
