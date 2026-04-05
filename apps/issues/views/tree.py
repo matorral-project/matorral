@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import View
 
-from apps.issues.models import BaseIssue, Bug, Chore, Epic, Milestone, Story
+from apps.issues.models import BaseIssue, Bug, Chore, Epic, Story
 from apps.projects.models import Project
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
@@ -40,37 +40,17 @@ class IssueMoveView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View):
         """Return the modal content with valid parent options."""
         issue = get_object_or_404(BaseIssue.objects.for_project(self.project), key=kwargs["key"])
 
-        # Determine valid parents based on issue type
         grouped_parents = []
-        if isinstance(issue, Epic):
-            # Epics cannot be moved to have a parent
-            valid_parents = Epic.objects.none()
-        elif isinstance(issue, (Story, Bug, Chore)):
-            # Can only have Epic parents (excluding self)
-            valid_parents = (
-                Epic.objects.for_project(self.project)
-                .exclude(pk=issue.pk)
-                .select_related("project", "project__workspace")
-                .ordered_by_key()
-            )
+        valid_parents = issue.get_valid_parents().select_related("project", "project__workspace")
+
+        if isinstance(issue, (Story, Bug, Chore)):
             # Group epics by milestone parent (tree-based), milestones ordered by key asc, no-milestone last
             epics_list = list(valid_parents)
-            steplen = BaseIssue.steplen
-            parent_paths = {e.path[:-steplen] for e in epics_list if len(e.path) > steplen}
-            milestones_by_path = {}
-            if parent_paths:
-                for m in Milestone.objects.filter(path__in=parent_paths):
-                    milestones_by_path[m.path] = m
+            parents_by_pk = BaseIssue.batch_load_parents(epics_list)
 
             # Sort by milestone key, then orphans last
-            with_milestone = [
-                (milestones_by_path[e.path[:-steplen]], e)
-                for e in epics_list
-                if milestones_by_path.get(e.path[:-steplen])
-            ]
-            without_milestone = [
-                e for e in epics_list if not milestones_by_path.get(e.path[:-steplen] if len(e.path) > steplen else "")
-            ]
+            with_milestone = [(parents_by_pk[e.pk], e) for e in epics_list if parents_by_pk.get(e.pk)]
+            without_milestone = [e for e in epics_list if not parents_by_pk.get(e.pk)]
 
             with_milestone.sort(key=lambda pair: pair[0].key)
             for milestone, group in groupby(with_milestone, key=lambda pair: pair[0]):
@@ -78,15 +58,6 @@ class IssueMoveView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, View):
 
             if without_milestone:
                 grouped_parents.append((None, without_milestone))
-        else:
-            # Generic Issue can have any parent (excluding self and descendants)
-            valid_parents = (
-                BaseIssue.objects.for_project(self.project)
-                .exclude(pk=issue.pk)
-                .exclude(pk__in=issue.get_descendants().values_list("pk", flat=True))
-                .select_related("project", "project__workspace")
-                .ordered_by_key()
-            )
 
         move_url = reverse(
             "issues:issue_move",

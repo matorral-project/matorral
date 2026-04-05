@@ -1,10 +1,14 @@
+from datetime import timedelta
+
 from django.test import TestCase
+from django.utils import timezone
 
 from apps.issues.factories import BugFactory, ChoreFactory, StoryFactory
 from apps.issues.models import IssueStatus
 from apps.projects.factories import ProjectFactory
 from apps.sprints.factories import SprintFactory
-from apps.sprints.models import Sprint
+from apps.sprints.models import Sprint, SprintStatus
+from apps.workspaces.factories import WorkspaceFactory
 
 
 class WithCommittedPointsTest(TestCase):
@@ -91,3 +95,46 @@ class WithVelocityTest(TestCase):
         sprint = Sprint.objects.filter(pk=self.sprint.pk).with_velocity().get()
         self.assertEqual(sprint.computed_committed_points, 0)
         self.assertEqual(sprint.computed_completed_points, 0)
+
+
+class AvailableTest(TestCase):
+    """Tests for SprintQuerySet.available()."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.workspace = WorkspaceFactory()
+
+    def _keys(self, qs):
+        return list(qs.values_list("key", flat=True))
+
+    def test_excludes_completed_and_archived(self):
+        planning = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
+        SprintFactory(workspace=self.workspace, status=SprintStatus.COMPLETED)
+        SprintFactory(workspace=self.workspace, status=SprintStatus.ARCHIVED)
+
+        result = Sprint.objects.for_workspace(self.workspace).available()
+        self.assertEqual(self._keys(result), [planning.key])
+
+    def test_active_sprint_comes_before_planning(self):
+        planning = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
+        active = SprintFactory(workspace=self.workspace, status=SprintStatus.ACTIVE)
+
+        keys = self._keys(Sprint.objects.for_workspace(self.workspace).available())
+        self.assertEqual(keys, [active.key, planning.key])
+
+    def test_multiple_planning_sprints_ordered_by_start_date_desc(self):
+        today = timezone.now().date()
+        older = SprintFactory(
+            workspace=self.workspace, status=SprintStatus.PLANNING, start_date=today - timedelta(weeks=2)
+        )
+        newer = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING, start_date=today)
+
+        keys = self._keys(Sprint.objects.for_workspace(self.workspace).available())
+        self.assertEqual(keys, [newer.key, older.key])
+
+    def test_empty_when_no_available_sprints(self):
+        SprintFactory(workspace=self.workspace, status=SprintStatus.COMPLETED)
+        SprintFactory(workspace=self.workspace, status=SprintStatus.ARCHIVED)
+
+        result = Sprint.objects.for_workspace(self.workspace).available()
+        self.assertFalse(result.exists())

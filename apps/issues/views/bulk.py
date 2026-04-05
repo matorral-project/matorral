@@ -16,7 +16,7 @@ from apps.issues.helpers import (
 )
 from apps.issues.models import BaseIssue, Bug, Chore, Epic, IssuePriority, IssueStatus, Milestone, Story
 from apps.projects.models import Project
-from apps.sprints.models import Sprint, SprintStatus
+from apps.sprints.models import Sprint
 from apps.utils.filters import count_active_filters, get_status_filter_label, parse_status_filter
 from apps.utils.models import AuditLog
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
@@ -298,11 +298,7 @@ class WorkspaceBulkActionMixin(IssueListContextMixin, WorkspaceIssueViewMixin):
             epic = get_object_or_404(Epic.objects.for_project(project), key=epic_filter)
             context["epic"] = epic
             context["project"] = project
-            context["available_sprints"] = (
-                Sprint.objects.for_workspace(self.workspace)
-                .filter(status__in=[SprintStatus.PLANNING, SprintStatus.ACTIVE])
-                .order_by("-status", "-start_date")
-            )
+            context["available_sprints"] = Sprint.objects.for_workspace(self.workspace).available()
             # Build group-by choices for epic context: exclude "epic", add "sprint"
             epic_group_by_choices = [
                 ("sprint", _("Sprint")),
@@ -327,11 +323,7 @@ class WorkspaceBulkActionMixin(IssueListContextMixin, WorkspaceIssueViewMixin):
             milestone = get_object_or_404(Milestone.objects.for_project(project), key=milestone_filter)
             context["milestone"] = milestone
             context["project"] = project
-            context["available_sprints"] = (
-                Sprint.objects.for_workspace(self.workspace)
-                .filter(status__in=[SprintStatus.PLANNING, SprintStatus.ACTIVE])
-                .order_by("-status", "-start_date")
-            )
+            context["available_sprints"] = Sprint.objects.for_workspace(self.workspace).available()
             # Rebuild grouped_issues with milestone context for epic grouping
             if group_by and "grouped_issues" in context:
                 context["grouped_issues"] = build_grouped_issues(
@@ -352,11 +344,7 @@ class WorkspaceBulkActionMixin(IssueListContextMixin, WorkspaceIssueViewMixin):
             project = get_object_or_404(Project.objects.for_workspace(self.workspace), key=project_filter)
             context["project"] = project
             context["project_orphan"] = True
-            context["available_sprints"] = (
-                Sprint.objects.for_workspace(self.workspace)
-                .filter(status__in=[SprintStatus.PLANNING, SprintStatus.ACTIVE])
-                .order_by("-status", "-start_date")
-            )
+            context["available_sprints"] = Sprint.objects.for_workspace(self.workspace).available()
             context["embed_url"] = reverse(
                 "projects:project_orphan_issues_embed",
                 kwargs={
@@ -559,14 +547,7 @@ class WorkspaceIssueBulkAddToSprintView(WorkspaceBulkActionMixin, LoginAndWorksp
             self.form.is_valid()
             return self.render_response(self.form.cleaned_data.get("page", 1))
 
-        self.sprint = (
-            Sprint.objects.for_workspace(self.workspace)
-            .filter(
-                status__in=[SprintStatus.PLANNING, SprintStatus.ACTIVE],
-                key=self.sprint_key,
-            )
-            .first()
-        )
+        self.sprint = Sprint.objects.for_workspace(self.workspace).available().filter(key=self.sprint_key).first()
         if not self.sprint:
             messages.error(request, _("Invalid sprint."))
             self.form = self.get_form()
@@ -666,20 +647,8 @@ class WorkspaceIssueBulkMilestoneView(WorkspaceBulkActionMixin, LoginAndWorkspac
         # Batch-load tree parents for audit log old values
         epic_qs = Epic.objects.filter(pk__in=selected_pks).select_related("polymorphic_ctype")
         objects = list(epic_qs)
-        steplen = BaseIssue.steplen
-        parent_paths = {e.path[:-steplen] for e in objects if len(e.path) > steplen}
-        parents_by_path = {}
-        if parent_paths:
-            for m in Milestone.objects.filter(path__in=parent_paths):
-                parents_by_path[m.path] = m
-        old_values = {
-            obj.pk: (
-                str(parents_by_path[obj.path[:-steplen]])
-                if parents_by_path.get(obj.path[:-steplen] if len(obj.path) > steplen else "")
-                else None
-            )
-            for obj in objects
-        }
+        parents_by_pk = BaseIssue.batch_load_parents(objects)
+        old_values = {obj.pk: str(parents_by_pk[obj.pk]) if parents_by_pk.get(obj.pk) else None for obj in objects}
         new_display = str(milestone) if milestone else None
 
         # Move each epic in the tree (one move per epic)
@@ -730,12 +699,7 @@ class WorkspaceIssueBulkDeletePreviewView(WorkspaceBulkActionMixin, LoginAndWork
         selected_keys = list(selected_queryset.values_list("key", flat=True))
         selected_count = len(selected_keys)
 
-        # Compute cascade counts
-        list(selected_queryset.values_list("pk", flat=True))
-        descendant_ids = []
-        for issue in selected_queryset:
-            descendant_ids.extend(issue.get_descendants().values_list("pk", flat=True))
-        descendant_count = len(descendant_ids)
+        descendant_count = BaseIssue.get_bulk_cascade_count(selected_queryset)
 
         # Determine context: embed type, checkbox name, hx-target, hx-indicator
         embed_value = request.POST.get("embed", "")

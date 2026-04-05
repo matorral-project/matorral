@@ -97,14 +97,9 @@ def build_grouped_epics_by_milestone(epics, project, include_empty_milestones: b
         progress (dict|None)
     """
     epics = list(epics)
-    steplen = models.BaseIssue.steplen
 
     # Batch-load parent milestones to avoid N+1 queries
-    parent_paths = {e.path[:-steplen] for e in epics if len(e.path) > steplen}
-    milestones_by_path = {}
-    if parent_paths:
-        for m in models.Milestone.objects.filter(path__in=parent_paths):
-            milestones_by_path[m.path] = m
+    parents_by_pk = models.BaseIssue.batch_load_parents(epics)
 
     grouped = OrderedDict()
 
@@ -122,9 +117,7 @@ def build_grouped_epics_by_milestone(epics, project, include_empty_milestones: b
 
     # Group epics by tree parent milestone
     for epic in epics:
-        parent_milestone = None
-        if len(epic.path) > steplen:
-            parent_milestone = milestones_by_path.get(epic.path[:-steplen])
+        parent_milestone = parents_by_pk.get(epic.pk)
 
         if parent_milestone:
             group_name = f"[{parent_milestone.key}] {parent_milestone.title}"

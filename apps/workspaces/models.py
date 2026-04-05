@@ -14,7 +14,7 @@ from waffle.utils import get_cache, keyfmt
 
 from . import roles as workspace_roles
 from .context import EmptyWorkspaceContextException, get_current_workspace
-from .managers import WorkspaceQuerySet
+from .managers import InvitationQuerySet, WorkspaceQuerySet
 from matorral.context_processors import get_root
 
 
@@ -138,6 +138,8 @@ class Invitation(BaseModel):
         null=True,
         blank=True,
     )
+
+    objects = InvitationQuerySet.as_manager()
 
     def get_url(self) -> str:
         return get_root() + reverse("workspaces:accept_invitation", args=[self.id])

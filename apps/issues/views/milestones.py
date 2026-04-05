@@ -26,9 +26,8 @@ from apps.issues.helpers import (
 from apps.issues.models import BaseIssue, Epic, IssuePriority, IssueStatus, Milestone
 from apps.issues.views.mixins import ISSUE_TYPE_CHOICES, ISSUE_TYPE_MODEL_MAP
 from apps.projects.models import Project
-from apps.sprints.models import Sprint, SprintStatus
+from apps.sprints.models import Sprint
 from apps.utils.models import AuditLog
-from apps.utils.progress import build_progress_dict
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
 from django_htmx.http import HttpResponseClientRedirect
@@ -128,16 +127,7 @@ class MilestoneDetailView(
         context = super().get_context_data(**kwargs)
         context["page_title"] = f"[{self.object.key}] {self.object.title}"
 
-        total = self.object.total_estimated_points
-        if total > 0:
-            context["progress"] = build_progress_dict(
-                self.object.total_done_points,
-                self.object.total_in_progress_points,
-                self.object.total_todo_points,
-                total,
-            )
-        else:
-            context["progress"] = None
+        context["progress"] = self.object.get_progress()
 
         context["other_projects_exist"] = (
             Project.objects.for_workspace(self.workspace).exclude(pk=self.project.pk).exists()
@@ -235,11 +225,7 @@ class MilestoneIssueListEmbedView(MilestoneViewMixin, LoginAndWorkspaceRequiredM
                 type_filter_choices=WORK_ITEM_TYPE_CHOICES,
             )
         )
-        context["available_sprints"] = (
-            Sprint.objects.for_workspace(self.workspace)
-            .filter(status__in=[SprintStatus.PLANNING, SprintStatus.ACTIVE])
-            .order_by("-status", "-start_date")
-        )
+        context["available_sprints"] = Sprint.objects.for_workspace(self.workspace).available()
         if self.group_by:
             # Only include empty epic groups when there are no active filters
             has_active_filters = bool(

@@ -10,6 +10,7 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.sprints.managers import SprintManager
 from apps.utils.models import BaseModel
+from apps.utils.progress import build_progress_dict
 from apps.workspaces.models import Workspace
 
 from auditlog.registry import auditlog
@@ -212,3 +213,17 @@ class Sprint(BaseModel):
         self.committed_points = sprint_items.aggregate(total=Sum("estimated_points"))["total"] or 0
         self.completed_points = sprint_items.done().aggregate(total=Sum("estimated_points"))["total"] or 0
         self.save(update_fields=["committed_points", "completed_points", "updated_at"])
+
+    def get_progress(self):
+        """Return progress dict from annotated weights. Requires with_progress() on queryset."""
+
+        total = getattr(self, "total_estimated_points", 0) or 0
+        if not total:
+            return None
+
+        return build_progress_dict(
+            getattr(self, "total_done_points", 0) or 0,
+            getattr(self, "total_in_progress_points", 0) or 0,
+            getattr(self, "total_todo_points", 0) or 0,
+            total,
+        )

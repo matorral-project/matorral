@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from apps.issues.managers import IssueManager, KeyNumber
+from apps.utils.progress import build_progress_dict
 
 from auditlog.registry import auditlog
 from polymorphic.models import PolymorphicModel
@@ -266,9 +267,67 @@ class BaseIssue(MP_Node, PolymorphicModel):
 
         self.refresh_from_db()
 
+    def get_progress(self):
+        """Return progress dict from annotated weights. Requires with_progress() on queryset."""
+
+        total = getattr(self, "total_estimated_points", 0) or 0
+        if not total:
+            return None
+
+        return build_progress_dict(
+            getattr(self, "total_done_points", 0) or 0,
+            getattr(self, "total_in_progress_points", 0) or 0,
+            getattr(self, "total_todo_points", 0) or 0,
+            total,
+        )
+
+    def get_valid_parents(self):
+        """Return queryset of valid parent issues for this issue type."""
+        if isinstance(self, Epic):
+            return Epic.objects.none()
+
+        elif isinstance(self, (Story, Bug, Chore)):
+            return Epic.objects.for_project(self.project).exclude(pk=self.pk).ordered_by_key()
+
+        else:
+            return (
+                BaseIssue.objects.for_project(self.project)
+                .exclude(pk=self.pk)
+                .exclude(pk__in=self.get_descendants().values_list("pk", flat=True))
+                .ordered_by_key()
+            )
+
+    def get_cascade_count(self):
+        """Return count of all descendants that would be deleted with this issue."""
+        return self.get_descendants().count()
+
+    @classmethod
+    def get_bulk_cascade_count(cls, queryset):
+        """Return total descendant count for a set of issues."""
+        count = 0
+        for issue in queryset:
+            count += issue.get_descendants().count()
+
+        return count
+
     @classmethod
     def get_priority_choices(cls):
         return IssuePriority.choices
+
+    @classmethod
+    def batch_load_parents(cls, issues: list) -> dict:
+        """Return a dict mapping issue.pk -> parent instance for a list of issues.
+
+        Fetches all parents in a single query. Issues without a parent are omitted.
+        """
+        steplen = cls.steplen
+        parent_paths = {i.path[:-steplen] for i in issues if len(i.path) > steplen}
+        if not parent_paths:
+            return {}
+        parents = {node.path: node for node in cls.objects.filter(path__in=parent_paths)}
+        return {
+            i.pk: parents[i.path[:-steplen]] for i in issues if len(i.path) > steplen and i.path[:-steplen] in parents
+        }
 
 
 @auditlog.register(

@@ -1,8 +1,9 @@
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from django.apps import apps
 from django.db import models
-from django.db.models import IntegerField, OuterRef, Subquery, Sum, Value
+from django.db.models import Case, IntegerField, OuterRef, Subquery, Sum, Value, When
 from django.db.models.functions import Coalesce
 
 if TYPE_CHECKING:
@@ -78,6 +79,32 @@ class SprintQuerySet(models.QuerySet):
     def not_archived(self) -> SprintQuerySet:
         """Exclude archived sprints."""
         return self.exclude(status=self.model.status_model.ARCHIVED)
+
+    def available(self) -> SprintQuerySet:
+        """Sprints that can receive work items (planning or active), active first then newest."""
+        return (
+            self.filter(status__in=[self.model.status_model.PLANNING, self.model.status_model.ACTIVE])
+            .annotate(
+                status_order=Case(
+                    When(status=self.model.status_model.ACTIVE, then=Value(0)),
+                    default=Value(1),
+                    output_field=IntegerField(),
+                )
+            )
+            .order_by("status_order", "-start_date")
+        )
+
+    def latest_active_or_completed(self) -> Sprint | None:
+        """Return the most recent active or completed sprint."""
+        return (
+            self.filter(status__in=[self.model.status_model.ACTIVE, self.model.status_model.COMPLETED])
+            .order_by("-end_date")
+            .first()
+        )
+
+    def has_next_planning(self, after_date) -> bool:
+        """Check if a planning sprint exists after the given date."""
+        return self.filter(start_date__gt=after_date, status=self.model.status_model.PLANNING).exists()
 
     def search(self, query: str) -> SprintQuerySet:
         """Search sprints by name or key (case-insensitive)."""
@@ -161,3 +188,52 @@ class SprintManager(models.Manager):
 
     def for_workspace(self, workspace: Workspace) -> SprintQuerySet:
         return self.get_queryset().for_workspace(workspace)
+
+    def create_next_from(self, previous: Sprint) -> Sprint:
+        """Create the next sprint based on a previous sprint's settings."""
+        duration = previous.end_date - previous.start_date
+        sprint = self.create(
+            workspace=previous.workspace,
+            name="",
+            start_date=previous.end_date + timedelta(days=1),
+            end_date=previous.end_date + timedelta(days=1) + duration,
+            status=self.model.status_model.PLANNING,
+            capacity=previous.capacity,
+        )
+        sprint_number = sprint.key.split("-")[-1]
+        sprint.name = f"Sprint #{sprint_number}"
+        sprint.save(update_fields=["name"])
+        return sprint
+
+    def get_creation_defaults(self, workspace: Workspace, workspace_members) -> dict:
+        """Return initial dict for sprint create form based on latest sprint data."""
+        initial = {}
+
+        if workspace_members is not None and len(workspace_members) == 1:
+            initial["owner"] = workspace_members[0].pk
+
+        try:
+            latest_sprint = (
+                self.for_workspace(workspace).values("owner_id", "capacity", "status", "end_date").latest("created_at")
+            )
+
+            if "owner" not in initial and latest_sprint["owner_id"]:
+                initial["owner"] = latest_sprint["owner_id"]
+
+            if latest_sprint["capacity"]:
+                initial["capacity"] = latest_sprint["capacity"]
+
+            if latest_sprint["status"] == self.model.status_model.COMPLETED:
+                initial["start_date"] = latest_sprint["end_date"]
+                initial["end_date"] = latest_sprint["end_date"] + timedelta(days=7)
+            else:
+                try:
+                    latest_completed = self.for_workspace(workspace).completed().values("end_date").latest("end_date")
+                    initial["start_date"] = latest_completed["end_date"]
+                    initial["end_date"] = latest_completed["end_date"] + timedelta(days=7)
+                except self.model.DoesNotExist:
+                    pass
+        except self.model.DoesNotExist:
+            pass
+
+        return initial

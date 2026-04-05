@@ -6,7 +6,6 @@ from apps.issues.models import BaseIssue, IssueStatus
 from apps.projects.models import Project
 from apps.sprints.models import Sprint
 from apps.users.models import User
-from apps.utils.progress import build_progress_dict
 
 from allauth.account.models import EmailAddress
 
@@ -41,17 +40,7 @@ def create_default_workspace_for_user(user: User, workspace_name: str | None = N
 
 def get_user_dashboard_data(user, workspace):
     active_sprint = Sprint.objects.for_workspace(workspace).active().first()
-
-    if active_sprint:
-        base_qs = BaseIssue.objects.for_sprint(active_sprint).work_items().with_assignee(user).select_related("project")
-    else:
-        base_qs = (
-            BaseIssue.objects.for_workspace(workspace)
-            .work_items()
-            .with_assignee(user)
-            .active()
-            .select_related("project")
-        )
+    base_qs = BaseIssue.objects.for_user_dashboard(user, workspace).select_related("project")
 
     in_progress = list(base_qs.with_status(IssueStatus.IN_PROGRESS))
     in_review = list(base_qs.with_status(IssueStatus.IN_REVIEW))
@@ -60,20 +49,8 @@ def get_user_dashboard_data(user, workspace):
 
     sprint_progress = None
     if active_sprint:
-        # Calculate progress using database-level annotation (following sprint view pattern)
-        annotated_issues = base_qs.with_progress().first()
-        if annotated_issues:
-            total = getattr(annotated_issues, "total_estimated_points", 0) or 0
-            if total:
-                done = getattr(annotated_issues, "total_done_points", 0) or 0
-                in_progress = getattr(annotated_issues, "total_in_progress_points", 0) or 0
-                todo = getattr(annotated_issues, "total_todo_points", 0) or 0
-
-                sprint_progress = build_progress_dict(done, in_progress, todo, total)
-            else:
-                sprint_progress = None
-        else:
-            sprint_progress = None
+        annotated_issue = base_qs.with_progress().first()
+        sprint_progress = annotated_issue.get_progress() if annotated_issue else None
 
     return {
         "active_sprint": active_sprint,
@@ -173,13 +150,8 @@ def get_open_invitations_for_user(user: User) -> list[dict]:
     if not user_emails:
         return []
 
-    emails = {e.email for e in user_emails}
-    open_invitations = (
-        Invitation.objects.filter(email__in=list(emails), is_accepted=False)
-        .exclude(workspace__membership__user=user)
-        .values("id", "workspace__name", "email")
-    )
-    verified_emails = {email.email for email in user_emails if email.verified}
+    verified_emails = {e.email for e in user_emails if e.verified}
+    open_invitations = Invitation.objects.pending_for_user(user).values("id", "workspace__name", "email")
     return [
         {
             **inv,
