@@ -300,8 +300,7 @@ Always query the model you actually need, not intermediate models. Let Django's 
   ```
 - **Prefer simple JOINs over Subquery** unless you have a specific reason (like correlated subqueries or complex aggregations).
 
-- **Use `.get(...)` when the intention is to get only one object instead of `.filter(...).first()`**. Using `.get()` is
-  semantically more clear and more efficient.
+- `.first()` should only be used when genuinely wanting the first item of an ordered queryset. Using it to retrieve a specific object by unique identifiers (pk, key, unique combination) is semantically wrong: it silently returns None instead of raising on duplicates, and the result can change if default ordering changes. `.get()` with try/except `DoesNotExist` is the correct pattern for "find this specific object".
 
 ### URLs and Views
 

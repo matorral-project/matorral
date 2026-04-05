@@ -1040,7 +1040,10 @@ class IssueRowInlineEditView(LoginAndWorkspaceRequiredMixin, IssueViewMixin, Vie
         sprint = None
         sprint_key = request.GET.get("sprint")
         if sprint_key:
-            sprint = Sprint.objects.for_workspace(self.workspace).filter(key=sprint_key).first()
+            try:
+                sprint = Sprint.objects.for_workspace(self.workspace).get(key=sprint_key)
+            except Sprint.DoesNotExist:
+                sprint = None
 
         # Derive group_by from show_* params (for issue_row.html template)
         group_by = ""

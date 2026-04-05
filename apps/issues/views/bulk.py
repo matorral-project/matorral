@@ -547,7 +547,10 @@ class WorkspaceIssueBulkAddToSprintView(WorkspaceBulkActionMixin, LoginAndWorksp
             self.form.is_valid()
             return self.render_response(self.form.cleaned_data.get("page", 1))
 
-        self.sprint = Sprint.objects.for_workspace(self.workspace).available().filter(key=self.sprint_key).first()
+        try:
+            self.sprint = Sprint.objects.for_workspace(self.workspace).available().get(key=self.sprint_key)
+        except Sprint.DoesNotExist:
+            self.sprint = None
         if not self.sprint:
             messages.error(request, _("Invalid sprint."))
             self.form = self.get_form()
@@ -632,7 +635,10 @@ class WorkspaceIssueBulkMilestoneView(WorkspaceBulkActionMixin, LoginAndWorkspac
         project_key = self.request.POST.get("project_filter", "")
         self._project = None
         if project_key:
-            self._project = Project.objects.for_workspace(self.workspace).filter(key=project_key).first()
+            try:
+                self._project = Project.objects.for_workspace(self.workspace).get(key=project_key)
+            except Project.DoesNotExist:
+                self._project = None
         return {
             "data": self.request.POST,
             "queryset": self.get_queryset(),

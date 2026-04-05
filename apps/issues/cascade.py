@@ -505,7 +505,10 @@ def _apply_cascade_up(pk, target_status, model_type, actor):
     """Apply cascade UP: update parent status."""
     if model_type == "project":
         status_choices = dict(ProjectStatus.choices)
-        obj = Project.objects.filter(pk=pk).first()
+        try:
+            obj = Project.objects.get(pk=pk)
+        except Project.DoesNotExist:
+            obj = None
         if obj:
             old_display = status_choices.get(obj.status, obj.status)
             new_display = status_choices.get(target_status, target_status)
@@ -517,7 +520,10 @@ def _apply_cascade_up(pk, target_status, model_type, actor):
     else:
         # "milestone" and "issue" are both BaseIssue now
         status_choices = dict(IssueStatus.choices)
-        obj = BaseIssue.objects.filter(pk=pk).select_related("polymorphic_ctype").first()
+        try:
+            obj = BaseIssue.objects.select_related("polymorphic_ctype").get(pk=pk)
+        except BaseIssue.DoesNotExist:
+            obj = None
         if obj:
             old_display = status_choices.get(obj.status, obj.status)
             new_display = status_choices.get(target_status, target_status)
