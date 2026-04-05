@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from django.apps import apps
 from django.db import models
-from django.db.models import IntegerField, OuterRef, Subquery, Sum, Value
+from django.db.models import Case, IntegerField, OuterRef, Subquery, Sum, Value, When
 from django.db.models.functions import Coalesce
 
 if TYPE_CHECKING:
@@ -81,9 +81,17 @@ class SprintQuerySet(models.QuerySet):
         return self.exclude(status=self.model.status_model.ARCHIVED)
 
     def available(self) -> SprintQuerySet:
-        """Sprints that can receive work items (planning or active), newest first."""
-        return self.filter(status__in=[self.model.status_model.PLANNING, self.model.status_model.ACTIVE]).order_by(
-            "-status", "-start_date"
+        """Sprints that can receive work items (planning or active), active first then newest."""
+        return (
+            self.filter(status__in=[self.model.status_model.PLANNING, self.model.status_model.ACTIVE])
+            .annotate(
+                status_order=Case(
+                    When(status=self.model.status_model.ACTIVE, then=Value(0)),
+                    default=Value(1),
+                    output_field=IntegerField(),
+                )
+            )
+            .order_by("status_order", "-start_date")
         )
 
     def latest_active_or_completed(self) -> Sprint | None:
