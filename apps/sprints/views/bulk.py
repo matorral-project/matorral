@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.db import IntegrityError
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -129,43 +130,32 @@ class SprintBulkStatusView(SprintBulkActionMixin, LoginAndWorkspaceRequiredMixin
 
     def perform_action(self):
         selected_pks = list(self.get_selected_queryset().values_list("pk", flat=True))
-        selected_sprints = list(Sprint.objects.filter(pk__in=selected_pks))
 
-        # Special handling for "active" status
         if self.status == SprintStatus.ACTIVE:
-            if len(selected_sprints) > 1:
+            if len(selected_pks) > 1:
                 messages.error(
                     self.request,
                     _("Only one sprint can be active at a time. Please select a single sprint to activate."),
                 )
                 return self.form.cleaned_data["page"]
 
-            # For a single sprint, check if it can be started
-            sprint = selected_sprints[0]
-            if not sprint.can_start():
-                if sprint.status != SprintStatus.PLANNING:
-                    messages.error(
-                        self.request,
-                        _("Sprint '%(name)s' must be in Planning status to be started.") % {"name": sprint.name},
-                    )
-                else:
-                    messages.error(
-                        self.request,
-                        _("Cannot activate sprint '%(name)s'. Another sprint is already active in this workspace.")
-                        % {"name": sprint.name},
-                    )
-                return self.form.cleaned_data["page"]
+            sprint = Sprint.objects.for_workspace(self.workspace).with_committed_points().get(pk=selected_pks[0])
 
-            # Activate the single sprint using save() to trigger model validation
-            sprint.status = SprintStatus.ACTIVE
-            sprint.save()
-            messages.success(
-                self.request,
-                _("Sprint '%(name)s' is now active.") % {"name": sprint.name},
-            )
+            try:
+                sprint.start()
+                messages.success(
+                    self.request,
+                    _("Sprint '%(name)s' is now active.") % {"name": sprint.name},
+                )
+            except ValueError as exc:
+                messages.error(self.request, str(exc))
+            except IntegrityError:
+                messages.error(self.request, _("Another sprint is already active in this workspace."))
+
             return self.form.cleaned_data["page"]
 
         # For other statuses, we can use bulk update
+        selected_sprints = list(Sprint.objects.filter(pk__in=selected_pks))
         selected_qs = self.get_selected_queryset()
         status_choices = dict(SprintStatus.choices)
         old_values = {obj.pk: status_choices.get(obj.status, obj.status) for obj in selected_sprints}
