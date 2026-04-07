@@ -646,7 +646,10 @@ class ProjectEpicsEmbedView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Pr
                 # Orphan epics: depth=1 (no parent)
                 queryset = queryset.filter(depth=1)
             else:
-                milestone = Milestone.objects.for_project(self.project).filter(key=self.milestone_filter).first()
+                try:
+                    milestone = Milestone.objects.for_project(self.project).get(key=self.milestone_filter)
+                except Milestone.DoesNotExist:
+                    milestone = None
                 if milestone:
                     queryset = queryset.filter(path__startswith=milestone.path, depth=milestone.depth + 1)
                 else:
@@ -948,7 +951,10 @@ class ProjectEpicCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, Pr
         # Pre-select parent milestone if provided in query params
         milestone_key = request.GET.get("milestone")
         if milestone_key:
-            self.parent_milestone = Milestone.objects.for_project(self.project).filter(key=milestone_key).first()
+            try:
+                self.parent_milestone = Milestone.objects.for_project(self.project).get(key=milestone_key)
+            except Milestone.DoesNotExist:
+                self.parent_milestone = None
         else:
             self.parent_milestone = None
 
@@ -1066,7 +1072,10 @@ class ProjectIssueCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, P
         # Pre-select epic parent if provided in query params
         epic_key = request.GET.get("epic") or request.POST.get("epic")
         if epic_key:
-            self.epic = Epic.objects.for_project(self.project).filter(key=epic_key).first()
+            try:
+                self.epic = Epic.objects.for_project(self.project).get(key=epic_key)
+            except Epic.DoesNotExist:
+                self.epic = None
         else:
             self.epic = None
 

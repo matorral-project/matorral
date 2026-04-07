@@ -1,0 +1,39 @@
+{% load i18n %}
+<div x-data="{ open: true }"
+     x-show="open"
+     @keydown.escape.window="open = false"
+     class="modal modal-open"
+     role="dialog"
+     aria-modal="true">
+  <div class="modal-box">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-bold text-lg">{{ action.confirm_title }}</h3>
+      <button type="button" class="btn btn-sm btn-ghost btn-square" @click="open = false">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <p class="text-sm mb-4">{{ action.confirm_body }}</p>
+    {% if item_count > 0 %}
+    <div class="alert alert-info mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <div>
+        <p class="font-semibold">
+          {% blocktranslate count count=item_count %}{{ count }} issue will be unassigned from this sprint but not deleted.{% plural %}{{ count }} issues will be unassigned from this sprint but not deleted.{% endblocktranslate %}
+        </p>
+      </div>
+    </div>
+    {% endif %}
+    <div class="modal-action">
+      <button type="button" class="btn btn-ghost" @click="open = false">{% translate "Cancel" %}</button>
+      <form method="post" action="{{ post_url }}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">{% translate "Confirm" %}</button>
+      </form>
+    </div>
+  </div>
+  <div class="modal-backdrop" @click="open = false"></div>
+</div>

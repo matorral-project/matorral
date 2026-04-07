@@ -1,110 +1,50 @@
 from django.contrib import messages
-from django.db import IntegrityError
-from django.http import HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import View
+from django.views.generic.detail import SingleObjectMixin
 
-from apps.issues.models import BaseIssue, Bug, Chore, IssueStatus, Story
+from apps.issues.models import BaseIssue, IssueStatus
 from apps.sprints.models import Sprint, SprintStatus
+from apps.sprints.registry import sprint_actions
 from apps.sprints.views.mixins import SprintSingleObjectMixin, SprintViewMixin
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
 from django_htmx.http import HttpResponseClientRedirect
 
 
-class SprintStartView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSingleObjectMixin, View):
-    """Start a sprint (change status to active)."""
+class SprintActionMixin(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSingleObjectMixin, SingleObjectMixin):
+    """Shared lookup for action + sprint, with availability check."""
 
-    def post(self, request, *args, **kwargs):
-        sprint = get_object_or_404(
-            Sprint.objects.for_workspace(self.workspace).with_committed_points(),
-            key=kwargs["key"],
-        )
+    def get_action_and_sprint(self, action_name):
+        action = sprint_actions.get(action_name)
+        if action is None:
+            raise Http404
 
-        if not sprint.can_start():
-            if sprint.status != SprintStatus.PLANNING:
-                messages.error(request, _("Only sprints in planning status can be started."))
-            else:
-                messages.error(request, _("Another sprint is already active in this workspace."))
-            return redirect(sprint.get_absolute_url())
+        sprint = self.get_object()
 
-        # Capture committed points at sprint start
-        sprint.committed_points = sprint.computed_committed_points
-        sprint.status = SprintStatus.ACTIVE
+        if not action.is_available(sprint, self.request.user):
+            raise Http404
 
-        try:
-            sprint.save(update_fields=["status", "committed_points", "updated_at"])
-            messages.success(request, _("Sprint started successfully."))
-        except IntegrityError:
-            messages.error(request, _("Another sprint is already active in this workspace."))
-
-        return redirect(sprint.get_absolute_url())
+        return action, sprint
 
 
-class SprintCompleteView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSingleObjectMixin, View):
-    """Complete a sprint and optionally move incomplete issues to next sprint."""
+class SprintActionConfirmView(SprintActionMixin, View):
+    """GET — returns confirmation modal HTML for an action."""
 
-    def post(self, request, *args, **kwargs):
-        sprint = get_object_or_404(
-            Sprint.objects.for_workspace(self.workspace).with_completed_points(),
-            key=kwargs["key"],
-        )
-
-        if sprint.status != SprintStatus.ACTIVE:
-            messages.error(request, _("Only active sprints can be completed."))
-            return redirect(sprint.get_absolute_url())
-
-        # Capture completed points at sprint completion
-        sprint.completed_points = sprint.computed_completed_points
-        sprint.status = SprintStatus.COMPLETED
-        sprint.save(update_fields=["status", "completed_points", "updated_at"])
-
-        # Move incomplete issues to next sprint if available
-        next_sprint = sprint.get_next_sprint()
-        moved_count = 0
-        if next_sprint:
-            incomplete_statuses = [
-                IssueStatus.DRAFT,
-                IssueStatus.PLANNING,
-                IssueStatus.READY,
-                IssueStatus.IN_PROGRESS,
-                IssueStatus.BLOCKED,
-            ]
-            for model in [Story, Bug, Chore]:
-                count = model.objects.filter(sprint=sprint, status__in=incomplete_statuses).update(sprint=next_sprint)
-                moved_count += count
-
-        if moved_count > 0:
-            messages.success(
-                request,
-                _("Sprint completed. %(count)d incomplete issue(s) moved to %(sprint)s.")
-                % {"count": moved_count, "sprint": next_sprint.name},
-            )
-        else:
-            messages.success(request, _("Sprint completed successfully."))
-
-        return redirect(sprint.get_absolute_url())
+    def get(self, request, action_name, **kwargs):
+        action, sprint = self.get_action_and_sprint(action_name)
+        return action.get_confirm_response(sprint, request)
 
 
-class SprintArchiveView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSingleObjectMixin, View):
-    """Archive a sprint (must not be active)."""
+class SprintActionView(SprintActionMixin, View):
+    """POST — executes a registered sprint action."""
 
-    def post(self, request, *args, **kwargs):
-        sprint = get_object_or_404(Sprint.objects.for_workspace(self.workspace), key=kwargs["key"])
-
-        if sprint.status == SprintStatus.ACTIVE:
-            messages.error(
-                request,
-                _("Active sprints cannot be archived. Complete the sprint first."),
-            )
-            return redirect(sprint.get_absolute_url())
-
-        sprint.status = SprintStatus.ARCHIVED
-        sprint.save(update_fields=["status", "updated_at"])
-        messages.success(request, _("Sprint archived successfully."))
-        return redirect(sprint.get_absolute_url())
+    def post(self, request, action_name, **kwargs):
+        action, sprint = self.get_action_and_sprint(action_name)
+        return action.execute(sprint, request)
 
 
 class SprintAddIssuesView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSingleObjectMixin, View):
@@ -118,19 +58,17 @@ class SprintAddIssuesView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, Sprin
 
     def get_unassigned_issues(self, search_query: str = ""):
         """Get work items in workspace not assigned to any sprint (excludes archived and done)."""
-        # Get active work items without a sprint assignment
-        unassigned = []
-        for model in [Story, Bug, Chore]:
-            qs = (
-                model.objects.filter(project__workspace=self.workspace, sprint__isnull=True)
-                .exclude(status__in=[IssueStatus.ARCHIVED, IssueStatus.DONE])
-                .select_related("project", "assignee")
-            )
-            if search_query:
-                qs = qs.filter(title__icontains=search_query) | qs.filter(key__icontains=search_query)
-            unassigned.extend(qs[:50])  # Limit results
+        qs = (
+            BaseIssue.objects.for_workspace(self.workspace)
+            .backlog()
+            .exclude(status__in=[IssueStatus.ARCHIVED, IssueStatus.DONE])
+            .select_related("project", "assignee")
+        )
 
-        return unassigned
+        if search_query:
+            qs = qs.filter(title__icontains=search_query) | qs.filter(key__icontains=search_query)
+
+        return qs[:50]
 
     def get(self, request, *args, **kwargs):
         search_query = request.GET.get("search", "").strip()
@@ -150,15 +88,7 @@ class SprintAddIssuesView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, Sprin
             messages.warning(request, _("No issues selected."))
             return redirect(self.sprint.get_absolute_url())
 
-        # Add issues to sprint
-        added_count = 0
-        for model in [Story, Bug, Chore]:
-            count = model.objects.filter(
-                project__workspace=self.workspace,
-                key__in=issue_keys,
-                sprint__isnull=True,
-            ).update(sprint=self.sprint)
-            added_count += count
+        added_count = self.sprint.add_issues(issue_keys, self.workspace)
 
         if added_count > 0:
             messages.success(
@@ -190,13 +120,7 @@ class SprintRemoveIssueView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, Vie
         sprint = get_object_or_404(Sprint.objects.for_workspace(self.workspace), key=kwargs["key"])
         issue_key = kwargs["issue_key"]
 
-        # Find and update the issue
-        removed = False
-        for model in [Story, Bug, Chore]:
-            count = model.objects.filter(sprint=sprint, key=issue_key).update(sprint=None)
-            if count > 0:
-                removed = True
-                break
+        removed = sprint.remove_issue(issue_key)
 
         if removed:
             messages.success(request, _("Issue removed from sprint."))

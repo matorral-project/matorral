@@ -550,7 +550,10 @@ class MilestoneIssueCreateView(MilestoneViewMixin, LoginAndWorkspaceRequiredMixi
         parent_key = request.GET.get("parent")
         self.parent = None
         if parent_key:
-            self.parent = BaseIssue.objects.for_project(self.project).filter(key=parent_key).first()
+            try:
+                self.parent = BaseIssue.objects.for_project(self.project).get(key=parent_key)
+            except BaseIssue.DoesNotExist:
+                self.parent = None
 
     def get_form_class(self):
         return get_form_class_for_type(self.issue_type)

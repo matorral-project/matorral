@@ -4,7 +4,6 @@ from django.test import TestCase
 
 from apps.projects.factories import ProjectFactory
 from apps.sprints.factories import SprintFactory
-from apps.sprints.models import SprintStatus
 from apps.users.factories import UserFactory
 from apps.workspaces.factories import InvitationFactory, MembershipFactory, WorkspaceFactory
 from apps.workspaces.helpers import (
@@ -226,7 +225,7 @@ class TestGetUserDashboardData(TestCase):
         self.assertIsNone(result["sprint_progress"])
 
     def test_returns_active_sprint_when_one_exists(self):
-        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.ACTIVE)
+        sprint = SprintFactory(workspace=self.workspace, active=True)
         result = get_user_dashboard_data(self.user, self.workspace)
         self.assertEqual(result["active_sprint"], sprint)
 

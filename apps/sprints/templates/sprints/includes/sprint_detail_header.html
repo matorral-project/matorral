@@ -2,7 +2,7 @@
 {# Display mode for sprint detail header - click on editable areas triggers edit mode #}
 <div id="sprint-header"
      class="sprint-detail-header"
-     x-data="{ showCompleteModal: false, showArchiveModal: false, expanded: localStorage.getItem('sprint_{{ sprint.pk }}_expanded') !== 'false' }"
+     x-data="{ expanded: localStorage.getItem('sprint_{{ sprint.pk }}_expanded') !== 'false' }"
      @click="if ($event.target.closest('.no-edit') === null && !$event.target.closest('a') && !$event.target.closest('button') && !$event.target.closest('.dropdown') && !$event.target.closest('.modal')) { htmx.ajax('GET', '{% url 'sprints:sprint_detail_inline_edit' workspace.slug sprint.key %}', { target: '#sprint-header', swap: 'outerHTML' }) }">
   <div class="flex justify-between items-center mb-4">
     <div class="cursor-pointer group flex-1">
@@ -23,21 +23,15 @@
       </div>
       {% endif %}
       {% include "sprints/includes/sprint_status_badge.html" with status=sprint.status status_display=sprint.get_status_display %}
-      {# Action buttons based on status #}
-      {% if sprint.status == "planning" %}
-      <form action="{% url 'sprints:sprint_start' workspace.slug sprint.key %}" method="post">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-sm btn-primary">
-          <i class="fa fa-play mr-1"></i>
-          {% translate "Start Sprint" %}
-        </button>
-      </form>
-      {% elif sprint.status == "active" %}
-      <button type="button" class="btn btn-sm btn-success" @click="showCompleteModal = true">
-        <i class="fa fa-check mr-1"></i>
-        {% translate "Complete Sprint" %}
+      {# Primary action buttons #}
+      {% for action in primary_actions %}
+      <button type="button"
+              hx-get="{{ action.confirm_url }}"
+              hx-target="#modal-container"
+              class="btn btn-sm {{ action.css_class }}">
+        {{ action.label }}
       </button>
-      {% endif %}
+      {% endfor %}
       <button type="button"
               class="btn btn-sm btn-ghost btn-square"
               @click.stop="expanded = !expanded; localStorage.setItem('sprint_{{ sprint.pk }}_expanded', expanded)"
@@ -58,58 +52,20 @@
               <i class="fa fa-pen"></i> {% translate "Edit" %}
             </button>
           </li>
-          {% if sprint.status != "archived" and sprint.status != "active" %}
+          {# Menu actions (Archive, Delete, etc.) #}
+          {% for action in menu_actions %}
           <li>
-            <button type="button" @click="showArchiveModal = true; document.activeElement.blur()">
-              <i class="fa fa-archive"></i> {% translate "Archive" %}
+            <button type="button"
+                    {% if action.name == "delete" %}class="text-error"{% endif %}
+                    hx-get="{{ action.confirm_url }}"
+                    hx-target="#modal-container"
+                    @click="document.activeElement.blur()">
+              <i class="fa fa-{{ action.icon }}"></i> {{ action.label }}
             </button>
           </li>
-          {% endif %}
-          <li>
-            <button type="button" class="text-error"
-                    hx-get="{% url 'sprints:sprint_delete' workspace.slug sprint.key %}"
-                    hx-target="#detail-delete-modal-content"
-                    hx-swap="innerHTML"
-                    @click="showDeleteModal = true; document.activeElement.blur()">
-              <i class="fa fa-trash"></i> {% translate "Delete" %}
-            </button>
-          </li>
+          {% endfor %}
         </ul>
       </div>
-    </div>
-    {# Complete Sprint Modal #}
-    <div class="modal" :class="{ 'modal-open': showCompleteModal }" @keydown.escape="showCompleteModal = false" role="dialog" aria-modal="true" aria-labelledby="complete-sprint-modal-title">
-      <div class="modal-box">
-        <h3 id="complete-sprint-modal-title" class="font-bold text-lg mb-4">{% translate "Complete Sprint" %}</h3>
-        <p class="text-sm mb-4">
-          {% blocktranslate %}Are you sure you want to complete this sprint? Incomplete issues will be moved to the next planning sprint if available.{% endblocktranslate %}
-        </p>
-        <div class="modal-action">
-          <button class="btn btn-ghost" @click="showCompleteModal = false">{% translate "Cancel" %}</button>
-          <form action="{% url 'sprints:sprint_complete' workspace.slug sprint.key %}" method="post">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-success">{% translate "Complete Sprint" %}</button>
-          </form>
-        </div>
-      </div>
-      <div class="modal-backdrop" @click="showCompleteModal = false"></div>
-    </div>
-    {# Archive Sprint Modal #}
-    <div class="modal" :class="{ 'modal-open': showArchiveModal }" @keydown.escape="showArchiveModal = false" role="dialog" aria-modal="true" aria-labelledby="archive-sprint-modal-title">
-      <div class="modal-box">
-        <h3 id="archive-sprint-modal-title" class="font-bold text-lg mb-4">{% translate "Archive Sprint" %}</h3>
-        <p class="text-sm mb-4">
-          {% blocktranslate %}Are you sure you want to archive this sprint?{% endblocktranslate %}
-        </p>
-        <div class="modal-action">
-          <button class="btn btn-ghost" @click="showArchiveModal = false">{% translate "Cancel" %}</button>
-          <form action="{% url 'sprints:sprint_archive' workspace.slug sprint.key %}" method="post">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-primary">{% translate "Archive" %}</button>
-          </form>
-        </div>
-      </div>
-      <div class="modal-backdrop" @click="showArchiveModal = false"></div>
     </div>
   </div>
 

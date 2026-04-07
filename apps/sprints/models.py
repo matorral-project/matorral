@@ -1,4 +1,5 @@
 import re
+from functools import cached_property
 
 from django.apps import apps
 from django.contrib.auth import get_user_model
@@ -196,6 +197,98 @@ class Sprint(BaseModel):
             return False
         return not Sprint.objects.for_workspace(self.workspace).active().exclude(pk=self.pk).exists()
 
+    def start(self):
+        """Start this sprint: validate, capture committed points, set active.
+
+        Requires .with_committed_points() annotation on the queryset.
+        Raises ValueError if sprint cannot be started.
+        Lets IntegrityError propagate (DB constraint on concurrent activation).
+        """
+        if self.status != SprintStatus.PLANNING:
+            raise ValueError("Only sprints in planning status can be started.")
+
+        if not self.can_start():
+            raise ValueError("Another sprint is already active in this workspace.")
+
+        self.committed_points = self.computed_committed_points
+        self.status = SprintStatus.ACTIVE
+        self.save(update_fields=["status", "committed_points", "updated_at"])
+
+    def complete(self) -> tuple[int, Sprint | None]:
+        """Complete sprint, capture points, roll incomplete items to next sprint.
+
+        Requires .with_completed_points() annotation.
+        Returns (moved_count, next_sprint).
+        Raises ValueError if not active.
+        """
+        if self.status != SprintStatus.ACTIVE:
+            raise ValueError("Only active sprints can be completed.")
+
+        self.completed_points = self.computed_completed_points
+        self.status = SprintStatus.COMPLETED
+        self.save(update_fields=["status", "completed_points", "updated_at"])
+
+        next_sprint = self.get_next_sprint()
+        moved_count = 0
+
+        if next_sprint:
+            Story = apps.get_model("issues", "Story")
+            Bug = apps.get_model("issues", "Bug")
+            Chore = apps.get_model("issues", "Chore")
+            BaseIssue = apps.get_model("issues", "BaseIssue")
+
+            IssueStatus = BaseIssue.status_model
+            incomplete_statuses = [
+                IssueStatus.DRAFT,
+                IssueStatus.PLANNING,
+                IssueStatus.READY,
+                IssueStatus.IN_PROGRESS,
+                IssueStatus.BLOCKED,
+            ]
+            for model in [Story, Bug, Chore]:
+                count = model.objects.filter(sprint=self, status__in=incomplete_statuses).update(sprint=next_sprint)
+                moved_count += count
+
+        return moved_count, next_sprint
+
+    def archive(self):
+        """Archive this sprint. Raises ValueError if currently active."""
+        if self.status == SprintStatus.ACTIVE:
+            raise ValueError("Active sprints cannot be archived. Complete the sprint first.")
+
+        self.status = SprintStatus.ARCHIVED
+        self.save(update_fields=["status", "updated_at"])
+
+    def add_issues(self, issue_keys, workspace) -> int:
+        """Add unassigned work items to this sprint by key. Returns count added."""
+        Story = apps.get_model("issues", "Story")
+        Bug = apps.get_model("issues", "Bug")
+        Chore = apps.get_model("issues", "Chore")
+
+        added_count = 0
+        for model in [Story, Bug, Chore]:
+            count = model.objects.filter(
+                project__workspace=workspace,
+                key__in=issue_keys,
+                sprint__isnull=True,
+            ).update(sprint=self)
+            added_count += count
+
+        return added_count
+
+    def remove_issue(self, issue_key) -> bool:
+        """Remove a work item from this sprint by key. Returns True if found."""
+        Story = apps.get_model("issues", "Story")
+        Bug = apps.get_model("issues", "Bug")
+        Chore = apps.get_model("issues", "Chore")
+
+        for model in [Story, Bug, Chore]:
+            count = model.objects.filter(sprint=self, key=issue_key).update(sprint=None)
+            if count > 0:
+                return True
+
+        return False
+
     def get_next_sprint(self):
         """Find the next planning sprint for issue rollover."""
         return (
@@ -214,9 +307,12 @@ class Sprint(BaseModel):
         self.completed_points = sprint_items.done().aggregate(total=Sum("estimated_points"))["total"] or 0
         self.save(update_fields=["committed_points", "completed_points", "updated_at"])
 
-    def get_progress(self):
-        """Return progress dict from annotated weights. Requires with_progress() on queryset."""
+    @cached_property
+    def progress(self):
+        """Progress dict from annotated weights. Requires with_progress() on queryset."""
+        return self._build_progress()
 
+    def _build_progress(self):
         total = getattr(self, "total_estimated_points", 0) or 0
         if not total:
             return None

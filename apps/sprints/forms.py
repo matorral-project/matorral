@@ -195,7 +195,7 @@ class SprintDetailInlineEditForm(SprintRowInlineEditForm):
     )
 
     def clean_goal(self):
-        goal = self.cleaned_data.get("goal")
-        if goal:
-            goal = goal.strip()
-        return goal
+        try:
+            return self.cleaned_data.get("goal").strip()
+        except AttributeError:
+            return ""

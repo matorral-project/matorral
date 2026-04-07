@@ -151,7 +151,10 @@ def accept_invitation(request, invitation_id):
     owned_email_address = None
     user_workspace_count = 0
     if request.user.is_authenticated:
-        owned_email_address = EmailAddress.objects.filter(email=invitation.email, user=request.user).first()
+        try:
+            owned_email_address = EmailAddress.objects.get(email=invitation.email, user=request.user)
+        except EmailAddress.DoesNotExist:
+            owned_email_address = None
         user_workspace_count = request.user.workspaces.count()
     return render(
         request,
@@ -195,7 +198,10 @@ class SignupAfterInvite(SignupView):
     def form_valid(self, form):
         response = super().form_valid(form)
         if settings.ACCOUNT_EMAIL_VERIFICATION != "none" and hasattr(self, "user") and self.invitation:
-            email_address = EmailAddress.objects.filter(user=self.user, email=self.invitation.email).first()
+            try:
+                email_address = EmailAddress.objects.get(user=self.user, email=self.invitation.email)
+            except EmailAddress.DoesNotExist:
+                email_address = None
             if email_address:
                 email_address.set_verified(commit=True)
         return response

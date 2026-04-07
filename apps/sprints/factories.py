@@ -14,6 +14,13 @@ class SprintFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Sprint
 
+    class Params:
+        active = factory.Trait(
+            status=SprintStatus.ACTIVE,
+            start_date=factory.LazyFunction(lambda: timezone.now().date() - timedelta(weeks=2)),
+            end_date=factory.LazyFunction(lambda: timezone.now().date()),
+        )
+
     workspace = factory.SubFactory(WorkspaceFactory)
     name = factory.Sequence(lambda n: f"Sprint {n}")
     key = ""  # Let the model auto-generate

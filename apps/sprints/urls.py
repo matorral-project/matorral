@@ -25,14 +25,17 @@ workspace_urlpatterns = [
         name="sprint_detail_inline_edit",
     ),
     path("<str:key>/edit/", views.SprintUpdateView.as_view(), name="sprint_update"),
-    path("<str:key>/delete/", views.SprintDeleteView.as_view(), name="sprint_delete"),
-    path("<str:key>/start/", views.SprintStartView.as_view(), name="sprint_start"),
+    # Action dispatch
     path(
-        "<str:key>/complete/",
-        views.SprintCompleteView.as_view(),
-        name="sprint_complete",
+        "<str:key>/action/<str:action_name>/confirm/",
+        views.SprintActionConfirmView.as_view(),
+        name="sprint_action_confirm",
     ),
-    path("<str:key>/archive/", views.SprintArchiveView.as_view(), name="sprint_archive"),
+    path(
+        "<str:key>/action/<str:action_name>/",
+        views.SprintActionView.as_view(),
+        name="sprint_action",
+    ),
     # Embedded issue list and add issues modal
     path(
         "<str:key>/issues/",
