@@ -23,20 +23,11 @@ class SprintStartView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSin
             key=kwargs["key"],
         )
 
-        if not sprint.can_start():
-            if sprint.status != SprintStatus.PLANNING:
-                messages.error(request, _("Only sprints in planning status can be started."))
-            else:
-                messages.error(request, _("Another sprint is already active in this workspace."))
-            return redirect(sprint.get_absolute_url())
-
-        # Capture committed points at sprint start
-        sprint.committed_points = sprint.computed_committed_points
-        sprint.status = SprintStatus.ACTIVE
-
         try:
-            sprint.save(update_fields=["status", "committed_points", "updated_at"])
+            sprint.start()
             messages.success(request, _("Sprint started successfully."))
+        except ValueError as exc:
+            messages.error(request, str(exc))
         except IntegrityError:
             messages.error(request, _("Another sprint is already active in this workspace."))
 

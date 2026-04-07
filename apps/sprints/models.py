@@ -196,6 +196,23 @@ class Sprint(BaseModel):
             return False
         return not Sprint.objects.for_workspace(self.workspace).active().exclude(pk=self.pk).exists()
 
+    def start(self):
+        """Start this sprint: validate, capture committed points, set active.
+
+        Requires .with_committed_points() annotation on the queryset.
+        Raises ValueError if sprint cannot be started.
+        Lets IntegrityError propagate (DB constraint on concurrent activation).
+        """
+        if self.status != SprintStatus.PLANNING:
+            raise ValueError("Only sprints in planning status can be started.")
+
+        if not self.can_start():
+            raise ValueError("Another sprint is already active in this workspace.")
+
+        self.committed_points = self.computed_committed_points
+        self.status = SprintStatus.ACTIVE
+        self.save(update_fields=["status", "committed_points", "updated_at"])
+
     def get_next_sprint(self):
         """Find the next planning sprint for issue rollover."""
         return (
