@@ -67,16 +67,12 @@ class SprintArchiveView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintS
     def post(self, request, *args, **kwargs):
         sprint = get_object_or_404(Sprint.objects.for_workspace(self.workspace), key=kwargs["key"])
 
-        if sprint.status == SprintStatus.ACTIVE:
-            messages.error(
-                request,
-                _("Active sprints cannot be archived. Complete the sprint first."),
-            )
-            return redirect(sprint.get_absolute_url())
+        try:
+            sprint.archive()
+            messages.success(request, _("Sprint archived successfully."))
+        except ValueError as exc:
+            messages.error(request, str(exc))
 
-        sprint.status = SprintStatus.ARCHIVED
-        sprint.save(update_fields=["status", "updated_at"])
-        messages.success(request, _("Sprint archived successfully."))
         return redirect(sprint.get_absolute_url())
 
 

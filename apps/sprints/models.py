@@ -250,6 +250,14 @@ class Sprint(BaseModel):
 
         return moved_count, next_sprint
 
+    def archive(self):
+        """Archive this sprint. Raises ValueError if currently active."""
+        if self.status == SprintStatus.ACTIVE:
+            raise ValueError("Active sprints cannot be archived. Complete the sprint first.")
+
+        self.status = SprintStatus.ARCHIVED
+        self.save(update_fields=["status", "updated_at"])
+
     def get_next_sprint(self):
         """Find the next planning sprint for issue rollover."""
         return (

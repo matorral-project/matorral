@@ -122,3 +122,31 @@ class SprintCompleteTest(TestCase):
         self.assertEqual(moved_count, 0)
         self.assertEqual(returned_next.pk, next_sprint.pk)
         self.assertEqual(Story.objects.filter(sprint=sprint).count(), 1)
+
+
+class SprintArchiveTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.workspace = WorkspaceFactory()
+
+    def test_archive_completed_sprint(self):
+        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.COMPLETED)
+
+        sprint.archive()
+
+        sprint.refresh_from_db()
+        self.assertEqual(sprint.status, SprintStatus.ARCHIVED)
+
+    def test_archive_planning_sprint(self):
+        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
+
+        sprint.archive()
+
+        sprint.refresh_from_db()
+        self.assertEqual(sprint.status, SprintStatus.ARCHIVED)
+
+    def test_archive_raises_when_active(self):
+        sprint = SprintFactory(workspace=self.workspace, active=True)
+
+        with self.assertRaises(ValueError):
+            sprint.archive()
