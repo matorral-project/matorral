@@ -1,4 +1,5 @@
 import re
+from functools import cached_property
 
 from django.apps import apps
 from django.contrib.auth import get_user_model
@@ -306,9 +307,12 @@ class Sprint(BaseModel):
         self.completed_points = sprint_items.done().aggregate(total=Sum("estimated_points"))["total"] or 0
         self.save(update_fields=["committed_points", "completed_points", "updated_at"])
 
-    def get_progress(self):
-        """Return progress dict from annotated weights. Requires with_progress() on queryset."""
+    @cached_property
+    def progress(self):
+        """Progress dict from annotated weights. Requires with_progress() on queryset."""
+        return self._build_progress()
 
+    def _build_progress(self):
         total = getattr(self, "total_estimated_points", 0) or 0
         if not total:
             return None

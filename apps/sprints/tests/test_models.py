@@ -191,6 +191,33 @@ class SprintAddIssuesTest(TestCase):
         self.assertEqual(count, 2)
 
 
+class SprintProgressPropertyTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.workspace = WorkspaceFactory()
+        cls.project = ProjectFactory(workspace=cls.workspace)
+
+    def test_progress_property_returns_dict_when_annotated(self):
+        sprint = SprintFactory(workspace=self.workspace)
+        StoryFactory(project=self.project, sprint=sprint, estimated_points=5, status=IssueStatus.DONE)
+        StoryFactory(project=self.project, sprint=sprint, estimated_points=3, status=IssueStatus.IN_PROGRESS)
+
+        sprint = Sprint.objects.for_workspace(self.workspace).with_progress().get(pk=sprint.pk)
+
+        result = sprint.progress
+
+        self.assertIsNotNone(result)
+        self.assertIn("done_pct", result)
+        self.assertIn("in_progress_pct", result)
+        self.assertIn("todo_pct", result)
+
+    def test_progress_property_returns_none_when_no_points(self):
+        sprint = SprintFactory(workspace=self.workspace)
+        sprint = Sprint.objects.for_workspace(self.workspace).with_progress().get(pk=sprint.pk)
+
+        self.assertIsNone(sprint.progress)
+
+
 class SprintRemoveIssueTest(TestCase):
     @classmethod
     def setUpTestData(cls):

@@ -73,10 +73,6 @@ class SprintListView(SprintViewMixin, SprintListContextMixin, LoginAndWorkspaceR
                 context["page_obj"].number, on_each_side=2, on_ends=1
             )
 
-        # Build progress dicts from the annotated weights
-        for sprint in context["sprints"]:
-            sprint.progress = sprint.get_progress()
-
         return context
 
 
@@ -102,7 +98,7 @@ class SprintDetailView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSi
         if sprint.status == SprintStatus.ACTIVE:
             sprint.completed_points = sprint.computed_completed_points
 
-        context["progress"] = sprint.get_progress()
+        context["progress"] = sprint.progress
 
         # Count items and total points from annotations
         context["item_count"] = BaseIssue.objects.for_sprint(sprint).count()
