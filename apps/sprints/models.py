@@ -258,6 +258,36 @@ class Sprint(BaseModel):
         self.status = SprintStatus.ARCHIVED
         self.save(update_fields=["status", "updated_at"])
 
+    def add_issues(self, issue_keys, workspace) -> int:
+        """Add unassigned work items to this sprint by key. Returns count added."""
+        Story = apps.get_model("issues", "Story")
+        Bug = apps.get_model("issues", "Bug")
+        Chore = apps.get_model("issues", "Chore")
+
+        added_count = 0
+        for model in [Story, Bug, Chore]:
+            count = model.objects.filter(
+                project__workspace=workspace,
+                key__in=issue_keys,
+                sprint__isnull=True,
+            ).update(sprint=self)
+            added_count += count
+
+        return added_count
+
+    def remove_issue(self, issue_key) -> bool:
+        """Remove a work item from this sprint by key. Returns True if found."""
+        Story = apps.get_model("issues", "Story")
+        Bug = apps.get_model("issues", "Bug")
+        Chore = apps.get_model("issues", "Chore")
+
+        for model in [Story, Bug, Chore]:
+            count = model.objects.filter(sprint=self, key=issue_key).update(sprint=None)
+            if count > 0:
+                return True
+
+        return False
+
     def get_next_sprint(self):
         """Find the next planning sprint for issue rollover."""
         return (

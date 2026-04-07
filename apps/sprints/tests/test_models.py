@@ -150,3 +150,70 @@ class SprintArchiveTest(TestCase):
 
         with self.assertRaises(ValueError):
             sprint.archive()
+
+
+class SprintAddIssuesTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.workspace = WorkspaceFactory()
+        cls.project = ProjectFactory(workspace=cls.workspace)
+
+    def test_add_issues_assigns_stories_bugs_chores(self):
+        sprint = SprintFactory(workspace=self.workspace)
+        story = StoryFactory(project=self.project, sprint=None)
+        bug = BugFactory(project=self.project, sprint=None)
+        chore = ChoreFactory(project=self.project, sprint=None)
+
+        sprint.add_issues([story.key, bug.key, chore.key], self.workspace)
+
+        self.assertEqual(Story.objects.filter(sprint=sprint).count(), 1)
+        self.assertEqual(Bug.objects.filter(sprint=sprint).count(), 1)
+        self.assertEqual(Chore.objects.filter(sprint=sprint).count(), 1)
+
+    def test_add_issues_skips_already_assigned(self):
+        sprint = SprintFactory(workspace=self.workspace)
+        other_sprint = SprintFactory(workspace=self.workspace)
+        story = StoryFactory(project=self.project, sprint=other_sprint)
+
+        count = sprint.add_issues([story.key], self.workspace)
+
+        self.assertEqual(count, 0)
+        story.refresh_from_db()
+        self.assertEqual(story.sprint, other_sprint)
+
+    def test_add_issues_returns_count(self):
+        sprint = SprintFactory(workspace=self.workspace)
+        story = StoryFactory(project=self.project, sprint=None)
+        bug = BugFactory(project=self.project, sprint=None)
+
+        count = sprint.add_issues([story.key, bug.key], self.workspace)
+
+        self.assertEqual(count, 2)
+
+
+class SprintRemoveIssueTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.workspace = WorkspaceFactory()
+        cls.project = ProjectFactory(workspace=cls.workspace)
+
+    def test_remove_issue_found(self):
+        sprint = SprintFactory(workspace=self.workspace)
+        story = StoryFactory(project=self.project, sprint=sprint)
+
+        result = sprint.remove_issue(story.key)
+
+        self.assertTrue(result)
+        story.refresh_from_db()
+        self.assertIsNone(story.sprint)
+
+    def test_remove_issue_not_found(self):
+        sprint = SprintFactory(workspace=self.workspace)
+        other_sprint = SprintFactory(workspace=self.workspace)
+        story = StoryFactory(project=self.project, sprint=other_sprint)
+
+        result = sprint.remove_issue(story.key)
+
+        self.assertFalse(result)
+        story.refresh_from_db()
+        self.assertEqual(story.sprint, other_sprint)

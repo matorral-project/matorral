@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import View
 
-from apps.issues.models import BaseIssue, Bug, Chore, IssueStatus, Story
+from apps.issues.models import BaseIssue, IssueStatus
 from apps.sprints.models import Sprint, SprintStatus
 from apps.sprints.views.mixins import SprintSingleObjectMixin, SprintViewMixin
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
@@ -117,15 +117,7 @@ class SprintAddIssuesView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, Sprin
             messages.warning(request, _("No issues selected."))
             return redirect(self.sprint.get_absolute_url())
 
-        # Add issues to sprint
-        added_count = 0
-        for model in [Story, Bug, Chore]:
-            count = model.objects.filter(
-                project__workspace=self.workspace,
-                key__in=issue_keys,
-                sprint__isnull=True,
-            ).update(sprint=self.sprint)
-            added_count += count
+        added_count = self.sprint.add_issues(issue_keys, self.workspace)
 
         if added_count > 0:
             messages.success(
@@ -157,13 +149,7 @@ class SprintRemoveIssueView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, Vie
         sprint = get_object_or_404(Sprint.objects.for_workspace(self.workspace), key=kwargs["key"])
         issue_key = kwargs["issue_key"]
 
-        # Find and update the issue
-        removed = False
-        for model in [Story, Bug, Chore]:
-            count = model.objects.filter(sprint=sprint, key=issue_key).update(sprint=None)
-            if count > 0:
-                removed = True
-                break
+        removed = sprint.remove_issue(issue_key)
 
         if removed:
             messages.success(request, _("Issue removed from sprint."))
