@@ -272,7 +272,7 @@ class TestRenderResponseSprintEmbed(BulkActionTestBase):
 
     def test_sprint_embed_renders_sprint_partial_with_sprint_in_context(self):
         """HTMX bulk action with embed=sprint renders the sprint issues embed template."""
-        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.ACTIVE)
+        sprint = SprintFactory(workspace=self.workspace, active=True)
         story = StoryFactory(project=self.project)
         Story.objects.filter(pk=story.pk).update(sprint=sprint)
 

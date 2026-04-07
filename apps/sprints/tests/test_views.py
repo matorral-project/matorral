@@ -732,7 +732,7 @@ class SprintStartViewTest(SprintViewTestBase):
 
     def test_start_fails_when_another_active(self):
         """Cannot start sprint when another is already active."""
-        SprintFactory(workspace=self.workspace, status=SprintStatus.ACTIVE)
+        SprintFactory(workspace=self.workspace, active=True)
         sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
 
         response = self.client.post(self._get_start_url(sprint))
@@ -769,7 +769,7 @@ class SprintCompleteViewTest(SprintViewTestBase):
 
     def test_complete_sprint(self):
         """Can complete an active sprint."""
-        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.ACTIVE)
+        sprint = SprintFactory(workspace=self.workspace, active=True)
 
         response = self.client.post(self._get_complete_url(sprint))
 
@@ -789,7 +789,7 @@ class SprintCompleteViewTest(SprintViewTestBase):
 
     def test_complete_calculates_completed_points(self):
         """Completing a sprint calculates completed points."""
-        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.ACTIVE)
+        sprint = SprintFactory(workspace=self.workspace, active=True)
         epic = EpicFactory(project=self.project)
         StoryFactory(
             project=self.project,
@@ -813,7 +813,7 @@ class SprintCompleteViewTest(SprintViewTestBase):
 
     def test_complete_moves_incomplete_issues(self):
         """Completing a sprint moves incomplete issues to next sprint."""
-        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.ACTIVE)
+        sprint = SprintFactory(workspace=self.workspace, active=True)
         next_sprint = SprintFactory(
             workspace=self.workspace,
             status=SprintStatus.PLANNING,
@@ -859,7 +859,7 @@ class SprintArchiveViewTest(SprintViewTestBase):
 
     def test_archive_fails_for_active(self):
         """Cannot archive an active sprint."""
-        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.ACTIVE)
+        sprint = SprintFactory(workspace=self.workspace, active=True)
 
         response = self.client.post(self._get_archive_url(sprint))
 
@@ -1017,7 +1017,7 @@ class IssueAddToSprintViewTest(SprintViewTestBase):
             status=SprintStatus.PLANNING,
             name="Planning Sprint",
         )
-        SprintFactory(workspace=self.workspace, status=SprintStatus.ACTIVE, name="Active Sprint")
+        SprintFactory(workspace=self.workspace, active=True, name="Active Sprint")
         SprintFactory(
             workspace=self.workspace,
             status=SprintStatus.ARCHIVED,
@@ -1174,7 +1174,7 @@ class SprintBulkStatusViewTest(SprintViewTestBase):
 
     def test_bulk_status_active_rejected_when_another_active(self):
         """Cannot set sprint to active when another is already active."""
-        SprintFactory(workspace=self.workspace, status=SprintStatus.ACTIVE, name="Already Active")
+        SprintFactory(workspace=self.workspace, active=True, name="Already Active")
         sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
 
         response = self.client.post(

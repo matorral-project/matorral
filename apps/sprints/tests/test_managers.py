@@ -117,7 +117,7 @@ class AvailableTest(TestCase):
 
     def test_active_sprint_comes_before_planning(self):
         planning = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
-        active = SprintFactory(workspace=self.workspace, status=SprintStatus.ACTIVE)
+        active = SprintFactory(workspace=self.workspace, active=True)
 
         keys = self._keys(Sprint.objects.for_workspace(self.workspace).available())
         self.assertEqual(keys, [active.key, planning.key])
@@ -149,13 +149,7 @@ class NeedingNextSprintTest(TestCase):
 
     def test_returns_active_sprint_without_planning(self):
         """An active sprint with no planning sprint after it should be returned."""
-        today = timezone.now().date()
-        active = SprintFactory(
-            workspace=self.workspace,
-            status=SprintStatus.ACTIVE,
-            start_date=today - timedelta(weeks=2),
-            end_date=today,
-        )
+        active = SprintFactory(workspace=self.workspace, active=True)
 
         result = Sprint.objects.needing_next_sprint()
 
@@ -164,12 +158,7 @@ class NeedingNextSprintTest(TestCase):
     def test_excludes_when_planning_exists_after(self):
         """An active sprint with a planning sprint after it should be excluded."""
         today = timezone.now().date()
-        SprintFactory(
-            workspace=self.workspace,
-            status=SprintStatus.ACTIVE,
-            start_date=today - timedelta(weeks=2),
-            end_date=today,
-        )
+        SprintFactory(workspace=self.workspace, active=True)
         SprintFactory(
             workspace=self.workspace,
             status=SprintStatus.PLANNING,
@@ -190,12 +179,7 @@ class NeedingNextSprintTest(TestCase):
             start_date=today - timedelta(weeks=4),
             end_date=today - timedelta(weeks=2),
         )
-        latest = SprintFactory(
-            workspace=self.workspace,
-            status=SprintStatus.ACTIVE,
-            start_date=today - timedelta(weeks=2),
-            end_date=today,
-        )
+        latest = SprintFactory(workspace=self.workspace, active=True)
 
         result = Sprint.objects.needing_next_sprint()
 
@@ -206,12 +190,7 @@ class NeedingNextSprintTest(TestCase):
         today = timezone.now().date()
         other_workspace = WorkspaceFactory()
 
-        sprint_a = SprintFactory(
-            workspace=self.workspace,
-            status=SprintStatus.ACTIVE,
-            start_date=today - timedelta(weeks=2),
-            end_date=today,
-        )
+        sprint_a = SprintFactory(workspace=self.workspace, active=True)
         sprint_b = SprintFactory(
             workspace=other_workspace,
             status=SprintStatus.COMPLETED,
