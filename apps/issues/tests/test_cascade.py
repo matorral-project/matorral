@@ -516,6 +516,18 @@ class ApplyCascadeTest(TestCase):
         self.assertEqual(milestone.status, IssueStatus.DONE)
         self.assertEqual(orphan_epic.status, IssueStatus.DONE)
 
+    def test_apply_cascade_up_nonexistent_project(self):
+        """Cascade UP with a nonexistent project PK does not raise."""
+        nonexistent_pk = 999999
+
+        _apply_cascade_up(nonexistent_pk, ProjectStatus.COMPLETED, "project", self.actor)
+
+    def test_apply_cascade_up_nonexistent_issue(self):
+        """Cascade UP with a nonexistent issue PK does not raise."""
+        nonexistent_pk = 999999
+
+        _apply_cascade_up(nonexistent_pk, IssueStatus.DONE, "issue", self.actor)
+
 
 class DeepCascadeDownTest(TestCase):
     """Tests for deep cascade DOWN that reaches all descendants."""

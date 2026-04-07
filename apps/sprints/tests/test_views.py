@@ -942,6 +942,29 @@ class SprintAddIssuesViewTest(SprintViewTestBase):
         self.assertContains(response, "Unassigned")
         self.assertNotContains(response, "Already Assigned")
 
+    def test_add_issues_search_filters_by_title(self):
+        """Search query filters unassigned issues by title."""
+        sprint = SprintFactory(workspace=self.workspace)
+        epic = EpicFactory(project=self.project)
+        StoryFactory(project=self.project, parent=epic, sprint=None, title="Fix login bug")
+        StoryFactory(project=self.project, parent=epic, sprint=None, title="Add dashboard")
+
+        response = self.client.get(self._get_add_issues_url(sprint), {"search": "login"})
+
+        self.assertContains(response, "Fix login bug")
+        self.assertNotContains(response, "Add dashboard")
+
+    def test_add_issues_search_filters_by_key(self):
+        """Search query filters unassigned issues by key."""
+        sprint = SprintFactory(workspace=self.workspace)
+        epic = EpicFactory(project=self.project)
+        story = StoryFactory(project=self.project, parent=epic, sprint=None, title="Some issue")
+        StoryFactory(project=self.project, parent=epic, sprint=None, title="Other issue")
+
+        response = self.client.get(self._get_add_issues_url(sprint), {"search": story.key})
+
+        self.assertContains(response, story.key)
+
     def test_add_issues_to_sprint(self):
         """Can add issues to a sprint via POST."""
         sprint = SprintFactory(workspace=self.workspace)

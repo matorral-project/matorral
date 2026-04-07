@@ -138,3 +138,87 @@ class AvailableTest(TestCase):
 
         result = Sprint.objects.for_workspace(self.workspace).available()
         self.assertFalse(result.exists())
+
+
+class NeedingNextSprintTest(TestCase):
+    """Tests for SprintQuerySet.needing_next_sprint()."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.workspace = WorkspaceFactory()
+
+    def test_returns_active_sprint_without_planning(self):
+        """An active sprint with no planning sprint after it should be returned."""
+        today = timezone.now().date()
+        active = SprintFactory(
+            workspace=self.workspace,
+            status=SprintStatus.ACTIVE,
+            start_date=today - timedelta(weeks=2),
+            end_date=today,
+        )
+
+        result = Sprint.objects.needing_next_sprint()
+
+        self.assertQuerySetEqual(result, [active])
+
+    def test_excludes_when_planning_exists_after(self):
+        """An active sprint with a planning sprint after it should be excluded."""
+        today = timezone.now().date()
+        SprintFactory(
+            workspace=self.workspace,
+            status=SprintStatus.ACTIVE,
+            start_date=today - timedelta(weeks=2),
+            end_date=today,
+        )
+        SprintFactory(
+            workspace=self.workspace,
+            status=SprintStatus.PLANNING,
+            start_date=today + timedelta(days=1),
+            end_date=today + timedelta(weeks=2),
+        )
+
+        result = Sprint.objects.needing_next_sprint()
+
+        self.assertFalse(result.exists())
+
+    def test_excludes_when_later_active_exists(self):
+        """Only the latest active/completed sprint per workspace qualifies."""
+        today = timezone.now().date()
+        SprintFactory(
+            workspace=self.workspace,
+            status=SprintStatus.COMPLETED,
+            start_date=today - timedelta(weeks=4),
+            end_date=today - timedelta(weeks=2),
+        )
+        latest = SprintFactory(
+            workspace=self.workspace,
+            status=SprintStatus.ACTIVE,
+            start_date=today - timedelta(weeks=2),
+            end_date=today,
+        )
+
+        result = Sprint.objects.needing_next_sprint()
+
+        self.assertQuerySetEqual(result, [latest])
+
+    def test_multiple_workspaces_returns_one_per_workspace(self):
+        """Each workspace's latest qualifying sprint is returned independently."""
+        today = timezone.now().date()
+        other_workspace = WorkspaceFactory()
+
+        sprint_a = SprintFactory(
+            workspace=self.workspace,
+            status=SprintStatus.ACTIVE,
+            start_date=today - timedelta(weeks=2),
+            end_date=today,
+        )
+        sprint_b = SprintFactory(
+            workspace=other_workspace,
+            status=SprintStatus.COMPLETED,
+            start_date=today - timedelta(weeks=2),
+            end_date=today,
+        )
+
+        result = Sprint.objects.needing_next_sprint()
+
+        self.assertEqual(set(result), {sprint_a, sprint_b})
