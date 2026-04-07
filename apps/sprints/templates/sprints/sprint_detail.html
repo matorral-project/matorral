@@ -3,12 +3,12 @@
 {% block app_content_content %}
 <div id="page-content" hx-target="#page-content">
   {% partialdef page-content inline %}
-  <section class="app-card pb-2 lg:pb-2" x-data="{ showDeleteModal: false, showCascadeModal: false }">
+  <section class="app-card pb-2 lg:pb-2" x-data="{ showCascadeModal: false }">
     {% include "sprints/includes/sprint_detail_header.html" %}
 
-    {% include "includes/delete_confirm_modal.html" with delete_modal_id="detail-delete-modal-content" %}
     {% include "includes/cascade_status_modal.html" %}
   </section>
+  <div id="modal-container"></div>
 
   {# Embedded Issues List and History Tabs #}
   <section class="app-card" x-data="{ activeTab: 'issues' }">

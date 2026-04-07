@@ -6,13 +6,14 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views import View
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
-from apps.issues.helpers import build_grouped_issues, build_htmx_delete_response
+from apps.issues.helpers import build_grouped_issues
 from apps.issues.models import BaseIssue
 from apps.issues.views.mixins import WORK_ITEM_TYPE_CHOICES, IssueListContextMixin
 from apps.sprints.forms import SprintDetailInlineEditForm, SprintForm, SprintRowInlineEditForm
 from apps.sprints.models import Sprint, SprintStatus
+from apps.sprints.registry import build_sprint_action_context
 from apps.sprints.views.mixins import SprintFormMixin, SprintListContextMixin, SprintSingleObjectMixin, SprintViewMixin
 from apps.utils.progress import calculate_progress
 from apps.workspaces.helpers import clear_onboarding_session_cache
@@ -103,6 +104,8 @@ class SprintDetailView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSi
         # Count items and total points from annotations
         context["item_count"] = BaseIssue.objects.for_sprint(sprint).count()
         context["total_points"] = sprint.computed_committed_points
+
+        context.update(build_sprint_action_context(sprint, self.request.user))
 
         return context
 
@@ -209,47 +212,6 @@ class SprintUpdateView(
             return HttpResponse(messages_div + script)
 
         return redirect(self.object.get_absolute_url())
-
-
-class SprintDeleteView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSingleObjectMixin, DeleteView):
-    """Delete a sprint."""
-
-    template_name = "sprints/sprint_confirm_delete.html"
-
-    def get_queryset(self):
-        return Sprint.objects.for_workspace(self.workspace)
-
-    def get_template_names(self):
-        if self.request.htmx and not self.request.htmx.history_restore_request:
-            return ["sprints/includes/delete_confirm_content.html"]
-        return [self.template_name]
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["page_title"] = _("Delete %s") % self.object.name
-        # Count items assigned to this sprint
-        context["item_count"] = BaseIssue.objects.for_sprint(self.object).count()
-        return context
-
-    def get_success_url(self):
-        return reverse(
-            "sprints:sprint_list",
-            kwargs={
-                "workspace_slug": self.kwargs["workspace_slug"],
-            },
-        )
-
-    def form_valid(self, form):
-        deleted_url = self.object.get_absolute_url()
-        redirect_url = self.get_success_url()
-
-        self.object.delete()
-        messages.success(self.request, _("Sprint deleted successfully."))
-
-        if self.request.htmx:
-            return build_htmx_delete_response(self.request, deleted_url, redirect_url)
-
-        return redirect(redirect_url)
 
 
 class SprintIssueListEmbedView(SprintViewMixin, IssueListContextMixin, LoginAndWorkspaceRequiredMixin, ListView):
@@ -435,7 +397,7 @@ class SprintDetailInlineEditView(SprintViewMixin, LoginAndWorkspaceRequiredMixin
     """Handle inline editing of sprint details on the detail page."""
 
     def _get_sprint_queryset(self):
-        return Sprint.objects.for_workspace(self.workspace).select_related("owner").with_committed_points()
+        return Sprint.objects.for_workspace(self.workspace).select_related("owner", "workspace").with_committed_points()
 
     def _get_context(self, request, sprint, form=None):
         """Build common context for GET/POST handlers."""
@@ -448,6 +410,7 @@ class SprintDetailInlineEditView(SprintViewMixin, LoginAndWorkspaceRequiredMixin
         }
         if form:
             context["form"] = form
+        context.update(build_sprint_action_context(sprint, request.user))
         return context
 
     def get(self, request, *args, **kwargs):

@@ -228,12 +228,23 @@ class SprintDeleteTest(TestCase):
         self.client = Client()
         self.client.force_login(self.user)
 
-    def _get_delete_url(self, sprint):
+    def _get_action_url(self, sprint, action_name):
         return reverse(
-            "sprints:sprint_delete",
+            "sprints:sprint_action",
             kwargs={
                 "workspace_slug": self.workspace.slug,
                 "key": sprint.key,
+                "action_name": action_name,
+            },
+        )
+
+    def _get_action_confirm_url(self, sprint, action_name):
+        return reverse(
+            "sprints:sprint_action_confirm",
+            kwargs={
+                "workspace_slug": self.workspace.slug,
+                "key": sprint.key,
+                "action_name": action_name,
             },
         )
 
@@ -242,7 +253,7 @@ class SprintDeleteTest(TestCase):
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic, sprint=sprint)
 
-        self.client.post(self._get_delete_url(sprint))
+        self.client.post(self._get_action_url(sprint, "delete"))
 
         self.assertFalse(Sprint.objects.filter(pk=sprint.pk).exists())
         # Story should still exist, just unlinked from sprint
@@ -254,7 +265,7 @@ class SprintDeleteTest(TestCase):
         epic = EpicFactory(project=self.project)
         StoryFactory(project=self.project, parent=epic, sprint=sprint)
 
-        response = self.client.get(self._get_delete_url(sprint))
+        response = self.client.get(self._get_action_confirm_url(sprint, "delete"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context["item_count"], 1)
+        self.assertContains(response, "1 issue")

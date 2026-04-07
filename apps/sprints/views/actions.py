@@ -1,79 +1,50 @@
 from django.contrib import messages
-from django.db import IntegrityError
-from django.http import HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import View
+from django.views.generic.detail import SingleObjectMixin
 
 from apps.issues.models import BaseIssue, IssueStatus
 from apps.sprints.models import Sprint, SprintStatus
+from apps.sprints.registry import sprint_actions
 from apps.sprints.views.mixins import SprintSingleObjectMixin, SprintViewMixin
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
 from django_htmx.http import HttpResponseClientRedirect
 
 
-class SprintStartView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSingleObjectMixin, View):
-    """Start a sprint (change status to active)."""
+class SprintActionMixin(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSingleObjectMixin, SingleObjectMixin):
+    """Shared lookup for action + sprint, with availability check."""
 
-    def post(self, request, *args, **kwargs):
-        sprint = get_object_or_404(
-            Sprint.objects.for_workspace(self.workspace).with_committed_points(),
-            key=kwargs["key"],
-        )
+    def get_action_and_sprint(self, action_name):
+        action = sprint_actions.get(action_name)
+        if action is None:
+            raise Http404
 
-        try:
-            sprint.start()
-            messages.success(request, _("Sprint started successfully."))
-        except ValueError as exc:
-            messages.error(request, str(exc))
-        except IntegrityError:
-            messages.error(request, _("Another sprint is already active in this workspace."))
+        sprint = self.get_object()
 
-        return redirect(sprint.get_absolute_url())
+        if not action.is_available(sprint, self.request.user):
+            raise Http404
+
+        return action, sprint
 
 
-class SprintCompleteView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSingleObjectMixin, View):
-    """Complete a sprint and optionally move incomplete issues to next sprint."""
+class SprintActionConfirmView(SprintActionMixin, View):
+    """GET — returns confirmation modal HTML for an action."""
 
-    def post(self, request, *args, **kwargs):
-        sprint = get_object_or_404(
-            Sprint.objects.for_workspace(self.workspace).with_completed_points(),
-            key=kwargs["key"],
-        )
-
-        try:
-            moved_count, next_sprint = sprint.complete()
-        except ValueError as exc:
-            messages.error(request, str(exc))
-            return redirect(sprint.get_absolute_url())
-
-        if moved_count > 0:
-            messages.success(
-                request,
-                _("Sprint completed. %(count)d incomplete issue(s) moved to %(sprint)s.")
-                % {"count": moved_count, "sprint": next_sprint.name},
-            )
-        else:
-            messages.success(request, _("Sprint completed successfully."))
-
-        return redirect(sprint.get_absolute_url())
+    def get(self, request, action_name, **kwargs):
+        action, sprint = self.get_action_and_sprint(action_name)
+        return action.get_confirm_response(sprint, request)
 
 
-class SprintArchiveView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSingleObjectMixin, View):
-    """Archive a sprint (must not be active)."""
+class SprintActionView(SprintActionMixin, View):
+    """POST — executes a registered sprint action."""
 
-    def post(self, request, *args, **kwargs):
-        sprint = get_object_or_404(Sprint.objects.for_workspace(self.workspace), key=kwargs["key"])
-
-        try:
-            sprint.archive()
-            messages.success(request, _("Sprint archived successfully."))
-        except ValueError as exc:
-            messages.error(request, str(exc))
-
-        return redirect(sprint.get_absolute_url())
+    def post(self, request, action_name, **kwargs):
+        action, sprint = self.get_action_and_sprint(action_name)
+        return action.execute(sprint, request)
 
 
 class SprintAddIssuesView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, SprintSingleObjectMixin, View):

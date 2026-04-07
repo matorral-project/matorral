@@ -67,39 +67,23 @@ class SprintViewTestBase(TestCase):
             },
         )
 
-    def _get_delete_url(self, sprint):
+    def _get_action_confirm_url(self, sprint, action_name):
         return reverse(
-            "sprints:sprint_delete",
+            "sprints:sprint_action_confirm",
             kwargs={
                 "workspace_slug": self.workspace.slug,
                 "key": sprint.key,
+                "action_name": action_name,
             },
         )
 
-    def _get_start_url(self, sprint):
+    def _get_action_url(self, sprint, action_name):
         return reverse(
-            "sprints:sprint_start",
+            "sprints:sprint_action",
             kwargs={
                 "workspace_slug": self.workspace.slug,
                 "key": sprint.key,
-            },
-        )
-
-    def _get_complete_url(self, sprint):
-        return reverse(
-            "sprints:sprint_complete",
-            kwargs={
-                "workspace_slug": self.workspace.slug,
-                "key": sprint.key,
-            },
-        )
-
-    def _get_archive_url(self, sprint):
-        return reverse(
-            "sprints:sprint_archive",
-            kwargs={
-                "workspace_slug": self.workspace.slug,
-                "key": sprint.key,
+                "action_name": action_name,
             },
         )
 
@@ -395,6 +379,51 @@ class SprintDetailViewTest(SprintViewTestBase):
 
         self.assertEqual(404, response.status_code)
 
+    def test_detail_planning_sprint_action_context(self):
+        """PLANNING sprint: primary=[start], menu=[archive, delete]."""
+        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
+
+        response = self.client.get(self._get_detail_url(sprint))
+
+        self.assertEqual(200, response.status_code)
+        primary = [a.name for a in response.context["primary_actions"]]
+        menu = [a.name for a in response.context["menu_actions"]]
+        self.assertEqual(["start"], primary)
+        self.assertEqual(["archive", "delete"], menu)
+
+    def test_detail_active_sprint_action_context(self):
+        """ACTIVE sprint: primary=[complete], menu=[delete]."""
+        sprint = SprintFactory(workspace=self.workspace, active=True)
+
+        response = self.client.get(self._get_detail_url(sprint))
+
+        primary = [a.name for a in response.context["primary_actions"]]
+        menu = [a.name for a in response.context["menu_actions"]]
+        self.assertEqual(["complete"], primary)
+        self.assertEqual(["delete"], menu)
+
+    def test_detail_completed_sprint_action_context(self):
+        """COMPLETED sprint: primary=[], menu=[archive, delete]."""
+        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.COMPLETED)
+
+        response = self.client.get(self._get_detail_url(sprint))
+
+        primary = [a.name for a in response.context["primary_actions"]]
+        menu = [a.name for a in response.context["menu_actions"]]
+        self.assertEqual([], primary)
+        self.assertEqual(["archive", "delete"], menu)
+
+    def test_detail_archived_sprint_action_context(self):
+        """ARCHIVED sprint: primary=[], menu=[delete]."""
+        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.ARCHIVED)
+
+        response = self.client.get(self._get_detail_url(sprint))
+
+        primary = [a.name for a in response.context["primary_actions"]]
+        menu = [a.name for a in response.context["menu_actions"]]
+        self.assertEqual([], primary)
+        self.assertEqual(["delete"], menu)
+
 
 class SprintCreateViewTest(SprintViewTestBase):
     """Tests for the sprint create view."""
@@ -647,109 +676,87 @@ class SprintUpdateViewTest(SprintViewTestBase):
         self.assertEqual("Updated goal", sprint.goal)
 
 
-class SprintDeleteViewTest(SprintViewTestBase):
-    """Tests for the sprint delete view."""
+class SprintActionConfirmViewTest(SprintViewTestBase):
+    """Tests for GET confirm modal views."""
 
-    def test_delete_view_returns_200(self):
-        """Delete view returns 200."""
-        sprint = SprintFactory(workspace=self.workspace)
+    def test_confirm_unknown_action_returns_404(self):
+        """GET unknown action name → 404."""
+        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
 
-        response = self.client.get(self._get_delete_url(sprint))
+        response = self.client.get(self._get_action_confirm_url(sprint, "nonexistent"))
+
+        self.assertEqual(404, response.status_code)
+
+    def test_confirm_unavailable_action_returns_404(self):
+        """GET action whose is_available() is False → 404."""
+        # archive is not available for active sprints
+        sprint = SprintFactory(workspace=self.workspace, active=True)
+
+        response = self.client.get(self._get_action_confirm_url(sprint, "archive"))
+
+        self.assertEqual(404, response.status_code)
+
+    def test_confirm_start_on_planning_sprint_returns_200(self):
+        """GET start confirm on a PLANNING sprint → 200 with modal HTML."""
+        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
+
+        response = self.client.get(self._get_action_confirm_url(sprint, "start"))
 
         self.assertEqual(200, response.status_code)
+        self.assertContains(response, "Start Sprint")
 
-    def test_delete_sprint(self):
-        """Can delete a sprint via POST."""
-        sprint = SprintFactory(workspace=self.workspace)
-        sprint_pk = sprint.pk
+    def test_confirm_delete_returns_200_with_sprint_info(self):
+        """GET delete confirm on any sprint → 200, returns delete-specific modal HTML."""
+        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
 
-        response = self.client.post(self._get_delete_url(sprint))
+        response = self.client.get(self._get_action_confirm_url(sprint, "delete"))
 
-        self.assertEqual(302, response.status_code)
-        self.assertFalse(Sprint.objects.filter(pk=sprint_pk).exists())
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, sprint.key)
+        self.assertContains(response, "Delete Sprint")
 
-    def test_delete_shows_item_count(self):
-        """Delete view shows count of items in sprint."""
+    def test_confirm_delete_shows_item_count(self):
+        """GET delete confirm shows count of assigned issues."""
         sprint = SprintFactory(workspace=self.workspace)
         epic = EpicFactory(project=self.project)
         StoryFactory(project=self.project, parent=epic, sprint=sprint)
         StoryFactory(project=self.project, parent=epic, sprint=sprint)
 
-        response = self.client.get(self._get_delete_url(sprint))
-
-        self.assertIn("item_count", response.context)
-        self.assertEqual(2, response.context["item_count"])
-
-    def test_delete_htmx_detail_page_returns_hx_location(self):
-        """HTMX delete from detail page returns HX-Location with target."""
-        sprint = SprintFactory(workspace=self.workspace)
-        sprint_pk = sprint.pk
-        detail_url = self._get_detail_url(sprint)
-        list_url = self._get_list_url()
-
-        response = self.client.post(
-            self._get_delete_url(sprint),
-            HTTP_HX_REQUEST="true",
-            HTTP_HX_CURRENT_URL=f"http://testserver{detail_url}",
-        )
+        response = self.client.get(self._get_action_confirm_url(sprint, "delete"))
 
         self.assertEqual(200, response.status_code)
-        self.assertIn("HX-Location", response)
-        location_data = json.loads(response["HX-Location"])
-        self.assertEqual(location_data["path"], list_url)
-        self.assertEqual(location_data["target"], "#page-content")
-        self.assertFalse(Sprint.objects.filter(pk=sprint_pk).exists())
-
-    def test_delete_htmx_other_page_returns_hx_refresh(self):
-        """HTMX delete from other page returns HX-Refresh."""
-        sprint = SprintFactory(workspace=self.workspace)
-        sprint_pk = sprint.pk
-
-        response = self.client.post(
-            self._get_delete_url(sprint),
-            HTTP_HX_REQUEST="true",
-            HTTP_HX_CURRENT_URL="http://testserver/w/workspace/sprints/",
-        )
-
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(response["HX-Refresh"], "true")
-        self.assertNotIn("HX-Location", response)
-        self.assertFalse(Sprint.objects.filter(pk=sprint_pk).exists())
+        self.assertContains(response, "2 issues")
 
 
-class SprintStartViewTest(SprintViewTestBase):
-    """Tests for the sprint start action view."""
+class SprintActionViewTest(SprintViewTestBase):
+    """Tests for POST action execution views."""
 
-    def test_start_sprint(self):
-        """Can start a planning sprint."""
+    def test_post_unknown_action_returns_404(self):
+        """POST unknown action name → 404."""
         sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
 
-        response = self.client.post(self._get_start_url(sprint))
+        response = self.client.post(self._get_action_url(sprint, "nonexistent"))
+
+        self.assertEqual(404, response.status_code)
+
+    def test_post_unavailable_action_returns_404(self):
+        """POST action not available for current sprint status → 404."""
+        # start is not available for active sprints
+        sprint = SprintFactory(workspace=self.workspace, active=True)
+
+        response = self.client.post(self._get_action_url(sprint, "start"))
+
+        self.assertEqual(404, response.status_code)
+
+    def test_start_planning_sprint(self):
+        """POST start on PLANNING sprint → sprint becomes active, redirect."""
+        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
+
+        response = self.client.post(self._get_action_url(sprint, "start"))
 
         self.assertEqual(302, response.status_code)
         sprint.refresh_from_db()
         self.assertEqual(SprintStatus.ACTIVE, sprint.status)
-
-    def test_start_fails_when_another_active(self):
-        """Cannot start sprint when another is already active."""
-        SprintFactory(workspace=self.workspace, active=True)
-        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
-
-        response = self.client.post(self._get_start_url(sprint))
-
-        self.assertEqual(302, response.status_code)
-        sprint.refresh_from_db()
-        self.assertEqual(SprintStatus.PLANNING, sprint.status)  # Still planning
-
-    def test_start_fails_for_non_planning_sprint(self):
-        """Cannot start a sprint that is not in planning status."""
-        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.COMPLETED)
-
-        response = self.client.post(self._get_start_url(sprint))
-
-        self.assertEqual(302, response.status_code)
-        sprint.refresh_from_db()
-        self.assertEqual(SprintStatus.COMPLETED, sprint.status)
 
     def test_start_captures_committed_points(self):
         """Starting a sprint captures committed points."""
@@ -758,34 +765,31 @@ class SprintStartViewTest(SprintViewTestBase):
         StoryFactory(project=self.project, parent=epic, sprint=sprint, estimated_points=5)
         StoryFactory(project=self.project, parent=epic, sprint=sprint, estimated_points=3)
 
-        self.client.post(self._get_start_url(sprint))
+        self.client.post(self._get_action_url(sprint, "start"))
 
         sprint.refresh_from_db()
         self.assertEqual(8, sprint.committed_points)
 
-
-class SprintCompleteViewTest(SprintViewTestBase):
-    """Tests for the sprint complete action view."""
-
-    def test_complete_sprint(self):
-        """Can complete an active sprint."""
-        sprint = SprintFactory(workspace=self.workspace, active=True)
-
-        response = self.client.post(self._get_complete_url(sprint))
-
-        self.assertEqual(302, response.status_code)
-        sprint.refresh_from_db()
-        self.assertEqual(SprintStatus.COMPLETED, sprint.status)
-
-    def test_complete_fails_for_non_active_sprint(self):
-        """Cannot complete a sprint that is not active."""
+    def test_start_fails_when_another_active(self):
+        """POST start when another sprint is already active → error message, redirect."""
+        SprintFactory(workspace=self.workspace, active=True)
         sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
 
-        response = self.client.post(self._get_complete_url(sprint))
+        response = self.client.post(self._get_action_url(sprint, "start"))
 
         self.assertEqual(302, response.status_code)
         sprint.refresh_from_db()
         self.assertEqual(SprintStatus.PLANNING, sprint.status)
+
+    def test_complete_active_sprint(self):
+        """POST complete on ACTIVE sprint → sprint completed, redirect."""
+        sprint = SprintFactory(workspace=self.workspace, active=True)
+
+        response = self.client.post(self._get_action_url(sprint, "complete"))
+
+        self.assertEqual(302, response.status_code)
+        sprint.refresh_from_db()
+        self.assertEqual(SprintStatus.COMPLETED, sprint.status)
 
     def test_complete_calculates_completed_points(self):
         """Completing a sprint calculates completed points."""
@@ -806,7 +810,7 @@ class SprintCompleteViewTest(SprintViewTestBase):
             status=IssueStatus.IN_PROGRESS,
         )
 
-        self.client.post(self._get_complete_url(sprint))
+        self.client.post(self._get_action_url(sprint, "complete"))
 
         sprint.refresh_from_db()
         self.assertEqual(5, sprint.completed_points)
@@ -836,46 +840,78 @@ class SprintCompleteViewTest(SprintViewTestBase):
             title="Incomplete Story",
         )
 
-        self.client.post(self._get_complete_url(sprint))
+        self.client.post(self._get_action_url(sprint, "complete"))
 
         done_story.refresh_from_db()
         incomplete_story.refresh_from_db()
         self.assertEqual(sprint, done_story.sprint)
         self.assertEqual(next_sprint, incomplete_story.sprint)
 
-
-class SprintArchiveViewTest(SprintViewTestBase):
-    """Tests for the sprint archive action view."""
-
-    def test_archive_sprint(self):
-        """Can archive a completed sprint."""
+    def test_archive_completed_sprint(self):
+        """POST archive on COMPLETED sprint → sprint archived, redirect."""
         sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.COMPLETED)
 
-        response = self.client.post(self._get_archive_url(sprint))
+        response = self.client.post(self._get_action_url(sprint, "archive"))
 
         self.assertEqual(302, response.status_code)
         sprint.refresh_from_db()
         self.assertEqual(SprintStatus.ARCHIVED, sprint.status)
 
-    def test_archive_fails_for_active(self):
-        """Cannot archive an active sprint."""
+    def test_archive_active_sprint_returns_404(self):
+        """POST archive on ACTIVE sprint → 404 (not available)."""
         sprint = SprintFactory(workspace=self.workspace, active=True)
 
-        response = self.client.post(self._get_archive_url(sprint))
+        response = self.client.post(self._get_action_url(sprint, "archive"))
 
-        self.assertEqual(302, response.status_code)
+        self.assertEqual(404, response.status_code)
         sprint.refresh_from_db()
         self.assertEqual(SprintStatus.ACTIVE, sprint.status)
 
-    def test_archive_planning_sprint(self):
-        """Can archive a planning sprint."""
-        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
+    def test_delete_sprint(self):
+        """POST delete on any sprint → sprint deleted, redirects to list."""
+        sprint = SprintFactory(workspace=self.workspace)
+        sprint_pk = sprint.pk
 
-        response = self.client.post(self._get_archive_url(sprint))
+        response = self.client.post(self._get_action_url(sprint, "delete"))
 
         self.assertEqual(302, response.status_code)
-        sprint.refresh_from_db()
-        self.assertEqual(SprintStatus.ARCHIVED, sprint.status)
+        self.assertFalse(Sprint.objects.filter(pk=sprint_pk).exists())
+
+    def test_delete_htmx_detail_page_returns_hx_location(self):
+        """HTMX delete from detail page returns HX-Location."""
+        sprint = SprintFactory(workspace=self.workspace)
+        sprint_pk = sprint.pk
+        detail_url = self._get_detail_url(sprint)
+        list_url = self._get_list_url()
+
+        response = self.client.post(
+            self._get_action_url(sprint, "delete"),
+            HTTP_HX_REQUEST="true",
+            HTTP_HX_CURRENT_URL=f"http://testserver{detail_url}",
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.assertIn("HX-Location", response)
+        location_data = json.loads(response["HX-Location"])
+        self.assertEqual(location_data["path"], list_url)
+        self.assertEqual(location_data["target"], "#page-content")
+        self.assertFalse(Sprint.objects.filter(pk=sprint_pk).exists())
+
+    def test_delete_htmx_other_page_returns_hx_refresh(self):
+        """HTMX delete from non-detail page returns HX-Refresh."""
+        sprint = SprintFactory(workspace=self.workspace)
+        sprint_pk = sprint.pk
+
+        response = self.client.post(
+            self._get_action_url(sprint, "delete"),
+            HTTP_HX_REQUEST="true",
+            HTTP_HX_CURRENT_URL="http://testserver/w/workspace/sprints/",
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(response["HX-Refresh"], "true")
+        self.assertNotIn("HX-Location", response)
+        self.assertFalse(Sprint.objects.filter(pk=sprint_pk).exists())
 
 
 class SprintIssuesEmbedViewTest(SprintViewTestBase):
