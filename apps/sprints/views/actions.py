@@ -43,29 +43,11 @@ class SprintCompleteView(SprintViewMixin, LoginAndWorkspaceRequiredMixin, Sprint
             key=kwargs["key"],
         )
 
-        if sprint.status != SprintStatus.ACTIVE:
-            messages.error(request, _("Only active sprints can be completed."))
+        try:
+            moved_count, next_sprint = sprint.complete()
+        except ValueError as exc:
+            messages.error(request, str(exc))
             return redirect(sprint.get_absolute_url())
-
-        # Capture completed points at sprint completion
-        sprint.completed_points = sprint.computed_completed_points
-        sprint.status = SprintStatus.COMPLETED
-        sprint.save(update_fields=["status", "completed_points", "updated_at"])
-
-        # Move incomplete issues to next sprint if available
-        next_sprint = sprint.get_next_sprint()
-        moved_count = 0
-        if next_sprint:
-            incomplete_statuses = [
-                IssueStatus.DRAFT,
-                IssueStatus.PLANNING,
-                IssueStatus.READY,
-                IssueStatus.IN_PROGRESS,
-                IssueStatus.BLOCKED,
-            ]
-            for model in [Story, Bug, Chore]:
-                count = model.objects.filter(sprint=sprint, status__in=incomplete_statuses).update(sprint=next_sprint)
-                moved_count += count
 
         if moved_count > 0:
             messages.success(

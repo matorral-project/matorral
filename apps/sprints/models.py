@@ -213,6 +213,43 @@ class Sprint(BaseModel):
         self.status = SprintStatus.ACTIVE
         self.save(update_fields=["status", "committed_points", "updated_at"])
 
+    def complete(self) -> tuple[int, Sprint | None]:
+        """Complete sprint, capture points, roll incomplete items to next sprint.
+
+        Requires .with_completed_points() annotation.
+        Returns (moved_count, next_sprint).
+        Raises ValueError if not active.
+        """
+        if self.status != SprintStatus.ACTIVE:
+            raise ValueError("Only active sprints can be completed.")
+
+        self.completed_points = self.computed_completed_points
+        self.status = SprintStatus.COMPLETED
+        self.save(update_fields=["status", "completed_points", "updated_at"])
+
+        next_sprint = self.get_next_sprint()
+        moved_count = 0
+
+        if next_sprint:
+            Story = apps.get_model("issues", "Story")
+            Bug = apps.get_model("issues", "Bug")
+            Chore = apps.get_model("issues", "Chore")
+            BaseIssue = apps.get_model("issues", "BaseIssue")
+
+            IssueStatus = BaseIssue.status_model
+            incomplete_statuses = [
+                IssueStatus.DRAFT,
+                IssueStatus.PLANNING,
+                IssueStatus.READY,
+                IssueStatus.IN_PROGRESS,
+                IssueStatus.BLOCKED,
+            ]
+            for model in [Story, Bug, Chore]:
+                count = model.objects.filter(sprint=self, status__in=incomplete_statuses).update(sprint=next_sprint)
+                moved_count += count
+
+        return moved_count, next_sprint
+
     def get_next_sprint(self):
         """Find the next planning sprint for issue rollover."""
         return (
