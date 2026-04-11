@@ -9,9 +9,12 @@ workspace_urlpatterns = [
     path("", views.SprintListView.as_view(), name="sprint_list"),
     path("new/", views.SprintCreateView.as_view(), name="sprint_create"),
     # Bulk actions
-    path("bulk-delete/", views.SprintBulkDeleteView.as_view(), name="sprints_bulk_delete"),
-    path("bulk-status/", views.SprintBulkStatusView.as_view(), name="sprints_bulk_status"),
-    path("bulk-owner/", views.SprintBulkOwnerView.as_view(), name="sprints_bulk_owner"),
+    path(
+        "bulk-action/<str:action_name>/confirm/",
+        views.SprintBulkActionConfirmView.as_view(),
+        name="sprint_bulk_action_confirm",
+    ),
+    path("bulk-action/<str:action_name>/", views.SprintBulkActionView.as_view(), name="sprint_bulk_action"),
     # Single sprint views
     path("<str:key>/", views.SprintDetailView.as_view(), name="sprint_detail"),
     path(

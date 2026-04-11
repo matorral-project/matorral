@@ -1118,9 +1118,10 @@ class SprintBulkDeleteViewTest(SprintViewTestBase):
 
     def _get_bulk_delete_url(self):
         return reverse(
-            "sprints:sprints_bulk_delete",
+            "sprints:sprint_bulk_action",
             kwargs={
                 "workspace_slug": self.workspace.slug,
+                "action_name": "delete",
             },
         )
 
@@ -1154,11 +1155,13 @@ class SprintBulkDeleteViewTest(SprintViewTestBase):
 class SprintBulkStatusViewTest(SprintViewTestBase):
     """Tests for bulk updating sprint status."""
 
-    def _get_bulk_status_url(self):
+    def _get_bulk_status_url(self, status_value=None):
+        action_name = f"status-{status_value}" if status_value else "status-planning"
         return reverse(
-            "sprints:sprints_bulk_status",
+            "sprints:sprint_bulk_action",
             kwargs={
                 "workspace_slug": self.workspace.slug,
+                "action_name": action_name,
             },
         )
 
@@ -1168,8 +1171,8 @@ class SprintBulkStatusViewTest(SprintViewTestBase):
         sprint2 = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
 
         response = self.client.post(
-            self._get_bulk_status_url(),
-            {"sprints": [sprint1.key, sprint2.key], "status": SprintStatus.ARCHIVED},
+            self._get_bulk_status_url(SprintStatus.ARCHIVED),
+            {"sprints": [sprint1.key, sprint2.key]},
         )
 
         self.assertEqual(302, response.status_code)
@@ -1183,8 +1186,8 @@ class SprintBulkStatusViewTest(SprintViewTestBase):
         sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
 
         response = self.client.post(
-            self._get_bulk_status_url(),
-            {"sprints": [sprint.key], "status": SprintStatus.ACTIVE},
+            self._get_bulk_status_url(SprintStatus.ACTIVE),
+            {"sprints": [sprint.key]},
         )
 
         self.assertEqual(302, response.status_code)
@@ -1197,8 +1200,8 @@ class SprintBulkStatusViewTest(SprintViewTestBase):
         sprint2 = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
 
         response = self.client.post(
-            self._get_bulk_status_url(),
-            {"sprints": [sprint1.key, sprint2.key], "status": SprintStatus.ACTIVE},
+            self._get_bulk_status_url(SprintStatus.ACTIVE),
+            {"sprints": [sprint1.key, sprint2.key]},
         )
 
         self.assertEqual(302, response.status_code)
@@ -1214,8 +1217,8 @@ class SprintBulkStatusViewTest(SprintViewTestBase):
         sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
 
         response = self.client.post(
-            self._get_bulk_status_url(),
-            {"sprints": [sprint.key], "status": SprintStatus.ACTIVE},
+            self._get_bulk_status_url(SprintStatus.ACTIVE),
+            {"sprints": [sprint.key]},
         )
 
         self.assertEqual(302, response.status_code)
@@ -1228,8 +1231,8 @@ class SprintBulkStatusViewTest(SprintViewTestBase):
         sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.COMPLETED)
 
         response = self.client.post(
-            self._get_bulk_status_url(),
-            {"sprints": [sprint.key], "status": SprintStatus.ACTIVE},
+            self._get_bulk_status_url(SprintStatus.ACTIVE),
+            {"sprints": [sprint.key]},
         )
 
         self.assertEqual(302, response.status_code)
@@ -1237,16 +1240,16 @@ class SprintBulkStatusViewTest(SprintViewTestBase):
         # Sprint should still be in completed status
         self.assertEqual(SprintStatus.COMPLETED, sprint.status)
 
-    def test_bulk_status_invalid_status(self):
-        """Invalid status value shows error."""
-        sprint = SprintFactory(workspace=self.workspace)
-
+    def test_bulk_action_unknown_name_returns_404(self):
+        """Unknown bulk action name returns 404."""
         response = self.client.post(
-            self._get_bulk_status_url(),
-            {"sprints": [sprint.key], "status": "invalid_status"},
+            reverse(
+                "sprints:sprint_bulk_action",
+                kwargs={"workspace_slug": self.workspace.slug, "action_name": "nonexistent"},
+            ),
         )
 
-        self.assertEqual(302, response.status_code)
+        self.assertEqual(404, response.status_code)
 
 
 class SprintBulkOwnerViewTest(SprintViewTestBase):
@@ -1254,9 +1257,10 @@ class SprintBulkOwnerViewTest(SprintViewTestBase):
 
     def _get_bulk_owner_url(self):
         return reverse(
-            "sprints:sprints_bulk_owner",
+            "sprints:sprint_bulk_action",
             kwargs={
                 "workspace_slug": self.workspace.slug,
+                "action_name": "owner",
             },
         )
 
