@@ -231,6 +231,29 @@ class SprintListViewTest(SprintViewTestBase):
         self.assertContains(response, "Unassigned Sprint")
         self.assertNotContains(response, "My Sprint")
 
+    def test_htmx_list_content_refresh_respects_combined_filters(self):
+        """HTMX list-content refresh honours all active query params (status + owner).
+
+        Regression: after creating/updating via modal the handler was fetching a
+        bare URL, dropping filters and showing the default planning/active view.
+        """
+        SprintFactory(workspace=self.workspace, name="Planning Mine", status=SprintStatus.PLANNING, owner=self.user)
+        SprintFactory(
+            workspace=self.workspace, name="Planning Other", status=SprintStatus.PLANNING, owner=self.other_user
+        )
+        SprintFactory(workspace=self.workspace, name="Completed Mine", status=SprintStatus.COMPLETED, owner=self.user)
+
+        response = self.client.get(
+            self._get_list_url() + f"?status=planning&owner={self.user.pk}",
+            HTTP_HX_REQUEST="true",
+            HTTP_HX_TARGET="list-content",
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, "Planning Mine")
+        self.assertNotContains(response, "Planning Other")
+        self.assertNotContains(response, "Completed Mine")
+
 
 class SprintListViewProgressTest(SprintViewTestBase):
     """Tests for sprint list view progress computation."""

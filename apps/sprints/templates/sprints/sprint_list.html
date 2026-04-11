@@ -5,8 +5,8 @@
   {% partialdef page-content inline %}
   <section class="app-card relative"
            x-data="sprintList()"
-           @sprint-created.window="showNewSprintModal = false; htmx.ajax('GET', $event.detail.listUrl, {target: '#list-content', swap: 'innerHTML'})"
-           @sprint-updated.window="showNewSprintModal = false; htmx.ajax('GET', $event.detail.listUrl, {target: '#list-content', swap: 'innerHTML'})"
+           @sprint-created.window="showNewSprintModal = false; htmx.ajax('GET', window.location.pathname + window.location.search, {target: '#list-content', swap: 'innerHTML'})"
+           @sprint-updated.window="showNewSprintModal = false; htmx.ajax('GET', window.location.pathname + window.location.search, {target: '#list-content', swap: 'innerHTML'})"
            @filters-apply-page.window="
              let u = '{% url 'sprints:sprint_list' workspace.slug %}?' + new URLSearchParams({
                status: $event.detail.status || '',
