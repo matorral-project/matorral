@@ -8,6 +8,7 @@ from apps.issues.models import IssueStatus
 from apps.projects.factories import ProjectFactory
 from apps.sprints.factories import SprintFactory
 from apps.sprints.models import Sprint, SprintStatus
+from apps.users.factories import UserFactory
 from apps.workspaces.factories import WorkspaceFactory
 
 
@@ -138,6 +139,118 @@ class AvailableTest(TestCase):
 
         result = Sprint.objects.for_workspace(self.workspace).available()
         self.assertFalse(result.exists())
+
+
+class GetCreationDefaultsTest(TestCase):
+    """Tests for SprintManager.get_creation_defaults()."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.workspace = WorkspaceFactory()
+
+    def _defaults(self, workspace_members=None):
+        return Sprint.objects.get_creation_defaults(self.workspace, workspace_members)
+
+    def test_returns_empty_dict_when_no_sprints(self):
+        result = self._defaults()
+        self.assertEqual(result, {})
+
+    def test_ignores_archived_sprints(self):
+        SprintFactory(workspace=self.workspace, status=SprintStatus.ARCHIVED)
+        result = self._defaults()
+        self.assertEqual(result, {})
+
+    def test_uses_duration_of_last_sprint_by_start_date(self):
+        today = timezone.now().date()
+        # 3-week sprint
+        sprint = SprintFactory(
+            workspace=self.workspace,
+            status=SprintStatus.COMPLETED,
+            start_date=today - timedelta(weeks=3),
+            end_date=today,
+        )
+        duration = sprint.end_date - sprint.start_date
+
+        result = self._defaults()
+
+        expected_start = sprint.end_date + timedelta(days=1)
+        self.assertEqual(result["start_date"], expected_start)
+        self.assertEqual(result["end_date"], expected_start + duration)
+
+    def test_picks_latest_sprint_by_start_date(self):
+        today = timezone.now().date()
+        SprintFactory(
+            workspace=self.workspace,
+            status=SprintStatus.COMPLETED,
+            start_date=today - timedelta(weeks=6),
+            end_date=today - timedelta(weeks=4),
+        )
+        # 1-week sprint, more recent
+        latest = SprintFactory(
+            workspace=self.workspace,
+            status=SprintStatus.COMPLETED,
+            start_date=today - timedelta(weeks=2),
+            end_date=today - timedelta(weeks=1),
+        )
+        duration = latest.end_date - latest.start_date
+
+        result = self._defaults()
+
+        expected_start = latest.end_date + timedelta(days=1)
+        self.assertEqual(result["start_date"], expected_start)
+        self.assertEqual(result["end_date"], expected_start + duration)
+
+    def test_includes_planning_and_active_sprints(self):
+        today = timezone.now().date()
+        sprint = SprintFactory(
+            workspace=self.workspace,
+            status=SprintStatus.PLANNING,
+            start_date=today,
+            end_date=today + timedelta(weeks=2),
+        )
+        duration = sprint.end_date - sprint.start_date
+
+        result = self._defaults()
+
+        expected_start = sprint.end_date + timedelta(days=1)
+        self.assertEqual(result["start_date"], expected_start)
+        self.assertEqual(result["end_date"], expected_start + duration)
+
+    def test_prefills_capacity_from_latest_sprint(self):
+        SprintFactory(workspace=self.workspace, status=SprintStatus.COMPLETED, capacity=40)
+        result = self._defaults()
+        self.assertEqual(result["capacity"], 40)
+
+    def test_skips_capacity_when_none(self):
+        SprintFactory(workspace=self.workspace, status=SprintStatus.COMPLETED, capacity=None)
+        result = self._defaults()
+        self.assertNotIn("capacity", result)
+
+    def test_prefills_owner_from_latest_sprint(self):
+        user = UserFactory()
+        SprintFactory(workspace=self.workspace, status=SprintStatus.COMPLETED, owner=user)
+
+        result = self._defaults()
+
+        self.assertEqual(result["owner"], user.pk)
+
+    def test_single_workspace_member_overrides_sprint_owner(self):
+        sprint_owner = UserFactory()
+        single_member = UserFactory()
+        SprintFactory(workspace=self.workspace, status=SprintStatus.COMPLETED, owner=sprint_owner)
+
+        result = self._defaults(workspace_members=[single_member])
+
+        self.assertEqual(result["owner"], single_member.pk)
+
+    def test_multiple_workspace_members_uses_sprint_owner(self):
+        sprint_owner = UserFactory()
+        SprintFactory(workspace=self.workspace, status=SprintStatus.COMPLETED, owner=sprint_owner)
+        members = [UserFactory(), UserFactory()]
+
+        result = self._defaults(workspace_members=members)
+
+        self.assertEqual(result["owner"], sprint_owner.pk)
 
 
 class NeedingNextSprintTest(TestCase):

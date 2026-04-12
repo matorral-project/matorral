@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, StrEnum
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
@@ -20,6 +20,19 @@ class ActionType(Enum):
     MENU = "menu"
 
 
+class RenderType(StrEnum):
+    BUTTON = "button"
+    DROPDOWN = "dropdown"
+    MODAL = "modal"
+    MENU = "menu"
+
+
+@dataclass
+class BulkActionResult:
+    message: str
+    remaining_count: int | None = None
+
+
 class BaseAction:
     """Shared fields for single-sprint and bulk-sprint actions."""
 
@@ -33,7 +46,17 @@ class BaseAction:
 
 
 class SprintAction(BaseAction):
-    """Action that operates on a single sprint (detail page)."""
+    """Action that operates on a single sprint (detail page).
+
+    To register a new sprint action:
+    1. Create a subclass of SprintAction
+    2. Set name, label, icon, and other fields
+    3. Set action_type to ActionType.PRIMARY or ActionType.MENU
+    4. Implement is_available() to control visibility
+    5. Implement execute() to perform the action
+    6. Optionally override get_confirm_response() for custom confirmation UI
+    7. Register with @sprint_actions.register
+    """
 
     action_type = ActionType.PRIMARY
 
@@ -86,13 +109,17 @@ class SprintBulkAction(BaseAction):
     5. Register with @sprint_bulk_actions.register or sprint_bulk_actions.register_instance()
     """
 
-    render_type = "button"  # "button", "dropdown", or "modal"
+    render_type: RenderType = RenderType.BUTTON
 
     def validate(self, queryset, request):
         """Raise ValidationError to abort with user-facing message."""
 
-    def execute(self, queryset, request) -> str:
-        """Perform the bulk operation. Return success message string."""
+    def execute(self, queryset, request, extra_cleaned_data: dict | None = None) -> BulkActionResult:
+        """Perform the bulk operation. Return a BulkActionResult.
+
+        ``extra_cleaned_data`` holds the validated cleaned_data from the action's
+        extra form (see ``get_form_class``) when one is configured; otherwise None.
+        """
         raise NotImplementedError
 
     def get_form_class(self):
@@ -112,19 +139,30 @@ class SprintBulkAction(BaseAction):
         )
 
 
-class SprintActionRegistry:
-    def __init__(self):
-        self._actions: dict[str, SprintAction] = {}
+class ActionRegistry[T: BaseAction]:
+    """Generic registry for action instances keyed by name."""
 
-    def register(self, action_class):
+    def __init__(self):
+        self._actions: dict[str, T] = {}
+
+    def register(self, action_class: type[T]) -> type[T]:
         """Register an action class. Can be used as @decorator."""
         instance = action_class()
         self._actions[instance.name] = instance
         return action_class
 
-    def get(self, name: str) -> SprintAction | None:
+    def register_instance(self, instance: T) -> None:
+        """Register a pre-built action instance (for parameterized actions)."""
+        self._actions[instance.name] = instance
+
+    def get(self, name: str) -> T | None:
         return self._actions.get(name)
 
+    def all(self) -> list[T]:
+        return list(self._actions.values())
+
+
+class SprintActionRegistry(ActionRegistry[SprintAction]):
     def available_for(self, sprint, user) -> list[SprintAction]:
         return [a for a in self._actions.values() if a.is_available(sprint, user)]
 
@@ -138,31 +176,12 @@ class SprintActionRegistry:
 sprint_actions = SprintActionRegistry()
 
 
-class SprintBulkActionRegistry:
+class SprintBulkActionRegistry(ActionRegistry[SprintBulkAction]):
     """Registry for bulk sprint actions.
 
     Bulk actions are always shown in the toolbar (no is_available filtering).
     Register actions with @registry.register (class decorator) or registry.register_instance().
     """
-
-    def __init__(self):
-        self._actions: dict[str, SprintBulkAction] = {}
-
-    def register(self, action_class):
-        """Register an action class. Can be used as @decorator."""
-        instance = action_class()
-        self._actions[instance.name] = instance
-        return action_class
-
-    def register_instance(self, instance):
-        """Register a pre-built action instance (for parameterized actions)."""
-        self._actions[instance.name] = instance
-
-    def get(self, name: str) -> SprintBulkAction | None:
-        return self._actions.get(name)
-
-    def all(self) -> list[SprintBulkAction]:
-        return list(self._actions.values())
 
 
 sprint_bulk_actions = SprintBulkActionRegistry()
@@ -179,50 +198,36 @@ class BoundAction:
     confirm_url: str
     confirm_title: str = ""
     confirm_body: str = ""
-    render_type: str = "button"
+    render_type: RenderType = RenderType.BUTTON
 
-
-def build_sprint_action_context(sprint, user) -> dict:
-    """Build primary_actions and menu_actions context for templates."""
-
-    def make_bound(action):
-        return BoundAction(
+    @classmethod
+    def from_action(cls, action, subject) -> BoundAction:
+        return cls(
             name=action.name,
             label=str(action.label),
             icon=action.icon,
             css_class=action.css_class,
             confirm=action.confirm,
-            url=action.get_url(sprint),
-            confirm_url=action.get_confirm_url(sprint),
+            url=action.get_url(subject),
+            confirm_url=action.get_confirm_url(subject),
             confirm_title=str(action.confirm_title),
             confirm_body=str(action.confirm_body),
+            render_type=getattr(action, "render_type", RenderType.BUTTON),
         )
 
+
+def build_sprint_action_context(sprint, user) -> dict:
+    """Build primary_actions and menu_actions context for templates."""
     return {
-        "primary_actions": [make_bound(a) for a in sprint_actions.primary_for(sprint, user)],
-        "menu_actions": [make_bound(a) for a in sprint_actions.menu_for(sprint, user)],
+        "primary_actions": [BoundAction.from_action(a, sprint) for a in sprint_actions.primary_for(sprint, user)],
+        "menu_actions": [BoundAction.from_action(a, sprint) for a in sprint_actions.menu_for(sprint, user)],
     }
 
 
 def build_sprint_bulk_action_context(workspace) -> dict:
     """Build bulk_actions context for sprint list template."""
-
-    def make_bound(action):
-        return BoundAction(
-            name=action.name,
-            label=str(action.label),
-            icon=action.icon,
-            css_class=action.css_class,
-            confirm=action.confirm,
-            url=action.get_url(workspace),
-            confirm_url=action.get_confirm_url(workspace),
-            confirm_title=str(action.confirm_title),
-            confirm_body=str(action.confirm_body),
-            render_type=action.render_type,
-        )
-
     return {
-        "bulk_actions": [make_bound(a) for a in sprint_bulk_actions.all()],
+        "bulk_actions": [BoundAction.from_action(a, workspace) for a in sprint_bulk_actions.all()],
     }
 
 
@@ -370,18 +375,21 @@ class BulkDeleteAction(SprintBulkAction):
     confirm_title = _("Delete Sprints")
     confirm_body = _("Are you sure you want to delete the selected sprints? This action cannot be undone.")
     css_class = "btn-error"
-    render_type = "menu"
+    render_type = RenderType.MENU
 
-    def execute(self, queryset, request):
+    def execute(self, queryset, request, extra_cleaned_data: dict | None = None):
         deleted_count, _deleted_objects = queryset.delete()
         remaining_count = Sprint.objects.for_workspace(request.workspace).count()
-        return deleted_count, remaining_count
+
+        message = _("%(count)d sprint(s) deleted successfully.") % {"count": deleted_count}
+
+        return BulkActionResult(message=message, remaining_count=remaining_count)
 
 
 class BulkStatusAction(SprintBulkAction):
     """Parameterized bulk action for setting sprint status."""
 
-    render_type = "dropdown"
+    render_type = RenderType.DROPDOWN
 
     def __init__(self, status_value, status_label):
         self.name = f"status-{status_value}"
@@ -396,7 +404,7 @@ class BulkStatusAction(SprintBulkAction):
                 _("Only one sprint can be active at a time. Please select a single sprint to activate.")
             )
 
-    def execute(self, queryset, request):
+    def execute(self, queryset, request, extra_cleaned_data: dict | None = None):
         selected_pks = list(queryset.values_list("pk", flat=True))
 
         if self.status == SprintStatus.ACTIVE:
@@ -404,7 +412,8 @@ class BulkStatusAction(SprintBulkAction):
 
             try:
                 sprint.start()
-                return _("Sprint '%(name)s' is now active.") % {"name": sprint.name}
+                message = _("Sprint '%(name)s' is now active.") % {"name": sprint.name}
+                return BulkActionResult(message=message)
             except ValueError as exc:
                 raise ValidationError(str(exc)) from exc
             except IntegrityError as exc:
@@ -425,11 +434,17 @@ class BulkStatusAction(SprintBulkAction):
             actor=request.user,
         )
 
-        return _("%(count)d sprint(s) updated to %(status)s.") % {"count": updated_count, "status": new_display}
+        message = _("%(count)d sprint(s) updated to %(status)s.") % {"count": updated_count, "status": new_display}
+
+        return BulkActionResult(message=message)
 
 
-for _value, _label in SprintStatus.choices:
-    sprint_bulk_actions.register_instance(BulkStatusAction(_value, _label))
+def _register_status_actions():
+    for value, label in SprintStatus.choices:
+        sprint_bulk_actions.register_instance(BulkStatusAction(value, label))
+
+
+_register_status_actions()
 
 
 @sprint_bulk_actions.register
@@ -438,19 +453,13 @@ class BulkOwnerAction(SprintBulkAction):
     label = _("Set Owner")
     icon = "user"
     css_class = "btn-outline"
-    render_type = "modal"
+    render_type = RenderType.MODAL
 
     def get_form_class(self):
         return SprintBulkOwnerForm
 
-    def execute(self, queryset, request):
-        extra_form = SprintBulkOwnerForm(
-            data=request.POST,
-            workspace=request.workspace,
-            workspace_members=request.workspace_members,
-        )
-        extra_form.is_valid()
-        owner = extra_form.cleaned_data["owner"]
+    def execute(self, queryset, request, extra_cleaned_data: dict | None = None):
+        owner = (extra_cleaned_data or {}).get("owner")
 
         selected_pks = list(queryset.values_list("pk", flat=True))
         objects = list(Sprint.objects.filter(pk__in=selected_pks).select_related("owner"))
@@ -463,5 +472,11 @@ class BulkOwnerAction(SprintBulkAction):
         )
 
         if owner:
-            return _("%(count)d sprint(s) assigned to %(owner)s.") % {"count": updated_count, "owner": new_display}
-        return _("%(count)d sprint(s) unassigned.") % {"count": updated_count}
+            message = _("%(count)d sprint(s) assigned to %(owner)s.") % {
+                "count": updated_count,
+                "owner": new_display,
+            }
+        else:
+            message = _("%(count)d sprint(s) unassigned.") % {"count": updated_count}
+
+        return BulkActionResult(message=message)

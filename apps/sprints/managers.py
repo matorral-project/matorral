@@ -225,34 +225,42 @@ class SprintManager(models.Manager):
         return sprint
 
     def get_creation_defaults(self, workspace: Workspace, workspace_members) -> dict:
-        """Return initial dict for sprint create form based on latest sprint data."""
+        """Return initial dict for sprint create form based on latest sprint data.
+
+        Finds the last sprint (by start_date) in active, completed, or planning status
+        and pre-calculates the next period using the same duration.
+        """
         initial = {}
 
         if workspace_members is not None and len(workspace_members) == 1:
             initial["owner"] = workspace_members[0].pk
 
-        try:
-            latest_sprint = (
-                self.for_workspace(workspace).values("owner_id", "capacity", "status", "end_date").latest("created_at")
+        latest_sprint = (
+            self.for_workspace(workspace)
+            .filter(
+                status__in=[
+                    self.model.status_model.ACTIVE,
+                    self.model.status_model.COMPLETED,
+                    self.model.status_model.PLANNING,
+                ]
             )
+            .values("owner_id", "capacity", "start_date", "end_date")
+            .order_by("start_date", "end_date", "created_at")
+            .last()
+        )
 
-            if "owner" not in initial and latest_sprint["owner_id"]:
-                initial["owner"] = latest_sprint["owner_id"]
+        if latest_sprint is None:
+            return initial
 
-            if latest_sprint["capacity"]:
-                initial["capacity"] = latest_sprint["capacity"]
+        if "owner" not in initial and latest_sprint["owner_id"]:
+            initial["owner"] = latest_sprint["owner_id"]
 
-            if latest_sprint["status"] == self.model.status_model.COMPLETED:
-                initial["start_date"] = latest_sprint["end_date"]
-                initial["end_date"] = latest_sprint["end_date"] + timedelta(days=7)
-            else:
-                try:
-                    latest_completed = self.for_workspace(workspace).completed().values("end_date").latest("end_date")
-                    initial["start_date"] = latest_completed["end_date"]
-                    initial["end_date"] = latest_completed["end_date"] + timedelta(days=7)
-                except self.model.DoesNotExist:
-                    pass
-        except self.model.DoesNotExist:
-            pass
+        if latest_sprint["capacity"]:
+            initial["capacity"] = latest_sprint["capacity"]
+
+        duration = latest_sprint["end_date"] - latest_sprint["start_date"]
+        new_start = latest_sprint["end_date"] + timedelta(days=1)
+        initial["start_date"] = new_start
+        initial["end_date"] = new_start + duration
 
         return initial

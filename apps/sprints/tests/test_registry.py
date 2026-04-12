@@ -10,6 +10,8 @@ from apps.sprints.models import Sprint, SprintStatus
 from apps.sprints.registry import (
     ActionType,
     BaseAction,
+    BulkActionResult,
+    RenderType,
     SprintAction,
     SprintActionRegistry,
     SprintBulkAction,
@@ -348,10 +350,11 @@ class BulkDeleteActionTest(TestCase):
         request = RequestFactory().post("/")
         request.workspace = self.workspace
 
-        deleted_count, remaining_count = action.execute(queryset, request)
+        result = action.execute(queryset, request)
 
-        self.assertEqual(2, deleted_count)
-        self.assertEqual(1, remaining_count)
+        self.assertIsInstance(result, BulkActionResult)
+        self.assertEqual(1, result.remaining_count)
+        self.assertIn("2", str(result.message))
 
     def test_confirm_is_true(self):
         action = sprint_bulk_actions.get("delete")
@@ -361,7 +364,7 @@ class BulkDeleteActionTest(TestCase):
     def test_render_type_is_menu(self):
         action = sprint_bulk_actions.get("delete")
 
-        self.assertEqual("menu", action.render_type)
+        self.assertEqual(RenderType.MENU, action.render_type)
 
 
 class BulkStatusActionTest(TestCase):
@@ -413,7 +416,9 @@ class BulkStatusActionTest(TestCase):
         sprint2.refresh_from_db()
         self.assertEqual(SprintStatus.ARCHIVED, sprint1.status)
         self.assertEqual(SprintStatus.ARCHIVED, sprint2.status)
-        self.assertIn("2", str(result))
+        self.assertIsInstance(result, BulkActionResult)
+        self.assertIsNone(result.remaining_count)
+        self.assertIn("2", str(result.message))
 
     def test_execute_active_calls_start(self):
         action = sprint_bulk_actions.get(f"status-{SprintStatus.ACTIVE}")
@@ -428,7 +433,8 @@ class BulkStatusActionTest(TestCase):
 
         sprint.refresh_from_db()
         self.assertEqual(SprintStatus.ACTIVE, sprint.status)
-        self.assertIn(sprint.name, str(result))
+        self.assertIsInstance(result, BulkActionResult)
+        self.assertIn(sprint.name, str(result.message))
 
     def test_execute_active_raises_on_start_error(self):
         action = sprint_bulk_actions.get(f"status-{SprintStatus.ACTIVE}")
@@ -464,7 +470,7 @@ class BulkStatusActionTest(TestCase):
     def test_render_type_is_dropdown(self):
         action = sprint_bulk_actions.get(f"status-{SprintStatus.PLANNING}")
 
-        self.assertEqual("dropdown", action.render_type)
+        self.assertEqual(RenderType.DROPDOWN, action.render_type)
 
 
 class BulkOwnerActionTest(TestCase):
@@ -485,4 +491,4 @@ class BulkOwnerActionTest(TestCase):
     def test_render_type_is_modal(self):
         action = sprint_bulk_actions.get("owner")
 
-        self.assertEqual("modal", action.render_type)
+        self.assertEqual(RenderType.MODAL, action.render_type)

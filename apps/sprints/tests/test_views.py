@@ -463,7 +463,7 @@ class SprintCreateViewTest(SprintViewTestBase):
 
     def test_create_view_pre_populates_dates_from_completed_sprint(self):
         """Create view pre-populates dates based on latest completed sprint."""
-        # Create a completed sprint
+        # Create a completed sprint with a 1-week duration
         start_date = timezone.now().date() - timedelta(weeks=2)
         end_date = start_date + timedelta(weeks=1)
         SprintFactory(
@@ -476,44 +476,54 @@ class SprintCreateViewTest(SprintViewTestBase):
         response = self.client.get(self._get_create_url())
 
         form = response.context["form"]
-        self.assertEqual(end_date, form.initial["start_date"])
-        self.assertEqual(end_date + timedelta(days=7), form.initial["end_date"])
+        expected_start = end_date + timedelta(days=1)
+        self.assertEqual(expected_start, form.initial["start_date"])
+        self.assertEqual(expected_start + timedelta(weeks=1), form.initial["end_date"])
 
     def test_create_view_uses_latest_completed_sprint_dates(self):
-        """Create view uses the latest completed sprint for date calculation."""
-        # Create two completed sprints with different end dates
-        old_end_date = timezone.now().date() - timedelta(weeks=2)
-        new_end_date = timezone.now().date() - timedelta(weeks=1)
+        """Create view uses the latest sprint (by start_date) for date calculation."""
+        # Create two completed sprints: older 1-week, newer 1-week
+        old_start = timezone.now().date() - timedelta(weeks=3)
+        old_end = old_start + timedelta(weeks=1)
+        new_start = old_end + timedelta(days=1)
+        new_end = new_start + timedelta(weeks=1)
         SprintFactory(
             workspace=self.workspace,
             status=SprintStatus.COMPLETED,
-            start_date=old_end_date - timedelta(weeks=1),
-            end_date=old_end_date,
+            start_date=old_start,
+            end_date=old_end,
         )
         SprintFactory(
             workspace=self.workspace,
             status=SprintStatus.COMPLETED,
-            start_date=old_end_date,
-            end_date=new_end_date,
+            start_date=new_start,
+            end_date=new_end,
         )
 
         response = self.client.get(self._get_create_url())
 
         form = response.context["form"]
-        # Should use the latest (new_end_date), not the older one
-        self.assertEqual(new_end_date, form.initial["start_date"])
-        self.assertEqual(new_end_date + timedelta(days=7), form.initial["end_date"])
+        # Should use the latest sprint (new_start/new_end), preserving its 1-week duration
+        expected_start = new_end + timedelta(days=1)
+        self.assertEqual(expected_start, form.initial["start_date"])
+        self.assertEqual(expected_start + timedelta(weeks=1), form.initial["end_date"])
 
-    def test_create_view_no_dates_without_completed_sprint(self):
-        """Create view does not pre-populate dates if no completed sprint exists."""
-        # Create a planning sprint (not completed)
-        SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
+    def test_create_view_pre_populates_dates_from_planning_sprint(self):
+        """Create view pre-populates dates from a planning sprint (not only completed)."""
+        today = timezone.now().date()
+        sprint = SprintFactory(
+            workspace=self.workspace,
+            status=SprintStatus.PLANNING,
+            start_date=today,
+            end_date=today + timedelta(weeks=2),
+        )
 
         response = self.client.get(self._get_create_url())
 
         form = response.context["form"]
-        self.assertNotIn("start_date", form.initial)
-        self.assertNotIn("end_date", form.initial)
+        expected_start = sprint.end_date + timedelta(days=1)
+        self.assertEqual(expected_start, form.initial["start_date"])
+        self.assertEqual(expected_start + timedelta(weeks=2), form.initial["end_date"])
 
     def test_create_view_ignores_other_workspace_completed_sprints(self):
         """Create view only considers completed sprints from the current workspace."""
@@ -647,10 +657,23 @@ class SprintCreateViewTest(SprintViewTestBase):
         self.assertNotIn("capacity", form.initial)
 
     def test_create_view_presets_from_latest_not_oldest_sprint(self):
-        """Presets come from the most recently created sprint, not an older one."""
+        """Presets come from the sprint with the latest start_date, not an older one."""
+        today = timezone.now().date()
         MembershipFactory(workspace=self.workspace, user=self.other_user)
-        SprintFactory(workspace=self.workspace, owner=self.user, capacity=20)
-        SprintFactory(workspace=self.workspace, owner=self.other_user, capacity=35)
+        SprintFactory(
+            workspace=self.workspace,
+            owner=self.user,
+            capacity=20,
+            start_date=today - timedelta(weeks=4),
+            end_date=today - timedelta(weeks=2),
+        )
+        SprintFactory(
+            workspace=self.workspace,
+            owner=self.other_user,
+            capacity=35,
+            start_date=today - timedelta(weeks=2),
+            end_date=today,
+        )
 
         response = self.client.get(self._get_create_url())
 
