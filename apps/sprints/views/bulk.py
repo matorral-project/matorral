@@ -133,8 +133,9 @@ class SprintBulkActionView(SprintBulkActionMixin, LoginAndWorkspaceRequiredMixin
             return self.render_response(self.form.cleaned_data["page"])
 
         # Execute the action
+        extra_cleaned_data = self.form.cleaned_data if extra_form_class else None
         try:
-            result = action.execute(selected_qs, request)
+            result = action.execute(selected_qs, request, extra_cleaned_data=extra_cleaned_data)
         except ValidationError as exc:
             for msg in exc.messages:
                 messages.error(request, msg)

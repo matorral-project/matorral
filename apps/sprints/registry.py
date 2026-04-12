@@ -114,8 +114,12 @@ class SprintBulkAction(BaseAction):
     def validate(self, queryset, request):
         """Raise ValidationError to abort with user-facing message."""
 
-    def execute(self, queryset, request) -> BulkActionResult:
-        """Perform the bulk operation. Return a BulkActionResult."""
+    def execute(self, queryset, request, extra_cleaned_data: dict | None = None) -> BulkActionResult:
+        """Perform the bulk operation. Return a BulkActionResult.
+
+        ``extra_cleaned_data`` holds the validated cleaned_data from the action's
+        extra form (see ``get_form_class``) when one is configured; otherwise None.
+        """
         raise NotImplementedError
 
     def get_form_class(self):
@@ -395,7 +399,7 @@ class BulkDeleteAction(SprintBulkAction):
     css_class = "btn-error"
     render_type = RenderType.MENU
 
-    def execute(self, queryset, request):
+    def execute(self, queryset, request, extra_cleaned_data: dict | None = None):
         deleted_count, _deleted_objects = queryset.delete()
         remaining_count = Sprint.objects.for_workspace(request.workspace).count()
 
@@ -422,7 +426,7 @@ class BulkStatusAction(SprintBulkAction):
                 _("Only one sprint can be active at a time. Please select a single sprint to activate.")
             )
 
-    def execute(self, queryset, request):
+    def execute(self, queryset, request, extra_cleaned_data: dict | None = None):
         selected_pks = list(queryset.values_list("pk", flat=True))
 
         if self.status == SprintStatus.ACTIVE:
@@ -476,14 +480,8 @@ class BulkOwnerAction(SprintBulkAction):
     def get_form_class(self):
         return SprintBulkOwnerForm
 
-    def execute(self, queryset, request):
-        extra_form = SprintBulkOwnerForm(
-            data=request.POST,
-            workspace=request.workspace,
-            workspace_members=request.workspace_members,
-        )
-        extra_form.is_valid()
-        owner = extra_form.cleaned_data["owner"]
+    def execute(self, queryset, request, extra_cleaned_data: dict | None = None):
+        owner = (extra_cleaned_data or {}).get("owner")
 
         selected_pks = list(queryset.values_list("pk", flat=True))
         objects = list(Sprint.objects.filter(pk__in=selected_pks).select_related("owner"))
