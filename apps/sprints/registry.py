@@ -139,19 +139,30 @@ class SprintBulkAction(BaseAction):
         )
 
 
-class SprintActionRegistry:
-    def __init__(self):
-        self._actions: dict[str, SprintAction] = {}
+class ActionRegistry[T: BaseAction]:
+    """Generic registry for action instances keyed by name."""
 
-    def register(self, action_class):
+    def __init__(self):
+        self._actions: dict[str, T] = {}
+
+    def register(self, action_class: type[T]) -> type[T]:
         """Register an action class. Can be used as @decorator."""
         instance = action_class()
         self._actions[instance.name] = instance
         return action_class
 
-    def get(self, name: str) -> SprintAction | None:
+    def register_instance(self, instance: T) -> None:
+        """Register a pre-built action instance (for parameterized actions)."""
+        self._actions[instance.name] = instance
+
+    def get(self, name: str) -> T | None:
         return self._actions.get(name)
 
+    def all(self) -> list[T]:
+        return list(self._actions.values())
+
+
+class SprintActionRegistry(ActionRegistry[SprintAction]):
     def available_for(self, sprint, user) -> list[SprintAction]:
         return [a for a in self._actions.values() if a.is_available(sprint, user)]
 
@@ -165,31 +176,12 @@ class SprintActionRegistry:
 sprint_actions = SprintActionRegistry()
 
 
-class SprintBulkActionRegistry:
+class SprintBulkActionRegistry(ActionRegistry[SprintBulkAction]):
     """Registry for bulk sprint actions.
 
     Bulk actions are always shown in the toolbar (no is_available filtering).
     Register actions with @registry.register (class decorator) or registry.register_instance().
     """
-
-    def __init__(self):
-        self._actions: dict[str, SprintBulkAction] = {}
-
-    def register(self, action_class):
-        """Register an action class. Can be used as @decorator."""
-        instance = action_class()
-        self._actions[instance.name] = instance
-        return action_class
-
-    def register_instance(self, instance):
-        """Register a pre-built action instance (for parameterized actions)."""
-        self._actions[instance.name] = instance
-
-    def get(self, name: str) -> SprintBulkAction | None:
-        return self._actions.get(name)
-
-    def all(self) -> list[SprintBulkAction]:
-        return list(self._actions.values())
 
 
 sprint_bulk_actions = SprintBulkActionRegistry()
