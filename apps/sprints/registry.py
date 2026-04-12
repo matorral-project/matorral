@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, StrEnum
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
@@ -20,6 +20,13 @@ class ActionType(Enum):
     MENU = "menu"
 
 
+class RenderType(StrEnum):
+    BUTTON = "button"
+    DROPDOWN = "dropdown"
+    MODAL = "modal"
+    MENU = "menu"
+
+
 class BaseAction:
     """Shared fields for single-sprint and bulk-sprint actions."""
 
@@ -33,7 +40,17 @@ class BaseAction:
 
 
 class SprintAction(BaseAction):
-    """Action that operates on a single sprint (detail page)."""
+    """Action that operates on a single sprint (detail page).
+
+    To register a new sprint action:
+    1. Create a subclass of SprintAction
+    2. Set name, label, icon, and other fields
+    3. Set action_type to ActionType.PRIMARY or ActionType.MENU
+    4. Implement is_available() to control visibility
+    5. Implement execute() to perform the action
+    6. Optionally override get_confirm_response() for custom confirmation UI
+    7. Register with @sprint_actions.register
+    """
 
     action_type = ActionType.PRIMARY
 
@@ -86,7 +103,7 @@ class SprintBulkAction(BaseAction):
     5. Register with @sprint_bulk_actions.register or sprint_bulk_actions.register_instance()
     """
 
-    render_type = "button"  # "button", "dropdown", or "modal"
+    render_type: RenderType = RenderType.BUTTON
 
     def validate(self, queryset, request):
         """Raise ValidationError to abort with user-facing message."""
@@ -179,7 +196,7 @@ class BoundAction:
     confirm_url: str
     confirm_title: str = ""
     confirm_body: str = ""
-    render_type: str = "button"
+    render_type: RenderType = RenderType.BUTTON
 
 
 def build_sprint_action_context(sprint, user) -> dict:
@@ -370,7 +387,7 @@ class BulkDeleteAction(SprintBulkAction):
     confirm_title = _("Delete Sprints")
     confirm_body = _("Are you sure you want to delete the selected sprints? This action cannot be undone.")
     css_class = "btn-error"
-    render_type = "menu"
+    render_type = RenderType.MENU
 
     def execute(self, queryset, request):
         deleted_count, _deleted_objects = queryset.delete()
@@ -381,7 +398,7 @@ class BulkDeleteAction(SprintBulkAction):
 class BulkStatusAction(SprintBulkAction):
     """Parameterized bulk action for setting sprint status."""
 
-    render_type = "dropdown"
+    render_type = RenderType.DROPDOWN
 
     def __init__(self, status_value, status_label):
         self.name = f"status-{status_value}"
@@ -428,8 +445,12 @@ class BulkStatusAction(SprintBulkAction):
         return _("%(count)d sprint(s) updated to %(status)s.") % {"count": updated_count, "status": new_display}
 
 
-for _value, _label in SprintStatus.choices:
-    sprint_bulk_actions.register_instance(BulkStatusAction(_value, _label))
+def _register_status_actions():
+    for value, label in SprintStatus.choices:
+        sprint_bulk_actions.register_instance(BulkStatusAction(value, label))
+
+
+_register_status_actions()
 
 
 @sprint_bulk_actions.register
@@ -438,7 +459,7 @@ class BulkOwnerAction(SprintBulkAction):
     label = _("Set Owner")
     icon = "user"
     css_class = "btn-outline"
-    render_type = "modal"
+    render_type = RenderType.MODAL
 
     def get_form_class(self):
         return SprintBulkOwnerForm

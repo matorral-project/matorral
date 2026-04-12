@@ -10,6 +10,7 @@ from apps.sprints.models import Sprint, SprintStatus
 from apps.sprints.registry import (
     ActionType,
     BaseAction,
+    RenderType,
     SprintAction,
     SprintActionRegistry,
     SprintBulkAction,
@@ -361,7 +362,7 @@ class BulkDeleteActionTest(TestCase):
     def test_render_type_is_menu(self):
         action = sprint_bulk_actions.get("delete")
 
-        self.assertEqual("menu", action.render_type)
+        self.assertEqual(RenderType.MENU, action.render_type)
 
 
 class BulkStatusActionTest(TestCase):
@@ -464,7 +465,7 @@ class BulkStatusActionTest(TestCase):
     def test_render_type_is_dropdown(self):
         action = sprint_bulk_actions.get(f"status-{SprintStatus.PLANNING}")
 
-        self.assertEqual("dropdown", action.render_type)
+        self.assertEqual(RenderType.DROPDOWN, action.render_type)
 
 
 class BulkOwnerActionTest(TestCase):
@@ -485,4 +486,4 @@ class BulkOwnerActionTest(TestCase):
     def test_render_type_is_modal(self):
         action = sprint_bulk_actions.get("owner")
 
-        self.assertEqual("modal", action.render_type)
+        self.assertEqual(RenderType.MODAL, action.render_type)
