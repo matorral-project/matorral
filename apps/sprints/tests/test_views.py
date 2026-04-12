@@ -1,6 +1,10 @@
 import json
 from datetime import timedelta
+from unittest.mock import patch
 
+from django.conf import settings
+from django.contrib.messages import get_messages
+from django.db import IntegrityError
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -1174,6 +1178,74 @@ class SprintBulkDeleteViewTest(SprintViewTestBase):
         # Sprint should still exist
         self.assertEqual(1, Sprint.objects.for_workspace(self.workspace).count())
 
+    def test_bulk_delete_htmx_returns_list_partial(self):
+        """HTMX POST returns the sprint list fragment (200) and deleted sprints are gone."""
+        sprint1 = SprintFactory(workspace=self.workspace, name="Sprint 1")
+        sprint2 = SprintFactory(workspace=self.workspace, name="Sprint 2")
+        sprint3 = SprintFactory(workspace=self.workspace, name="Sprint 3")
+
+        response = self.client.post(
+            self._get_bulk_delete_url(),
+            {"sprints": [sprint1.key, sprint2.key]},
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(200, response.status_code)
+        # Fragment rendering uses the block name as the template name
+        self.assertTemplateUsed(response, "page-content")
+        self.assertFalse(Sprint.objects.filter(pk=sprint1.pk).exists())
+        self.assertFalse(Sprint.objects.filter(pk=sprint2.pk).exists())
+        self.assertTrue(Sprint.objects.filter(pk=sprint3.pk).exists())
+
+    def test_bulk_delete_htmx_preserves_filters(self):
+        """HTMX POST with filters re-renders the filtered sprint list."""
+        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING, name="Keep Me")
+        to_delete = SprintFactory(workspace=self.workspace, status=SprintStatus.ARCHIVED, name="Delete Me")
+
+        response = self.client.post(
+            self._get_bulk_delete_url(),
+            {
+                "sprints": [to_delete.key],
+                "status_filter": SprintStatus.PLANNING,
+                "search": "",
+            },
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.assertFalse(Sprint.objects.filter(pk=to_delete.pk).exists())
+        self.assertTrue(Sprint.objects.filter(pk=sprint.pk).exists())
+
+    def test_bulk_delete_redirect_preserves_page(self):
+        """Non-HTMX redirect preserves page number when page > 1."""
+        # Create enough sprints so that page 2 remains valid after deleting one
+        sprints = [SprintFactory(workspace=self.workspace) for _ in range(settings.DEFAULT_PAGE_SIZE + 5)]
+        to_delete = sprints[0]
+
+        response = self.client.post(
+            self._get_bulk_delete_url(),
+            {"sprints": [to_delete.key], "page": 2},
+        )
+
+        self.assertEqual(302, response.status_code)
+        self.assertIn("page=2", response["Location"])
+
+    def test_bulk_delete_htmx_paginated_includes_elided_range(self):
+        """HTMX response for a paginated list includes elided_page_range in context."""
+        # Create enough sprints to span multiple pages (all kept after delete of 1)
+        sprints = [SprintFactory(workspace=self.workspace) for _ in range(settings.DEFAULT_PAGE_SIZE * 3)]
+        to_delete = sprints[0]
+
+        response = self.client.post(
+            self._get_bulk_delete_url(),
+            {"sprints": [to_delete.key]},
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(response.context["is_paginated"])
+        self.assertIn("elided_page_range", response.context)
+
 
 class SprintBulkStatusViewTest(SprintViewTestBase):
     """Tests for bulk updating sprint status."""
@@ -1326,6 +1398,99 @@ class SprintBulkOwnerViewTest(SprintViewTestBase):
         response = self.client.post(self._get_bulk_owner_url(), {"sprints": [], "owner": self.user.pk})
 
         self.assertEqual(302, response.status_code)
+
+    def test_bulk_owner_invalid_form_shows_errors(self):
+        """Posting an owner pk not in the workspace fails validation and flashes an error."""
+        sprint = SprintFactory(workspace=self.workspace)
+        non_member = UserFactory()
+
+        response = self.client.post(
+            self._get_bulk_owner_url(),
+            {"sprints": [sprint.key], "owner": non_member.pk},
+        )
+
+        self.assertEqual(302, response.status_code)
+        messages_list = list(get_messages(response.wsgi_request))
+        self.assertTrue(messages_list, "Expected at least one error message to be flashed")
+
+
+class SprintBulkActionConfirmViewTest(SprintViewTestBase):
+    """Tests for SprintBulkActionConfirmView."""
+
+    def _get_bulk_confirm_url(self, action_name):
+        return reverse(
+            "sprints:sprint_bulk_action_confirm",
+            kwargs={
+                "workspace_slug": self.workspace.slug,
+                "action_name": action_name,
+            },
+        )
+
+    def test_confirm_modal_renders_for_delete(self):
+        """GET the confirm URL for the delete action renders the confirmation modal."""
+        response = self.client.get(self._get_bulk_confirm_url("delete"))
+
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, "sprints/includes/bulk_action_confirm_modal.html")
+
+    def test_confirm_unknown_action_returns_404(self):
+        """GET with an unregistered action name returns 404."""
+        response = self.client.get(self._get_bulk_confirm_url("nonexistent"))
+
+        self.assertEqual(404, response.status_code)
+
+    def test_confirm_non_confirmable_action_returns_404(self):
+        """GET for an action whose confirm=False returns 404."""
+        # BulkOwnerAction has confirm=False (default from BaseAction)
+        response = self.client.get(self._get_bulk_confirm_url("owner"))
+
+        self.assertEqual(404, response.status_code)
+
+
+class SprintActionDispatchTest(SprintViewTestBase):
+    """Tests for single-sprint action error paths in the registry (via SprintActionView)."""
+
+    def test_start_action_integrity_error_flashes_message(self):
+        """IntegrityError during sprint.start() is caught and shown as an error message."""
+        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
+
+        with patch.object(Sprint, "start", side_effect=IntegrityError("duplicate key")):
+            response = self.client.post(self._get_action_url(sprint, "start"))
+
+        self.assertEqual(302, response.status_code)
+        messages_list = list(get_messages(response.wsgi_request))
+        self.assertTrue(
+            any("already active" in str(m) for m in messages_list),
+            f"Expected 'already active' in messages, got: {[str(m) for m in messages_list]}",
+        )
+
+    def test_complete_action_value_error_flashes_message(self):
+        """ValueError during sprint.complete() is caught and shown as an error message."""
+        sprint = SprintFactory(workspace=self.workspace, active=True)
+
+        with patch.object(Sprint, "complete", side_effect=ValueError("Cannot complete")):
+            response = self.client.post(self._get_action_url(sprint, "complete"))
+
+        self.assertEqual(302, response.status_code)
+        messages_list = list(get_messages(response.wsgi_request))
+        self.assertTrue(
+            any("Cannot complete" in str(m) for m in messages_list),
+            f"Expected 'Cannot complete' in messages, got: {[str(m) for m in messages_list]}",
+        )
+
+    def test_archive_action_value_error_flashes_message(self):
+        """ValueError during sprint.archive() is caught and shown as an error message."""
+        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
+
+        with patch.object(Sprint, "archive", side_effect=ValueError("Cannot archive")):
+            response = self.client.post(self._get_action_url(sprint, "archive"))
+
+        self.assertEqual(302, response.status_code)
+        messages_list = list(get_messages(response.wsgi_request))
+        self.assertTrue(
+            any("Cannot archive" in str(m) for m in messages_list),
+            f"Expected 'Cannot archive' in messages, got: {[str(m) for m in messages_list]}",
+        )
 
 
 class SprintRowInlineEditViewTest(SprintViewTestBase):

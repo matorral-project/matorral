@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from django.test import RequestFactory, TestCase
 
 from apps.sprints.factories import SprintFactory
@@ -440,6 +441,22 @@ class BulkStatusActionTest(TestCase):
 
         with (
             patch.object(Sprint, "start", side_effect=ValueError("Cannot start")),
+            self.assertRaises(ValidationError),
+        ):
+            action.execute(queryset, request)
+
+    def test_execute_active_wraps_integrity_error(self):
+        """IntegrityError from sprint.start() is re-raised as ValidationError."""
+        action = sprint_bulk_actions.get(f"status-{SprintStatus.ACTIVE}")
+        sprint = SprintFactory(workspace=self.workspace, status=SprintStatus.PLANNING)
+
+        queryset = Sprint.objects.filter(pk=sprint.pk)
+        request = RequestFactory().post("/")
+        request.workspace = self.workspace
+        request.user = self.user
+
+        with (
+            patch.object(Sprint, "start", side_effect=IntegrityError("duplicate key")),
             self.assertRaises(ValidationError),
         ):
             action.execute(queryset, request)
