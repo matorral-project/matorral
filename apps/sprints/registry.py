@@ -27,6 +27,12 @@ class RenderType(StrEnum):
     MENU = "menu"
 
 
+@dataclass
+class BulkActionResult:
+    message: str
+    remaining_count: int | None = None
+
+
 class BaseAction:
     """Shared fields for single-sprint and bulk-sprint actions."""
 
@@ -108,8 +114,8 @@ class SprintBulkAction(BaseAction):
     def validate(self, queryset, request):
         """Raise ValidationError to abort with user-facing message."""
 
-    def execute(self, queryset, request) -> str:
-        """Perform the bulk operation. Return success message string."""
+    def execute(self, queryset, request) -> BulkActionResult:
+        """Perform the bulk operation. Return a BulkActionResult."""
         raise NotImplementedError
 
     def get_form_class(self):
@@ -392,7 +398,10 @@ class BulkDeleteAction(SprintBulkAction):
     def execute(self, queryset, request):
         deleted_count, _deleted_objects = queryset.delete()
         remaining_count = Sprint.objects.for_workspace(request.workspace).count()
-        return deleted_count, remaining_count
+
+        message = _("%(count)d sprint(s) deleted successfully.") % {"count": deleted_count}
+
+        return BulkActionResult(message=message, remaining_count=remaining_count)
 
 
 class BulkStatusAction(SprintBulkAction):
@@ -421,7 +430,8 @@ class BulkStatusAction(SprintBulkAction):
 
             try:
                 sprint.start()
-                return _("Sprint '%(name)s' is now active.") % {"name": sprint.name}
+                message = _("Sprint '%(name)s' is now active.") % {"name": sprint.name}
+                return BulkActionResult(message=message)
             except ValueError as exc:
                 raise ValidationError(str(exc)) from exc
             except IntegrityError as exc:
@@ -442,7 +452,9 @@ class BulkStatusAction(SprintBulkAction):
             actor=request.user,
         )
 
-        return _("%(count)d sprint(s) updated to %(status)s.") % {"count": updated_count, "status": new_display}
+        message = _("%(count)d sprint(s) updated to %(status)s.") % {"count": updated_count, "status": new_display}
+
+        return BulkActionResult(message=message)
 
 
 def _register_status_actions():
@@ -484,5 +496,11 @@ class BulkOwnerAction(SprintBulkAction):
         )
 
         if owner:
-            return _("%(count)d sprint(s) assigned to %(owner)s.") % {"count": updated_count, "owner": new_display}
-        return _("%(count)d sprint(s) unassigned.") % {"count": updated_count}
+            message = _("%(count)d sprint(s) assigned to %(owner)s.") % {
+                "count": updated_count,
+                "owner": new_display,
+            }
+        else:
+            message = _("%(count)d sprint(s) unassigned.") % {"count": updated_count}
+
+        return BulkActionResult(message=message)

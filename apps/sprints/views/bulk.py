@@ -140,17 +140,12 @@ class SprintBulkActionView(SprintBulkActionMixin, LoginAndWorkspaceRequiredMixin
                 messages.error(request, msg)
             return self.render_response(self.form.cleaned_data["page"])
 
-        # BulkDeleteAction returns (deleted_count, remaining_count) for page calculation
-        if isinstance(result, tuple):
-            _deleted_count, remaining_count = result
-            messages.success(
-                request,
-                _("%(count)d sprint(s) deleted successfully.") % {"count": _deleted_count},
-            )
-            redirect_page = calculate_valid_page(remaining_count, self.form.cleaned_data["page"])
-        else:
-            messages.success(request, result)
-            redirect_page = self.form.cleaned_data["page"]
+        messages.success(request, result.message)
+
+        page = self.form.cleaned_data["page"]
+        redirect_page = (
+            calculate_valid_page(result.remaining_count, page) if result.remaining_count is not None else page
+        )
 
         return self.render_response(redirect_page)
 
