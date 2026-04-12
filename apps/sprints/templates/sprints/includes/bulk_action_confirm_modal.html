@@ -1,0 +1,34 @@
+{% load i18n %}
+<div x-data="{ open: true }"
+     x-show="open"
+     @keydown.escape.window="open = false"
+     class="modal modal-open"
+     role="dialog"
+     aria-modal="true">
+  <div class="modal-box">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-bold text-lg">{{ action.confirm_title }}</h3>
+      <button type="button" class="btn btn-sm btn-ghost btn-square" @click="open = false">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <p class="text-sm mb-4">{{ action.confirm_body }}</p>
+    <div class="modal-action">
+      <button type="button" class="btn btn-ghost" @click="open = false">{% translate "Cancel" %}</button>
+      <button type="button"
+              class="btn {{ action.css_class }}"
+              hx-post="{{ post_url }}"
+              hx-vals='{"page": "{{ page_obj.number|default:1 }}", "search": "{{ search_query|default:"" }}", "status_filter": "{{ status_filter|default:"" }}", "owner_filter": "{{ owner_filter|default:"" }}"}'
+              hx-include="[name='sprints']:checked"
+              hx-target="#page-content"
+              hx-swap="innerHTML"
+              hx-indicator="#list-loading"
+              @click="open = false">
+        {% translate "Confirm" %}
+      </button>
+    </div>
+  </div>
+  <div class="modal-backdrop" @click="open = false"></div>
+</div>

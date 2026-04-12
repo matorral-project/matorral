@@ -6,7 +6,7 @@ from apps.sprints.views.actions import (
     SprintAddIssuesView,
     SprintRemoveIssueView,
 )
-from apps.sprints.views.bulk import SprintBulkDeleteView, SprintBulkOwnerView, SprintBulkStatusView
+from apps.sprints.views.bulk import SprintBulkActionConfirmView, SprintBulkActionView
 from apps.sprints.views.crud import (
     SprintCreateView,
     SprintDetailInlineEditView,
@@ -31,9 +31,8 @@ __all__ = [
     "SprintRemoveIssueView",
     "IssueAddToSprintView",
     "IssueAddToSprintConfirmView",
-    "SprintBulkDeleteView",
-    "SprintBulkStatusView",
-    "SprintBulkOwnerView",
+    "SprintBulkActionView",
+    "SprintBulkActionConfirmView",
     "SprintRowInlineEditView",
     "SprintDetailInlineEditView",
 ]

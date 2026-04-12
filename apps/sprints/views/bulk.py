@@ -1,17 +1,18 @@
 from django.conf import settings
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
-from django.db import IntegrityError
+from django.http import Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import View
 
 from apps.issues.helpers import calculate_valid_page
-from apps.sprints.forms import SprintBulkActionForm, SprintBulkOwnerForm
-from apps.sprints.models import Sprint, SprintStatus
+from apps.sprints.forms import SprintBulkActionForm
+from apps.sprints.models import Sprint
+from apps.sprints.registry import build_sprint_bulk_action_context, sprint_bulk_actions
 from apps.sprints.views.mixins import SprintListContextMixin, SprintViewMixin
-from apps.utils.models import AuditLog
 from apps.workspaces.mixins import LoginAndWorkspaceRequiredMixin
 
 
@@ -48,25 +49,6 @@ class SprintBulkActionMixin(SprintViewMixin, SprintListContextMixin):
     def get_form(self):
         return self.form_class(**self.get_form_kwargs())
 
-    def post(self, request, *args, **kwargs):
-        self.form = self.get_form()
-        if not self.form.is_valid():
-            for errors in self.form.errors.values():
-                for error in errors:
-                    messages.error(request, error)
-            return self.render_response(int(request.POST.get("page", 1)))
-
-        if not self.form.cleaned_data["sprints"]:
-            messages.warning(request, _("No sprints selected."))
-            return self.render_response(self.form.cleaned_data["page"])
-
-        redirect_page = self.perform_action()
-        return self.render_response(redirect_page)
-
-    def perform_action(self):
-        """Subclasses implement this. Returns the page to redirect to."""
-        raise NotImplementedError
-
     def render_response(self, page):
         if not self.request.htmx:
             return redirect(
@@ -81,13 +63,14 @@ class SprintBulkActionMixin(SprintViewMixin, SprintListContextMixin):
         status_filter = self.form.cleaned_data.get("status_filter", "")
         owner_filter = self.form.cleaned_data.get("owner_filter", "")
 
-        queryset = self.get_queryset().select_related("workspace", "owner")
+        queryset = self.get_queryset().select_related("workspace", "owner").with_progress()
         queryset = self.apply_sprint_filters(queryset, search_query, status_filter, owner_filter)
 
         paginator = Paginator(queryset, settings.DEFAULT_PAGE_SIZE)
         page_obj = paginator.get_page(page or 1)
 
         context = self.get_sprint_list_context(search_query, status_filter, owner_filter)
+        context.update(build_sprint_bulk_action_context(self.workspace))
         context.update(
             {
                 "sprints": page_obj,
@@ -103,113 +86,91 @@ class SprintBulkActionMixin(SprintViewMixin, SprintListContextMixin):
         return render(self.request, "sprints/sprint_list.html#page-content", context)
 
 
-class SprintBulkDeleteView(SprintBulkActionMixin, LoginAndWorkspaceRequiredMixin, View):
-    """Delete multiple sprints at once."""
+class SprintBulkActionView(SprintBulkActionMixin, LoginAndWorkspaceRequiredMixin, View):
+    """Generic dispatch view for all bulk sprint actions.
 
-    def perform_action(self):
-        deleted_count, _deleted_objects = self.get_selected_queryset().delete()
-        messages.success(
-            self.request,
-            _("%(count)d sprint(s) deleted successfully.") % {"count": deleted_count},
-        )
-        remaining_count = self.get_queryset().count()
-        return calculate_valid_page(remaining_count, self.form.cleaned_data["page"])
+    Looks up the action by name from the registry, validates forms,
+    runs action.validate(), then action.execute().
+    """
 
-
-class SprintBulkStatusView(SprintBulkActionMixin, LoginAndWorkspaceRequiredMixin, View):
-    """Update the status of multiple sprints at once."""
+    http_method_names = ["post"]
 
     def post(self, request, *args, **kwargs):
-        self.status = request.POST.get("status")
-        if self.status not in [choice[0] for choice in SprintStatus.choices]:
-            messages.error(request, _("Invalid status value."))
-            self.form = self.get_form()
-            self.form.is_valid()
-            return self.render_response(self.form.cleaned_data.get("page", 1))
-        return super().post(request, *args, **kwargs)
+        action_name = kwargs["action_name"]
+        action = sprint_bulk_actions.get(action_name)
+        if not action:
+            raise Http404
 
-    def perform_action(self):
-        selected_pks = list(self.get_selected_queryset().values_list("pk", flat=True))
-
-        if self.status == SprintStatus.ACTIVE:
-            if len(selected_pks) > 1:
-                messages.error(
-                    self.request,
-                    _("Only one sprint can be active at a time. Please select a single sprint to activate."),
-                )
-                return self.form.cleaned_data["page"]
-
-            sprint = Sprint.objects.for_workspace(self.workspace).with_committed_points().get(pk=selected_pks[0])
-
-            try:
-                sprint.start()
-                messages.success(
-                    self.request,
-                    _("Sprint '%(name)s' is now active.") % {"name": sprint.name},
-                )
-            except ValueError as exc:
-                messages.error(self.request, str(exc))
-            except IntegrityError:
-                messages.error(self.request, _("Another sprint is already active in this workspace."))
-
-            return self.form.cleaned_data["page"]
-
-        # For other statuses, we can use bulk update
-        selected_sprints = list(Sprint.objects.filter(pk__in=selected_pks))
-        selected_qs = self.get_selected_queryset()
-        status_choices = dict(SprintStatus.choices)
-        old_values = {obj.pk: status_choices.get(obj.status, obj.status) for obj in selected_sprints}
-        new_display = status_choices.get(self.status, self.status)
-
-        updated_count = selected_qs.update(status=self.status)
-        AuditLog.objects.bulk_create_for(
-            selected_sprints,
-            field_name="status",
-            old_values=old_values,
-            new_display=new_display,
-            actor=self.request.user,
-        )
-
-        messages.success(
-            self.request,
-            _("%(count)d sprint(s) updated to %(status)s.") % {"count": updated_count, "status": new_display},
-        )
-        return self.form.cleaned_data["page"]
-
-
-class SprintBulkOwnerView(SprintBulkActionMixin, LoginAndWorkspaceRequiredMixin, View):
-    """Update the owner of multiple sprints at once."""
-
-    form_class = SprintBulkOwnerForm
-
-    def get_form_kwargs(self):
-        return {
-            "data": self.request.POST,
-            "workspace": self.workspace,
-            "workspace_members": self.request.workspace_members,
-        }
-
-    def perform_action(self):
-        owner = self.form.cleaned_data["owner"]
-        selected_qs = self.get_selected_queryset()
-        selected_pks = list(selected_qs.values_list("pk", flat=True))
-        objects = list(Sprint.objects.filter(pk__in=selected_pks).select_related("owner"))
-        old_values = {obj.pk: obj.owner.get_display_name() if obj.owner else None for obj in objects}
-        new_display = owner.get_display_name() if owner else None
-
-        updated_count = selected_qs.update(owner=owner)
-        AuditLog.objects.bulk_create_for(
-            objects, field_name="owner", old_values=old_values, new_display=new_display, actor=self.request.user
-        )
-
-        if owner:
-            messages.success(
-                self.request,
-                _("%(count)d sprint(s) assigned to %(owner)s.") % {"count": updated_count, "owner": new_display},
+        # Handle extra form for actions that need one (e.g., owner picker)
+        extra_form_class = action.get_form_class()
+        if extra_form_class:
+            self.form = extra_form_class(
+                data=request.POST,
+                workspace=self.workspace,
+                workspace_members=request.workspace_members,
             )
         else:
+            self.form = self.get_form()
+
+        if not self.form.is_valid():
+            for errors in self.form.errors.values():
+                for error in errors:
+                    messages.error(request, error)
+            return self.render_response(int(request.POST.get("page", 1)))
+
+        if not self.form.cleaned_data["sprints"]:
+            messages.warning(request, _("No sprints selected."))
+            return self.render_response(self.form.cleaned_data["page"])
+
+        selected_qs = self.get_selected_queryset()
+
+        # Run action validation
+        try:
+            action.validate(selected_qs, request)
+        except ValidationError as exc:
+            for msg in exc.messages:
+                messages.error(request, msg)
+            return self.render_response(self.form.cleaned_data["page"])
+
+        # Execute the action
+        try:
+            result = action.execute(selected_qs, request)
+        except ValidationError as exc:
+            for msg in exc.messages:
+                messages.error(request, msg)
+            return self.render_response(self.form.cleaned_data["page"])
+
+        # BulkDeleteAction returns (deleted_count, remaining_count) for page calculation
+        if isinstance(result, tuple):
+            _deleted_count, remaining_count = result
             messages.success(
-                self.request,
-                _("%(count)d sprint(s) unassigned.") % {"count": updated_count},
+                request,
+                _("%(count)d sprint(s) deleted successfully.") % {"count": _deleted_count},
             )
-        return self.form.cleaned_data["page"]
+            redirect_page = calculate_valid_page(remaining_count, self.form.cleaned_data["page"])
+        else:
+            messages.success(request, result)
+            redirect_page = self.form.cleaned_data["page"]
+
+        return self.render_response(redirect_page)
+
+
+class SprintBulkActionConfirmView(SprintBulkActionMixin, LoginAndWorkspaceRequiredMixin, View):
+    """Render confirmation modal for bulk actions with confirm=True."""
+
+    http_method_names = ["get"]
+
+    def get(self, request, *args, **kwargs):
+        action_name = kwargs["action_name"]
+        action = sprint_bulk_actions.get(action_name)
+        if not action or not action.confirm:
+            raise Http404
+
+        return render(
+            request,
+            "sprints/includes/bulk_action_confirm_modal.html",
+            {
+                "action": action,
+                "post_url": action.get_url(self.workspace),
+            },
+        )

@@ -13,7 +13,7 @@ from apps.issues.models import BaseIssue
 from apps.issues.views.mixins import WORK_ITEM_TYPE_CHOICES, IssueListContextMixin
 from apps.sprints.forms import SprintDetailInlineEditForm, SprintForm, SprintRowInlineEditForm
 from apps.sprints.models import Sprint, SprintStatus
-from apps.sprints.registry import build_sprint_action_context
+from apps.sprints.registry import build_sprint_action_context, build_sprint_bulk_action_context
 from apps.sprints.views.mixins import SprintFormMixin, SprintListContextMixin, SprintSingleObjectMixin, SprintViewMixin
 from apps.utils.progress import calculate_progress
 from apps.workspaces.helpers import clear_onboarding_session_cache
@@ -68,6 +68,8 @@ class SprintListView(SprintViewMixin, SprintListContextMixin, LoginAndWorkspaceR
                 using_default_status_filter=self.using_default_status_filter,
             )
         )
+
+        context.update(build_sprint_bulk_action_context(self.workspace))
 
         if context.get("is_paginated"):
             context["elided_page_range"] = context["paginator"].get_elided_page_range(
