@@ -208,48 +208,34 @@ class BoundAction:
     confirm_body: str = ""
     render_type: RenderType = RenderType.BUTTON
 
-
-def build_sprint_action_context(sprint, user) -> dict:
-    """Build primary_actions and menu_actions context for templates."""
-
-    def make_bound(action):
-        return BoundAction(
+    @classmethod
+    def from_action(cls, action, subject) -> BoundAction:
+        return cls(
             name=action.name,
             label=str(action.label),
             icon=action.icon,
             css_class=action.css_class,
             confirm=action.confirm,
-            url=action.get_url(sprint),
-            confirm_url=action.get_confirm_url(sprint),
+            url=action.get_url(subject),
+            confirm_url=action.get_confirm_url(subject),
             confirm_title=str(action.confirm_title),
             confirm_body=str(action.confirm_body),
+            render_type=getattr(action, "render_type", RenderType.BUTTON),
         )
 
+
+def build_sprint_action_context(sprint, user) -> dict:
+    """Build primary_actions and menu_actions context for templates."""
     return {
-        "primary_actions": [make_bound(a) for a in sprint_actions.primary_for(sprint, user)],
-        "menu_actions": [make_bound(a) for a in sprint_actions.menu_for(sprint, user)],
+        "primary_actions": [BoundAction.from_action(a, sprint) for a in sprint_actions.primary_for(sprint, user)],
+        "menu_actions": [BoundAction.from_action(a, sprint) for a in sprint_actions.menu_for(sprint, user)],
     }
 
 
 def build_sprint_bulk_action_context(workspace) -> dict:
     """Build bulk_actions context for sprint list template."""
-
-    def make_bound(action):
-        return BoundAction(
-            name=action.name,
-            label=str(action.label),
-            icon=action.icon,
-            css_class=action.css_class,
-            confirm=action.confirm,
-            url=action.get_url(workspace),
-            confirm_url=action.get_confirm_url(workspace),
-            confirm_title=str(action.confirm_title),
-            confirm_body=str(action.confirm_body),
-            render_type=action.render_type,
-        )
-
     return {
-        "bulk_actions": [make_bound(a) for a in sprint_bulk_actions.all()],
+        "bulk_actions": [BoundAction.from_action(a, workspace) for a in sprint_bulk_actions.all()],
     }
 
 
