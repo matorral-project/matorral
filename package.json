@@ -13,13 +13,13 @@
   "author": "Matias Agustín Mendez <matagus@gmail.com>",
   "homepage": "http://matorral.dev/",
   "devDependencies": {
-    "@types/node": "^25.5.2",
+    "@types/node": "^25.6.0",
     "autoprefixer": "^10.4.27",
-    "postcss": "^8.5.8",
+    "postcss": "^8.5.9",
     "postcss-import": "^16.1.1",
     "postcss-nested": "^7.0.2",
     "typescript": "^6.0.2",
-    "vite": "^8.0.5"
+    "vite": "^8.0.8"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.2.2",
