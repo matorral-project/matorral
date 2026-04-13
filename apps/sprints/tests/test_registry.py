@@ -4,14 +4,11 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.test import RequestFactory, TestCase
 
+from apps.generic_ui.actions import ActionType, BaseAction, BulkActionResult, RenderType
 from apps.sprints.factories import SprintFactory
 from apps.sprints.forms import SprintBulkOwnerForm
 from apps.sprints.models import Sprint, SprintStatus
 from apps.sprints.registry import (
-    ActionType,
-    BaseAction,
-    BulkActionResult,
-    RenderType,
     SprintAction,
     SprintActionRegistry,
     SprintBulkAction,
