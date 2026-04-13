@@ -1,6 +1,3 @@
-from dataclasses import dataclass
-from enum import Enum, StrEnum
-
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
@@ -8,44 +5,43 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
+from apps.generic_ui.actions import (
+    Action,
+    ActionRegistry,
+    ActionType,
+    BaseAction,
+    BoundAction,
+    BulkAction,
+    BulkActionResult,
+    RenderType,
+)
 from apps.issues.helpers import build_htmx_delete_response
 from apps.issues.models import BaseIssue
 from apps.sprints.forms import SprintBulkOwnerForm
 from apps.sprints.models import Sprint, SprintStatus
 from apps.utils.models import AuditLog
 
-
-class ActionType(Enum):
-    PRIMARY = "primary"
-    MENU = "menu"
-
-
-class RenderType(StrEnum):
-    BUTTON = "button"
-    DROPDOWN = "dropdown"
-    MODAL = "modal"
-    MENU = "menu"
-
-
-@dataclass
-class BulkActionResult:
-    message: str
-    remaining_count: int | None = None
-
-
-class BaseAction:
-    """Shared fields for single-sprint and bulk-sprint actions."""
-
-    name = ""
-    label = ""
-    icon = ""
-    confirm = False
-    confirm_title = ""
-    confirm_body = ""
-    css_class = "btn-primary"
+__all__ = [
+    "Action",
+    "ActionRegistry",
+    "ActionType",
+    "BaseAction",
+    "BoundAction",
+    "BulkAction",
+    "BulkActionResult",
+    "RenderType",
+    "SprintAction",
+    "SprintActionRegistry",
+    "SprintBulkAction",
+    "SprintBulkActionRegistry",
+    "build_sprint_action_context",
+    "build_sprint_bulk_action_context",
+    "sprint_actions",
+    "sprint_bulk_actions",
+]
 
 
-class SprintAction(BaseAction):
+class SprintAction(Action):
     """Action that operates on a single sprint (detail page).
 
     To register a new sprint action:
@@ -98,7 +94,7 @@ class SprintAction(BaseAction):
         )
 
 
-class SprintBulkAction(BaseAction):
+class SprintBulkAction(BulkAction):
     """Action that operates on multiple sprints (list page bulk toolbar).
 
     To register a new bulk action:
@@ -108,23 +104,6 @@ class SprintBulkAction(BaseAction):
     4. Optionally override validate() and get_form_class()
     5. Register with @sprint_bulk_actions.register or sprint_bulk_actions.register_instance()
     """
-
-    render_type: RenderType = RenderType.BUTTON
-
-    def validate(self, queryset, request):
-        """Raise ValidationError to abort with user-facing message."""
-
-    def execute(self, queryset, request, extra_cleaned_data: dict | None = None) -> BulkActionResult:
-        """Perform the bulk operation. Return a BulkActionResult.
-
-        ``extra_cleaned_data`` holds the validated cleaned_data from the action's
-        extra form (see ``get_form_class``) when one is configured; otherwise None.
-        """
-        raise NotImplementedError
-
-    def get_form_class(self):
-        """Override to provide extra form fields. Return None for no extra form."""
-        return None
 
     def get_url(self, workspace) -> str:
         return reverse(
@@ -139,38 +118,8 @@ class SprintBulkAction(BaseAction):
         )
 
 
-class ActionRegistry[T: BaseAction]:
-    """Generic registry for action instances keyed by name."""
-
-    def __init__(self):
-        self._actions: dict[str, T] = {}
-
-    def register(self, action_class: type[T]) -> type[T]:
-        """Register an action class. Can be used as @decorator."""
-        instance = action_class()
-        self._actions[instance.name] = instance
-        return action_class
-
-    def register_instance(self, instance: T) -> None:
-        """Register a pre-built action instance (for parameterized actions)."""
-        self._actions[instance.name] = instance
-
-    def get(self, name: str) -> T | None:
-        return self._actions.get(name)
-
-    def all(self) -> list[T]:
-        return list(self._actions.values())
-
-
 class SprintActionRegistry(ActionRegistry[SprintAction]):
-    def available_for(self, sprint, user) -> list[SprintAction]:
-        return [a for a in self._actions.values() if a.is_available(sprint, user)]
-
-    def primary_for(self, sprint, user) -> list[SprintAction]:
-        return [a for a in self.available_for(sprint, user) if a.action_type == ActionType.PRIMARY]
-
-    def menu_for(self, sprint, user) -> list[SprintAction]:
-        return [a for a in self.available_for(sprint, user) if a.action_type == ActionType.MENU]
+    pass
 
 
 sprint_actions = SprintActionRegistry()
@@ -185,35 +134,6 @@ class SprintBulkActionRegistry(ActionRegistry[SprintBulkAction]):
 
 
 sprint_bulk_actions = SprintBulkActionRegistry()
-
-
-@dataclass
-class BoundAction:
-    name: str
-    label: str
-    icon: str
-    css_class: str
-    confirm: bool
-    url: str
-    confirm_url: str
-    confirm_title: str = ""
-    confirm_body: str = ""
-    render_type: RenderType = RenderType.BUTTON
-
-    @classmethod
-    def from_action(cls, action, subject) -> BoundAction:
-        return cls(
-            name=action.name,
-            label=str(action.label),
-            icon=action.icon,
-            css_class=action.css_class,
-            confirm=action.confirm,
-            url=action.get_url(subject),
-            confirm_url=action.get_confirm_url(subject),
-            confirm_title=str(action.confirm_title),
-            confirm_body=str(action.confirm_body),
-            render_type=getattr(action, "render_type", RenderType.BUTTON),
-        )
 
 
 def build_sprint_action_context(sprint, user) -> dict:
