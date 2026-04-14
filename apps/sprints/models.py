@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from apps.sprints.managers import SprintManager
-from apps.utils.models import BaseModel
+from apps.utils.models import BaseModel, StatusTransitionMixin
 from apps.utils.progress import build_progress_dict
 from apps.workspaces.models import Workspace
 
@@ -38,7 +38,7 @@ class SprintStatus(models.TextChoices):
         "capacity",
     ]
 )
-class Sprint(BaseModel):
+class Sprint(StatusTransitionMixin, BaseModel):
     """
     A sprint is a time-boxed iteration for agile development.
     Sprints are workspace-scoped and can contain work items from any project in that workspace.
@@ -211,8 +211,7 @@ class Sprint(BaseModel):
             raise ValueError("Another sprint is already active in this workspace.")
 
         self.committed_points = self.computed_committed_points
-        self.status = SprintStatus.ACTIVE
-        self.save(update_fields=["status", "committed_points", "updated_at"])
+        self._transition_status(SprintStatus.ACTIVE, extra_update_fields=["committed_points"])
 
     def complete(self) -> tuple[int, Sprint | None]:
         """Complete sprint, capture points, roll incomplete items to next sprint.
@@ -225,8 +224,7 @@ class Sprint(BaseModel):
             raise ValueError("Only active sprints can be completed.")
 
         self.completed_points = self.computed_completed_points
-        self.status = SprintStatus.COMPLETED
-        self.save(update_fields=["status", "completed_points", "updated_at"])
+        self._transition_status(SprintStatus.COMPLETED, extra_update_fields=["completed_points"])
 
         next_sprint = self.get_next_sprint()
         moved_count = 0
@@ -256,8 +254,7 @@ class Sprint(BaseModel):
         if self.status == SprintStatus.ACTIVE:
             raise ValueError("Active sprints cannot be archived. Complete the sprint first.")
 
-        self.status = SprintStatus.ARCHIVED
-        self.save(update_fields=["status", "updated_at"])
+        self._transition_status(SprintStatus.ARCHIVED)
 
     def add_issues(self, issue_keys, workspace) -> int:
         """Add unassigned work items to this sprint by key. Returns count added."""

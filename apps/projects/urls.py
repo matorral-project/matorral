@@ -10,17 +10,10 @@ project_urlpatterns = (
         path("", views.ProjectListView.as_view(), name="project_list"),
         path("new/", views.ProjectCreateView.as_view(), name="project_create"),
         path(
-            "bulk-delete/",
-            views.ProjectBulkDeleteView.as_view(),
-            name="projects_bulk_delete",
+            "bulk-action/<str:action_name>/",
+            views.ProjectBulkActionView.as_view(),
+            name="project_bulk_action",
         ),
-        path(
-            "bulk-status/",
-            views.ProjectBulkStatusView.as_view(),
-            name="projects_bulk_status",
-        ),
-        path("bulk-lead/", views.ProjectBulkLeadView.as_view(), name="projects_bulk_lead"),
-        path("bulk-move/", views.ProjectBulkMoveView.as_view(), name="projects_bulk_move"),
         path("move-progress/<str:operation_id>/", views.MoveProgressView.as_view(), name="move_progress"),
         path("<str:key>/", views.ProjectDetailView.as_view(), name="project_detail"),
         path(

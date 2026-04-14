@@ -70,7 +70,7 @@
       <div class="modal-action">
         <button type="button"
                 class="btn btn-primary"
-                hx-post="{% url 'projects:projects_bulk_lead' workspace.slug %}"
+                hx-post="{% url 'projects:project_bulk_action' workspace.slug 'lead' %}"
                 hx-vals='{"page": "{{ page_obj.number|default:1 }}", "search": "{{ search_query|default:"" }}", "status_filter": "{{ status_filter|default:"" }}", "lead_filter": "{{ lead_filter|default:"" }}", "group_by": "{{ group_by|default:"" }}"}'
                 hx-include="[name='projects']:checked, #lead-hidden"
                 hx-target="#page-content"

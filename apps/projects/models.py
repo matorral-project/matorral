@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from apps.projects.managers import ProjectQuerySet
-from apps.utils.models import BaseModel
+from apps.utils.models import BaseModel, StatusTransitionMixin
 from apps.workspaces.models import Workspace
 
 from auditlog.registry import auditlog
@@ -56,7 +56,7 @@ def generate_project_key(name: str, length: int = 3) -> str:
 
 
 @auditlog.register(include_fields=["name", "key", "description", "status", "lead"])
-class Project(BaseModel):
+class Project(StatusTransitionMixin, BaseModel):
     """
     A project belongs to a workspace.
     """
@@ -231,3 +231,31 @@ class Project(BaseModel):
             self.workspace = target_workspace
             self.key = new_key
             self.save()
+
+    def start(self):
+        """Transition DRAFT → ACTIVE. Raises ValueError if not in DRAFT status."""
+        if self.status != ProjectStatus.DRAFT:
+            raise ValueError("Only draft projects can be started.")
+
+        self._transition_status(ProjectStatus.ACTIVE)
+
+    def complete(self):
+        """Transition ACTIVE → COMPLETED. Raises ValueError if not active."""
+        if self.status != ProjectStatus.ACTIVE:
+            raise ValueError("Only active projects can be completed.")
+
+        self._transition_status(ProjectStatus.COMPLETED)
+
+    def reopen(self):
+        """Transition COMPLETED or ARCHIVED → ACTIVE. Raises ValueError otherwise."""
+        if self.status not in (ProjectStatus.COMPLETED, ProjectStatus.ARCHIVED):
+            raise ValueError("Only completed or archived projects can be reopened.")
+
+        self._transition_status(ProjectStatus.ACTIVE)
+
+    def archive(self):
+        """Transition any non-archived project → ARCHIVED. Raises ValueError if already archived."""
+        if self.status == ProjectStatus.ARCHIVED:
+            raise ValueError("Project is already archived.")
+
+        self._transition_status(ProjectStatus.ARCHIVED)
