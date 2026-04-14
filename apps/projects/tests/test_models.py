@@ -2,7 +2,7 @@ from django.test import TestCase
 
 from apps.issues.factories import BugFactory, ChoreFactory, EpicFactory, StoryFactory
 from apps.projects.factories import ProjectFactory
-from apps.projects.models import Project
+from apps.projects.models import Project, ProjectStatus
 from apps.sprints.factories import SprintFactory
 from apps.workspaces.factories import WorkspaceFactory
 
@@ -226,3 +226,99 @@ class ProjectMoveTest(TestCase):
 
         chore.refresh_from_db()
         self.assertIsNone(chore.sprint)
+
+
+class ProjectStatusTransitionTest(TestCase):
+    def setUp(self):
+        self.workspace = WorkspaceFactory()
+
+    # start() tests
+
+    def test_start_transitions_draft_to_active(self):
+        project = ProjectFactory(workspace=self.workspace, status=ProjectStatus.DRAFT)
+
+        project.start()
+
+        project.refresh_from_db()
+        self.assertEqual(project.status, ProjectStatus.ACTIVE)
+
+    def test_start_raises_when_not_draft(self):
+        for status in [ProjectStatus.ACTIVE, ProjectStatus.COMPLETED, ProjectStatus.ARCHIVED]:
+            project = ProjectFactory(workspace=self.workspace, status=status)
+
+            with self.assertRaises(ValueError, msg=f"Expected ValueError for status={status}"):
+                project.start()
+
+    # complete() tests
+
+    def test_complete_transitions_active_to_completed(self):
+        project = ProjectFactory(workspace=self.workspace, status=ProjectStatus.ACTIVE)
+
+        project.complete()
+
+        project.refresh_from_db()
+        self.assertEqual(project.status, ProjectStatus.COMPLETED)
+
+    def test_complete_raises_when_not_active(self):
+        for status in [ProjectStatus.DRAFT, ProjectStatus.COMPLETED, ProjectStatus.ARCHIVED]:
+            project = ProjectFactory(workspace=self.workspace, status=status)
+
+            with self.assertRaises(ValueError, msg=f"Expected ValueError for status={status}"):
+                project.complete()
+
+    # reopen() tests
+
+    def test_reopen_transitions_completed_to_active(self):
+        project = ProjectFactory(workspace=self.workspace, status=ProjectStatus.COMPLETED)
+
+        project.reopen()
+
+        project.refresh_from_db()
+        self.assertEqual(project.status, ProjectStatus.ACTIVE)
+
+    def test_reopen_transitions_archived_to_active(self):
+        project = ProjectFactory(workspace=self.workspace, status=ProjectStatus.ARCHIVED)
+
+        project.reopen()
+
+        project.refresh_from_db()
+        self.assertEqual(project.status, ProjectStatus.ACTIVE)
+
+    def test_reopen_raises_when_draft_or_active(self):
+        for status in [ProjectStatus.DRAFT, ProjectStatus.ACTIVE]:
+            project = ProjectFactory(workspace=self.workspace, status=status)
+
+            with self.assertRaises(ValueError, msg=f"Expected ValueError for status={status}"):
+                project.reopen()
+
+    # archive() tests
+
+    def test_archive_transitions_draft_to_archived(self):
+        project = ProjectFactory(workspace=self.workspace, status=ProjectStatus.DRAFT)
+
+        project.archive()
+
+        project.refresh_from_db()
+        self.assertEqual(project.status, ProjectStatus.ARCHIVED)
+
+    def test_archive_transitions_active_to_archived(self):
+        project = ProjectFactory(workspace=self.workspace, status=ProjectStatus.ACTIVE)
+
+        project.archive()
+
+        project.refresh_from_db()
+        self.assertEqual(project.status, ProjectStatus.ARCHIVED)
+
+    def test_archive_transitions_completed_to_archived(self):
+        project = ProjectFactory(workspace=self.workspace, status=ProjectStatus.COMPLETED)
+
+        project.archive()
+
+        project.refresh_from_db()
+        self.assertEqual(project.status, ProjectStatus.ARCHIVED)
+
+    def test_archive_raises_when_already_archived(self):
+        project = ProjectFactory(workspace=self.workspace, status=ProjectStatus.ARCHIVED)
+
+        with self.assertRaises(ValueError):
+            project.archive()
