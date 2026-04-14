@@ -85,6 +85,7 @@ PROJECT_APPS = [
     "apps.utils.apps.UtilsConfig",
     "apps.landing_pages.apps.LandingPagesConfig",
     "apps.workspaces.apps.WorkspacesConfig",
+    "apps.generic_ui.apps.GenericUiConfig",
     "apps.projects.apps.ProjectsConfig",
     "apps.issues.apps.IssuesConfig",
     "apps.sprints.apps.SprintsConfig",

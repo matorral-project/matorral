@@ -71,11 +71,12 @@ class CascadeViewTestBase(TestCase):
             },
         )
 
-    def _get_project_bulk_status_url(self):
+    def _get_project_bulk_status_url(self, status):
         return reverse(
-            "projects:projects_bulk_status",
+            "projects:project_bulk_action",
             kwargs={
                 "workspace_slug": self.workspace.slug,
+                "action_name": f"status-{status}",
             },
         )
 
@@ -413,10 +414,9 @@ class BulkStatusCascadeTest(CascadeViewTestBase):
         MilestoneFactory(project=project2, status=IssueStatus.DRAFT)
 
         response = self.client.post(
-            self._get_project_bulk_status_url(),
+            self._get_project_bulk_status_url(ProjectStatus.COMPLETED),
             {
                 "projects": [project2.key],
-                "status": ProjectStatus.COMPLETED,
                 "page": "1",
             },
             HTTP_HX_REQUEST="true",

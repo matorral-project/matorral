@@ -41,6 +41,7 @@ from django_htmx.http import HttpResponseClientRefresh
 
 from ..forms import ProjectDetailInlineEditForm, ProjectRowInlineEditForm
 from ..models import Project, ProjectStatus
+from ..registry import build_project_bulk_action_context
 from ..tasks import start_move_operation
 from .mixins import ProjectFormMixin, ProjectSingleObjectMixin, ProjectViewMixin
 
@@ -203,6 +204,7 @@ class ProjectListView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, ListView
             context["elided_page_range"] = context["paginator"].get_elided_page_range(
                 context["page_obj"].number, on_each_side=2, on_ends=1
             )
+        context.update(build_project_bulk_action_context(self.workspace))
         return context
 
 

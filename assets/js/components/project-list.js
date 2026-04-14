@@ -22,5 +22,22 @@ export default function projectList() {
       this.showBulkMoveModal = false;
       this.moveConfirmStep = false;
     },
+
+    init() {
+      this.$watch('showBulkLeadModal', (open) => {
+        if (!open) return;
+        this.leadConfirmStep = false;
+        this.selectedLeadName = '';
+        this.selectedLeadValue = '';
+        const none = document.getElementById('lead-none');
+        if (none) none.checked = true;
+      });
+      this.$watch('showBulkMoveModal', (open) => {
+        if (!open) return;
+        this.moveConfirmStep = false;
+        this.selectedMoveWorkspaceName = '';
+        this.selectedMoveWorkspaceValue = '';
+      });
+    },
   };
 }
