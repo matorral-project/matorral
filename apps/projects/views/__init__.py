@@ -1,4 +1,4 @@
-from .bulk import ProjectBulkDeleteView, ProjectBulkLeadView, ProjectBulkMoveView, ProjectBulkStatusView
+from .bulk import ProjectBulkActionView
 from .crud import (
     MoveProgressView,
     ProjectCloneView,
@@ -21,10 +21,7 @@ from .history import ProjectHistoryView
 
 __all__ = [
     "MoveProgressView",
-    "ProjectBulkDeleteView",
-    "ProjectBulkLeadView",
-    "ProjectBulkMoveView",
-    "ProjectBulkStatusView",
+    "ProjectBulkActionView",
     "ProjectCloneView",
     "ProjectCreateView",
     "ProjectDeleteView",

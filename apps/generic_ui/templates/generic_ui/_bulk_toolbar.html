@@ -1,0 +1,100 @@
+{% load i18n %}
+{% comment %}
+Bulk actions toolbar — shown when at least one item is selected.
+
+Required context:
+  bulk_actions       list[BoundAction]
+  bulk_has_dropdown  bool — any DROPDOWN-type action present
+  bulk_has_menu      bool — any MENU-type action present
+  select_name        str — name attr of the row checkbox inputs (e.g. "sprints", "projects")
+  list_hx_vals       str — JSON payload of base hx-vals (page, search, filters) for the list
+
+MODAL / confirm-BUTTON / confirm-MENU actions open a modal; each action's
+`modal_var` names the Alpine variable the consuming page toggles.
+{% endcomment %}
+<div class="flex items-center gap-2" x-show="selectedCount > 0" x-cloak>
+  <span class="text-sm text-base-content/70" x-text="selectedCount + ' {% translate "selected" %}'"></span>
+
+  {% if bulk_has_dropdown %}
+  <div class="dropdown dropdown-end">
+    <div tabindex="0" role="button" class="btn btn-sm btn-outline">
+      <i class="fa fa-flag mr-1"></i>
+      {% translate "Set Status" %}
+      <i class="fa fa-chevron-down ml-1"></i>
+    </div>
+    <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+      {% for action in bulk_actions %}{% if action.render_type == "dropdown" %}
+      <li>
+        <button type="button"
+                hx-post="{{ action.url }}"
+                hx-vals='{{ list_hx_vals }}'
+                hx-include="[name='{{ select_name }}']:checked"
+                hx-target="#page-content"
+                hx-swap="innerHTML"
+                hx-indicator="#list-loading"
+                hx-disabled-elt="this"
+                @click="document.activeElement.blur()">
+          {{ action.label }}
+        </button>
+      </li>
+      {% endif %}{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% for action in bulk_actions %}
+  {% if action.render_type == "modal" %}
+  <button type="button"
+          class="btn btn-sm {{ action.css_class }}"
+          @click="{{ action.modal_var }} = true; document.activeElement.blur()">
+    <i class="fa fa-{{ action.icon }} mr-1"></i>
+    {{ action.label }}
+  </button>
+  {% elif action.render_type == "button" %}
+  <button type="button"
+          class="btn btn-sm {{ action.css_class }}"
+          {% if action.confirm %}
+          @click="{{ action.modal_var }} = true; document.activeElement.blur()"
+          {% else %}
+          hx-post="{{ action.url }}"
+          hx-vals='{{ list_hx_vals }}'
+          hx-include="[name='{{ select_name }}']:checked"
+          hx-target="#page-content"
+          hx-swap="innerHTML"
+          hx-indicator="#list-loading"
+          {% endif %}>
+    <i class="fa fa-{{ action.icon }} mr-1"></i>
+    {{ action.label }}
+  </button>
+  {% endif %}
+  {% endfor %}
+
+  {% if bulk_has_menu %}
+  <div class="dropdown dropdown-end">
+    <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square">
+      <i class="fa fa-ellipsis-vertical"></i>
+    </div>
+    <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+      {% for action in bulk_actions %}{% if action.render_type == "menu" %}
+      <li>
+        <button type="button"
+                {% if action.confirm %}
+                class="text-error"
+                @click="{{ action.modal_var }} = true; document.activeElement.blur()"
+                {% else %}
+                hx-post="{{ action.url }}"
+                hx-vals='{{ list_hx_vals }}'
+                hx-include="[name='{{ select_name }}']:checked"
+                hx-target="#page-content"
+                hx-swap="innerHTML"
+                hx-indicator="#list-loading"
+                {% endif %}>
+          <i class="fa fa-{{ action.icon }}"></i>
+          {{ action.label }}
+        </button>
+      </li>
+      {% endif %}{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</div>

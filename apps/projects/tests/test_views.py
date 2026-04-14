@@ -67,14 +67,14 @@ class ProjectViewTestCase(TestCase):
 
     def _get_bulk_delete_url(self):
         return reverse(
-            "projects:projects_bulk_delete",
-            kwargs={"workspace_slug": self.workspace.slug},
+            "projects:project_bulk_action",
+            kwargs={"workspace_slug": self.workspace.slug, "action_name": "delete"},
         )
 
-    def _get_bulk_status_url(self):
+    def _get_bulk_status_url(self, status=ProjectStatus.ACTIVE):
         return reverse(
-            "projects:projects_bulk_status",
-            kwargs={"workspace_slug": self.workspace.slug},
+            "projects:project_bulk_action",
+            kwargs={"workspace_slug": self.workspace.slug, "action_name": f"status-{status}"},
         )
 
 
@@ -612,16 +612,16 @@ class ProjectBulkStatusViewTest(ProjectViewTestCase):
         self.assertEqual(ProjectStatus.ACTIVE, project1.status)
         self.assertEqual(ProjectStatus.ACTIVE, project2.status)
 
-    def test_bulk_status_invalid_status_shows_error(self):
+    def test_bulk_status_invalid_action_returns_404(self):
         project = ProjectFactory(workspace=self.workspace, status=ProjectStatus.DRAFT)
-
-        response = self.client.post(
-            self._get_bulk_status_url(),
-            {"projects": [project.key], "status": "invalid_status", "page": 1},
-            follow=True,
+        invalid_url = reverse(
+            "projects:project_bulk_action",
+            kwargs={"workspace_slug": self.workspace.slug, "action_name": "status-invalid_status"},
         )
 
-        self.assertContains(response, "Invalid status")
+        response = self.client.post(invalid_url, {"projects": [project.key], "page": 1})
+
+        self.assertEqual(404, response.status_code)
         project.refresh_from_db()
         self.assertEqual(ProjectStatus.DRAFT, project.status)
 
@@ -869,7 +869,10 @@ class ProjectBulkMoveViewTest(ProjectViewTestCase):
         MembershipFactory(workspace=self.target_workspace, user=self.user, role=ROLE_MEMBER)
 
     def _get_bulk_move_url(self):
-        return reverse("projects:projects_bulk_move", kwargs={"workspace_slug": self.workspace.slug})
+        return reverse(
+            "projects:project_bulk_action",
+            kwargs={"workspace_slug": self.workspace.slug, "action_name": "move"},
+        )
 
     def test_bulk_move_moves_all_selected_projects(self):
         project1 = ProjectFactory(workspace=self.workspace)

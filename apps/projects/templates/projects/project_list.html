@@ -53,61 +53,8 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        {# Bulk actions - shown when at least one project is selected #}
-        <div class="flex items-center gap-2" x-show="selectedCount > 0" x-cloak>
-          <span class="text-sm text-base-content/70" x-text="selectedCount + ' {% translate "selected" %}'"></span>
-          <div class="dropdown dropdown-end">
-            <div tabindex="0" role="button" class="btn btn-sm btn-outline">
-              <i class="fa fa-flag mr-1"></i>
-              {% translate "Set Status" %}
-              <i class="fa fa-chevron-down ml-1"></i>
-            </div>
-            <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
-              {% for status_value, status_label in status_choices %}
-              <li>
-                <button type="button"
-                        hx-post="{% url 'projects:projects_bulk_status' workspace.slug %}"
-                        hx-vals='{"status": "{{ status_value }}", "page": "{{ page_obj.number|default:1 }}", "search": "{{ search_query|default:"" }}", "status_filter": "{{ status_filter|default:"" }}", "lead_filter": "{{ lead_filter|default:"" }}", "group_by": "{{ group_by|default:"" }}"}'
-                        hx-include="[name='projects']:checked"
-                        hx-target="#page-content"
-                        hx-swap="innerHTML"
-                        hx-indicator="#list-loading"
-                        hx-disabled-elt="this"
-                        @click="document.activeElement.blur()">
-                  {{ status_label }}
-                </button>
-              </li>
-              {% endfor %}
-            </ul>
-          </div>
-          <button type="button"
-                  class="btn btn-sm btn-outline"
-                  @click="document.getElementById('lead-none').checked = true; leadConfirmStep = false; selectedLeadName = ''; selectedLeadValue = ''; showBulkLeadModal = true">
-            <i class="fa fa-user mr-1"></i>
-            {% translate "Set Lead" %}
-          </button>
-          <button type="button"
-                  class="btn btn-sm btn-outline"
-                  @click="moveConfirmStep = false; selectedMoveWorkspaceName = ''; selectedMoveWorkspaceValue = ''; showBulkMoveModal = true; document.activeElement.blur()">
-            <i class="fa fa-arrow-right-arrow-left mr-1"></i>
-            {% translate "Move to Workspace" %}
-          </button>
-          <div class="dropdown dropdown-end">
-            <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square">
-              <i class="fa fa-ellipsis-vertical"></i>
-            </div>
-            <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow">
-              <li>
-                <button type="button"
-                        class="text-error"
-                        @click="showBulkDeleteModal = true; document.activeElement.blur()">
-                  <i class="fa fa-trash"></i>
-                  {% translate "Delete" %}
-                </button>
-              </li>
-            </ul>
-          </div>
-        </div>
+        {% json_vals page=page_obj.number search=search_query status_filter=status_filter lead_filter=lead_filter group_by=group_by as project_bulk_hx_vals %}
+        {% include "generic_ui/_bulk_toolbar.html" with select_name="projects" list_hx_vals=project_bulk_hx_vals %}
         <button type="button"
                 class="btn btn-primary"
                 hx-get="{% url 'projects:project_create' workspace.slug %}?modal=1"

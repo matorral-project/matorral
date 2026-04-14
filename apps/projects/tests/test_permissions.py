@@ -67,14 +67,14 @@ class ProjectPermissionTestCase(TestCase):
 
     def _get_bulk_delete_url(self):
         return reverse(
-            "projects:projects_bulk_delete",
-            kwargs={"workspace_slug": self.workspace.slug},
+            "projects:project_bulk_action",
+            kwargs={"workspace_slug": self.workspace.slug, "action_name": "delete"},
         )
 
-    def _get_bulk_status_url(self):
+    def _get_bulk_status_url(self, status=ProjectStatus.ACTIVE):
         return reverse(
-            "projects:projects_bulk_status",
-            kwargs={"workspace_slug": self.workspace.slug},
+            "projects:project_bulk_action",
+            kwargs={"workspace_slug": self.workspace.slug, "action_name": f"status-{status}"},
         )
 
 
