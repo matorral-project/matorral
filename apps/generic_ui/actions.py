@@ -84,6 +84,7 @@ class BulkAction(BaseAction):
     """Action that operates on a queryset of subjects (list page toolbar)."""
 
     render_type: RenderType = RenderType.BUTTON
+    modal_var: str = ""
 
     def validate(self, queryset, request):
         """Raise ValidationError to abort with user-facing message."""
@@ -97,7 +98,7 @@ class BulkAction(BaseAction):
         """
         raise NotImplementedError
 
-    def get_form_class(self):
+    def get_form_class(self) -> type | None:
         """Override to provide extra form fields. Return None for no extra form."""
         return None
 
@@ -157,6 +158,7 @@ class BoundAction:
     confirm_title: str = ""
     confirm_body: str = ""
     render_type: RenderType = RenderType.BUTTON
+    modal_var: str = ""
 
     @classmethod
     def from_action(cls, action, subject) -> BoundAction:
@@ -171,4 +173,20 @@ class BoundAction:
             confirm_title=str(action.confirm_title),
             confirm_body=str(action.confirm_body),
             render_type=getattr(action, "render_type", RenderType.BUTTON),
+            modal_var=getattr(action, "modal_var", ""),
         )
+
+
+def build_bulk_action_context(registry: ActionRegistry, subject) -> dict:
+    """Build the context dict consumed by `generic_ui/_bulk_toolbar.html`.
+
+    Returns ``bulk_actions`` plus ``bulk_has_dropdown`` / ``bulk_has_menu``
+    precomputed so the partial can conditionally render the grouped wrappers
+    without iterating twice.
+    """
+    actions = [BoundAction.from_action(a, subject) for a in registry.all()]
+    return {
+        "bulk_actions": actions,
+        "bulk_has_dropdown": any(a.render_type == RenderType.DROPDOWN for a in actions),
+        "bulk_has_menu": any(a.render_type == RenderType.MENU for a in actions),
+    }

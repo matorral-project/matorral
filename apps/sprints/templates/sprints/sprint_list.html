@@ -51,7 +51,8 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        {% include "generic_ui/_bulk_toolbar.html" %}
+        {% json_vals page=page_obj.number search=search_query status_filter=status_filter owner_filter=owner_filter as sprint_bulk_hx_vals %}
+        {% include "generic_ui/_bulk_toolbar.html" with select_name="sprints" list_hx_vals=sprint_bulk_hx_vals %}
         <button type="button"
                 class="btn btn-primary"
                 hx-get="{% url 'sprints:sprint_create' workspace.slug %}?modal=1"

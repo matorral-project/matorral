@@ -13,6 +13,7 @@ from apps.generic_ui.actions import (
     BulkAction,
     BulkActionResult,
     RenderType,
+    build_bulk_action_context,
 )
 from apps.issues.helpers import build_htmx_delete_response
 from apps.issues.models import BaseIssue
@@ -137,9 +138,7 @@ def build_sprint_action_context(sprint, user) -> dict:
 
 def build_sprint_bulk_action_context(workspace) -> dict:
     """Build bulk_actions context for sprint list template."""
-    return {
-        "bulk_actions": [BoundAction.from_action(a, workspace) for a in sprint_bulk_actions.all()],
-    }
+    return build_bulk_action_context(sprint_bulk_actions, workspace)
 
 
 # ============================================================================
@@ -287,6 +286,7 @@ class BulkDeleteAction(SprintBulkAction):
     confirm_body = _("Are you sure you want to delete the selected sprints? This action cannot be undone.")
     css_class = "btn-error"
     render_type = RenderType.MENU
+    modal_var = "showBulkDeleteModal"
 
     def execute(self, queryset, request, extra_cleaned_data: dict | None = None):
         deleted_count, _deleted_objects = queryset.delete()
@@ -365,6 +365,7 @@ class BulkOwnerAction(SprintBulkAction):
     icon = "user"
     css_class = "btn-outline"
     render_type = RenderType.MODAL
+    modal_var = "showBulkOwnerModal"
 
     def get_form_class(self):
         return SprintBulkOwnerForm
