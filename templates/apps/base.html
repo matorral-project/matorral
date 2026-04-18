@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% block top_nav %}{% endblock %}
 {% block body %}
 <div class="drawer lg:drawer-open">
@@ -7,7 +8,7 @@
   <div class="drawer-content flex flex-col h-dvh">
     <!-- Mobile-only top bar with toggle (hidden on lg+) -->
     <div class="navbar bg-primary text-primary-content sticky top-0 z-10 lg:hidden">
-      <label for="sidebar-drawer" aria-label="open sidebar" class="btn btn-square btn-ghost text-primary-content">
+      <label for="sidebar-drawer" aria-label="{% translate "open sidebar" %}" class="btn btn-square btn-ghost text-primary-content">
         <i class="fa fa-bars"></i>
       </label>
       <a href="{% url 'landing_pages:home' %}" class="text-lg font-semibold text-primary-content">{{ site.name }}</a>
@@ -21,7 +22,7 @@
   </div>
 
   <div class="drawer-side is-drawer-close:overflow-visible z-40">
-    <label for="sidebar-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+    <label for="sidebar-drawer" aria-label="{% translate "close sidebar" %}" class="drawer-overlay"></label>
     {% include "includes/sidebar_app.html" %}
   </div>
 </div>

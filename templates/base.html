@@ -1,6 +1,7 @@
-{% load static django_vite %}
+{% load static django_vite i18n %}
+{% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="{{ LANGUAGE_CODE }}" data-theme="light">
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">

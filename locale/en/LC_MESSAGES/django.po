@@ -1,18 +1,16 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Matorral
+# Copyright (C) 2026 Matorral Project
+# This file is distributed under the same license as the Matorral package.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: matorral\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-13 21:45+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"POT-Creation-Date: 2026-04-18 12:40+0000\n"
+"PO-Revision-Date: 2026-04-18 00:00+0000\n"
+"Last-Translator: Matorral Project\n"
+"Language-Team: English\n"
+"Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -747,6 +745,7 @@ msgstr ""
 #: apps/sprints/registry.py:238 apps/sprints/registry.py:282
 #: apps/sprints/templates/sprints/sprint_confirm_delete.html:25
 #: apps/sprints/templates/sprints/sprint_list.html:144
+#: templates/attachments/delete.html:6 templates/attachments/delete_link.html:2
 #: templates/includes/delete_confirm_modal.html:5
 msgid "Delete"
 msgstr ""
@@ -2473,6 +2472,17 @@ msgstr ""
 msgid ""
 "If you have any questions about these Terms of Service, please contact us "
 "through the %(name)s platform."
+msgstr ""
+
+#: apps/landing_pages/views.py:16
+msgid "Open Source Project Management tool"
+msgstr ""
+
+#: apps/landing_pages/views.py:18
+msgid ""
+"Project management made simple, built with Django + HTMX + Tailwind. Open "
+"Source. Matorral gives your team a clear, flexible way to plan and deliver "
+"software."
 msgstr ""
 
 #: apps/projects/admin.py:39
@@ -4618,6 +4628,18 @@ msgstr ""
 
 #: matorral/settings.py:416 matorral/settings/settings.py:416
 msgid "The project management tool that doesn't get in your way."
+msgstr ""
+
+#: templates/apps/base.html:11
+msgid "open sidebar"
+msgstr ""
+
+#: templates/apps/base.html:25
+msgid "close sidebar"
+msgstr ""
+
+#: templates/attachments/add.html:8
+msgid "Upload"
 msgstr ""
 
 #: templates/attachments/add_form.html:9

@@ -1,7 +1,8 @@
+{% load i18n %}
 {% if delete_url %}
 <form method="post" action="{{ delete_url }}" style="display:inline">
   {% csrf_token %}
   <input type="hidden" name="next" value="{{ next }}">
-  <button type="submit" class="btn btn-xs btn-error btn-outline">Delete</button>
+  <button type="submit" class="btn btn-xs btn-error btn-outline">{% translate "Delete" %}</button>
 </form>
 {% endif %}

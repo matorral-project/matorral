@@ -2,6 +2,7 @@ from django.conf import settings
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.templatetags.static import static
+from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import cache_control
 from django.views.decorators.http import require_GET
 
@@ -12,8 +13,8 @@ from health_check.views import MainView
 
 def home(request):
     context = {
-        "page_title": "Open Source Project Management tool",
-        "page_description": (
+        "page_title": _("Open Source Project Management tool"),
+        "page_description": _(
             "Project management made simple, built with Django + HTMX + Tailwind. "
             "Open Source. Matorral gives your team a clear, flexible way to plan and deliver software."
         ),
