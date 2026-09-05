@@ -1,3 +1,5 @@
+import json
+
 from django.urls import reverse
 
 from apps.issues.factories import EpicFactory, MilestoneFactory, StoryFactory
@@ -163,6 +165,22 @@ class ProjectActionViewTest(ProjectActionUrlMixin, ProjectViewTestCase):
         self.assertFalse(Project.objects.filter(pk=project.pk).exists())
         self.assertRedirects(response, self._get_list_url())
 
+    def test_delete_via_htmx_from_detail_page_returns_hx_location(self):
+        """HTMX delete from the project's own detail page returns HX-Location with target."""
+        project = ProjectFactory(workspace=self.workspace)
+        detail_url = self._get_detail_url(project)
+
+        response = self.client.post(
+            self._get_action_url(project, "delete"),
+            headers={"hx-request": "true", "hx-current-url": f"http://testserver{detail_url}"},
+        )
+
+        self.assertEqual(200, response.status_code)
+        location_data = json.loads(response["HX-Location"])
+        self.assertEqual(self._get_list_url(), location_data["path"])
+        self.assertEqual("#page-content", location_data["target"])
+        self.assertFalse(Project.objects.filter(pk=project.pk).exists())
+
     def test_delete_via_htmx_returns_client_refresh(self):
         project = ProjectFactory(workspace=self.workspace)
 
@@ -174,6 +192,31 @@ class ProjectActionViewTest(ProjectActionUrlMixin, ProjectViewTestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual("true", response.headers.get("HX-Refresh"))
         self.assertFalse(Project.objects.filter(pk=project.pk).exists())
+
+    def test_clone_via_htmx_returns_hx_redirect(self):
+        project = ProjectFactory(workspace=self.workspace, name="Original")
+
+        response = self.client.post(
+            self._get_action_url(project, "clone"),
+            headers={"hx-request": "true"},
+        )
+
+        cloned = Project.objects.get(name="Original (Copy)")
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(cloned.get_absolute_url(), response.headers["HX-Redirect"])
+
+    def test_start_via_htmx_returns_hx_redirect(self):
+        project = ProjectFactory(workspace=self.workspace, status=ProjectStatus.DRAFT)
+
+        response = self.client.post(
+            self._get_action_url(project, "start"),
+            headers={"hx-request": "true"},
+        )
+
+        project.refresh_from_db()
+        self.assertEqual(ProjectStatus.ACTIVE, project.status)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(project.get_absolute_url(), response.headers["HX-Redirect"])
 
     def test_unknown_action_returns_404(self):
         project = ProjectFactory(workspace=self.workspace)

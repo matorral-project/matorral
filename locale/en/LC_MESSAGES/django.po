@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: matorral\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-18 12:40+0000\n"
+"POT-Creation-Date: 2026-09-05 14:46+0000\n"
 "PO-Revision-Date: 2026-04-18 00:00+0000\n"
 "Last-Translator: Matorral Project\n"
 "Language-Team: English\n"
@@ -62,7 +62,7 @@ msgstr ""
 #: apps/issues/templates/issues/includes/milestone_detail_header_edit.html:12
 #: apps/issues/templates/issues/milestones/milestone_quick_view.html:5
 #: apps/projects/templates/projects/project_epics_embed.html:69
-#: apps/projects/views/crud.py:756
+#: apps/projects/views/crud.py:681
 msgid "Milestone"
 msgstr ""
 
@@ -163,8 +163,8 @@ msgid ""
 "will be deleted."
 msgstr ""
 
-#: apps/issues/helpers.py:134 apps/projects/views/crud.py:687
-#: apps/projects/views/crud.py:720
+#: apps/issues/helpers.py:134 apps/projects/views/crud.py:612
+#: apps/projects/views/crud.py:645
 msgid "No Milestone"
 msgstr ""
 
@@ -184,7 +184,7 @@ msgstr ""
 #: apps/issues/views/mixins.py:265 apps/issues/views/mixins.py:296
 #: apps/projects/templates/projects/includes/epic_bulk_assignee_modal.html:4
 #: apps/projects/templates/projects/project_epics_embed.html:137
-#: apps/projects/views/crud.py:675 apps/projects/views/crud.py:713
+#: apps/projects/views/crud.py:600 apps/projects/views/crud.py:638
 #: apps/sprints/templates/sprints/sprint_list.html:157
 #: apps/sprints/views/mixins.py:75 apps/sprints/views/mixins.py:89
 #: apps/utils/filters.py:107
@@ -348,7 +348,7 @@ msgstr ""
 #: apps/issues/templates/issues/includes/milestone_detail_header_edit.html:29
 #: apps/issues/templates/issues/milestones/milestone_quick_view.html:19
 #: apps/projects/models.py:78
-#: apps/projects/templates/projects/includes/project_detail_header.html:83
+#: apps/projects/templates/projects/includes/project_detail_header.html:80
 #: apps/projects/templates/projects/includes/project_detail_header_edit.html:28
 #: apps/workspaces/models.py:65
 msgid "Description"
@@ -372,9 +372,9 @@ msgstr ""
 #: apps/projects/templates/projects/project_epics_embed.html:265
 #: apps/projects/templates/projects/project_list.html:97
 #: apps/projects/templates/projects/project_list.html:130
-#: apps/projects/views/crud.py:52 apps/projects/views/crud.py:147
-#: apps/projects/views/crud.py:595 apps/projects/views/crud.py:734
-#: apps/projects/views/crud.py:881 apps/sprints/models.py:63
+#: apps/projects/views/crud.py:48 apps/projects/views/crud.py:143
+#: apps/projects/views/crud.py:520 apps/projects/views/crud.py:659
+#: apps/projects/views/crud.py:806 apps/sprints/models.py:63
 #: apps/sprints/templates/sprints/includes/add_issues_modal_content.html:30
 #: apps/sprints/templates/sprints/includes/sprint_detail_header_edit.html:61
 #: apps/sprints/templates/sprints/sprint_list.html:86
@@ -401,8 +401,8 @@ msgstr ""
 #: apps/issues/views/crud.py:878 apps/issues/views/mixins.py:65
 #: apps/issues/views/mixins.py:341
 #: apps/projects/templates/projects/project_epics_embed.html:266
-#: apps/projects/views/crud.py:596 apps/projects/views/crud.py:741
-#: apps/projects/views/crud.py:882
+#: apps/projects/views/crud.py:521 apps/projects/views/crud.py:666
+#: apps/projects/views/crud.py:807
 #: apps/workspaces/templates/workspaces/includes/dashboard_issue_table.html:10
 msgid "Priority"
 msgstr ""
@@ -427,7 +427,7 @@ msgstr ""
 #: apps/issues/templates/issues/includes/milestone_detail_header.html:120
 #: apps/issues/templates/issues/includes/milestone_detail_header_edit.html:55
 #: apps/issues/templates/issues/milestones/milestone_quick_view.html:45
-#: apps/issues/views/bulk.py:169 apps/projects/views/crud.py:884
+#: apps/issues/views/bulk.py:169 apps/projects/views/crud.py:809
 msgid "Due Date"
 msgstr ""
 
@@ -446,8 +446,8 @@ msgstr ""
 #: apps/issues/views/crud.py:879 apps/issues/views/mixins.py:66
 #: apps/issues/views/mixins.py:351
 #: apps/projects/templates/projects/project_epics_embed.html:267
-#: apps/projects/views/crud.py:597 apps/projects/views/crud.py:748
-#: apps/projects/views/crud.py:883
+#: apps/projects/views/crud.py:522 apps/projects/views/crud.py:673
+#: apps/projects/views/crud.py:808
 msgid "Assignee"
 msgstr ""
 
@@ -459,7 +459,7 @@ msgstr ""
 #: apps/issues/templates/issues/includes/milestone_detail_header.html:132
 #: apps/issues/templates/issues/milestones/milestone_quick_view.html:57
 #: apps/projects/models.py:96
-#: apps/projects/templates/projects/includes/project_detail_header.html:101
+#: apps/projects/templates/projects/includes/project_detail_header.html:98
 #: apps/sprints/models.py:81
 #: apps/sprints/templates/sprints/includes/sprint_detail_header.html:116
 msgid "Creator"
@@ -476,8 +476,8 @@ msgstr ""
 #: apps/issues/models.py:144 apps/issues/views/crud.py:192
 #: apps/issues/views/crud.py:229 apps/issues/views/crud.py:953
 #: apps/issues/views/crud.py:982 apps/issues/views/milestones.py:594
-#: apps/issues/views/milestones.py:629 apps/projects/views/crud.py:1118
-#: apps/projects/views/crud.py:1155
+#: apps/issues/views/milestones.py:629 apps/projects/views/crud.py:1043
+#: apps/projects/views/crud.py:1080
 msgid "Issue"
 msgstr ""
 
@@ -512,7 +512,7 @@ msgstr ""
 #: apps/issues/views/milestones.py:469 apps/issues/views/mixins.py:32
 #: apps/issues/views/mixins.py:63
 #: apps/projects/templates/projects/project_epics_embed.html:79
-#: apps/projects/views/crud.py:994
+#: apps/projects/views/crud.py:919
 msgid "Epic"
 msgstr ""
 
@@ -678,22 +678,20 @@ msgstr[1] ""
 #: apps/issues/templates/issues/milestones/milestone_confirm_delete.html:41
 #: apps/issues/templates/issues/milestones/milestone_form.html:29
 #: apps/issues/templates/issues/milestones/milestone_form_modal.html:11
+#: apps/projects/templates/projects/includes/action_confirm_modal.html:57
 #: apps/projects/templates/projects/includes/bulk_delete_modal.html:26
 #: apps/projects/templates/projects/includes/bulk_lead_modal.html:53
 #: apps/projects/templates/projects/includes/bulk_move_modal.html:46
-#: apps/projects/templates/projects/includes/delete_confirm_content.html:30
 #: apps/projects/templates/projects/includes/epic_bulk_milestone_modal.html:31
 #: apps/projects/templates/projects/includes/epic_children_row_edit_embed.html:70
 #: apps/projects/templates/projects/includes/epic_form_modal.html:17
 #: apps/projects/templates/projects/includes/epic_row_edit_embed.html:57
 #: apps/projects/templates/projects/includes/milestone_form_modal.html:14
-#: apps/projects/templates/projects/includes/move_modal.html:41
 #: apps/projects/templates/projects/includes/orphan_work_item_row_edit.html:68
 #: apps/projects/templates/projects/includes/project_detail_header_edit.html:72
 #: apps/projects/templates/projects/includes/project_form_modal.html:11
 #: apps/projects/templates/projects/includes/project_issue_create_form_modal.html:17
 #: apps/projects/templates/projects/includes/project_row_edit.html:59
-#: apps/projects/templates/projects/project_confirm_delete.html:48
 #: apps/projects/templates/projects/project_form.html:29
 #: apps/sprints/templates/sprints/includes/action_confirm_modal.html:31
 #: apps/sprints/templates/sprints/includes/add_issues_modal_content.html:51
@@ -734,11 +732,10 @@ msgstr ""
 #: apps/issues/templates/issues/milestones/milestone_confirm_delete.html:35
 #: apps/issues/templates/issues/workspace_issue_list.html:229
 #: apps/issues/templates/issues/workspace_issue_list.html:282
-#: apps/projects/registry.py:117
+#: apps/projects/registry.py:284 apps/projects/registry.py:335
 #: apps/projects/templates/projects/includes/epic_child_row_embed.html:130
 #: apps/projects/templates/projects/includes/epic_row_embed.html:113
 #: apps/projects/templates/projects/includes/orphan_work_item_row.html:134
-#: apps/projects/templates/projects/includes/project_detail_header.html:68
 #: apps/projects/templates/projects/project_detail.html:22
 #: apps/projects/templates/projects/project_epics_embed.html:162
 #: apps/projects/templates/projects/project_epics_embed.html:239
@@ -827,7 +824,7 @@ msgstr ""
 #: apps/projects/templates/projects/includes/orphan_work_item_row.html:36
 #: apps/projects/templates/projects/includes/orphan_work_item_row.html:83
 #: apps/projects/templates/projects/includes/project_detail_header.html:15
-#: apps/projects/templates/projects/includes/project_detail_header.html:46
+#: apps/projects/templates/projects/includes/project_detail_header.html:55
 #: apps/projects/templates/projects/includes/project_row.html:48
 #: apps/projects/templates/projects/project_epics_embed.html:224
 #: apps/sprints/templates/sprints/includes/sprint_detail_header.html:52
@@ -892,7 +889,6 @@ msgstr ""
 #: apps/projects/templates/projects/includes/bulk_lead_modal.html:50
 #: apps/projects/templates/projects/includes/bulk_move_modal.html:43
 #: apps/projects/templates/projects/includes/epic_bulk_milestone_modal.html:32
-#: apps/projects/templates/projects/includes/move_modal.html:38
 #: apps/users/templates/socialaccount/login.html:17
 #: apps/users/templates/socialaccount/login_redirect.html:9
 #: templates/includes/bulk_person_modal.html:34
@@ -919,7 +915,6 @@ msgstr ""
 #: apps/projects/templates/projects/includes/bulk_lead_modal.html:84
 #: apps/projects/templates/projects/includes/bulk_move_modal.html:84
 #: apps/projects/templates/projects/includes/epic_bulk_milestone_modal.html:44
-#: apps/projects/templates/projects/includes/move_modal.html:78
 #: templates/includes/bulk_person_modal.html:43
 msgid "Back"
 msgstr ""
@@ -984,14 +979,14 @@ msgstr ""
 
 #: apps/issues/templates/issues/includes/epic_detail_header.html:41
 #: apps/issues/templates/issues/includes/milestone_detail_header.html:41
-#: apps/projects/templates/projects/includes/project_detail_header.html:32
+#: apps/projects/templates/projects/includes/project_detail_header.html:41
 #: apps/sprints/templates/sprints/includes/sprint_detail_header.html:38
 msgid "Collapse details"
 msgstr ""
 
 #: apps/issues/templates/issues/includes/epic_detail_header.html:41
 #: apps/issues/templates/issues/includes/milestone_detail_header.html:41
-#: apps/projects/templates/projects/includes/project_detail_header.html:32
+#: apps/projects/templates/projects/includes/project_detail_header.html:41
 #: apps/sprints/templates/sprints/includes/sprint_detail_header.html:38
 msgid "Expand details"
 msgstr ""
@@ -1008,13 +1003,13 @@ msgstr ""
 #: apps/issues/templates/issues/issues_embed.html:476
 #: apps/issues/templates/issues/workspace_issue_list.html:272
 #: apps/issues/templates/issues/workspace_issue_list.html:273
+#: apps/projects/registry.py:226
 #: apps/projects/templates/projects/includes/epic_child_row_embed.html:82
 #: apps/projects/templates/projects/includes/epic_child_row_embed.html:83
 #: apps/projects/templates/projects/includes/epic_row_embed.html:103
 #: apps/projects/templates/projects/includes/epic_row_embed.html:104
 #: apps/projects/templates/projects/includes/orphan_work_item_row.html:88
 #: apps/projects/templates/projects/includes/orphan_work_item_row.html:89
-#: apps/projects/templates/projects/includes/project_detail_header.html:51
 #: apps/projects/templates/projects/project_epics_embed.html:229
 #: apps/projects/templates/projects/project_epics_embed.html:230
 msgid "Clone"
@@ -1032,7 +1027,7 @@ msgstr ""
 #: apps/issues/templates/issues/includes/issue_quick_view.html:17
 #: apps/issues/templates/issues/includes/milestone_detail_header.html:98
 #: apps/issues/templates/issues/milestones/milestone_quick_view.html:23
-#: apps/projects/templates/projects/includes/project_detail_header.html:87
+#: apps/projects/templates/projects/includes/project_detail_header.html:84
 msgid "No description"
 msgstr ""
 
@@ -1159,7 +1154,7 @@ msgstr ""
 
 #: apps/issues/templates/issues/includes/issue_move_modal_content.html:8
 #: apps/issues/templates/issues/issues_embed.html:66
-#: apps/issues/views/mixins.py:381 apps/projects/views/crud.py:166
+#: apps/issues/views/mixins.py:381 apps/projects/views/crud.py:162
 #: templates/includes/filters_modal.html:178
 msgid "None"
 msgstr ""
@@ -1176,7 +1171,6 @@ msgstr ""
 
 #: apps/issues/templates/issues/includes/issue_move_modal_content.html:61
 #: apps/issues/templates/issues/includes/issue_move_to_project_modal_content.html:46
-#: apps/projects/templates/projects/includes/project_detail_header.html:58
 msgid "Move"
 msgstr ""
 
@@ -1447,7 +1441,7 @@ msgid "Group:"
 msgstr ""
 
 #: apps/issues/templates/issues/issues_embed.html:57
-#: apps/issues/views/mixins.py:377 apps/projects/views/crud.py:162
+#: apps/issues/views/mixins.py:377 apps/projects/views/crud.py:158
 msgid "Group by"
 msgstr ""
 
@@ -1548,14 +1542,12 @@ msgid "No issues yet."
 msgstr ""
 
 #: apps/issues/templates/issues/milestones/delete_confirm_content.html:13
-#: apps/projects/templates/projects/includes/delete_confirm_content.html:14
-#: apps/projects/templates/projects/project_confirm_delete.html:22
+#: apps/projects/templates/projects/includes/action_confirm_modal.html:41
 msgid "The following will be permanently deleted:"
 msgstr ""
 
 #: apps/issues/templates/issues/milestones/delete_confirm_content.html:15
-#: apps/projects/templates/projects/includes/delete_confirm_content.html:20
-#: apps/projects/templates/projects/project_confirm_delete.html:28
+#: apps/projects/templates/projects/includes/action_confirm_modal.html:47
 #, python-format
 msgid "%(count)s epic"
 msgid_plural "%(count)s epics"
@@ -1563,8 +1555,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: apps/issues/templates/issues/milestones/delete_confirm_content.html:17
-#: apps/projects/templates/projects/includes/delete_confirm_content.html:23
-#: apps/projects/templates/projects/project_confirm_delete.html:31
+#: apps/projects/templates/projects/includes/action_confirm_modal.html:50
 #, python-format
 msgid "%(count)s work item"
 msgid_plural "%(count)s work items"
@@ -1707,7 +1698,7 @@ msgstr ""
 
 #: apps/issues/views/crud.py:232 apps/issues/views/crud.py:406
 #: apps/issues/views/crud.py:985 apps/issues/views/milestones.py:632
-#: apps/projects/views/crud.py:1158
+#: apps/projects/views/crud.py:1083
 #, python-format
 msgid "%(type)s created successfully."
 msgstr ""
@@ -1767,7 +1758,7 @@ msgstr ""
 msgid "%(key)s promoted from %(old)s to Epic."
 msgstr ""
 
-#: apps/issues/views/milestones.py:274 apps/projects/views/crud.py:1262
+#: apps/issues/views/milestones.py:274 apps/projects/views/crud.py:1187
 msgid "Milestone created successfully."
 msgstr ""
 
@@ -1788,7 +1779,7 @@ msgstr ""
 msgid "Milestone cloned successfully."
 msgstr ""
 
-#: apps/issues/views/milestones.py:501 apps/projects/views/crud.py:1028
+#: apps/issues/views/milestones.py:501 apps/projects/views/crud.py:953
 msgid "Epic created successfully."
 msgstr ""
 
@@ -1821,8 +1812,8 @@ msgid "Backlog (not in sprint)"
 msgstr ""
 
 #: apps/issues/views/mixins.py:333 apps/issues/views/mixins.py:355
-#: apps/issues/views/mixins.py:368 apps/projects/views/crud.py:158
-#: apps/projects/views/crud.py:752 apps/projects/views/crud.py:760
+#: apps/issues/views/mixins.py:368 apps/projects/views/crud.py:154
+#: apps/projects/views/crud.py:677 apps/projects/views/crud.py:685
 #: apps/sprints/views/mixins.py:108 templates/includes/filters_modal.html:175
 #: templates/includes/filters_modal.html:201
 msgid "All"
@@ -1980,7 +1971,7 @@ msgstr ""
 #: apps/landing_pages/templates/landing_pages/landing_page.html:107
 #: apps/projects/models.py:118
 #: apps/projects/templates/projects/project_list.html:22
-#: apps/projects/views/crud.py:174 templates/includes/sidebar_app.html:44
+#: apps/projects/views/crud.py:170 templates/includes/sidebar_app.html:44
 #: templates/includes/sidebar_app.html:46
 msgid "Projects"
 msgstr ""
@@ -2597,59 +2588,181 @@ msgid ""
 msgstr ""
 
 #: apps/projects/models.py:88
-#: apps/projects/templates/projects/includes/project_detail_header.html:93
+#: apps/projects/templates/projects/includes/project_detail_header.html:90
 #: apps/projects/templates/projects/includes/project_detail_header_edit.html:53
 #: apps/projects/templates/projects/project_list.html:98
 #: apps/projects/templates/projects/project_list.html:131
-#: apps/projects/views/crud.py:53 apps/projects/views/crud.py:154
+#: apps/projects/views/crud.py:49 apps/projects/views/crud.py:150
 msgid "Lead"
 msgstr ""
 
-#: apps/projects/registry.py:120
+#: apps/projects/models.py:245
+#, python-format
+msgid "%(name)s (Copy)"
+msgstr ""
+
+#: apps/projects/registry.py:168
+msgid "Start Project"
+msgstr ""
+
+#: apps/projects/registry.py:171
+msgid "Project started successfully."
+msgstr ""
+
+#: apps/projects/registry.py:172
+msgid "Start Project?"
+msgstr ""
+
+#: apps/projects/registry.py:173
+msgid "The project will move from draft to active."
+msgstr ""
+
+#: apps/projects/registry.py:182
+msgid "Complete Project"
+msgstr ""
+
+#: apps/projects/registry.py:185
+msgid "Project completed successfully."
+msgstr ""
+
+#: apps/projects/registry.py:186
+msgid "Complete Project?"
+msgstr ""
+
+#: apps/projects/registry.py:187
+msgid "The project will be marked as completed."
+msgstr ""
+
+#: apps/projects/registry.py:196
+msgid "Reopen Project"
+msgstr ""
+
+#: apps/projects/registry.py:199
+msgid "Project reopened successfully."
+msgstr ""
+
+#: apps/projects/registry.py:200
+msgid "Reopen Project?"
+msgstr ""
+
+#: apps/projects/registry.py:201
+msgid "The project will become active again."
+msgstr ""
+
+#: apps/projects/registry.py:210 apps/sprints/registry.py:215
+msgid "Archive"
+msgstr ""
+
+#: apps/projects/registry.py:215
+msgid "Project archived successfully."
+msgstr ""
+
+#: apps/projects/registry.py:216
+msgid "Archive Project?"
+msgstr ""
+
+#: apps/projects/registry.py:217
+msgid "Are you sure you want to archive this project?"
+msgstr ""
+
+#: apps/projects/registry.py:236
+msgid "Project cloned successfully."
+msgstr ""
+
+#: apps/projects/registry.py:243 apps/projects/registry.py:438
+msgid "Move to Workspace"
+msgstr ""
+
+#: apps/projects/registry.py:248
+msgid "Move Project?"
+msgstr ""
+
+#: apps/projects/registry.py:250
+msgid ""
+"The project and all its issues will be moved to another workspace. Sprint "
+"assignments will be removed from all work items."
+msgstr ""
+
+#: apps/projects/registry.py:276
+msgid "Project queued for move."
+msgstr ""
+
+#: apps/projects/registry.py:289
+msgid "Delete Project?"
+msgstr ""
+
+#: apps/projects/registry.py:290 apps/sprints/registry.py:243
+msgid "This action cannot be undone."
+msgstr ""
+
+#: apps/projects/registry.py:319
+msgid "Project deleted successfully."
+msgstr ""
+
+#: apps/projects/registry.py:338
 #: apps/projects/templates/projects/includes/bulk_delete_modal.html:4
 #: apps/projects/templates/projects/includes/bulk_delete_modal.html:23
 msgid "Delete Projects"
 msgstr ""
 
-#: apps/projects/registry.py:121
+#: apps/projects/registry.py:339
 #: apps/projects/templates/projects/includes/bulk_delete_modal.html:6
 msgid ""
 "Are you sure you want to delete the selected projects? This action cannot be "
 "undone."
 msgstr ""
 
-#: apps/projects/registry.py:130
+#: apps/projects/registry.py:348
 #, python-format
 msgid "%(count)d project(s) deleted successfully."
 msgstr ""
 
-#: apps/projects/registry.py:165
+#: apps/projects/registry.py:383
 #, python-format
 msgid "%(count)d project(s) updated to %(status)s."
 msgstr ""
 
-#: apps/projects/registry.py:181
+#: apps/projects/registry.py:399
 #: apps/projects/templates/projects/includes/bulk_lead_modal.html:4
 msgid "Set Lead"
 msgstr ""
 
-#: apps/projects/registry.py:207
+#: apps/projects/registry.py:425
 #, python-format
 msgid "%(count)d project(s) assigned to %(lead)s."
 msgstr ""
 
-#: apps/projects/registry.py:212
+#: apps/projects/registry.py:430
 #, python-format
 msgid "%(count)d project(s) lead removed."
 msgstr ""
 
-#: apps/projects/registry.py:220
-msgid "Move to Workspace"
-msgstr ""
-
-#: apps/projects/registry.py:238
+#: apps/projects/registry.py:456
 #, python-format
 msgid "%(count)d project(s) queued for move."
+msgstr ""
+
+#: apps/projects/templates/projects/includes/action_confirm_modal.html:21
+msgid "Target workspace"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/action_confirm_modal.html:28
+msgid "Select a workspace"
+msgstr ""
+
+#: apps/projects/templates/projects/includes/action_confirm_modal.html:44
+#, python-format
+msgid "%(count)s milestone"
+msgid_plural "%(count)s milestones"
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/projects/templates/projects/includes/action_confirm_modal.html:60
+#: apps/projects/templates/projects/includes/bulk_lead_modal.html:81
+#: apps/sprints/templates/sprints/includes/action_confirm_modal.html:34
+#: apps/sprints/templates/sprints/includes/bulk_action_confirm_modal.html:29
+#: apps/users/templates/account/email_confirm.html:27
+msgid "Confirm"
 msgstr ""
 
 #: apps/projects/templates/projects/includes/bulk_delete_modal.html:11
@@ -2674,8 +2787,8 @@ msgstr ""
 
 #: apps/projects/templates/projects/includes/bulk_lead_modal.html:26
 #: apps/projects/views/bulk.py:160 apps/projects/views/bulk.py:232
-#: apps/projects/views/crud.py:96 apps/projects/views/crud.py:121
-#: apps/projects/views/crud.py:139
+#: apps/projects/views/crud.py:92 apps/projects/views/crud.py:117
+#: apps/projects/views/crud.py:135
 msgid "No lead"
 msgstr ""
 
@@ -2689,13 +2802,6 @@ msgstr ""
 
 #: apps/projects/templates/projects/includes/bulk_lead_modal.html:66
 msgid "New lead"
-msgstr ""
-
-#: apps/projects/templates/projects/includes/bulk_lead_modal.html:81
-#: apps/sprints/templates/sprints/includes/action_confirm_modal.html:34
-#: apps/sprints/templates/sprints/includes/bulk_action_confirm_modal.html:29
-#: apps/users/templates/account/email_confirm.html:27
-msgid "Confirm"
 msgstr ""
 
 #: apps/projects/templates/projects/includes/bulk_move_modal.html:4
@@ -2712,7 +2818,6 @@ msgid "project(s) will be moved"
 msgstr ""
 
 #: apps/projects/templates/projects/includes/bulk_move_modal.html:29
-#: apps/projects/templates/projects/includes/move_modal.html:24
 msgid "No other workspaces available."
 msgstr ""
 
@@ -2721,12 +2826,10 @@ msgid "Are you sure you want to move the selected projects?"
 msgstr ""
 
 #: apps/projects/templates/projects/includes/bulk_move_modal.html:59
-#: apps/projects/templates/projects/includes/move_modal.html:54
 msgid "Destination workspace"
 msgstr ""
 
 #: apps/projects/templates/projects/includes/bulk_move_modal.html:65
-#: apps/projects/templates/projects/includes/move_modal.html:60
 msgid ""
 "All work items will be removed from their current sprints. This action "
 "cannot be undone."
@@ -2734,30 +2837,7 @@ msgstr ""
 
 #: apps/projects/templates/projects/includes/bulk_move_modal.html:81
 #: apps/projects/templates/projects/includes/epic_bulk_milestone_modal.html:54
-#: apps/projects/templates/projects/includes/move_modal.html:74
 msgid "Confirm Move"
-msgstr ""
-
-#: apps/projects/templates/projects/includes/delete_confirm_content.html:3
-#: apps/projects/templates/projects/project_confirm_delete.html:11
-#, python-format
-msgid ""
-"Are you sure you want to delete <strong>%(name)s</strong>? This action "
-"cannot be undone."
-msgstr ""
-
-#: apps/projects/templates/projects/includes/delete_confirm_content.html:17
-#: apps/projects/templates/projects/project_confirm_delete.html:25
-#, python-format
-msgid "%(count)s milestone"
-msgid_plural "%(count)s milestones"
-msgstr[0] ""
-msgstr[1] ""
-
-#: apps/projects/templates/projects/includes/delete_confirm_content.html:33
-#: apps/projects/templates/projects/project_confirm_delete.html:7
-#: apps/projects/templates/projects/project_confirm_delete.html:42
-msgid "Delete Project"
 msgstr ""
 
 #: apps/projects/templates/projects/includes/epic_bulk_assignee_modal.html:3
@@ -2812,18 +2892,6 @@ msgstr ""
 msgid "Creating milestone for project <strong>%(key)s</strong> - %(name)s"
 msgstr ""
 
-#: apps/projects/templates/projects/includes/move_modal.html:4
-msgid "Move Project to Workspace"
-msgstr ""
-
-#: apps/projects/templates/projects/includes/move_modal.html:9
-msgid "Select a workspace to move this project to."
-msgstr ""
-
-#: apps/projects/templates/projects/includes/move_modal.html:49
-msgid "Are you sure you want to move this project?"
-msgstr ""
-
 #: apps/projects/templates/projects/includes/move_progress.html:7
 msgid "Moving projects..."
 msgstr ""
@@ -2835,7 +2903,7 @@ msgstr ""
 #: apps/projects/templates/projects/includes/new_project_modal.html:2
 #: apps/projects/templates/projects/project_form.html:11
 #: apps/projects/templates/projects/project_list.html:65
-#: apps/projects/views/crud.py:268
+#: apps/projects/views/crud.py:264
 msgid "New Project"
 msgstr ""
 
@@ -2863,18 +2931,11 @@ msgstr ""
 msgid "Demo"
 msgstr ""
 
-#: apps/projects/templates/projects/project_confirm_delete.html:34
-#, python-format
-msgid "%(count)s subtask"
-msgid_plural "%(count)s subtasks"
-msgstr[0] ""
-msgstr[1] ""
-
-#: apps/projects/templates/projects/project_detail.html:13
+#: apps/projects/templates/projects/project_detail.html:14
 msgid "This is a demo project"
 msgstr ""
 
-#: apps/projects/templates/projects/project_detail.html:14
+#: apps/projects/templates/projects/project_detail.html:15
 msgid ""
 "Explore it to see how projects, milestones, epics, and sprints work "
 "together. When you're ready, feel free to delete it and create your own."
@@ -2932,35 +2993,17 @@ msgstr ""
 msgid "No projects yet. Create your first project to get started."
 msgstr ""
 
-#: apps/projects/views/crud.py:295
+#: apps/projects/views/crud.py:291
 msgid "Project created successfully."
 msgstr ""
 
-#: apps/projects/views/crud.py:329 apps/sprints/views/crud.py:193
+#: apps/projects/views/crud.py:325 apps/sprints/views/crud.py:193
 #, python-format
 msgid "Edit %s"
 msgstr ""
 
-#: apps/projects/views/crud.py:336
+#: apps/projects/views/crud.py:332
 msgid "Project updated successfully."
-msgstr ""
-
-#: apps/projects/views/crud.py:361
-#, python-format
-msgid "Delete %s"
-msgstr ""
-
-#: apps/projects/views/crud.py:386
-msgid "Project deleted successfully."
-msgstr ""
-
-#: apps/projects/views/crud.py:401
-#, python-format
-msgid "%(name)s (Copy)"
-msgstr ""
-
-#: apps/projects/views/crud.py:407
-msgid "Project cloned successfully."
 msgstr ""
 
 #: apps/sprints/admin.py:33
@@ -3085,10 +3128,6 @@ msgstr ""
 msgid "Sprint completed successfully."
 msgstr ""
 
-#: apps/sprints/registry.py:215
-msgid "Archive"
-msgstr ""
-
 #: apps/sprints/registry.py:219
 msgid "Archive Sprint?"
 msgstr ""
@@ -3103,10 +3142,6 @@ msgstr ""
 
 #: apps/sprints/registry.py:242
 msgid "Delete Sprint?"
-msgstr ""
-
-#: apps/sprints/registry.py:243
-msgid "This action cannot be undone."
 msgstr ""
 
 #: apps/sprints/registry.py:266
