@@ -68,13 +68,6 @@ project_urlpatterns = (
             name="project_detail_inline_edit",
         ),
         path("<str:key>/edit/", views.ProjectUpdateView.as_view(), name="project_update"),
-        path("<str:key>/clone/", views.ProjectCloneView.as_view(), name="project_clone"),
-        path("<str:key>/move/", views.ProjectMoveView.as_view(), name="project_move"),
-        path(
-            "<str:key>/delete/",
-            views.ProjectDeleteView.as_view(),
-            name="project_delete",
-        ),
         path(
             "<str:key>/history/",
             views.ProjectHistoryView.as_view(),

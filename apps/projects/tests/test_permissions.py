@@ -58,10 +58,11 @@ class ProjectPermissionTestCase(TestCase):
     def _get_delete_url(self, project=None):
         project = project or self.project
         return reverse(
-            "projects:project_delete",
+            "projects:project_action",
             kwargs={
                 "workspace_slug": self.workspace.slug,
                 "key": project.key,
+                "action_name": "delete",
             },
         )
 
@@ -312,10 +313,11 @@ class WorkspaceIsolationTest(TestCase):
         client.force_login(self.user1)
 
         url = reverse(
-            "projects:project_delete",
+            "projects:project_action",
             kwargs={
                 "workspace_slug": self.workspace2.slug,
                 "key": self.project2.key,
+                "action_name": "delete",
             },
         )
         response = client.post(url)

@@ -1,5 +1,3 @@
-import json
-
 from django.conf import settings
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -50,15 +48,6 @@ class ProjectViewTestCase(TestCase):
     def _get_update_url(self, project):
         return reverse(
             "projects:project_update",
-            kwargs={
-                "workspace_slug": self.workspace.slug,
-                "key": project.key,
-            },
-        )
-
-    def _get_delete_url(self, project):
-        return reverse(
-            "projects:project_delete",
             kwargs={
                 "workspace_slug": self.workspace.slug,
                 "key": project.key,
@@ -413,71 +402,6 @@ class ProjectUpdateViewTest(ProjectViewTestCase):
         self.assertTrue(Project.objects.filter(pk=existing_project.pk, key="EXIST").exists())
 
 
-class ProjectDeleteViewTest(ProjectViewTestCase):
-    """Tests for ProjectDeleteView functionality."""
-
-    def test_delete_view_shows_confirmation(self):
-        project = ProjectFactory(workspace=self.workspace, name="To Delete")
-
-        response = self.client.get(self._get_delete_url(project))
-
-        self.assertEqual(200, response.status_code)
-        self.assertContains(response, "To Delete")
-
-    def test_delete_removes_project_and_redirects(self):
-        project = ProjectFactory(workspace=self.workspace)
-        project_pk = project.pk
-
-        response = self.client.post(self._get_delete_url(project))
-
-        self.assertEqual(302, response.status_code)
-        self.assertIn(self._get_list_url(), response.url)
-        self.assertFalse(Project.objects.filter(pk=project_pk).exists())
-
-    def test_delete_shows_success_message(self):
-        project = ProjectFactory(workspace=self.workspace)
-
-        response = self.client.post(self._get_delete_url(project), follow=True)
-
-        self.assertContains(response, "Project deleted successfully")
-
-    def test_delete_htmx_detail_page_returns_hx_location(self):
-        """HTMX delete from detail page returns HX-Location with target."""
-        project = ProjectFactory(workspace=self.workspace)
-        project_pk = project.pk
-        detail_url = self._get_detail_url(project)
-        list_url = self._get_list_url()
-
-        response = self.client.post(
-            self._get_delete_url(project),
-            HTTP_HX_REQUEST="true",
-            HTTP_HX_CURRENT_URL=f"http://testserver{detail_url}",
-        )
-
-        self.assertEqual(200, response.status_code)
-        self.assertIn("HX-Location", response)
-        location_data = json.loads(response["HX-Location"])
-        self.assertEqual(location_data["path"], list_url)
-        self.assertEqual(location_data["target"], "#page-content")
-        self.assertFalse(Project.objects.filter(pk=project_pk).exists())
-
-    def test_delete_htmx_other_page_returns_hx_refresh(self):
-        """HTMX delete from other page returns HX-Refresh."""
-        project = ProjectFactory(workspace=self.workspace)
-        project_pk = project.pk
-
-        response = self.client.post(
-            self._get_delete_url(project),
-            HTTP_HX_REQUEST="true",
-            HTTP_HX_CURRENT_URL="http://testserver/w/workspace/projects/",
-        )
-
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(response["HX-Refresh"], "true")
-        self.assertNotIn("HX-Location", response)
-        self.assertFalse(Project.objects.filter(pk=project_pk).exists())
-
-
 class ProjectBulkDeleteViewTest(ProjectViewTestCase):
     """Tests for ProjectBulkDeleteView functionality."""
 
@@ -517,77 +441,6 @@ class ProjectBulkDeleteViewTest(ProjectViewTestCase):
         )
 
         self.assertTrue(Project.objects.filter(pk=project.pk).exists())
-
-
-class ProjectCloneViewTest(ProjectViewTestCase):
-    """Tests for ProjectCloneView functionality."""
-
-    def _get_clone_url(self, project):
-        return reverse(
-            "projects:project_clone",
-            kwargs={
-                "workspace_slug": self.workspace.slug,
-                "key": project.key,
-            },
-        )
-
-    def test_clone_creates_copy_of_project(self):
-        project = ProjectFactory(
-            workspace=self.workspace,
-            name="Original Project",
-            description="Original description",
-            status=ProjectStatus.ACTIVE,
-            lead=self.user,
-        )
-
-        response = self.client.post(self._get_clone_url(project))
-
-        self.assertEqual(302, response.status_code)
-        self.assertEqual(2, Project.objects.filter(workspace=self.workspace).count())
-        cloned = Project.objects.exclude(pk=project.pk).get()
-        self.assertIn("Original Project", cloned.name)
-        self.assertIn("Copy", cloned.name)
-        self.assertEqual("Original description", cloned.description)
-        self.assertEqual(ProjectStatus.ACTIVE, cloned.status)
-        self.assertEqual(self.user, cloned.lead)
-
-    def test_clone_generates_new_key(self):
-        project = ProjectFactory(workspace=self.workspace, name="Test Project")
-
-        self.client.post(self._get_clone_url(project))
-
-        cloned = Project.objects.exclude(pk=project.pk).get()
-        self.assertNotEqual(project.key, cloned.key)
-
-    def test_clone_redirects_to_cloned_project(self):
-        project = ProjectFactory(workspace=self.workspace, name="Test Project")
-
-        response = self.client.post(self._get_clone_url(project))
-
-        cloned = Project.objects.exclude(pk=project.pk).get()
-        self.assertIn(cloned.key, response.url)
-
-    def test_clone_shows_success_message(self):
-        project = ProjectFactory(workspace=self.workspace, name="Test Project")
-
-        response = self.client.post(self._get_clone_url(project), follow=True)
-
-        self.assertContains(response, "Project cloned successfully")
-
-    def test_clone_nonexistent_project_returns_404(self):
-        project = ProjectFactory(workspace=self.workspace)
-        url = self._get_clone_url(project).replace(project.key, "NOTFND")
-
-        response = self.client.post(url)
-
-        self.assertEqual(404, response.status_code)
-
-    def test_clone_get_method_not_allowed(self):
-        project = ProjectFactory(workspace=self.workspace)
-
-        response = self.client.get(self._get_clone_url(project))
-
-        self.assertEqual(405, response.status_code)
 
 
 class ProjectBulkStatusViewTest(ProjectViewTestCase):
@@ -924,51 +777,6 @@ class ProjectBulkMoveViewTest(ProjectViewTestCase):
     def test_bulk_move_get_not_allowed(self):
         response = self.client.get(self._get_bulk_move_url())
 
-        self.assertEqual(405, response.status_code)
-
-
-class ProjectMoveViewTest(ProjectViewTestCase):
-    """Tests for ProjectMoveView (single project move)."""
-
-    def setUp(self):
-        super().setUp()
-        self.target_workspace = WorkspaceFactory()
-        MembershipFactory(workspace=self.target_workspace, user=self.user, role=ROLE_MEMBER)
-        self.project = ProjectFactory(workspace=self.workspace)
-
-    def _get_move_url(self, project=None):
-        project = project or self.project
-        return reverse(
-            "projects:project_move",
-            kwargs={"workspace_slug": self.workspace.slug, "key": project.key},
-        )
-
-    def test_move_project_moves_project_to_target_workspace(self):
-        response = self.client.post(self._get_move_url(), {"workspace": self.target_workspace.pk})
-        self.project.refresh_from_db()
-        self.assertEqual(self.target_workspace, self.project.workspace)
-        self.assertRedirects(response, self._get_list_url())
-
-    def test_move_project_moves_to_target_workspace(self):
-        self.client.post(self._get_move_url(), {"workspace": self.target_workspace.pk})
-        self.project.refresh_from_db()
-        self.assertEqual(self.target_workspace, self.project.workspace)
-
-    def test_move_to_workspace_without_membership_returns_404(self):
-        other_workspace = WorkspaceFactory()  # user is NOT a member
-        response = self.client.post(self._get_move_url(), {"workspace": other_workspace.pk})
-        self.assertEqual(404, response.status_code)
-
-    def test_move_nonexistent_project_returns_404(self):
-        url = reverse(
-            "projects:project_move",
-            kwargs={"workspace_slug": self.workspace.slug, "key": "INVALID"},
-        )
-        response = self.client.post(url, {"workspace": self.target_workspace.pk})
-        self.assertEqual(404, response.status_code)
-
-    def test_get_not_allowed(self):
-        response = self.client.get(self._get_move_url())
         self.assertEqual(405, response.status_code)
 
 

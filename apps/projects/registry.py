@@ -26,6 +26,8 @@ from apps.projects.tasks import start_move_operation
 from apps.utils.models import AuditLog
 from apps.workspaces.models import Workspace
 
+from django_htmx.http import HttpResponseClientRedirect
+
 __all__ = [
     "ProjectAction",
     "ProjectActionRegistry",
@@ -79,6 +81,12 @@ class ProjectAction(Action):
                 "post_url": self.get_url(project),
             },
         )
+
+    def redirect_response(self, request, url):
+        """Redirect that works for both plain form POSTs and HTMX requests."""
+        if request.htmx:
+            return HttpResponseClientRedirect(url)
+        return redirect(url)
 
 
 class ProjectBulkAction(BulkAction):
@@ -151,7 +159,7 @@ class ProjectStatusAction(ProjectAction):
         except ValueError as exc:
             messages.error(request, str(exc))
 
-        return redirect(project.get_absolute_url())
+        return self.redirect_response(request, project.get_absolute_url())
 
 
 @project_actions.register
@@ -226,7 +234,7 @@ class CloneProjectAction(ProjectAction):
     def execute(self, project, request):
         cloned = project.clone(created_by=request.user)
         messages.success(request, _("Project cloned successfully."))
-        return redirect(cloned.get_absolute_url())
+        return self.redirect_response(request, cloned.get_absolute_url())
 
 
 @project_actions.register
@@ -266,7 +274,8 @@ class MoveProjectAction(ProjectAction):
         )
         start_move_operation([project.pk], target_workspace.pk)
         messages.success(request, _("Project queued for move."))
-        return redirect(reverse("projects:project_list", kwargs={"workspace_slug": request.workspace.slug}))
+        list_url = reverse("projects:project_list", kwargs={"workspace_slug": request.workspace.slug})
+        return self.redirect_response(request, list_url)
 
 
 @project_actions.register
