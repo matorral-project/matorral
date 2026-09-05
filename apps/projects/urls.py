@@ -16,6 +16,17 @@ project_urlpatterns = (
         ),
         path("move-progress/<str:operation_id>/", views.MoveProgressView.as_view(), name="move_progress"),
         path("<str:key>/", views.ProjectDetailView.as_view(), name="project_detail"),
+        # Action dispatch
+        path(
+            "<str:key>/action/<str:action_name>/confirm/",
+            views.ProjectActionConfirmView.as_view(),
+            name="project_action_confirm",
+        ),
+        path(
+            "<str:key>/action/<str:action_name>/",
+            views.ProjectActionView.as_view(),
+            name="project_action",
+        ),
         path(
             "<str:key>/epics/",
             views.ProjectEpicsEmbedView.as_view(),
