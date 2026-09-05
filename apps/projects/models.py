@@ -232,6 +232,23 @@ class Project(StatusTransitionMixin, BaseModel):
             self.key = new_key
             self.save()
 
+    def clone(self, created_by=None):
+        """
+        Create a copy of this project in the same workspace.
+
+        Copies name (with a "(Copy)" suffix), description, status and lead.
+        A new unique key is auto-generated. Child objects (milestones, epics,
+        work items) are not copied.
+        """
+        return Project.objects.create(
+            workspace=self.workspace,
+            name=_("%(name)s (Copy)") % {"name": self.name},
+            description=self.description,
+            status=self.status,
+            lead=self.lead,
+            created_by=created_by,
+        )
+
     def start(self):
         """Transition DRAFT → ACTIVE. Raises ValueError if not in DRAFT status."""
         if self.status != ProjectStatus.DRAFT:
