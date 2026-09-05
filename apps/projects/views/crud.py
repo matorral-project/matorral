@@ -362,12 +362,11 @@ class ProjectDeleteView(
         context["milestone_count"] = Milestone.objects.for_project(project).count()
         context["epic_count"] = Epic.objects.for_project(project).count()
         # Work items = all non-epic issues
-        work_item_ids = list(
+        context["work_item_count"] = (
             BaseIssue.objects.for_project(project)
             .exclude(polymorphic_ctype_id__in=[get_epic_content_type_id(), get_milestone_content_type_id()])
-            .values_list("pk", flat=True)
+            .count()
         )
-        context["work_item_count"] = len(work_item_ids)
         return context
 
     def get_success_url(self):
