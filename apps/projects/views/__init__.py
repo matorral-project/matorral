@@ -1,3 +1,4 @@
+from .actions import ProjectActionConfirmView, ProjectActionView
 from .bulk import ProjectBulkActionView
 from .crud import (
     MoveProgressView,
@@ -21,6 +22,8 @@ from .history import ProjectHistoryView
 
 __all__ = [
     "MoveProgressView",
+    "ProjectActionConfirmView",
+    "ProjectActionView",
     "ProjectBulkActionView",
     "ProjectCloneView",
     "ProjectCreateView",
