@@ -395,14 +395,7 @@ class ProjectCloneView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, View):
 
     def post(self, request, *args, **kwargs):
         original = get_object_or_404(Project.objects.for_workspace(self.workspace), key=kwargs["key"])
-        cloned = Project.objects.create(
-            workspace=original.workspace,
-            name=_("%(name)s (Copy)") % {"name": original.name},
-            description=original.description,
-            status=original.status,
-            lead=original.lead,
-            created_by=request.user,
-        )
+        cloned = original.clone(created_by=request.user)
         messages.success(request, _("Project cloned successfully."))
         return redirect(cloned.get_absolute_url())
 

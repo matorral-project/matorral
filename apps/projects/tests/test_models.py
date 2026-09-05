@@ -1,9 +1,11 @@
 from django.test import TestCase
 
-from apps.issues.factories import BugFactory, ChoreFactory, EpicFactory, StoryFactory
+from apps.issues.factories import BugFactory, ChoreFactory, EpicFactory, MilestoneFactory, StoryFactory
+from apps.issues.models import Epic, Milestone, Story
 from apps.projects.factories import ProjectFactory
 from apps.projects.models import Project, ProjectStatus
 from apps.sprints.factories import SprintFactory
+from apps.users.factories import UserFactory
 from apps.workspaces.factories import WorkspaceFactory
 
 
@@ -226,6 +228,74 @@ class ProjectMoveTest(TestCase):
 
         chore.refresh_from_db()
         self.assertIsNone(chore.sprint)
+
+
+class ProjectCloneTest(TestCase):
+    """Tests for Project.clone(created_by)."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.workspace = WorkspaceFactory()
+        cls.user = UserFactory()
+
+    def test_clone_creates_new_project_in_same_workspace(self):
+        project = ProjectFactory(workspace=self.workspace)
+
+        cloned = project.clone(created_by=self.user)
+
+        self.assertNotEqual(cloned.pk, project.pk)
+        self.assertEqual(cloned.workspace, self.workspace)
+
+    def test_clone_appends_copy_suffix_to_name(self):
+        project = ProjectFactory(workspace=self.workspace, name="Original Project")
+
+        cloned = project.clone(created_by=self.user)
+
+        self.assertEqual(cloned.name, "Original Project (Copy)")
+
+    def test_clone_copies_description_status_and_lead(self):
+        lead = UserFactory()
+        project = ProjectFactory(
+            workspace=self.workspace,
+            description="Some description",
+            status=ProjectStatus.ACTIVE,
+            lead=lead,
+        )
+
+        cloned = project.clone(created_by=self.user)
+
+        self.assertEqual(cloned.description, "Some description")
+        self.assertEqual(cloned.status, ProjectStatus.ACTIVE)
+        self.assertEqual(cloned.lead, lead)
+
+    def test_clone_sets_created_by(self):
+        project = ProjectFactory(workspace=self.workspace)
+
+        cloned = project.clone(created_by=self.user)
+
+        self.assertEqual(cloned.created_by, self.user)
+
+    def test_clone_generates_unique_keys(self):
+        """Original and successive clones all get distinct keys."""
+        project = ProjectFactory(workspace=self.workspace, name="Roadmap")
+
+        clone1 = project.clone(created_by=self.user)
+        clone2 = project.clone(created_by=self.user)
+
+        keys = {project.key, clone1.key, clone2.key}
+        self.assertEqual(len(keys), 3)
+
+    def test_clone_does_not_copy_child_objects(self):
+        project = ProjectFactory(workspace=self.workspace)
+        MilestoneFactory(project=project)
+        epic = EpicFactory(project=project)
+        StoryFactory(project=project, parent=epic)
+
+        cloned = project.clone(created_by=self.user)
+
+        self.assertEqual(Milestone.objects.for_project(cloned).count(), 0)
+        self.assertEqual(Epic.objects.for_project(cloned).count(), 0)
+        self.assertEqual(Story.objects.for_project(cloned).count(), 0)
 
 
 class ProjectStatusTransitionTest(TestCase):
