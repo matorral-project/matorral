@@ -1,3 +1,5 @@
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
@@ -12,10 +14,19 @@ from apps.generic_ui.actions import (
     build_bulk_action_context,
 )
 from apps.issues.cascade import build_cascade_oob_response_bulk
+from apps.issues.helpers import (
+    build_htmx_delete_response,
+    get_epic_content_type_id,
+    get_milestone_content_type_id,
+)
+from apps.issues.models import BaseIssue, Epic, Milestone
 from apps.projects.forms import BulkLeadForm, BulkMoveForm
 from apps.projects.models import Project, ProjectStatus
 from apps.projects.tasks import start_move_operation
 from apps.utils.models import AuditLog
+from apps.workspaces.models import Workspace
+
+from django_htmx.http import HttpResponseClientRedirect
 
 __all__ = [
     "ProjectAction",
@@ -59,6 +70,23 @@ class ProjectAction(Action):
                 "action_name": self.name,
             },
         )
+
+    def get_confirm_response(self, project, request):
+        return render(
+            request,
+            "projects/includes/action_confirm_modal.html",
+            {
+                "action": self,
+                "project": project,
+                "post_url": self.get_url(project),
+            },
+        )
+
+    def redirect_response(self, request, url):
+        """Redirect that works for both plain form POSTs and HTMX requests."""
+        if request.htmx:
+            return HttpResponseClientRedirect(url)
+        return redirect(url)
 
 
 class ProjectBulkAction(BulkAction):
@@ -104,6 +132,196 @@ def build_project_action_context(project, user) -> dict:
 def build_project_bulk_action_context(workspace) -> dict:
     """Build bulk_actions context for project list template."""
     return build_bulk_action_context(project_bulk_actions, workspace)
+
+
+# ============================================================================
+# Single-project action registrations
+# ============================================================================
+
+
+class ProjectStatusAction(ProjectAction):
+    """Shared execute() for single-project status transitions.
+
+    Subclasses set ``transition`` to the Project model method name and
+    provide availability rules and confirmation copy.
+    """
+
+    action_type = ActionType.PRIMARY
+    confirm = True
+    css_class = "btn-success"
+    transition = ""
+    success_message = ""
+
+    def execute(self, project, request):
+        try:
+            getattr(project, self.transition)()
+            messages.success(request, self.success_message)
+        except ValueError as exc:
+            messages.error(request, str(exc))
+
+        return self.redirect_response(request, project.get_absolute_url())
+
+
+@project_actions.register
+class StartProjectAction(ProjectStatusAction):
+    name = "start"
+    label = _("Start Project")
+    icon = "play"
+    transition = "start"
+    success_message = _("Project started successfully.")
+    confirm_title = _("Start Project?")
+    confirm_body = _("The project will move from draft to active.")
+
+    def is_available(self, project, user):
+        return project.status == ProjectStatus.DRAFT
+
+
+@project_actions.register
+class CompleteProjectAction(ProjectStatusAction):
+    name = "complete"
+    label = _("Complete Project")
+    icon = "check-circle"
+    transition = "complete"
+    success_message = _("Project completed successfully.")
+    confirm_title = _("Complete Project?")
+    confirm_body = _("The project will be marked as completed.")
+
+    def is_available(self, project, user):
+        return project.status == ProjectStatus.ACTIVE
+
+
+@project_actions.register
+class ReopenProjectAction(ProjectStatusAction):
+    name = "reopen"
+    label = _("Reopen Project")
+    icon = "rotate-left"
+    transition = "reopen"
+    success_message = _("Project reopened successfully.")
+    confirm_title = _("Reopen Project?")
+    confirm_body = _("The project will become active again.")
+
+    def is_available(self, project, user):
+        return project.status in (ProjectStatus.COMPLETED, ProjectStatus.ARCHIVED)
+
+
+@project_actions.register
+class ArchiveProjectAction(ProjectStatusAction):
+    name = "archive"
+    label = _("Archive")
+    icon = "archive"
+    action_type = ActionType.MENU
+    css_class = "btn-primary"
+    transition = "archive"
+    success_message = _("Project archived successfully.")
+    confirm_title = _("Archive Project?")
+    confirm_body = _("Are you sure you want to archive this project?")
+
+    def is_available(self, project, user):
+        return project.status != ProjectStatus.ARCHIVED
+
+
+@project_actions.register
+class CloneProjectAction(ProjectAction):
+    name = "clone"
+    label = _("Clone")
+    icon = "clone"
+    action_type = ActionType.MENU
+    css_class = "btn-ghost"
+
+    def is_available(self, project, user):
+        return True
+
+    def execute(self, project, request):
+        cloned = project.clone(created_by=request.user)
+        messages.success(request, _("Project cloned successfully."))
+        return self.redirect_response(request, cloned.get_absolute_url())
+
+
+@project_actions.register
+class MoveProjectAction(ProjectAction):
+    name = "move"
+    label = _("Move to Workspace")
+    icon = "arrow-right-arrow-left"
+    action_type = ActionType.MENU
+    css_class = "btn-ghost"
+    confirm = True
+    confirm_title = _("Move Project?")
+    confirm_body = _(
+        "The project and all its issues will be moved to another workspace. "
+        "Sprint assignments will be removed from all work items."
+    )
+
+    def is_available(self, project, user):
+        return Workspace.objects.for_user(user).exclude(pk=project.workspace_id).exists()
+
+    def get_confirm_response(self, project, request):
+        target_workspaces = Workspace.objects.for_user(request.user).exclude(pk=project.workspace_id)
+        return render(
+            request,
+            "projects/includes/action_confirm_modal.html",
+            {
+                "action": self,
+                "project": project,
+                "target_workspaces": target_workspaces,
+                "post_url": self.get_url(project),
+            },
+        )
+
+    def execute(self, project, request):
+        target_workspace = get_object_or_404(
+            Workspace.objects.for_user(request.user).exclude(pk=project.workspace_id),
+            pk=request.POST.get("workspace"),
+        )
+        start_move_operation([project.pk], target_workspace.pk)
+        messages.success(request, _("Project queued for move."))
+        list_url = reverse("projects:project_list", kwargs={"workspace_slug": request.workspace.slug})
+        return self.redirect_response(request, list_url)
+
+
+@project_actions.register
+class DeleteProjectAction(ProjectAction):
+    name = "delete"
+    label = _("Delete")
+    icon = "trash"
+    action_type = ActionType.MENU
+    css_class = "btn-error"
+    confirm = True
+    confirm_title = _("Delete Project?")
+    confirm_body = _("This action cannot be undone.")
+
+    def is_available(self, project, user):
+        return True
+
+    def get_confirm_response(self, project, request):
+        work_item_count = (
+            BaseIssue.objects.for_project(project)
+            .exclude(polymorphic_ctype_id__in=[get_epic_content_type_id(), get_milestone_content_type_id()])
+            .count()
+        )
+        return render(
+            request,
+            "projects/includes/action_confirm_modal.html",
+            {
+                "action": self,
+                "project": project,
+                "milestone_count": Milestone.objects.for_project(project).count(),
+                "epic_count": Epic.objects.for_project(project).count(),
+                "work_item_count": work_item_count,
+                "post_url": self.get_url(project),
+            },
+        )
+
+    def execute(self, project, request):
+        deleted_url = project.get_absolute_url()
+        redirect_url = reverse("projects:project_list", kwargs={"workspace_slug": request.workspace.slug})
+
+        project.delete()
+        messages.success(request, _("Project deleted successfully."))
+
+        if request.htmx:
+            return build_htmx_delete_response(request, deleted_url, redirect_url)
+
+        return redirect(redirect_url)
 
 
 # ============================================================================

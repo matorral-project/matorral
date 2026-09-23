@@ -3,7 +3,8 @@
 {% block app_content_content %}
 <div id="page-content" hx-target="#page-content">
   {% partialdef page-content inline %}
-  <section class="app-card" x-data="{ showDeleteModal: false, showCascadeModal: false }">
+  <div id="modal-container"></div>
+  <section class="app-card" x-data="{ showCascadeModal: false }">
     {% if not project.created_by %}
     <div x-data="{ dismissed: localStorage.getItem('demo_banner_dismissed_{{ project.pk }}') === 'true' }"
          x-show="!dismissed" x-cloak>
@@ -15,10 +16,9 @@
         </div>
         <div class="flex gap-2">
           <button class="btn btn-sm btn-error"
-                  hx-get="{% url 'projects:project_delete' workspace.slug project.key %}"
-                  hx-target="#detail-delete-modal-content"
-                  hx-swap="innerHTML"
-                  @click="showDeleteModal = true">
+                  hx-get="{% url 'projects:project_action_confirm' workspace.slug project.key 'delete' %}"
+                  hx-target="#modal-container"
+                  hx-swap="innerHTML">
             <i class="fa fa-trash"></i> {% translate "Delete" %}
           </button>
           <button class="btn btn-sm btn-ghost"
@@ -129,7 +129,6 @@
         </div>
       </div>
     </div>
-    {% include "includes/delete_confirm_modal.html" with delete_modal_id="detail-delete-modal-content" %}
     {% include "includes/cascade_status_modal.html" %}
   </section>
   {% endpartialdef page-content %}
