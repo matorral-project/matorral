@@ -1,3 +1,6 @@
+from datetime import UTC, datetime
+from unittest.mock import patch
+
 from django.test import TestCase
 
 from apps.issues.models import BaseIssue, Bug, BugSeverity, Chore, Epic, IssueStatus, Milestone, Story, Subtask
@@ -12,12 +15,17 @@ from apps.workspaces.demo_data import (
     create_demo_project,
 )
 
+# A fixed Monday, so demo data generation (e.g. the next-Monday branch in
+# _create_sprints) is deterministic regardless of when the test suite runs.
+DEMO_NOW = datetime(2026, 1, 5, 12, tzinfo=UTC)
+
 
 class CreateDemoProjectTest(WorkspaceTestMixin, TestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.project = create_demo_project(cls.workspace, cls.admin)
+        with patch("apps.workspaces.demo_data.timezone.now", return_value=DEMO_NOW):
+            cls.project = create_demo_project(cls.workspace, cls.admin)
 
     def test_project_created_with_correct_attributes(self):
         self.assertEqual(self.project.name, "Acme SaaS Platform")

@@ -8,9 +8,19 @@ from apps.sprints.models import Sprint
 from apps.utils.tests.base import WorkspaceTestMixin
 from apps.workspaces.demo_data import create_demo_project
 from apps.workspaces.tasks import DEMO_USER_EMAIL, DEMO_USER_PASSWORD, reset_demo_workspace_data
+from apps.workspaces.tests.test_demo_data import DEMO_NOW
 
 
 class ResetDemoWorkspaceDataTest(WorkspaceTestMixin, TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Freeze "now" so demo data generation is deterministic regardless of
+        # when the suite runs (see DEMO_NOW).
+        patcher = patch("apps.workspaces.demo_data.timezone.now", return_value=DEMO_NOW)
+        patcher.start()
+        super().setUpClass()
+        cls.addClassCleanup(patcher.stop)
+
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
