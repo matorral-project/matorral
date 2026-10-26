@@ -15,16 +15,16 @@
   "devDependencies": {
     "@types/node": "^26.6.5",
     "autoprefixer": "^10.6.1",
-    "postcss": "^8.5.14",
+    "postcss": "^8.5.31",
     "postcss-import": "^17.0.1",
-    "postcss-nested": "^9.0.0",
+    "postcss-nested": "^9.0.1",
     "typescript": "^7.0.2",
-    "vite": "^8.3.4"
+    "vite": "^8.3.5"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.3.3",
     "@tailwindcss/typography": "^0.5.20",
-    "alpinejs": "^3.17.4",
+    "alpinejs": "^3.17.5",
     "daisyui": "^5.7.50",
     "htmx-ext-ws": "^2.0.4",
     "htmx.org": "^2.0.11",
