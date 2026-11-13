@@ -19,10 +19,10 @@
     "postcss-import": "^17.0.1",
     "postcss-nested": "^9.0.1",
     "typescript": "^7.0.2",
-    "vite": "^8.3.5"
+    "vite": "^8.3.6"
   },
   "dependencies": {
-    "@tailwindcss/postcss": "^4.3.3",
+    "@tailwindcss/postcss": "^4.3.4",
     "@tailwindcss/typography": "^0.5.20",
     "alpinejs": "^3.17.5",
     "daisyui": "^5.7.50",
