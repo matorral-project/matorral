@@ -19,12 +19,6 @@ def get_default_workspace_name_for_user(user: User) -> str:
     return (user.get_display_name().split("@")[0] or _("My Workspace")).title()
 
 
-def get_default_workspace_for_user(user: User) -> Workspace | None:
-    if user.workspaces.exists():
-        return user.workspaces.first()
-    return None
-
-
 def create_default_workspace_for_user(user: User, workspace_name: str | None = None):
     workspace_name = workspace_name or get_default_workspace_name_for_user(user)
     slug = get_next_unique_workspace_slug(workspace_name)
