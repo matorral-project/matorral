@@ -1,11 +1,14 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
+from allauth.account import app_settings as allauth_app_settings
 from allauth.account.forms import SignupForm
+from allauth.account.models import EmailAddress
 
 from .helpers import create_default_workspace_for_user, get_next_unique_workspace_slug, get_open_invitations_for_user
 from .models import Invitation, Membership, Workspace
@@ -78,16 +81,31 @@ class WorkspaceSignupForm(SignupForm):
     def save(self, request):
         invitation_id = self.cleaned_data["invitation_id"]
         workspace_name = self.cleaned_data["workspace_name"]
-        user = super().save(request)
 
-        if not user:
-            return
+        # allauth reports an already-existing account by raising ValueError from
+        # save(); it never returns None. Guard on that flag so a duplicate signup is a
+        # clean no-op instead of an exception escaping with half-written state behind
+        # it.
+        if getattr(self, "account_already_exists", False):
+            return None
 
-        user.terms_accepted_at = timezone.now()
-        user.save(update_fields=["terms_accepted_at"])
+        # Signup writes several rows (user, email address, terms acceptance,
+        # workspace, membership). Roll them all back if any step fails, so a failed
+        # signup cannot leave an account that signs in to nothing.
+        with transaction.atomic():
+            user = super().save(request)
 
-        if not invitation_id and not get_open_invitations_for_user(user):
-            create_default_workspace_for_user(user, workspace_name)
+            user.terms_accepted_at = timezone.now()
+            user.save(update_fields=["terms_accepted_at"])
+
+            # With verification switched off no confirmation link is ever sent or
+            # clicked, so the address must be marked verified here or
+            # User.has_confirmed_email_address stays False forever.
+            if allauth_app_settings.EMAIL_VERIFICATION == allauth_app_settings.EmailVerificationMethod.NONE:
+                EmailAddress.objects.filter(user=user, email__iexact=user.email).update(verified=True)
+
+            if not invitation_id and not get_open_invitations_for_user(user):
+                create_default_workspace_for_user(user, workspace_name)
 
         return user
 
@@ -125,8 +143,10 @@ class InvitationForm(forms.ModelForm):
                     'There is already a pending invitation for {}. You can resend it by clicking "Resend Invitation".'
                 ).format(email)
             )
+
         if Membership.objects.filter(workspace=self.workspace, user__email__iexact=email).exists():
             raise ValidationError(_("{email} is already a member of this workspace.").format(email=email))
+
         return email
 
     class Meta:
