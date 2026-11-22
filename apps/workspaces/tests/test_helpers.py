@@ -8,7 +8,6 @@ from apps.users.factories import UserFactory
 from apps.workspaces.factories import InvitationFactory, MembershipFactory, WorkspaceFactory
 from apps.workspaces.helpers import (
     create_default_workspace_for_user,
-    get_default_workspace_for_user,
     get_default_workspace_name_for_user,
     get_onboarding_status,
     get_open_invitations_for_user,
@@ -36,20 +35,6 @@ class TestGetDefaultWorkspaceNameForUser(TestCase):
         user = UserFactory(first_name="", last_name="", email="@example.com")
         name = get_default_workspace_name_for_user(user)
         self.assertEqual(name, "My Workspace")
-
-
-class TestGetDefaultWorkspaceForUser(TestCase):
-    def test_returns_first_workspace_when_user_has_one(self):
-        user = UserFactory()
-        workspace = WorkspaceFactory()
-        MembershipFactory(workspace=workspace, user=user, role=ROLE_MEMBER)
-        result = get_default_workspace_for_user(user)
-        self.assertEqual(result, workspace)
-
-    def test_returns_none_when_user_has_no_workspaces(self):
-        user = UserFactory()
-        result = get_default_workspace_for_user(user)
-        self.assertIsNone(result)
 
 
 class TestCreateDefaultWorkspaceForUser(TestCase):

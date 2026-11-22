@@ -46,4 +46,4 @@ class AcceptInvitationAdapter(UserEmailAsUsernameAdapter):
             if workspace:
                 return workspace.get_absolute_url()
 
-        return getattr(settings, "LOGIN_REDIRECT_URL", "/")
+        return settings.LOGIN_REDIRECT_URL
