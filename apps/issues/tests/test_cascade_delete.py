@@ -184,10 +184,21 @@ class ProjectDeleteCascadeTest(TestCase):
 
     def _get_delete_url(self):
         return reverse(
-            "projects:project_delete",
+            "projects:project_action",
             kwargs={
                 "workspace_slug": self.workspace.slug,
                 "key": self.project.key,
+                "action_name": "delete",
+            },
+        )
+
+    def _get_delete_confirm_url(self):
+        return reverse(
+            "projects:project_action_confirm",
+            kwargs={
+                "workspace_slug": self.workspace.slug,
+                "key": self.project.key,
+                "action_name": "delete",
             },
         )
 
@@ -202,13 +213,13 @@ class ProjectDeleteCascadeTest(TestCase):
         self.assertFalse(Project.objects.filter(pk=self.project.pk).exists())
         self.assertFalse(Subtask.objects.filter(pk=subtask_pk).exists())
 
-    def test_project_delete_get_shows_cascade_counts(self):
+    def test_project_delete_confirm_shows_cascade_counts(self):
         milestone = MilestoneFactory(project=self.project)  # noqa: F841
         epic = EpicFactory(project=self.project)
         story = StoryFactory(project=self.project, parent=epic)
         SubtaskFactory(parent=story)
 
-        response = self.client.get(self._get_delete_url())
+        response = self.client.get(self._get_delete_confirm_url())
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["milestone_count"], 1)

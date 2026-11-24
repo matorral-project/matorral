@@ -16,6 +16,17 @@ project_urlpatterns = (
         ),
         path("move-progress/<str:operation_id>/", views.MoveProgressView.as_view(), name="move_progress"),
         path("<str:key>/", views.ProjectDetailView.as_view(), name="project_detail"),
+        # Action dispatch
+        path(
+            "<str:key>/action/<str:action_name>/confirm/",
+            views.ProjectActionConfirmView.as_view(),
+            name="project_action_confirm",
+        ),
+        path(
+            "<str:key>/action/<str:action_name>/",
+            views.ProjectActionView.as_view(),
+            name="project_action",
+        ),
         path(
             "<str:key>/epics/",
             views.ProjectEpicsEmbedView.as_view(),
@@ -57,13 +68,6 @@ project_urlpatterns = (
             name="project_detail_inline_edit",
         ),
         path("<str:key>/edit/", views.ProjectUpdateView.as_view(), name="project_update"),
-        path("<str:key>/clone/", views.ProjectCloneView.as_view(), name="project_clone"),
-        path("<str:key>/move/", views.ProjectMoveView.as_view(), name="project_move"),
-        path(
-            "<str:key>/delete/",
-            views.ProjectDeleteView.as_view(),
-            name="project_delete",
-        ),
         path(
             "<str:key>/history/",
             views.ProjectHistoryView.as_view(),

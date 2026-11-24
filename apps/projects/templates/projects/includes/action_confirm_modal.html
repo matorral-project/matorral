@@ -1,0 +1,65 @@
+{% load i18n %}
+<div x-data="{ open: true }"
+     x-show="open"
+     @keydown.escape.window="open = false"
+     class="modal modal-open"
+     role="dialog"
+     aria-modal="true">
+  <div class="modal-box">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-bold text-lg">{{ action.confirm_title }}</h3>
+      <button type="button" class="btn btn-sm btn-ghost btn-square" @click="open = false">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <p class="text-sm mb-4">{{ action.confirm_body }}</p>
+    {% if target_workspaces %}
+    <div class="mb-4">
+      <label class="label" for="move-target-workspace">
+        <span class="label-text">{% translate "Target workspace" %}</span>
+      </label>
+      <select id="move-target-workspace"
+              name="workspace"
+              form="action-confirm-form"
+              class="select select-bordered w-full"
+              required>
+        <option value="" disabled selected>{% translate "Select a workspace" %}</option>
+        {% for target in target_workspaces %}
+        <option value="{{ target.pk }}">{{ target.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+    {% if milestone_count or epic_count or work_item_count %}
+    <div class="alert alert-error mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <div>
+        <p class="font-semibold">{% translate "The following will be permanently deleted:" %}</p>
+        <ul class="list-disc list-inside mt-1 text-sm">
+          {% if milestone_count %}
+          <li>{% blocktranslate count count=milestone_count %}{{ count }} milestone{% plural %}{{ count }} milestones{% endblocktranslate %}</li>
+          {% endif %}
+          {% if epic_count %}
+          <li>{% blocktranslate count count=epic_count %}{{ count }} epic{% plural %}{{ count }} epics{% endblocktranslate %}</li>
+          {% endif %}
+          {% if work_item_count %}
+          <li>{% blocktranslate count count=work_item_count %}{{ count }} work item{% plural %}{{ count }} work items{% endblocktranslate %}</li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+    {% endif %}
+    <div class="modal-action">
+      <button type="button" class="btn btn-ghost" @click="open = false">{% translate "Cancel" %}</button>
+      <form method="post" action="{{ post_url }}" id="action-confirm-form">
+        {% csrf_token %}
+        <button type="submit" class="btn {{ action.css_class }}">{% translate "Confirm" %}</button>
+      </form>
+    </div>
+  </div>
+  <div class="modal-backdrop" @click="open = false"></div>
+</div>

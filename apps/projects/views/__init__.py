@@ -1,9 +1,8 @@
+from .actions import ProjectActionConfirmView, ProjectActionView
 from .bulk import ProjectBulkActionView
 from .crud import (
     MoveProgressView,
-    ProjectCloneView,
     ProjectCreateView,
-    ProjectDeleteView,
     ProjectDetailInlineEditView,
     ProjectDetailView,
     ProjectEpicChildrenView,
@@ -12,7 +11,6 @@ from .crud import (
     ProjectIssueCreateView,
     ProjectListView,
     ProjectMilestoneCreateView,
-    ProjectMoveView,
     ProjectOrphanIssuesEmbedView,
     ProjectRowInlineEditView,
     ProjectUpdateView,
@@ -21,10 +19,10 @@ from .history import ProjectHistoryView
 
 __all__ = [
     "MoveProgressView",
+    "ProjectActionConfirmView",
+    "ProjectActionView",
     "ProjectBulkActionView",
-    "ProjectCloneView",
     "ProjectCreateView",
-    "ProjectDeleteView",
     "ProjectDetailInlineEditView",
     "ProjectDetailView",
     "ProjectEpicChildrenView",
@@ -34,7 +32,6 @@ __all__ = [
     "ProjectIssueCreateView",
     "ProjectListView",
     "ProjectMilestoneCreateView",
-    "ProjectMoveView",
     "ProjectOrphanIssuesEmbedView",
     "ProjectRowInlineEditView",
     "ProjectUpdateView",

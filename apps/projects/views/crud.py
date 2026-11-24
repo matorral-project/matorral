@@ -10,7 +10,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views import View
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from apps.issues.cascade import build_cascade_oob_response
 from apps.issues.forms import EpicForm, MilestoneForm, get_form_class_for_type
@@ -18,10 +18,7 @@ from apps.issues.helpers import (
     annotate_epic_child_counts,
     build_grouped_epics_by_milestone,
     build_grouped_issues,
-    build_htmx_delete_response,
-    get_epic_content_type_id,
     get_issue_creation_defaults,
-    get_milestone_content_type_id,
 )
 from apps.issues.models import BaseIssue, Epic, IssuePriority, IssueStatus, Milestone
 from apps.issues.views.mixins import (
@@ -41,8 +38,7 @@ from django_htmx.http import HttpResponseClientRefresh
 
 from ..forms import ProjectDetailInlineEditForm, ProjectRowInlineEditForm
 from ..models import Project, ProjectStatus
-from ..registry import build_project_bulk_action_context
-from ..tasks import start_move_operation
+from ..registry import build_project_action_context, build_project_bulk_action_context
 from .mixins import ProjectFormMixin, ProjectSingleObjectMixin, ProjectViewMixin
 
 User = get_user_model()
@@ -233,7 +229,7 @@ class ProjectDetailView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["page_title"] = f"{self.object.name} Roadmap"
-        context["move_target_workspaces"] = Workspace.objects.for_user(self.request.user).exclude(pk=self.workspace.pk)
+        context.update(build_project_action_context(self.object, self.request.user))
 
         # Add progress context for the project
         total = getattr(self.object, "total_estimated_points", 0) or 0
@@ -335,77 +331,6 @@ class ProjectUpdateView(
     def form_valid(self, form):
         messages.success(self.request, _("Project updated successfully."))
         return super().form_valid(form)
-
-
-class ProjectDeleteView(
-    LoginAndWorkspaceRequiredMixin,
-    ProjectViewMixin,
-    ProjectSingleObjectMixin,
-    DeleteView,
-):
-    """Delete a project."""
-
-    template_name = "projects/project_confirm_delete.html"
-
-    def get_queryset(self):
-        return Project.objects.for_workspace(self.workspace)
-
-    def get_template_names(self):
-        if self.request.htmx and not self.request.htmx.history_restore_request:
-            return ["projects/includes/delete_confirm_content.html"]
-        return [self.template_name]
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        project = self.object
-        context["page_title"] = _("Delete %s") % project.name
-        context["milestone_count"] = Milestone.objects.for_project(project).count()
-        context["epic_count"] = Epic.objects.for_project(project).count()
-        # Work items = all non-epic issues
-        work_item_ids = list(
-            BaseIssue.objects.for_project(project)
-            .exclude(polymorphic_ctype_id__in=[get_epic_content_type_id(), get_milestone_content_type_id()])
-            .values_list("pk", flat=True)
-        )
-        context["work_item_count"] = len(work_item_ids)
-        return context
-
-    def get_success_url(self):
-        return reverse(
-            "projects:project_list",
-            kwargs={"workspace_slug": self.kwargs["workspace_slug"]},
-        )
-
-    def form_valid(self, form):
-        # Django's CASCADE delete will handle all issues (epics, work items, subtasks)
-        # No need to manually delete subtasks first
-        deleted_url = self.object.get_absolute_url()
-        redirect_url = self.get_success_url()
-
-        self.object.delete()
-        messages.success(self.request, _("Project deleted successfully."))
-
-        if self.request.htmx:
-            return build_htmx_delete_response(self.request, deleted_url, redirect_url)
-
-        return redirect(redirect_url)
-
-
-class ProjectCloneView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, View):
-    """Clone an existing project."""
-
-    def post(self, request, *args, **kwargs):
-        original = get_object_or_404(Project.objects.for_workspace(self.workspace), key=kwargs["key"])
-        cloned = Project.objects.create(
-            workspace=original.workspace,
-            name=_("%(name)s (Copy)") % {"name": original.name},
-            description=original.description,
-            status=original.status,
-            lead=original.lead,
-            created_by=request.user,
-        )
-        messages.success(request, _("Project cloned successfully."))
-        return redirect(cloned.get_absolute_url())
 
 
 # ============================================================================
@@ -1288,25 +1213,6 @@ class ProjectMilestoneCreateView(LoginAndWorkspaceRequiredMixin, ProjectViewMixi
     def form_invalid(self, form):
         context = self.get_context_data(form=form)
         return render(self.request, self.get_template_names()[0], context)
-
-
-class ProjectMoveView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, View):
-    """Move a single project to another workspace (POST only)."""
-
-    http_method_names = ["post"]
-
-    def post(self, request, *args, **kwargs):
-        project = get_object_or_404(
-            Project.objects.for_workspace(self.workspace),
-            key=kwargs["key"],
-        )
-        target_workspace_pk = request.POST.get("workspace")
-        target_workspace = get_object_or_404(
-            Workspace.objects.for_user(request.user).exclude(pk=self.workspace.pk),
-            pk=target_workspace_pk,
-        )
-        start_move_operation([project.pk], target_workspace.pk)
-        return redirect(reverse("projects:project_list", kwargs={"workspace_slug": self.kwargs["workspace_slug"]}))
 
 
 class MoveProgressView(LoginAndWorkspaceRequiredMixin, ProjectViewMixin, View):
